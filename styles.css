@@ -6,21 +6,23 @@
   font-display: swap;
 }
 
+/* Every text tier clears WCAG AA (4.5:1) at 13px. Hierarchy comes from the
+   darkness ramp strong > muted > label, not from dropping tiers below legible. */
 :root {
   --bg: #f6f5f1;
-  --strong: #0a0907;
-  --fg: #2b2925;
-  --muted: #7a786f;
-  --label: #b3b0a8;
-  --rule: #e3e1da;
+  --strong: #0a0907; /* 18.25:1 */
+  --fg: #2b2925;     /* 13.31:1 */
+  --muted: #57554e;  /*  6.84:1 */
+  --label: #6f6b61;  /*  4.87:1 */
+  --rule: #dedcd4;
 }
 [data-theme="dark"] {
   --bg: #14130f;
-  --strong: #ffffff;
-  --fg: #d6d4cd;
-  --muted: #807e76;
-  --label: #4f4d47;
-  --rule: #2a2823;
+  --strong: #ffffff; /* 18.59:1 */
+  --fg: #d6d4cd;     /* 12.53:1 */
+  --muted: #a9a79e;  /*  7.71:1 */
+  --label: #8a877e;  /*  5.18:1 */
+  --rule: #2f2d27;
 }
 
 * { box-sizing: border-box; }
@@ -55,6 +57,13 @@ a {
 a:hover {
   text-decoration-color: var(--strong);
   color: var(--strong);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--strong);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 .page {

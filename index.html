@@ -3,9 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>David Liu</title>
-  <meta name="description" content="Software engineering at Western. Founder of Tethos.">
+  <title>David Liu — Engineer, Founder</title>
+  <meta name="description" content="Software engineering at Western, Ivey HBA. Founder of Tethos, a nonprofit dev studio with 100+ devs. Building TSI Platform and BumBot.">
+  <link rel="canonical" href="https://davidliu.work/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="David Liu">
+  <meta property="og:url" content="https://davidliu.work/">
+  <meta property="og:title" content="David Liu — Engineer, Founder">
+  <meta property="og:description" content="Software engineering at Western, Ivey HBA. Founder of Tethos, a nonprofit dev studio with 100+ devs. Building TSI Platform and BumBot.">
+  <meta property="og:image" content="https://davidliu.work/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="David Liu — Engineer, Founder. davidliu.work">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@davidliu8473">
+  <meta name="twitter:creator" content="@davidliu8473">
+  <meta name="twitter:title" content="David Liu — Engineer, Founder">
+  <meta name="twitter:description" content="Software engineering at Western, Ivey HBA. Founder of Tethos, a nonprofit dev studio with 100+ devs.">
+  <meta name="twitter:image" content="https://davidliu.work/og.png">
+
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
+  <link rel="preload" href="/fonts/TestSohne-Buch.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
   <script>
     (function () {
@@ -165,13 +185,6 @@
     </section>
   </main>
 
-  <script>
-    document.querySelector('.theme-toggle').addEventListener('click', function () {
-      var current = document.documentElement.getAttribute('data-theme');
-      var next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-    });
-  </script>
+  <script src="/theme.js"></script>
 </body>
 </html>

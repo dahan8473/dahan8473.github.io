@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kunlun — David Liu</title>
+  <meta name="description" content="Kunlun: a bilingual clothing brand built on Shan Hai Jing mythology. Next.js 15, Stripe, Supabase. Design system, storefront, and myth written from scratch.">
+  <link rel="canonical" href="https://davidliu.work/kunlun/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="David Liu">
+  <meta property="og:url" content="https://davidliu.work/kunlun/">
+  <meta property="og:title" content="Kunlun — bilingual clothing brand">
+  <meta property="og:description" content="A clothing brand built on Shan Hai Jing mythology. Traditional Chinese and English as parallel voices. Next.js 15, Stripe, Supabase.">
+  <meta property="og:image" content="https://davidliu.work/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="David Liu — Engineer, Founder. davidliu.work">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@davidliu8473">
+  <meta name="twitter:creator" content="@davidliu8473">
+  <meta name="twitter:title" content="Kunlun — bilingual clothing brand">
+  <meta name="twitter:description" content="A clothing brand built on Shan Hai Jing mythology. Traditional Chinese and English as parallel voices.">
+  <meta name="twitter:image" content="https://davidliu.work/og.png">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
+  <link rel="preload" href="/fonts/TestSohne-Buch.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    (function () {
+      var stored = localStorage.getItem('theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = stored || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <button class="theme-toggle" aria-label="Toggle theme" type="button">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
+
+  <main class="page">
+    <a href="/" class="back">← David Liu</a>
+
+    <header class="header">
+      <div class="identity">
+        <p class="name">Kunlun</p>
+        <p class="title">Clothing Brand</p>
+      </div>
+      <p class="tagline">崑崙. A clothing brand built on Chinese mythology, not borrowed from it. Storefront, design system, and myth written from scratch. Pre-launch.</p>
+    </header>
+
+    <section class="section">
+      <p class="label">Context</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Premise</p></div>
+          <div class="desc">
+            <p>Heritage brands usually translate the culture for the buyer. Kunlun doesn't.</p>
+            <p>Traditional Chinese and English run as parallel voices, each carrying what the other can't.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Source</p></div>
+          <div class="desc">
+            <p>Shan Hai Jing and Daoist cosmology. Kunlun is the axis mountain.</p>
+            <p>Products are named for places on it: Kaiming the gatekeeper, Yaochi the jade pool, Liusha the shifting sands.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Structure</p></div>
+          <div class="desc">
+            <p>Drops are tiers of an ascent, not seasons.</p>
+            <p>Liangfeng (I), Xuanpu (II), Tianting (III). You climb rather than restock.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="label">Build</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Design System</p></div>
+          <div class="desc">
+            <p><code>DESIGN.md</code> is the source of truth every component defers to.</p>
+            <p>Specifies script (Traditional, never Simplified), register (literary, between classical and vernacular), and translation direction per context.</p>
+            <p>Myth copy is Chinese-first, English footnoted. Navigation and cart are English-first. Product names are co-equal.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Storefront</p></div>
+          <div class="desc">
+            <p>Next.js 15 App Router. Nested drop routes down to per-colorway product pages.</p>
+            <p>Stripe Checkout for payment, Supabase for newsletter and preorder capture, Resend for transactional mail.</p>
+            <p>Every third-party call degrades gracefully, so the site runs end-to-end with no keys set.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Motion</p></div>
+          <div class="desc">
+            <p>Lenis for scroll. The brief was "the pace of mist, not the pace of a feed."</p>
+            <p>Negative space is treated as a material rather than as padding.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="label">Stack</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Frontend</p></div>
+          <div class="desc"><p>Next.js 15, React 19, TypeScript, Tailwind CSS, Lenis.</p></div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Commerce</p></div>
+          <div class="desc"><p>Stripe Checkout. Supabase. Resend. Middleware password gate for pre-launch.</p></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="socials">
+        <a href="https://github.com/dahan8473" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+          </svg>
+        </a>
+        <a href="https://x.com/davidliu8473" aria-label="X">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <a href="https://www.linkedin.com/in/davidmakesmoves" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/>
+            <rect x="2" y="9" width="4" height="12"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+        </a>
+        <a href="mailto:davidliu8473@gmail.com" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </a>
+      </div>
+      <div class="footer-resume">
+        <a href="/resume-swe.pdf">resume (swe)</a>
+        <a href="/resume-pm.pdf">resume (pm)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+</body>
+</html>

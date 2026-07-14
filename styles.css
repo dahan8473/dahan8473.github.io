@@ -153,13 +153,10 @@ button:focus-visible {
   line-height: 1.4;
 }
 .role .org { color: var(--strong); }
-.role .org a { text-decoration: none; color: inherit; }
-.role .org a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 0.5px;
-  text-decoration-color: var(--strong);
-}
+/* Linked entries carry a rest-state underline so a reader can tell which rows
+   open a case study. Without it, linked and unlinked orgs look identical. */
+.role .org a { color: inherit; text-decoration-color: var(--rule); }
+.role .org a:hover { text-decoration-color: var(--strong); }
 .role .position { color: var(--fg); }
 .role .date { color: var(--muted); }
 
@@ -222,6 +219,12 @@ button:focus-visible {
 
 /* Tagline (subpage header) */
 .tagline { color: var(--muted); max-width: 62ch; }
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+  color: var(--fg);
+}
 
 /* Theme toggle */
 .theme-toggle {

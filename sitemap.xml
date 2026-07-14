@@ -8,4 +8,16 @@
     <loc>https://davidliu.work/tethos/</loc>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://davidliu.work/dashboard/</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://davidliu.work/rag/</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://davidliu.work/kunlun/</loc>
+    <priority>0.8</priority>
+  </url>
 </urlset>

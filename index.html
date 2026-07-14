@@ -27,6 +27,31 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
   <link rel="preload" href="/fonts/TestSohne-Buch.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "David Liu",
+    "url": "https://davidliu.work/",
+    "jobTitle": "Engineer, Founder",
+    "email": "mailto:davidliu8473@gmail.com",
+    "alumniOf": {
+      "@type": "CollegeOrUniversity",
+      "name": "University of Western Ontario"
+    },
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Tethos",
+      "url": "https://tethos.ca"
+    },
+    "sameAs": [
+      "https://github.com/dahan8473",
+      "https://x.com/davidliu8473",
+      "https://www.linkedin.com/in/davidmakesmoves"
+    ]
+  }
+  </script>
   <script>
     (function () {
       var stored = localStorage.getItem('theme');
@@ -96,7 +121,29 @@
           </div>
           <div class="desc">
             <p>Solo-built full-stack platform.</p>
-            <p>400+ users, 22 endpoints, 3D dashboard.</p>
+            <p>400+ users, 50+ API routes, 22 migrations.</p>
+          </div>
+        </article>
+
+        <article class="entry">
+          <div class="role">
+            <p class="org"><a href="dashboard/">3D Game Dashboard</a></p>
+            <p class="date">2025 — Present</p>
+          </div>
+          <div class="desc">
+            <p>The member dashboard is a walkable island.</p>
+            <p>Procedural terrain, baked height grid, LLM-backed NPCs.</p>
+          </div>
+        </article>
+
+        <article class="entry">
+          <div class="role">
+            <p class="org"><a href="rag/">RAG Microservice</a></p>
+            <p class="date">2025</p>
+          </div>
+          <div class="desc">
+            <p>Drive and Notion indexed into pgvector.</p>
+            <p>Two-signal delta re-indexing. Cited answers.</p>
           </div>
         </article>
 
@@ -156,11 +203,12 @@
       <div class="entries">
         <article class="entry">
           <div class="role">
-            <p class="org">Kunlun</p>
+            <p class="org"><a href="kunlun/">Kunlun</a></p>
             <p class="date">2026</p>
           </div>
           <div class="desc">
-            <p>Clothing brand.</p>
+            <p>Clothing brand built on Chinese mythology.</p>
+            <p>Bilingual design system, Next.js storefront.</p>
           </div>
         </article>
 

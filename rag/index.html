@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Microservice — David Liu</title>
+  <meta name="description" content="A FastAPI retrieval service indexing Google Drive and Notion into pgvector. Two-signal delta re-indexing, sentence-aware chunking, cited answers.">
+  <link rel="canonical" href="https://davidliu.work/rag/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="David Liu">
+  <meta property="og:url" content="https://davidliu.work/rag/">
+  <meta property="og:title" content="RAG Microservice — FastAPI + pgvector">
+  <meta property="og:description" content="Indexes Google Drive and Notion into pgvector. Two-signal delta re-indexing so unchanged docs never pay to re-embed.">
+  <meta property="og:image" content="https://davidliu.work/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="David Liu — Engineer, Founder. davidliu.work">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@davidliu8473">
+  <meta name="twitter:creator" content="@davidliu8473">
+  <meta name="twitter:title" content="RAG Microservice — FastAPI + pgvector">
+  <meta name="twitter:description" content="Indexes Google Drive and Notion into pgvector. Two-signal delta re-indexing so unchanged docs never pay to re-embed.">
+  <meta name="twitter:image" content="https://davidliu.work/og.png">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
+  <link rel="preload" href="/fonts/TestSohne-Buch.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    (function () {
+      var stored = localStorage.getItem('theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = stored || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <button class="theme-toggle" aria-label="Toggle theme" type="button">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
+
+  <main class="page">
+    <a href="/" class="back">← David Liu</a>
+
+    <header class="header">
+      <div class="identity">
+        <p class="name">RAG Microservice</p>
+        <p class="title">FastAPI · pgvector</p>
+      </div>
+      <p class="tagline">Ask <a href="/tethos/">Tethos</a>'s internal documents a question and get a cited answer. The interesting problem isn't retrieval, it's not re-embedding the 95% of documents that didn't change.</p>
+    </header>
+
+    <section class="section">
+      <p class="label">Context</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Problem</p></div>
+          <div class="desc">
+            <p>Institutional knowledge lives across a Drive folder tree and a Notion workspace, and nobody reads either.</p>
+            <p>New executives ask the same questions every September.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Shape</p></div>
+          <div class="desc">
+            <p>A standalone service, not a feature of the platform. It's containerized and deployed on its own so the portal can call it and never own its dependencies.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="label">Build</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Ingest</p></div>
+          <div class="desc">
+            <p>Walks a Drive folder tree recursively, holding a visited set so a cyclic shortcut can't trap the crawler. Notion is crawled breadth-first from a root page, handling eleven block types.</p>
+            <p>Both land in one <code>documents</code> table, with Notion IDs namespaced so the two sources coexist.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">The Hard Part</p></div>
+          <div class="desc">
+            <p>Embedding is the expensive step. Re-embedding an unchanged 50-chunk document is 50 API calls for no new information.</p>
+            <p>So re-indexing gates on two signals, not one: Drive's <code>modifiedTime</code> and a SHA-256 hash of the exported text. A doc whose timestamp moved because someone left a comment, but whose text is byte-identical, is skipped by the hash. A doc whose text changed under a stale timestamp is still caught. Either signal alone leaks.</p>
+            <p>The endpoint reports <code>documents_processed</code> against <code>documents_skipped</code>, so it tells you its own cache hit rate.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Writes</p></div>
+          <div class="desc">
+            <p>Updating a document is upsert-then-replace: delete its chunks, re-insert them, all in one transaction that rolls back on failure. A doc is never left half-chunked.</p>
+            <p>Chunk identity is deliberately not preserved. Boundaries shift when the text shifts, so a chunk-level diff would be lying to itself.</p>
+            <p>Failures are per-document, so one bad export can't abort a 200-document crawl.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Retrieval</p></div>
+          <div class="desc">
+            <p>Sentence-aware chunking at ~1000 characters with 200 characters of overlap, carrying the previous chunk's trailing sentences so a fact split across a boundary survives.</p>
+            <p>Query embeds, pulls the top 6 chunks by vector distance, and answers with titles and URLs attached. If retrieval comes back empty the service refuses to guess.</p>
+            <p>Four routing modes trade cost against reasoning, so a cheap question doesn't buy an expensive model.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="label">Stack</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Service</p></div>
+          <div class="desc"><p>Python, FastAPI, Pydantic, Docker, Cloud Run.</p></div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Retrieval</p></div>
+          <div class="desc"><p>PostgreSQL with pgvector. OpenAI text-embedding-3-small, 1536 dimensions.</p></div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Sources</p></div>
+          <div class="desc"><p>Google Drive API. Notion API.</p></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="socials">
+        <a href="https://github.com/dahan8473" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+          </svg>
+        </a>
+        <a href="https://x.com/davidliu8473" aria-label="X">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <a href="https://www.linkedin.com/in/davidmakesmoves" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/>
+            <rect x="2" y="9" width="4" height="12"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+        </a>
+        <a href="mailto:davidliu8473@gmail.com" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </a>
+      </div>
+      <div class="footer-resume">
+        <a href="/resume-swe.pdf">resume (swe)</a>
+        <a href="/resume-pm.pdf">resume (pm)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+</body>
+</html>

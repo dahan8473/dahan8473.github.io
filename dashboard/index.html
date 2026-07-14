@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Game Dashboard — David Liu</title>
+  <meta name="description" content="A React Three Fiber world used as the TSI member dashboard. Procedural FBM terrain, a baked height grid for 60fps ground-follow, and a physically-arced day/night cycle.">
+  <link rel="canonical" href="https://davidliu.work/dashboard/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="David Liu">
+  <meta property="og:url" content="https://davidliu.work/dashboard/">
+  <meta property="og:title" content="3D Game Dashboard — React Three Fiber">
+  <meta property="og:description" content="Procedural FBM terrain, a baked 257x257 height grid for 60fps ground-follow, and a physically-arced day/night cycle. The member dashboard is a walkable island.">
+  <meta property="og:image" content="https://davidliu.work/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="David Liu — Engineer, Founder. davidliu.work">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@davidliu8473">
+  <meta name="twitter:creator" content="@davidliu8473">
+  <meta name="twitter:title" content="3D Game Dashboard — React Three Fiber">
+  <meta name="twitter:description" content="Procedural FBM terrain, a baked height grid for 60fps ground-follow, and a physically-arced day/night cycle.">
+  <meta name="twitter:image" content="https://davidliu.work/og.png">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
+  <link rel="preload" href="/fonts/TestSohne-Buch.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    (function () {
+      var stored = localStorage.getItem('theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = stored || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <button class="theme-toggle" aria-label="Toggle theme" type="button">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
+
+  <main class="page">
+    <a href="/" class="back">← David Liu</a>
+
+    <header class="header">
+      <div class="identity">
+        <p class="name">3D Game Dashboard</p>
+        <p class="title">React Three Fiber</p>
+      </div>
+      <p class="tagline">The <a href="/tethos/">Tethos</a> member dashboard is a walkable island. You are a 2D sprite on a billboard in a 3D world, and the buildings are the app's routes.</p>
+    </header>
+
+    <section class="section">
+      <p class="label">Context</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Why</p></div>
+          <div class="desc">
+            <p>A member dashboard is usually a table of links nobody opens.</p>
+            <p>Making it a place people walk through turns navigation into something they'd do for its own sake.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Constraint</p></div>
+          <div class="desc">
+            <p>It has to hold 60fps on an 8GB M1 and on student Chromebooks.</p>
+            <p>Most of the interesting work below is a consequence of that.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="label">Build</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Terrain</p></div>
+          <div class="desc">
+            <p>Value noise under 4-octave FBM produces rolling hills across a 40-unit island.</p>
+            <p>Buildings and paths flatten the ground beneath them, then ramp smoothly back to noise so nothing sits on a visible seam.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">The Hard Part</p></div>
+          <div class="desc">
+            <p>Every entity ground-follows, so each samples terrain height per frame. Player, ghosts, NPCs and filler NPCs together ran roughly 960 FBM calls a second, and each FBM is 16 noise samples. Around 15,000 sin/floor calls a second just to stand on the ground. Fine on desktop, hot on an M1.</p>
+            <p>So the final height is baked once into a 257×257 grid at module load, and runtime sampling is a bilinear lookup: 4 array reads and 4 lerps. About 50× cheaper.</p>
+            <p>The subtlety is that it bakes the <em>post-flattening</em> height, not the raw noise, so building and path corrections survive the optimization. The grid fills lazily on first sample to keep the bake off the SSR path.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Sky</p></div>
+          <div class="desc">
+            <p>The sun follows a real arc rather than a spin: elevation is <code>sin(s·π)·60°</code>, tracking east to south to west on a northern-hemisphere convention. The moon runs the opposite arc.</p>
+            <p>Sky colour interpolates between time-of-day keys, including the awkward night-to-dawn wrap from hour 21 back to 5.</p>
+            <p>A coarser four-phase signal (dawn, day, dusk, night) lets ambient life swap creatures without re-rendering on every hour tick.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Rendering</p></div>
+          <div class="desc">
+            <p>Characters are 2D sprites on billboards inside the 3D scene, in the vein of Dave the Diver. Animation is UV-window scrolling across a 3×10 sheet with nearest-neighbour filtering and no mipmaps, because pixel art must not be smoothed.</p>
+            <p>The walk cycle is driven by <em>measured</em> speed, not intended speed, so an avatar pinned against the world boundary slows its legs instead of moon-walking.</p>
+            <p>Nature GLBs draw through instanced meshes, one instance group per sub-mesh, cutting draws by roughly 5–15×.</p>
+          </div>
+        </article>
+
+        <article class="entry">
+          <div class="role"><p class="org">Empty World</p></div>
+          <div class="desc">
+            <p>There is no multiplayer. There is also never an empty world.</p>
+            <p>Members' positions heartbeat every 30 seconds, and the world repopulates itself with the last 10 real members seen in the past 24 hours, rendered as translucent ghosts with a "last seen 3h ago" nameplate.</p>
+            <p>Ghosts are desaturated to 20% against the NPCs' 50%, so the past reads as the past.</p>
+          </div>
+        </article>
+
+        <article class="entry">
+          <div class="role"><p class="org">NPCs</p></div>
+          <div class="desc">
+            <p>NPCs are LLM-backed with per-user memory that persists across sessions.</p>
+            <p>The memory is extracted from the model's own reply: it appends a structured block that gets stripped from the visible text, parsed, and set-unioned into stored state. It only writes on success, so a failed call can't wipe what it knows about you.</p>
+            <p>Three gates protect the bill: a profanity check before any spend, a 30-message rate limit, and a monthly cap that silently degrades to canned dialogue. The player never sees an error, the NPC just gets less chatty.</p>
+          </div>
+        </article>
+
+        <article class="entry">
+          <div class="role"><p class="org">Budget</p></div>
+          <div class="desc">
+            <p>Frame cost is measured, not guessed. Shadows cost about 7 FPS on an M1 (60 down to 53), bloom about 12, vignette half a frame.</p>
+            <p>So shadows ship off, bloom is opt-in, and distant trees drop shadow casting entirely because fog hides the loss.</p>
+            <p>Devices reporting 4GB or less auto-enter lite mode.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="label">Stack</p>
+      <div class="entries">
+        <article class="entry">
+          <div class="role"><p class="org">Rendering</p></div>
+          <div class="desc"><p>React Three Fiber, drei, three.js, TypeScript.</p></div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">App</p></div>
+          <div class="desc"><p>Next.js 16, React 19, Supabase, Zod. Claude Haiku for NPC dialogue.</p></div>
+        </article>
+        <article class="entry">
+          <div class="role"><p class="org">Scale</p></div>
+          <div class="desc"><p>~66k lines across the web app. 50+ API routes, 22 migrations.</p></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="socials">
+        <a href="https://github.com/dahan8473" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+          </svg>
+        </a>
+        <a href="https://x.com/davidliu8473" aria-label="X">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <a href="https://www.linkedin.com/in/davidmakesmoves" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/>
+            <rect x="2" y="9" width="4" height="12"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+        </a>
+        <a href="mailto:davidliu8473@gmail.com" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </a>
+      </div>
+      <div class="footer-resume">
+        <a href="/resume-swe.pdf">resume (swe)</a>
+        <a href="/resume-pm.pdf">resume (pm)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+</body>
+</html>

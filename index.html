@@ -220,12 +220,19 @@
       <div class="entries">
         <article class="entry">
           <div class="role">
-            <p class="org">Guitar</p>
+            <p class="org">
+              <button class="org-toggle" type="button" aria-expanded="false" aria-controls="guitar-tracks-wrap">
+                Guitar
+                <svg class="chev" viewBox="0 0 8 10" fill="currentColor" aria-hidden="true"><path d="M1 0l6 5-6 5z"/></svg>
+              </button>
+            </p>
           </div>
           <div class="desc">
             <p>National competitor. Performed at Carnegie Hall.</p>
             <p>2nd Place, NW Guitar Competition.</p>
-            <div class="tracks" id="guitar-tracks"></div>
+            <div class="expand" id="guitar-tracks-wrap">
+              <div class="tracks" id="guitar-tracks"></div>
+            </div>
           </div>
         </article>
 

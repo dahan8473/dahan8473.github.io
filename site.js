@@ -18,9 +18,22 @@
     { src: '/media/guitar/frog-galliard.mp3', title: 'The Frog Galliard · Dowland', dur: '1:59' }
   ];
 
+  var players = [];
+
+  // Expandable entries: any .org-toggle opens the element named by aria-controls.
+  // Collapsing stops audio so nothing plays invisibly.
+  document.querySelectorAll('.org-toggle').forEach(function (btn) {
+    var wrap = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!wrap) return;
+    btn.addEventListener('click', function () {
+      var open = wrap.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(open));
+      if (!open) players.forEach(function (p) { p.stop(); });
+    });
+  });
+
   var mount = document.getElementById('guitar-tracks');
   if (mount && TRACKS.length) {
-    var players = [];
     TRACKS.forEach(function (t) {
       var row = document.createElement('div');
       row.className = 'track';

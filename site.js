@@ -11,8 +11,12 @@
   }
 
   // Guitar recordings. Drop files in /media/guitar/ and list them here.
-  // { src: '/media/guitar/alhambra.mp3', title: 'Recuerdos de la Alhambra', dur: '2:47' }
-  var TRACKS = [];
+  var TRACKS = [
+    { src: '/media/guitar/capricho-arabe.mp3', title: 'Capricho Árabe · Tárrega', dur: '5:28' },
+    { src: '/media/guitar/tango-en-skai.mp3', title: 'Tango en Skaï · Dyens', dur: '2:22' },
+    { src: '/media/guitar/marieta.mp3', title: 'Marieta · Tárrega', dur: '2:06' },
+    { src: '/media/guitar/frog-galliard.mp3', title: 'The Frog Galliard · Dowland', dur: '1:59' }
+  ];
 
   var mount = document.getElementById('guitar-tracks');
   if (mount && TRACKS.length) {

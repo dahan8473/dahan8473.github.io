@@ -42,7 +42,8 @@ html, body {
   transition: background 120ms ease, color 120ms ease;
 }
 
-html, body { min-height: 100%; }
+html { min-height: 100%; }
+body { display: flex; flex-direction: column; min-height: 100vh; }
 
 p { margin: 0; }
 
@@ -67,8 +68,9 @@ button:focus-visible {
 }
 
 .page {
+  width: 100%;
   max-width: 1100px;
-  min-height: 100vh;
+  flex: 1 0 auto;
   margin: 0 auto;
   padding: 2rem 4rem;
   display: flex;
@@ -197,6 +199,7 @@ button:focus-visible {
 
 /* Footer */
 .footer {
+  width: 100%;
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 4rem 2.5rem;
@@ -225,6 +228,115 @@ code {
   font-size: 0.92em;
   color: var(--fg);
 }
+
+/* Intro (home) */
+.intro .bio { color: var(--fg); }
+.intro .now { color: var(--muted); margin-top: 0.2rem; }
+.now-k {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--label);
+  margin-right: 0.9rem;
+}
+
+/* Portrait (home header) */
+.portrait {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 5px;
+  filter: grayscale(1);
+  margin-bottom: 0.9rem;
+  transition: filter 200ms ease;
+}
+.portrait:hover { filter: none; }
+
+/* Sub-links under a build entry */
+.sublinks { margin-top: 0.15rem; }
+.sublinks .arrow { color: var(--label); }
+
+/* Guitar tracks */
+.tracks { margin-top: 0.6rem; max-width: 320px; }
+.track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0 0.5rem;
+}
+.track button {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+}
+.track button:hover { color: var(--strong); }
+.track button svg { width: 9px; height: 11px; display: block; }
+.track .pa { display: none; }
+.track.playing .pl { display: none; }
+.track.playing .pa { display: block; }
+.t-title { color: var(--fg); }
+.t-dur {
+  margin-left: auto;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.t-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--rule);
+}
+.t-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--strong);
+  transition: width 200ms linear;
+}
+.eq {
+  display: none;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10px;
+}
+.track.playing .eq { display: inline-flex; }
+.eq i {
+  width: 2px;
+  height: 4px;
+  background: var(--strong);
+  animation: eq 900ms ease-in-out infinite;
+}
+.eq i:nth-child(2) { animation-delay: 150ms; }
+.eq i:nth-child(3) { animation-delay: 300ms; }
+@keyframes eq {
+  0%, 100% { height: 3px; }
+  50% { height: 10px; }
+}
+
+/* Hover photo reveal */
+.hover-photo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 220px;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  z-index: 50;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
+.hover-photo.on { opacity: 1; }
+
+/* Home footer note */
+.foot-note { color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* Theme toggle */
 .theme-toggle {
@@ -282,5 +394,5 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
 }

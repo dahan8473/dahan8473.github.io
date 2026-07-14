@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>David Liu — Engineer, Founder</title>
-  <meta name="description" content="Software engineering at Western, Ivey HBA. Founder of Tethos, a nonprofit dev studio with 100+ devs. Building TSI Platform and BumBot.">
+  <meta name="description" content="Software engineering at Western, Ivey HBA. Founder of Tethos, a nonprofit dev studio with 100+ devs. Building the Tethos platform and BumBot.">
   <link rel="canonical" href="https://davidliu.work/">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="David Liu">
   <meta property="og:url" content="https://davidliu.work/">
   <meta property="og:title" content="David Liu — Engineer, Founder">
-  <meta property="og:description" content="Software engineering at Western, Ivey HBA. Founder of Tethos, a nonprofit dev studio with 100+ devs. Building TSI Platform and BumBot.">
+  <meta property="og:description" content="Software engineering at Western, Ivey HBA. Founder of Tethos, a nonprofit dev studio with 100+ devs. Building the Tethos platform and BumBot.">
   <meta property="og:image" content="https://davidliu.work/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -75,6 +75,9 @@
   <main class="page">
     <header class="header">
       <div class="identity">
+        <!-- Drop media/portrait.jpg in the repo, then uncomment:
+        <img class="portrait" src="/media/portrait.jpg" alt="David Liu" width="56" height="56">
+        -->
         <p class="name">David Liu</p>
         <p class="title">Engineer, Founder</p>
       </div>
@@ -111,39 +114,22 @@
       </div>
     </header>
 
+    <div class="intro">
+      <p class="bio">Software engineering at Western. Ivey HBA candidate. Founder of <a href="tethos/">Tethos</a>.</p>
+      <p class="now"><span class="now-k">Now</span>Shipping BumBot beta and Kunlun drop 001.</p>
+    </div>
+
     <section class="section">
       <p class="label">Build</p>
       <div class="entries">
         <article class="entry">
           <div class="role">
-            <p class="org"><a href="tethos/">TSI Platform</a></p>
+            <p class="org"><a href="tethos/">Tethos Platform</a></p>
             <p class="date">2025 — Present</p>
           </div>
           <div class="desc">
-            <p>Solo-built full-stack platform.</p>
-            <p>400+ users, 50+ API routes, 22 migrations.</p>
-          </div>
-        </article>
-
-        <article class="entry">
-          <div class="role">
-            <p class="org"><a href="dashboard/">3D Game Dashboard</a></p>
-            <p class="date">2025 — Present</p>
-          </div>
-          <div class="desc">
-            <p>The member dashboard is a walkable island.</p>
-            <p>Procedural terrain, baked height grid, LLM-backed NPCs.</p>
-          </div>
-        </article>
-
-        <article class="entry">
-          <div class="role">
-            <p class="org"><a href="rag/">RAG Microservice</a></p>
-            <p class="date">2025</p>
-          </div>
-          <div class="desc">
-            <p>Drive and Notion indexed into pgvector.</p>
-            <p>Two-signal delta re-indexing. Cited answers.</p>
+            <p>Solo-built full-stack platform. 400+ users, 50+ API routes, 22 migrations.</p>
+            <p class="sublinks"><span class="arrow">→</span> <a href="dashboard/">3D game dashboard</a> · <a href="rag/">RAG service</a></p>
           </div>
         </article>
 
@@ -154,6 +140,17 @@
           </div>
           <div class="desc">
             <p>Job application automation.</p>
+          </div>
+        </article>
+
+        <article class="entry">
+          <div class="role">
+            <p class="org"><a href="kunlun/">Kunlun</a></p>
+            <p class="date">2026</p>
+          </div>
+          <div class="desc">
+            <p>Clothing brand built on Chinese mythology.</p>
+            <p>Bilingual design system, Next.js storefront.</p>
           </div>
         </article>
       </div>
@@ -170,7 +167,7 @@
           </div>
           <div class="desc">
             <p>Federally incorporated nonprofit.</p>
-            <p>100+ devs across 2 chapters. 20+ projects shipped.</p>
+            <p>100+ devs across 2 chapters. 20+ projects, $300k+ in delivered work.</p>
           </div>
         </article>
 
@@ -203,12 +200,12 @@
       <div class="entries">
         <article class="entry">
           <div class="role">
-            <p class="org"><a href="kunlun/">Kunlun</a></p>
-            <p class="date">2026</p>
+            <p class="org">Guitar</p>
           </div>
           <div class="desc">
-            <p>Clothing brand built on Chinese mythology.</p>
-            <p>Bilingual design system, Next.js storefront.</p>
+            <p>National competitor. Performed at Carnegie Hall.</p>
+            <p>2nd Place, NW Guitar Competition.</p>
+            <div class="tracks" id="guitar-tracks"></div>
           </div>
         </article>
 
@@ -221,18 +218,24 @@
 
         <article class="entry">
           <div class="role">
-            <p class="org">Guitar</p>
+            <p class="org">Photography</p>
           </div>
           <div class="desc">
-            <p>National Competitor.</p>
-            <p>Performed at Carnegie Hall.</p>
-            <p>2nd Place, NW Guitar Competition.</p>
+            <p>Shot on Fujifilm.</p>
           </div>
         </article>
       </div>
     </section>
   </main>
 
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="foot-note">London, ON · <span id="clock">--:--</span></p>
+      <p class="foot-note">Hand-written HTML. Zero dependencies.</p>
+    </div>
+  </footer>
+
   <script src="/theme.js"></script>
+  <script src="/site.js"></script>
 </body>
 </html>

@@ -40,8 +40,7 @@ html, body {
   transition: background 120ms ease, color 120ms ease;
 }
 
-html, body { height: 100%; }
-body { overflow: hidden; }
+html, body { min-height: 100%; }
 
 p { margin: 0; }
 
@@ -60,14 +59,13 @@ a:hover {
 
 .page {
   max-width: 1100px;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0 auto;
   padding: 2rem 4rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   box-sizing: border-box;
-  overflow: hidden;
 }
 
 /* Back link (subpages) */
@@ -191,6 +189,31 @@ a:hover {
 .socials a:hover { color: var(--strong); }
 .socials svg { width: 16px; height: 16px; display: block; }
 
+/* Footer */
+.footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 4rem 2.5rem;
+  box-sizing: border-box;
+}
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+.footer-resume {
+  display: flex;
+  gap: 1.25rem;
+}
+.footer-resume a { color: var(--muted); text-decoration-color: var(--muted); }
+.footer-resume a:hover { color: var(--strong); text-decoration-color: var(--strong); }
+
+/* Tagline (subpage header) */
+.tagline { color: var(--muted); max-width: 62ch; }
+
 /* Theme toggle */
 .theme-toggle {
   position: fixed;
@@ -218,12 +241,15 @@ a:hover {
 
 /* Mobile */
 @media (max-width: 880px) {
-  body { overflow: auto; }
   .page {
-    height: auto;
-    min-height: 100vh;
     padding: 2.5rem 1.5rem;
     gap: 2rem;
+  }
+  .footer { padding: 0 1.5rem 2.5rem; }
+  .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
   .header,
   .section {

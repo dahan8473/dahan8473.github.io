@@ -229,9 +229,35 @@ code {
   color: var(--fg);
 }
 
+/* First screen (home): identity + intro + Build fill the viewport,
+   Lead peeks above the fold to invite the scroll. */
+.fold {
+  min-height: calc(100vh - 10rem);
+  min-height: calc(100svh - 10rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3rem;
+}
+.fold .identity .name { font-size: 20px; }
+.fold .entries { gap: 1.15rem; }
+
 /* Intro (home) */
-.intro .bio { color: var(--fg); }
-.intro .now { color: var(--muted); margin-top: 0.2rem; }
+.intro .bio { color: var(--fg); font-size: 16px; max-width: 52ch; }
+.intro .now { color: var(--muted); margin-top: 0.35rem; }
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 4.5rem;
+  margin-top: 2.75rem;
+}
+.stat .n {
+  font-size: 20px;
+  color: var(--strong);
+  font-variant-numeric: tabular-nums;
+}
+.stat .l { color: var(--muted); }
 .now-k {
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -369,6 +395,12 @@ code {
     padding: 2.5rem 1.5rem;
     gap: 2rem;
   }
+  .fold {
+    min-height: 0;
+    justify-content: flex-start;
+    gap: 2rem;
+  }
+  .fold .identity .name { font-size: 17px; }
   .footer { padding: 0 1.5rem 2.5rem; }
   .footer-inner {
     flex-direction: column;

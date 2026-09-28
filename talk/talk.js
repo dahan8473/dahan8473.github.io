@@ -896,7 +896,7 @@
     play(el, [
       { transform: 'none' }, { transform: 'rotate(-1.4deg) translateX(-6px)' }, { transform: 'rotate(.9deg)' }, { transform: 'rotate(-.4deg)' }, { transform: 'none' }
     ], { duration: 700, easing: 'ease-out' }).then(() => { el.style.transformOrigin = ''; });
-    await moveHead(tx + 34, ty - 14, 320, SPRING);
+    await moveHead(Math.min(tx + 34, innerWidth - HW - 8), Math.max(8, ty - 14), 320, SPRING);
   }
   async function roam(el) {
     const c = contentRect(el);

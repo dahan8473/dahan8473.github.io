@@ -72,7 +72,6 @@
     // Fourth wall
     devtools: ['woah woah woah. what are you doing', "close that. i'm shy", 'we literally just met today', "okay fine. it's hand-written html. nothing to see 😭"],
     devtoolsAgain: 'inspect element again? we talked about this',
-    devtoolsAlready: 'you had inspect element open before i even got here. bold',
     devtoolsBye: 'thank you. that was a lot',
     exit: "wait where are you going. i didn't even show you the 3D island",
     back: "oh you're back. i didn't move. i can't, i'm a head",
@@ -194,7 +193,7 @@
   let HW, HH, NW, NH;
   function measure() {
     const sm = innerWidth < 640;
-    HW = sm ? 64 : 84;
+    HW = sm ? 70 : 96;
     HH = Math.round((HW * HEAD.h) / HEAD.w);
     NW = sm ? 46 : 58;
     NH = Math.round((NW * hg.h) / hg.w);
@@ -1068,11 +1067,12 @@
   }
 
   // Devtools docked to the window shrink the viewport while the window and
-  // the zoom level stay the same. Nothing else does that.
+  // the zoom level stay the same. So does a browser sidebar (close enough, the
+  // joke still lands) and a phone keyboard (not close enough), so desktop only
+  // and never while typing.
   const dt = { open: false, iw: innerWidth, ih: innerHeight, ow: outerWidth, oh: outerHeight, dpr: devicePixelRatio, timers: [], covering: false };
-  const devtoolsAtLoad = Number.isInteger(devicePixelRatio) && (outerWidth - innerWidth > 260 || outerHeight - innerHeight > 300);
 
-  async function devtoolsOpened(already) {
+  async function devtoolsOpened() {
     dt.open = true;
     interrupt();
     wake();
@@ -1088,7 +1088,7 @@
     }
     const seen = S.once.includes('devtools');
     if (!seen) { S.once.push('devtools'); save(); }
-    quip(already ? LINES.devtoolsAlready : seen ? LINES.devtoolsAgain : LINES.devtools[0], 8000);
+    quip(seen ? LINES.devtoolsAgain : LINES.devtools[0], 8000);
     if (seen) return;
     const later = (ms, line) => dt.timers.push(setTimeout(() => dt.open && quip(line, 8000), ms));
     later(2800, LINES.devtools[1]);
@@ -1109,10 +1109,11 @@
   }
 
   function onResize() {
-    const sameWindow = outerWidth === dt.ow && outerHeight === dt.oh && devicePixelRatio === dt.dpr;
+    const typing = document.activeElement && document.activeElement.matches('input, textarea, [contenteditable]');
+    const sameWindow = fine && !typing && outerWidth === dt.ow && outerHeight === dt.oh && devicePixelRatio === dt.dpr;
     const shrank = dt.iw - innerWidth > 140 || dt.ih - innerHeight > 140;
     const grew = innerWidth - dt.iw > 140 || innerHeight - dt.ih > 140;
-    if (sameWindow && shrank && !dt.open) devtoolsOpened(false);
+    if (sameWindow && shrank && !dt.open) devtoolsOpened();
     else if (sameWindow && grew && dt.open) devtoolsClosed();
     else if (!sameWindow && devicePixelRatio === dt.dpr && outerWidth < dt.ow - 80) react('squish', LINES.squish);
     Object.assign(dt, { iw: innerWidth, ih: innerHeight, ow: outerWidth, oh: outerHeight, dpr: devicePixelRatio });
@@ -1217,7 +1218,6 @@
       actor.classList.add('on');
       play(headBtn, [{ transform: 'scale(0)' }, { transform: 'scale(1.1)', offset: 0.7 }, { transform: 'scale(1)' }], { duration: 320, easing: 'ease-out' });
     }
-    if (devtoolsAtLoad) setTimeout(() => devtoolsOpened(true), S.met ? 1500 : 5500);
     schedule(S.met ? rand(9000, 14000) : 13000);
   }
 

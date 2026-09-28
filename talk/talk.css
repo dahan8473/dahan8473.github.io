@@ -1,0 +1,448 @@
+/* Talking head. Everything is namespaced .dl- so nothing leaks into the site. */
+:root {
+  --talk-accent: #88c0d0;
+  --talk-paper: #fffdf7;
+  --talk-ink: #2b2925;
+  --talk-hl: rgba(136, 192, 208, 0.42);
+}
+[data-theme="dark"] {
+  --talk-paper: #26241f;
+  --talk-ink: #f1efe9;
+  --talk-hl: rgba(136, 192, 208, 0.32);
+}
+
+.dl {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  font-size: 15px;
+}
+.dl [hidden] { display: none !important; }
+@media print { .dl { display: none; } }
+
+/* Head ------------------------------------------------------------------ */
+
+.dl-actor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--hw);
+  height: var(--hh);
+  opacity: 0;
+  will-change: transform;
+}
+.dl-actor.on { opacity: 1; }
+.dl.quiet .dl-actor { scale: 0.8; }
+
+.dl-shadow {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: -12px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.16);
+  filter: blur(3px);
+  animation: dl-shadow 3.2s ease-in-out infinite;
+}
+[data-theme="dark"] .dl-shadow { background: rgba(0, 0, 0, 0.5); }
+
+.dl-head {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  transform-origin: 50% 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+.dl-head:focus-visible { outline: 2px solid var(--strong); outline-offset: 8px; border-radius: 40%; }
+
+.dl-bob { position: absolute; inset: 0; animation: dl-bob 3.2s ease-in-out infinite; }
+.dl-wob { position: absolute; inset: 0; transform-origin: 50% 90%; }
+
+.dl-skull,
+.dl-jaw { position: absolute; inset: 0; }
+.dl-skull { z-index: 2; transform-origin: 18% calc(var(--m) * 100%); }
+.dl-jaw { z-index: 3; }
+.dl-skull img,
+.dl-jaw img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+/* The straight cut: one photo, clipped into a top half and a bottom half. */
+.dl-skull img { clip-path: inset(0 0 calc((1 - var(--m)) * 100%) 0); }
+.dl-jaw img { clip-path: inset(calc(var(--m) * 100%) 0 0 0); }
+
+/* Inside of the mouth, only visible in the gap when the skull lifts. */
+.dl-cavity {
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--cx0) * 100% + 5%);
+  right: calc((1 - var(--cx1)) * 100% + 5%);
+  top: calc((var(--m) - 0.17) * 100%);
+  height: 18%;
+  border-radius: 30% 30% 46% 46% / 30% 30% 70% 70%;
+  background:
+    radial-gradient(ellipse 34% 30% at 50% 100%, #b23a4a 0 98%, transparent 100%),
+    linear-gradient(#120707, #3a1216);
+}
+/* Upper teeth ride on the skull, tucked behind the jaw until it opens. */
+.dl-teeth {
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--mx0) * 100% + 2%);
+  right: calc((1 - var(--mx1)) * 100% + 2%);
+  top: calc(var(--m) * 100% - 1px);
+  height: 3.6%;
+  border-radius: 0 0 5px 5px;
+  background: #f7f3ea;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+}
+.dl-skull img { z-index: 2; }
+
+.dl-blush {
+  position: absolute;
+  z-index: 3;
+  width: 24%;
+  height: 10%;
+  top: calc((var(--m) - 0.15) * 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  background:
+    repeating-linear-gradient(115deg, transparent 0 4px, rgba(200, 50, 80, 0.75) 4px 5.5px),
+    radial-gradient(closest-side, rgba(240, 90, 115, 0.6), rgba(240, 90, 115, 0));
+  -webkit-mask: radial-gradient(closest-side, #000 60%, transparent);
+  mask: radial-gradient(closest-side, #000 60%, transparent);
+}
+.dl-blush.l { left: calc(var(--mx0) * 100% - 19%); }
+.dl-blush.r { left: calc(var(--mx1) * 100% - 5%); }
+.dl.shy .dl-blush { opacity: 1; }
+
+/* Emotes: ! ? thinking dots and sleepy z's pop above the head. */
+.dl-emote {
+  position: absolute;
+  right: -10px;
+  top: -20px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 13px;
+  background: var(--talk-paper);
+  color: var(--talk-ink);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+  font: 700 16px/1 -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  pointer-events: none;
+}
+.dl-emote.on { display: inline-flex; }
+.dl-emote.bang { background: var(--talk-accent); color: #0a0907; }
+.dl-emote.dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: dl-dot 1s ease-in-out infinite;
+}
+.dl-emote.dots i:nth-child(2) { animation-delay: 150ms; }
+.dl-emote.dots i:nth-child(3) { animation-delay: 300ms; }
+.dl-emote.zz { background: none; box-shadow: none; color: var(--muted); font-weight: 400; }
+.dl-emote.zz i { font-style: normal; animation: dl-z 2.4s ease-in infinite; opacity: 0; }
+.dl-emote.zz i:nth-child(2) { animation-delay: 800ms; font-size: 13px; }
+.dl-emote.zz i:nth-child(3) { animation-delay: 1600ms; font-size: 11px; }
+
+/* Hand ------------------------------------------------------------------ */
+
+.dl-hand {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  color: var(--strong);
+  visibility: hidden;
+  will-change: transform;
+}
+.dl-hand.on { visibility: visible; }
+.dl-hand-in { transform-origin: 62% 92%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.16)); }
+.dl-hand svg,
+.dl-hand img { display: block; width: 100%; height: auto; }
+.dl-hand svg path { fill: var(--bg); stroke: currentColor; }
+
+/* Knocking on the glass leaves a ring where the knuckles hit. */
+.dl-ripple {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  margin: -45px 0 0 -45px;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  pointer-events: none;
+}
+
+/* Speech bubble ---------------------------------------------------------- */
+
+.dl-talk {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 290px;
+  pointer-events: auto;
+  transform-origin: var(--tail, 80%) 100%;
+}
+.dl.chat .dl-talk { width: min(380px, calc(100vw - 24px)); }
+
+.dl-bubble {
+  position: relative;
+  min-height: 66px;
+  padding: 20px 26px 20px;
+  border-radius: 34px 30px 32px 36px / 30px 34px 30px 32px;
+  background: var(--talk-paper);
+  color: var(--talk-ink);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.16);
+  line-height: 1.5;
+  cursor: default;
+}
+.dl-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: var(--tail, 80%);
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: inherit;
+  transform: translateX(-50%) rotate(45deg);
+}
+.dl-tag {
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  padding: 3px 12px 4px;
+  border-radius: 999px;
+  background: var(--talk-accent);
+  color: #0a0907;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.08);
+}
+.dl-tools {
+  position: absolute;
+  top: 7px;
+  right: 12px;
+  display: flex;
+  gap: 2px;
+}
+.dl-tools button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.dl-tools button:hover { color: var(--strong); }
+.dl-tools svg { width: 13px; height: 13px; }
+.dl-mute .off { display: none; }
+.dl.muted .dl-mute .on { display: none; }
+.dl.muted .dl-mute .off { display: block; }
+
+.dl-echo {
+  margin: 0 28px 4px 0;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dl-text {
+  margin: 0;
+  min-height: 1.5em;
+  padding-right: 18px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dl-text a { color: inherit; text-decoration-color: var(--talk-accent); }
+.dl-more {
+  position: absolute;
+  right: 20px;
+  bottom: 6px;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--talk-accent);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  animation: dl-more 800ms ease-in-out infinite;
+}
+
+.dl-row { display: none; }
+.dl.chat .dl-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 8px;
+  width: calc(100% - var(--hw) - 14px);
+  min-height: calc(var(--hh) + 18px);
+  padding-top: 18px;
+}
+
+.dl-choices {
+  display: flex;
+  flex-direction: column;
+  padding: 7px 6px;
+  border-radius: 22px;
+  background: var(--talk-paper);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+.dl-choices button {
+  position: relative;
+  padding: 5px 14px 5px 26px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--talk-ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.dl-choices button::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-left: 7px solid var(--talk-accent);
+  opacity: 0;
+  transform: translate(-4px, -50%);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.dl-choices button:hover::before,
+.dl-choices button:focus-visible::before { opacity: 1; transform: translate(0, -50%); }
+.dl-choices button:focus-visible { outline: none; }
+
+.dl-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 4px 4px 16px;
+  border-radius: 999px;
+  background: var(--talk-paper);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+.dl-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--talk-ink);
+  font: inherit;
+  font-size: 14px;
+}
+.dl-form input::placeholder { color: var(--muted); }
+.dl-form button {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--talk-accent);
+  color: #0a0907;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.dl-form button:disabled { opacity: 0.45; cursor: default; }
+.dl-form button svg { width: 14px; height: 14px; }
+.dl-form:focus-within { box-shadow: 0 0 0 1.5px var(--talk-accent), 0 8px 24px rgba(0, 0, 0, 0.14); }
+
+/* Things the hand touches on the page ------------------------------------ */
+
+.dl-held {
+  position: relative;
+  z-index: 60;
+  background: var(--bg);
+  border-radius: 4px;
+  box-shadow: 0 0 0 8px var(--bg), 0 16px 40px 6px rgba(0, 0, 0, 0.2);
+  will-change: transform;
+}
+a.dl-held { display: inline-block; }
+
+.dl-lit {
+  background-image: linear-gradient(var(--talk-hl), var(--talk-hl));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  animation: dl-lit 2600ms ease forwards;
+}
+.dl-lit-box {
+  outline: 1.5px dashed var(--talk-accent);
+  outline-offset: 10px;
+  border-radius: 6px;
+  animation: dl-box 2600ms ease forwards;
+}
+
+@keyframes dl-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes dl-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 1; }
+  50% { transform: scaleX(0.86); opacity: 0.7; }
+}
+@keyframes dl-more {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+@keyframes dl-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-3px); opacity: 1; }
+}
+@keyframes dl-z {
+  0% { transform: translate(0, 4px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translate(10px, -18px); opacity: 0; }
+}
+@keyframes dl-lit {
+  0% { background-size: 0% 46%; }
+  18%, 82% { background-size: 100% 46%; }
+  100% { background-size: 0% 46%; background-position: 100% 88%; }
+}
+@keyframes dl-box {
+  0% { outline-color: transparent; outline-offset: 18px; }
+  15%, 80% { outline-color: var(--talk-accent); outline-offset: 10px; }
+  100% { outline-color: transparent; }
+}
+
+@media (max-width: 640px) {
+  .dl { font-size: 14px; }
+  .dl-talk { width: min(290px, calc(100vw - 24px)); }
+  .dl-bubble { padding: 18px 20px; }
+}

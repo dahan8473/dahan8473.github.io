@@ -29,9 +29,15 @@
   // null, synthesized blips stand in.
   const VOICE = null;
 
-  // The cat. Photos go through `swift tools/cutout.swift thing <photo> media/cat-walk.webp`
-  // (one standing or walking, one lying down). Left null, an outline cat stands in.
-  const PET = null;
+  // The cat. The walk is a sprite cut from video frames
+  // (`swift tools/cutout.swift frames <dir> media/cat/walk.webp`), the poses are
+  // photos (`... thing <photo> media/cat/lie.webp x,y`). Left null, an outline cat stands in.
+  const PET = {
+    walk: { src: '/media/cat/walk.webp', frames: 12, w: 292, h: 223 },
+    lie: { src: '/media/cat/lie.webp', w: 400, h: 215 },
+    sleep: { src: '/media/cat/sleep.webp', w: 400, h: 395 },
+    belly: { src: '/media/cat/belly.webp', w: 400, h: 326 }
+  };
 
   const API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
     ? '/api'
@@ -48,7 +54,7 @@
     introIgnored: "okay i'll let you look around. click me if you want to talk",
     again: 'back again. what else',
     choices: ["i'm a recruiter", 'just looking around', 'skip the small talk'],
-    cat: ['she likes you', "that's meowmeow btw", "okay she's staying there now"],
+    cat: ['she likes you', "that's meowmeow btw", 'she only does that for people she likes'],
     close: "okay. i'll be right here",
     shoo: "fine. i'll stay in my corner 😭",
     poke: ['ow', 'hey', "that's my face", 'okay you can stop now', 'i will remember this'],
@@ -1330,70 +1336,105 @@
   }, 5000);
 
   // ---- The cat ----------------------------------------------------------------
-  // "psst psst psst": she waddles in from the left, plops down and stays.
+  // "psst psst psst": she walks in from the edge of the screen, flops over and
+  // stays. Left alone she curls up and naps; click her and she rolls over.
 
   const CAT = {
     walk: '<svg class="walk" viewBox="0 0 64 44" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 24c-6-2-8-10-4-16" fill="none"/><path class="leg a" d="M18 29v10"/><path class="leg b" d="M24 29v10"/><path class="leg b" d="M36 29v10"/><path class="leg a" d="M42 29v10"/><ellipse class="fill" cx="29" cy="25" rx="18" ry="9"/><path class="fill" d="M45 10l1-9 5 6M52 7l5-6 1 9"/><circle class="fill" cx="51" cy="15" r="8"/><path d="M54 14v1M58.5 17.5l-1 .8" fill="none"/></svg>',
     lie: '<svg class="lie" viewBox="0 0 64 44" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="fill" d="M8 40c0-10 8-17 21-17s21 7 21 17z"/><path d="M10 40c7 3 21 3 27 0" fill="none"/><path class="fill" d="M42 26l1-9 5 6M49 23l5-6 1 9"/><circle class="fill" cx="48" cy="31" r="8"/><path d="M45.5 31q1.5 1.5 3 0M50.5 31q1.5 1.5 3 0" fill="none"/></svg>'
   };
   let cat = null;
+  let napTimer = 0;
+  const small = () => innerWidth < 640;
+
+  function catWidth(state) {
+    if (!PET) return small() ? 66 : 96;
+    if (state === 'walking') return Math.round((small() ? 62 : 88) * PET.walk.w / PET.walk.h);
+    return { lying: small() ? 124 : 172, sleeping: small() ? 88 : 120, belly: small() ? 96 : 132 }[state];
+  }
+  function catState(state) {
+    cat.className = `dl-cat${PET ? ' pet' : ''} ${state}`;
+    cat.style.width = catWidth(state) + 'px';
+    if (S.cat) { S.cat.state = state; save(); }
+  }
+  function catAt(x) {
+    cat.style.transform = `translateX(${x}px)`;
+  }
   function catEl() {
     const el = document.createElement('div');
-    el.className = 'dl-cat';
-    el.innerHTML = `<div class="dl-cat-in">${PET ? `<img class="walk" src="${PET.walk}" alt=""><img class="lie" src="${PET.lie}" alt="">` : CAT.walk + CAT.lie}</div><span class="dl-heart" aria-hidden="true">&hearts;</span>`;
+    const w = PET && PET.walk;
+    el.innerHTML = `<div class="dl-cat-in">${PET
+      ? `<div class="walk" style="background-image:url(${w.src});aspect-ratio:${w.w}/${w.h};background-size:${w.frames * 100}% 100%;animation-timing-function:steps(${w.frames - 1}, jump-none)"></div>` +
+        ['lie', 'sleep', 'belly'].map((k) => `<img class="${k}" src="${PET[k].src}" alt="" draggable="false">`).join('')
+      : CAT.walk + CAT.lie}</div><span class="dl-heart" aria-hidden="true">&hearts;</span>`;
+    el.setAttribute('role', 'button');
     el.setAttribute('aria-label', 'meowmeow the cat');
     el.addEventListener('click', petCat);
     root.appendChild(el);
     return el;
   }
-  function catSpot() {
-    const w = innerWidth < 640 ? 66 : 96;
-    return { w, y: innerHeight - w * (44 / 64) - (innerWidth < 640 ? 6 : 12) };
+  function napLater() {
+    clearTimeout(napTimer);
+    if (PET) napTimer = setTimeout(() => { if (cat && cat.classList.contains('lying')) catState('sleeping'); }, 25000);
   }
   async function summonCat() {
     if (cat) { petCat(); return; }
     cat = catEl();
-    const { w, y } = catSpot();
-    const to = clamp(innerWidth * (innerWidth < 640 ? 0.04 : 0.2), 12, innerWidth - w - 12);
-    cat.style.width = w + 'px';
-    cat.classList.add('walking');
-    sound.meow();
+    catState('walking');
+    const w = catWidth('walking');
     const inner = cat.firstElementChild;
-    const rock = reduce ? null : inner.animate([{ transform: 'rotate(-6deg) translateY(0)' }, { transform: 'rotate(6deg) translateY(-3px)' }], { duration: 340, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
-    await play(cat, [{ transform: `translate(${-w - 20}px,${y}px)` }, { transform: `translate(${to}px,${y}px)` }], { duration: (to + w + 20) * 9, easing: 'linear' });
-    cat.style.transform = `translate(${to}px,${y}px)`;
-    if (rock) rock.cancel();
+    sound.meow();
+    const bob = reduce ? null : inner.animate([{ transform: 'rotate(-2deg) translateY(0)' }, { transform: 'rotate(2deg) translateY(-2px)' }], { duration: 400, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
+    let x;
+    if (PET) {
+      // The footage only has her from the shoulders forward, so she pokes in
+      // from the edge of the screen and the cut stays off it.
+      await play(cat, [{ transform: `translateX(${-w}px)` }, { transform: `translateX(${-w * 0.12}px)` }], { duration: 2400, easing: 'ease-out' });
+      catAt(-w * 0.12);
+      await wait(600);
+      x = small() ? 6 : 14;
+    } else {
+      x = clamp(innerWidth * (small() ? 0.04 : 0.2), 12, innerWidth - w - 12);
+      await play(cat, [{ transform: `translateX(${-w - 20}px)` }, { transform: `translateX(${x}px)` }], { duration: (x + w + 20) * 9, easing: 'linear' });
+    }
+    if (bob) bob.cancel();
     // Plop.
-    cat.classList.remove('walking');
-    await play(inner, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.2,.72)' }], { duration: 140, easing: 'ease-in' });
-    cat.classList.add('lying');
-    await play(inner, [{ transform: 'scale(1.2,.72)' }, { transform: 'scale(.94,1.06)' }, { transform: 'scale(1,1)' }], { duration: 320, easing: 'ease-out' });
+    await play(inner, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.18,.7)' }], { duration: 140, easing: 'ease-in' });
+    S.cat = { x: x / innerWidth };
+    catState('lying');
+    catAt(x);
+    await play(inner, [{ transform: 'scale(1.18,.7)' }, { transform: 'scale(.95,1.05)' }, { transform: 'scale(1,1)' }], { duration: 320, easing: 'ease-out' });
     heart();
-    S.cat = { x: to / innerWidth };
-    save();
+    napLater();
   }
   function heart() {
-    const h = cat.querySelector('.dl-heart');
-    play(h, [
+    play(cat.querySelector('.dl-heart'), [
       { transform: 'translate(-50%, 0) scale(.4)', opacity: 0 },
       { transform: 'translate(-50%, -10px) scale(1.2)', opacity: 1, offset: 0.3 },
       { transform: 'translate(-50%, -30px) scale(1)', opacity: 0 }
     ], { duration: 1100, easing: 'ease-out' });
   }
+  let petting = false;
   function petCat() {
-    if (!cat) return;
+    if (!cat || petting || cat.classList.contains('walking')) return;
+    petting = true;
     sound.meow();
     heart();
+    if (PET) catState('belly');
     play(cat.firstElementChild, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.06,.92)' }, { transform: 'scale(1,1)' }], { duration: 300 });
     quip(pick(LINES.cat), 1200, 'happy');
+    setTimeout(() => {
+      petting = false;
+      if (PET) catState('lying');
+      napLater();
+    }, 1800);
   }
   function catBack() {
     if (!S.cat || cat) return;
     cat = catEl();
-    const { w, y } = catSpot();
-    cat.style.width = w + 'px';
-    cat.classList.add('lying');
-    cat.style.transform = `translate(${clamp(S.cat.x * innerWidth, 12, innerWidth - w - 12)}px,${y}px)`;
+    catState(S.cat.state === 'sleeping' ? 'sleeping' : 'lying');
+    catAt(clamp(S.cat.x * innerWidth, 6, innerWidth - catWidth('lying') - 6));
+    napLater();
   }
 
   // ---- Dragging and throwing the head ---------------------------------------

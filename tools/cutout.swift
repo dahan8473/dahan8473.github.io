@@ -3,14 +3,16 @@
 //
 //   swift tools/cutout.swift head photo.jpg media/head.png
 //   swift tools/cutout.swift hand photo.jpg media/hands/point.png point
-//   swift tools/cutout.swift thing photo.jpg media/cat-walk.webp
+//   swift tools/cutout.swift thing photo.jpg media/cat/lie.webp [x,y]
+//   swift tools/cutout.swift frames frames-dir/ media/cat/walk.webp
 //
 // Hand poses: point (anchor on the index tip), pinch (between thumb and index),
 // fist (the knuckles), open (middle of the hand, for palms, peace signs, waves).
 // Head: straight-on, mouth closed, face filling most of the frame. Also writes
 // blink, angry, sad and happy versions next to it, morphed from the landmarks.
 // Hands: plain background, whole hand in frame, wrist visible.
-// Things (the cat): just the subject nearest the middle of the frame.
+// Things (the cat): the biggest subject, or the one under x,y (0-1, from the top left).
+// Frames: a folder of video frames, lifted and aligned into one sprite sheet.
 // A .webp output path needs cwebp (brew install webp).
 
 import CoreImage
@@ -25,18 +27,99 @@ func fail(_ msg: String) -> Never {
 }
 func warn(_ msg: String) { FileHandle.standardError.write(("warning: " + msg + "\n").data(using: .utf8)!) }
 
+func write(_ img: CGImage, to url: URL) {
+  let webp = url.pathExtension.lowercased() == "webp"
+  let pngURL = webp ? URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".png") : url
+  guard let dest = CGImageDestinationCreateWithURL(pngURL as CFURL, UTType.png.identifier as CFString, 1, nil) else {
+    fail("can't write \(url.path)")
+  }
+  CGImageDestinationAddImage(dest, img, nil)
+  guard CGImageDestinationFinalize(dest) else { fail("can't write \(url.path)") }
+  guard webp else { return }
+  let p = Process()
+  p.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+  p.arguments = ["cwebp", "-quiet", "-q", "84", "-alpha_q", "95", pngURL.path, "-o", url.path]
+  do { try p.run() } catch { fail("webp output needs cwebp: brew install webp") }
+  p.waitUntilExit()
+  try? FileManager.default.removeItem(at: pngURL)
+  if p.terminationStatus != 0 { fail("cwebp failed on \(url.path)") }
+}
+
+// The biggest subject Vision found, for frames and things with no landmarks.
+func largestLabel(_ obs: VNInstanceMaskObservation) -> Int? {
+  let buf = obs.instanceMask
+  CVPixelBufferLockBaseAddress(buf, .readOnly)
+  defer { CVPixelBufferUnlockBaseAddress(buf, .readOnly) }
+  let w = CVPixelBufferGetWidth(buf), h = CVPixelBufferGetHeight(buf), row = CVPixelBufferGetBytesPerRow(buf)
+  let base = CVPixelBufferGetBaseAddress(buf)!.assumingMemoryBound(to: UInt8.self)
+  var counts = [Int: Int]()
+  for y in 0..<h { for x in 0..<w { let l = Int(base[y * row + x]); if l > 0 { counts[l, default: 0] += 1 } } }
+  return counts.max { $0.value < $1.value }?.key
+}
+
+
 let args = CommandLine.arguments
 let poses = ["point", "pinch", "fist", "open"]
-guard (args.count == 4 && (args[1] == "head" || args[1] == "thing")) || ((args.count == 4 || args.count == 5) && args[1] == "hand"),
-      args.count < 5 || poses.contains(args[4]) else {
-  fail("usage: swift tools/cutout.swift head|thing <photo> <out.png>\n       swift tools/cutout.swift hand <photo> <out.png> [point|pinch|fist|open]")
+guard (args.count == 4 && (args[1] == "head" || args[1] == "frames")) || ((args.count == 4 || args.count == 5) && (args[1] == "hand" || args[1] == "thing")),
+      args.count < 5 || args[1] == "thing" || poses.contains(args[4]) else {
+  fail("usage: swift tools/cutout.swift head <photo> <out>\n       swift tools/cutout.swift hand <photo> <out> [point|pinch|fist|open]\n       swift tools/cutout.swift thing <photo> <out> [x,y]\n       swift tools/cutout.swift frames <dir> <out>")
 }
 let mode = args[1]
-let pose = args.count == 5 ? args[4] : "point"
+let pose = args.count == 5 && mode == "hand" ? args[4] : "point"
 let inURL = URL(fileURLWithPath: args[2])
 let outURL = URL(fileURLWithPath: args[3])
 
 let ctx = CIContext()
+
+if mode == "frames" {
+  let files = try FileManager.default.contentsOfDirectory(at: inURL, includingPropertiesForKeys: nil)
+    .filter { ["png", "jpg", "jpeg"].contains($0.pathExtension.lowercased()) }
+    .sorted { $0.lastPathComponent < $1.lastPathComponent }
+  var frames: [(w: Int, h: Int, px: [UInt8])] = []
+  for f in files {
+    guard let ci = CIImage(contentsOf: f), let fcg = ctx.createCGImage(ci, from: ci.extent) else { fail("can't read \(f.path)") }
+    let h = VNImageRequestHandler(cgImage: fcg)
+    let req = VNGenerateForegroundInstanceMaskRequest()
+    try h.perform([req])
+    guard let obs = req.results?.first else { warn("nothing in \(f.lastPathComponent), skipping"); continue }
+    let set = largestLabel(obs).map { IndexSet(integer: $0) } ?? obs.allInstances
+    let m = try obs.generateScaledMaskForImage(forInstances: set, from: h)
+    let lifted = CIImage(cgImage: fcg).applyingFilter("CIBlendWithMask", parameters: [
+      kCIInputBackgroundImageKey: CIImage.empty(), kCIInputMaskImageKey: CIImage(cvPixelBuffer: m),
+    ])
+    let out = ctx.createCGImage(lifted, from: CGRect(x: 0, y: 0, width: fcg.width, height: fcg.height))!
+    var px = [UInt8](repeating: 0, count: out.width * out.height * 4)
+    let c = CGContext(data: &px, width: out.width, height: out.height, bitsPerComponent: 8, bytesPerRow: out.width * 4,
+                      space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    c.draw(out, in: CGRect(x: 0, y: 0, width: out.width, height: out.height))
+    frames.append((out.width, out.height, px))
+  }
+  guard let first = frames.first else { fail("no frames with a subject") }
+  // One box that holds the subject in every frame, so nothing jitters.
+  var x0 = first.w, y0 = first.h, x1 = -1, y1 = -1
+  for f in frames {
+    for y in 0..<f.h { for x in 0..<f.w where f.px[(y * f.w + x) * 4 + 3] > 24 {
+      x0 = min(x0, x); x1 = max(x1, x); y0 = min(y0, y); y1 = max(y1, y)
+    } }
+  }
+  let bw = x1 - x0 + 1, bh = y1 - y0 + 1
+  let k = min(1, 240 / CGFloat(bh))
+  let fw = Int((CGFloat(bw) * k).rounded()), fh = Int((CGFloat(bh) * k).rounded())
+  let sheet = CGContext(data: nil, width: fw * frames.count, height: fh, bitsPerComponent: 8, bytesPerRow: 0,
+                        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+  sheet.interpolationQuality = .high
+  for (i, var f) in frames.enumerated() {
+    let fc = CGContext(data: &f.px, width: f.w, height: f.h, bitsPerComponent: 8, bytesPerRow: f.w * 4,
+                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    let crop = fc.makeImage()!.cropping(to: CGRect(x: x0, y: y0, width: bw, height: bh))!
+    sheet.draw(crop, in: CGRect(x: i * fw, y: 0, width: fw, height: fh))
+  }
+  write(sheet.makeImage()!, to: outURL)
+  let parts = outURL.path.components(separatedBy: "/media/")
+  print("{\"frames\":\(frames.count),\"h\":\(fh),\"src\":\"/media/\(parts.count > 1 ? parts.last! : outURL.lastPathComponent)\",\"w\":\(fw)}")
+  exit(0)
+}
+
 guard let src = CIImage(contentsOf: inURL, options: [.applyOrientationProperty: true]) else {
   fail("can't read \(inURL.path)")
 }
@@ -80,7 +163,11 @@ if mode == "head" {
     warn("no face found, guessing the mouth line")
   }
 } else if mode == "thing" {
-  focus = CGPoint(x: W / 2, y: H / 2)
+  if args.count == 5 {
+    let xy = args[4].split(separator: ",").compactMap { Double($0) }
+    guard xy.count == 2 else { fail("focus is x,y between 0 and 1, from the top left") }
+    focus = CGPoint(x: CGFloat(xy[0]) * W, y: (1 - CGFloat(xy[1])) * H)
+  }
 } else {
   let handReq = VNDetectHumanHandPoseRequest()
   handReq.maximumHandCount = 1
@@ -129,6 +216,7 @@ let maskReq = VNGenerateForegroundInstanceMaskRequest()
 try handler.perform([maskReq])
 guard let maskObs = maskReq.results?.first else { fail("no subject found") }
 var instances = maskObs.allInstances
+if mode == "thing" && focus == nil, let l = largestLabel(maskObs) { instances = IndexSet(integer: l) }
 if let f = focus {
   let buf = maskObs.instanceMask
   CVPixelBufferLockBaseAddress(buf, .readOnly)
@@ -195,23 +283,6 @@ dctx.interpolationQuality = .high
 dctx.draw(trimmed, in: CGRect(x: 0, y: 0, width: dw, height: dh))
 guard let finalCG = dctx.makeImage() else { fail("resize failed") }
 
-func write(_ img: CGImage, to url: URL) {
-  let webp = url.pathExtension.lowercased() == "webp"
-  let pngURL = webp ? URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".png") : url
-  guard let dest = CGImageDestinationCreateWithURL(pngURL as CFURL, UTType.png.identifier as CFString, 1, nil) else {
-    fail("can't write \(url.path)")
-  }
-  CGImageDestinationAddImage(dest, img, nil)
-  guard CGImageDestinationFinalize(dest) else { fail("can't write \(url.path)") }
-  guard webp else { return }
-  let p = Process()
-  p.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-  p.arguments = ["cwebp", "-quiet", "-q", "84", "-alpha_q", "95", pngURL.path, "-o", url.path]
-  do { try p.run() } catch { fail("webp output needs cwebp: brew install webp") }
-  p.waitUntilExit()
-  try? FileManager.default.removeItem(at: pngURL)
-  if p.terminationStatus != 0 { fail("cwebp failed on \(url.path)") }
-}
 write(finalCG, to: outURL)
 
 // ---- Expressions ----------------------------------------------------------

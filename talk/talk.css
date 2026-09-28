@@ -432,22 +432,40 @@
 .dl-cat {
   position: absolute;
   left: 0;
-  top: 0;
+  bottom: 10px;
   z-index: 2;
   color: var(--strong);
   cursor: pointer;
   pointer-events: auto;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.12));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.14));
 }
 .dl-cat-in { transform-origin: 50% 100%; }
 .dl-cat svg,
-.dl-cat img { display: block; width: 100%; height: auto; overflow: visible; }
+.dl-cat img,
+.dl-cat .walk { display: block; width: 100%; height: auto; overflow: visible; user-select: none; -webkit-user-drag: none; }
 .dl-cat svg .fill { fill: var(--bg); }
-.dl-cat .lie,
-.dl-cat.lying .walk { display: none; }
-.dl-cat.lying .lie { display: block; animation: dl-breathe 3.4s ease-in-out infinite; transform-origin: 50% 100%; }
+.dl-cat:not(.pet) .lie,
+.dl-cat:not(.pet).lying .walk { display: none; }
+.dl-cat:not(.pet).lying .lie { display: block; }
 .dl-cat.walking .leg { transform-box: fill-box; transform-origin: 50% 0; animation: dl-leg 340ms ease-in-out infinite alternate; }
 .dl-cat.walking .leg.b { animation-direction: alternate-reverse; }
+.dl-cat.pet .dl-cat-in > * { display: none; }
+.dl-cat.pet.walking .walk,
+.dl-cat.pet.lying .lie,
+.dl-cat.pet.sleeping .sleep,
+.dl-cat.pet.belly .belly { display: block; }
+.dl-cat .walk { background-repeat: no-repeat; animation: dl-walk 800ms infinite; }
+.dl-cat.lying .lie,
+.dl-cat.sleeping .sleep { animation: dl-breathe 3.4s ease-in-out infinite; transform-origin: 50% 100%; }
+.dl-cat.sleeping::after {
+  content: 'z';
+  position: absolute;
+  right: 18%;
+  top: -4px;
+  color: var(--muted);
+  opacity: 0;
+  animation: dl-z 2.4s ease-in infinite;
+}
 .dl-heart {
   position: absolute;
   left: 50%;
@@ -503,6 +521,10 @@ a.dl-held { display: inline-block; }
   0% { transform: translate(0, 4px); opacity: 0; }
   30% { opacity: 1; }
   100% { transform: translate(10px, -18px); opacity: 0; }
+}
+@keyframes dl-walk {
+  from { background-position-x: 0%; }
+  to { background-position-x: 100%; }
 }
 @keyframes dl-leg {
   from { transform: rotate(22deg); }

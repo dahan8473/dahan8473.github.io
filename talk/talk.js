@@ -249,7 +249,7 @@
   let HW, HH, NW, NH;
   function measure() {
     const sm = innerWidth < 640;
-    HW = sm ? 70 : 96;
+    HW = sm ? 80 : 112;
     HH = Math.round((HW * HEAD.h) / HEAD.w);
     root.style.setProperty('--hw', HW + 'px');
     root.style.setProperty('--hh', HH + 'px');
@@ -1355,7 +1355,6 @@
   function catState(state) {
     cat.className = `dl-cat${PET ? ' pet' : ''} ${state}`;
     cat.style.width = catWidth(state) + 'px';
-    if (S.cat) { S.cat.state = state; save(); }
   }
   function catAt(x) {
     cat.style.transform = `translateX(${x}px)`;
@@ -1400,7 +1399,6 @@
     if (bob) bob.cancel();
     // Plop.
     await play(inner, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.18,.7)' }], { duration: 140, easing: 'ease-in' });
-    S.cat = { x: x / innerWidth };
     catState('lying');
     catAt(x);
     await play(inner, [{ transform: 'scale(1.18,.7)' }, { transform: 'scale(.95,1.05)' }, { transform: 'scale(1,1)' }], { duration: 320, easing: 'ease-out' });
@@ -1429,14 +1427,6 @@
       napLater();
     }, 1800);
   }
-  function catBack() {
-    if (!S.cat || cat) return;
-    cat = catEl();
-    catState(S.cat.state === 'sleeping' ? 'sleeping' : 'lying');
-    catAt(clamp(S.cat.x * innerWidth, 6, innerWidth - catWidth('lying') - 6));
-    napLater();
-  }
-
   // ---- Dragging and throwing the head ---------------------------------------
 
   const drag = { on: false, moved: false, x0: 0, y0: 0, ox: 0, oy: 0, vx: 0, vy: 0, t: 0, raf: 0, weeAt: 0, weed: false, bumpAt: 0 };
@@ -1638,7 +1628,6 @@
   function start() {
     if (S.quiet) root.classList.add('quiet');
     if (!sound.on) root.classList.add('muted');
-    catBack();
     if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer }));
     if (S.open) { actor.classList.add('on'); restore(); }
     else if (!S.met) enter();

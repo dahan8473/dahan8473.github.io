@@ -33,7 +33,8 @@
   will-change: transform;
 }
 .dl-actor.on { opacity: 1; }
-.dl.quiet .dl-actor { scale: 0.8; }
+/* Shrink the head, not the actor: scale on the actor would scale its position too. */
+.dl.quiet .dl-head { scale: 0.8; }
 
 .dl-shadow {
   position: absolute;

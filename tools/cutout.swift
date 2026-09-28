@@ -3,12 +3,14 @@
 //
 //   swift tools/cutout.swift head photo.jpg media/head.png
 //   swift tools/cutout.swift hand photo.jpg media/hands/point.png point
+//   swift tools/cutout.swift thing photo.jpg media/cat-walk.webp
 //
 // Hand poses: point (anchor on the index tip), pinch (between thumb and index),
 // fist (the knuckles), open (middle of the hand, for palms, peace signs, waves).
 // Head: straight-on, mouth closed, face filling most of the frame. Also writes
 // blink, angry, sad and happy versions next to it, morphed from the landmarks.
 // Hands: plain background, whole hand in frame, wrist visible.
+// Things (the cat): just the subject nearest the middle of the frame.
 // A .webp output path needs cwebp (brew install webp).
 
 import CoreImage
@@ -25,9 +27,9 @@ func warn(_ msg: String) { FileHandle.standardError.write(("warning: " + msg + "
 
 let args = CommandLine.arguments
 let poses = ["point", "pinch", "fist", "open"]
-guard (args.count == 4 && args[1] == "head") || ((args.count == 4 || args.count == 5) && args[1] == "hand"),
+guard (args.count == 4 && (args[1] == "head" || args[1] == "thing")) || ((args.count == 4 || args.count == 5) && args[1] == "hand"),
       args.count < 5 || poses.contains(args[4]) else {
-  fail("usage: swift tools/cutout.swift head <photo> <out.png>\n       swift tools/cutout.swift hand <photo> <out.png> [point|pinch|fist|open]")
+  fail("usage: swift tools/cutout.swift head|thing <photo> <out.png>\n       swift tools/cutout.swift hand <photo> <out.png> [point|pinch|fist|open]")
 }
 let mode = args[1]
 let pose = args.count == 5 ? args[4] : "point"
@@ -77,6 +79,8 @@ if mode == "head" {
     // the head yourself first, then set the mouth line by eye in talk.js.
     warn("no face found, guessing the mouth line")
   }
+} else if mode == "thing" {
+  focus = CGPoint(x: W / 2, y: H / 2)
 } else {
   let handReq = VNDetectHumanHandPoseRequest()
   handReq.maximumHandCount = 1
@@ -343,6 +347,8 @@ if mode == "head" {
   out["cut"] = rowSpan(mouth)
   let dir = (out["src"] as! String).components(separatedBy: "/").dropLast().joined(separator: "/")
   if !faces.isEmpty { out["faces"] = faces.mapValues { dir + "/" + $0 } }
+} else if mode == "thing" {
+  // Nothing to anchor; w and h are all talk.js needs.
 } else if let at = extras["at"] as? CGPoint, let from = extras["from"] as? CGPoint {
   out["at"] = [fx(at.x), fy(at.y)]
   // Screen angle the gesture faces: 0 is right, -90 is straight up.

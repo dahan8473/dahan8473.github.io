@@ -29,20 +29,26 @@
   // null, synthesized blips stand in.
   const VOICE = null;
 
+  // The cat. Photos go through `swift tools/cutout.swift thing <photo> media/cat-walk.webp`
+  // (one standing or walking, one lying down). Left null, an outline cat stands in.
+  const PET = null;
+
   const API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
-    ? '/api/chat'
-    : 'https://davidliu-work.vercel.app/api/chat';
+    ? '/api'
+    : 'https://davidliu-work.vercel.app/api';
   const EMAIL = 'davidliu8473@gmail.com';
   const MAX_TURNS = 25;
 
   // ---- Lines ----------------------------------------------------------------
   // Everything the head says without asking the model. Lowercase, no em dashes.
   const LINES = {
-    hello: "oh. hi. i'm david, the floating head version. click me if you want to talk",
     lost: "this page doesn't exist. i'm lost too. i'm a head",
-    greet: 'hey. ask me anything. what i built, tethos, why i do it for free, whatever',
+    intro: "hey! i'm david. well, the floating head version of him. what's your name?",
+    introBack: (name) => `oh hey ${name}. you came back 😭 what are we looking at today?`,
+    introIgnored: "okay i'll let you look around. click me if you want to talk",
     again: 'back again. what else',
-    choices: ['who are you?', "best thing you've built?", 'why build for free?', 'resume pls'],
+    choices: ["i'm a recruiter", 'just looking around', 'skip the small talk'],
+    cat: ['she likes you', "that's meowmeow btw", "okay she's staying there now"],
     close: "okay. i'll be right here",
     shoo: "fine. i'll stay in my corner 😭",
     poke: ['ow', 'hey', "that's my face", 'okay you can stop now', 'i will remember this'],
@@ -137,6 +143,19 @@
     try { sessionStorage.setItem('dl-talk', JSON.stringify(S)); } catch (e) {}
   }
 
+  // A random id per browser, so returning visitors can be told apart in the
+  // log. Chats are saved server side (the bubble says so).
+  const uuid = () => (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : null);
+  const visitor = (() => {
+    try {
+      let v = localStorage.getItem('dl-visitor');
+      if (!v && (v = uuid())) localStorage.setItem('dl-visitor', v);
+      return v;
+    } catch (e) { return null; }
+  })();
+  if (!S.convo) S.convo = uuid();
+  const knownName = () => { try { return localStorage.getItem('dl-name') || ''; } catch (e) { return ''; } };
+
   let targets = {};
   let epoch = 0; // bumps on interrupt so half-finished bits stop touching things
 
@@ -175,6 +194,7 @@
           <button class="dl-mic" type="button" aria-label="Talk with your mic" hidden>${ICON.mic}</button>
           <button class="dl-send" type="submit" aria-label="Send">${ICON.send}</button>
         </form>
+        <p class="dl-fine" hidden>chats are saved so the real me can read them</p>
       </div>
     </div>
     <div class="dl-hand" aria-hidden="true"><div class="dl-hand-in">${HANDS ? `<img src="${HANDS.point.src}" alt="" draggable="false">` : ICON.hand}</div></div>`;
@@ -196,6 +216,7 @@
   const input = form.querySelector('input');
   const sendBtn = form.querySelector('.dl-send');
   const micBtn = form.querySelector('.dl-mic');
+  const fineEl = $('.dl-fine');
   const hand = $('.dl-hand');
   const handIn = $('.dl-hand-in');
   const handImg = hand.querySelector('img');
@@ -357,6 +378,28 @@
       o.stop(t + dur + 0.02);
     },
     pop() { this.tone(520, 900, 0.07, 0.08); },
+    meow() {
+      if (!this.live()) return;
+      const ac = this.ctx;
+      const t = ac.currentTime;
+      const o = ac.createOscillator();
+      const bp = ac.createBiquadFilter();
+      const g = ac.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(560, t);
+      o.frequency.linearRampToValueAtTime(880, t + 0.16);
+      o.frequency.linearRampToValueAtTime(500, t + 0.5);
+      bp.type = 'bandpass';
+      bp.frequency.value = 1300;
+      bp.Q.value = 2.5;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.05);
+      g.gain.setValueAtTime(0.25, t + 0.35);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.52);
+      o.connect(bp).connect(g).connect(ac.destination);
+      o.start(t);
+      o.stop(t + 0.55);
+    },
     tick() { this.tone(1500, 1300, 0.03, 0.05); },
     thud() { this.tone(120, 55, 0.14, 0.35); }
   };
@@ -879,8 +922,11 @@
             if (buf.length > 60) { onText(buf); buf = ''; }
             return;
           }
-          const m = /^(point|drag|face):([a-z0-9-]+)$/.exec(buf.slice(i + 2, j).trim());
+          const inner = buf.slice(i + 2, j).trim();
+          const m = /^(point|drag|face|summon):([a-z0-9-]+)$/.exec(inner);
+          const n = /^note:\s*([a-z_]+)\s*=\s*(.+)$/i.exec(inner);
           if (m) onAction({ verb: m[1], id: m[2] });
+          else if (n) onAction({ verb: 'note', id: n[1].toLowerCase(), value: n[2].trim() });
           buf = buf.slice(j + 2);
         }
       },
@@ -895,6 +941,11 @@
   let navTo = null;
   function act(a) {
     if (a.verb === 'face') { setFace(a.id, 3500); return; }
+    if (a.verb === 'summon') { if (a.id === 'cat') summonCat(); return; }
+    if (a.verb === 'note') {
+      if (a.id === 'name') try { localStorage.setItem('dl-name', a.value.slice(0, 40)); } catch (e) {}
+      return;
+    }
     const t = targets[a.id];
     if (!t) return;
     const el = find(a.id);
@@ -928,6 +979,7 @@
 
   function showForm() {
     form.hidden = false;
+    fineEl.hidden = false;
     sendBtn.disabled = asking;
     micBtn.hidden = !Recognition;
     micBtn.disabled = asking;
@@ -957,13 +1009,35 @@
     showTalk();
     showForm();
     if (fine) input.focus({ preventScroll: true });
-    if (!S.msgs.length) {
-      setFace('happy', 2500);
-      await speak(LINES.greet);
-      if (chatOn && !S.msgs.length) showChoices();
-    } else speak(LINES.again);
+    if (!S.msgs.some((m) => m.role === 'user')) await greet();
+    else speak(LINES.again);
   }
-  function closeChat() {
+
+  // The head starts the conversation: who it is, then their name.
+  let introTimer = 0;
+  async function greet() {
+    const name = knownName();
+    const line = name ? LINES.introBack(name) : LINES.intro;
+    if (!S.msgs.length) { S.msgs.push({ role: 'assistant', content: line }); save(); }
+    setFace('happy', 2500);
+    await speak(line);
+    if (chatOn && !S.msgs.some((m) => m.role === 'user')) showChoices();
+  }
+  async function intro() {
+    chatOn = true;
+    S.open = true;
+    save();
+    root.classList.add('chat');
+    showTalk();
+    showForm();
+    await greet();
+    // Nobody answered: tuck the chat away and let them browse.
+    clearTimeout(introTimer);
+    introTimer = setTimeout(() => {
+      if (chatOn && !asking && !input.value && !S.msgs.some((m) => m.role === 'user')) closeChat(LINES.introIgnored);
+    }, 30000);
+  }
+  function closeChat(line = LINES.close) {
     chatOn = false;
     S.open = false;
     save();
@@ -971,8 +1045,9 @@
     root.classList.remove('chat');
     choicesEl.hidden = true;
     form.hidden = true;
+    fineEl.hidden = true;
     speak('');
-    hideTalk().then(() => { quip(LINES.close, 800, 'sad'); peace(); });
+    hideTalk().then(() => { quip(line, 800, 'sad'); peace(); });
     schedule(40000);
   }
   function shoo() {
@@ -1028,6 +1103,7 @@
     if (!q || asking) return;
     choicesEl.hidden = true;
     input.value = '';
+    clearTimeout(introTimer);
     if (S.msgs.filter((m) => m.role === 'user').length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }
     asking = true;
     sendBtn.disabled = true;
@@ -1039,11 +1115,18 @@
     let raw = '';
     const parser = makeParser(feed, feedAction);
     try {
-      const res = await fetch(API, {
+      const res = await fetch(API + '/chat', {
         method: 'POST',
         // text/plain keeps this a simple request, so no CORS preflight.
         headers: { 'content-type': 'text/plain' },
-        body: JSON.stringify({ page: here, here: Object.keys(targets).filter((id) => find(id)), messages: S.msgs.slice(-16) })
+        body: JSON.stringify({
+          page: here,
+          here: Object.keys(targets).filter((id) => find(id)),
+          messages: S.msgs.slice(-16),
+          visitor,
+          convo: S.convo,
+          name: knownName()
+        })
       });
       if (!res.ok || !res.body) throw new Error('chat ' + res.status);
       const reader = res.body.getReader();
@@ -1072,6 +1155,7 @@
 
   function restore() {
     chatOn = true;
+    clearTimeout(introTimer);
     root.classList.add('chat');
     const d = dockPos();
     setHead(d.x, d.y);
@@ -1079,7 +1163,7 @@
     showForm();
     const last = [...S.msgs].reverse().find((m) => m.role === 'assistant');
     speak('');
-    textEl.textContent = last ? strip(last.content) : LINES.greet;
+    textEl.textContent = last ? strip(last.content) : LINES.intro;
     linkify();
     if (S.pending) {
       const a = S.pending;
@@ -1213,6 +1297,21 @@
   }
 
   let lastInput = now();
+  let lastScroll = 0;
+  let lastMove = 0;
+  // Resolves once the visitor has had a few seconds and stopped scrolling
+  // and moving around, or after 12s regardless.
+  function settled() {
+    const t0 = now();
+    return new Promise((done) => {
+      const check = () => {
+        const t = now();
+        if ((t - t0 > 3500 && t - lastScroll > 1500 && t - lastMove > 900) || t - t0 > 12000) done();
+        else setTimeout(check, 250);
+      };
+      check();
+    });
+  }
   function wake() {
     lastInput = now();
     if (!life.sleep) return;
@@ -1229,6 +1328,73 @@
       emote('z', { sticky: true });
     }
   }, 5000);
+
+  // ---- The cat ----------------------------------------------------------------
+  // "psst psst psst": she waddles in from the left, plops down and stays.
+
+  const CAT = {
+    walk: '<svg class="walk" viewBox="0 0 64 44" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 24c-6-2-8-10-4-16" fill="none"/><path class="leg a" d="M18 29v10"/><path class="leg b" d="M24 29v10"/><path class="leg b" d="M36 29v10"/><path class="leg a" d="M42 29v10"/><ellipse class="fill" cx="29" cy="25" rx="18" ry="9"/><path class="fill" d="M45 10l1-9 5 6M52 7l5-6 1 9"/><circle class="fill" cx="51" cy="15" r="8"/><path d="M54 14v1M58.5 17.5l-1 .8" fill="none"/></svg>',
+    lie: '<svg class="lie" viewBox="0 0 64 44" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="fill" d="M8 40c0-10 8-17 21-17s21 7 21 17z"/><path d="M10 40c7 3 21 3 27 0" fill="none"/><path class="fill" d="M42 26l1-9 5 6M49 23l5-6 1 9"/><circle class="fill" cx="48" cy="31" r="8"/><path d="M45.5 31q1.5 1.5 3 0M50.5 31q1.5 1.5 3 0" fill="none"/></svg>'
+  };
+  let cat = null;
+  function catEl() {
+    const el = document.createElement('div');
+    el.className = 'dl-cat';
+    el.innerHTML = `<div class="dl-cat-in">${PET ? `<img class="walk" src="${PET.walk}" alt=""><img class="lie" src="${PET.lie}" alt="">` : CAT.walk + CAT.lie}</div><span class="dl-heart" aria-hidden="true">&hearts;</span>`;
+    el.setAttribute('aria-label', 'meowmeow the cat');
+    el.addEventListener('click', petCat);
+    root.appendChild(el);
+    return el;
+  }
+  function catSpot() {
+    const w = innerWidth < 640 ? 66 : 96;
+    return { w, y: innerHeight - w * (44 / 64) - (innerWidth < 640 ? 6 : 12) };
+  }
+  async function summonCat() {
+    if (cat) { petCat(); return; }
+    cat = catEl();
+    const { w, y } = catSpot();
+    const to = clamp(innerWidth * (innerWidth < 640 ? 0.04 : 0.2), 12, innerWidth - w - 12);
+    cat.style.width = w + 'px';
+    cat.classList.add('walking');
+    sound.meow();
+    const inner = cat.firstElementChild;
+    const rock = reduce ? null : inner.animate([{ transform: 'rotate(-6deg) translateY(0)' }, { transform: 'rotate(6deg) translateY(-3px)' }], { duration: 340, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
+    await play(cat, [{ transform: `translate(${-w - 20}px,${y}px)` }, { transform: `translate(${to}px,${y}px)` }], { duration: (to + w + 20) * 9, easing: 'linear' });
+    cat.style.transform = `translate(${to}px,${y}px)`;
+    if (rock) rock.cancel();
+    // Plop.
+    cat.classList.remove('walking');
+    await play(inner, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.2,.72)' }], { duration: 140, easing: 'ease-in' });
+    cat.classList.add('lying');
+    await play(inner, [{ transform: 'scale(1.2,.72)' }, { transform: 'scale(.94,1.06)' }, { transform: 'scale(1,1)' }], { duration: 320, easing: 'ease-out' });
+    heart();
+    S.cat = { x: to / innerWidth };
+    save();
+  }
+  function heart() {
+    const h = cat.querySelector('.dl-heart');
+    play(h, [
+      { transform: 'translate(-50%, 0) scale(.4)', opacity: 0 },
+      { transform: 'translate(-50%, -10px) scale(1.2)', opacity: 1, offset: 0.3 },
+      { transform: 'translate(-50%, -30px) scale(1)', opacity: 0 }
+    ], { duration: 1100, easing: 'ease-out' });
+  }
+  function petCat() {
+    if (!cat) return;
+    sound.meow();
+    heart();
+    play(cat.firstElementChild, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.06,.92)' }, { transform: 'scale(1,1)' }], { duration: 300 });
+    quip(pick(LINES.cat), 1200, 'happy');
+  }
+  function catBack() {
+    if (!S.cat || cat) return;
+    cat = catEl();
+    const { w, y } = catSpot();
+    cat.style.width = w + 'px';
+    cat.classList.add('lying');
+    cat.style.transform = `translate(${clamp(S.cat.x * innerWidth, 12, innerWidth - w - 12)}px,${y}px)`;
+  }
 
   // ---- Dragging and throwing the head ---------------------------------------
 
@@ -1350,7 +1516,7 @@
   // ---- Wiring ---------------------------------------------------------------
 
   function wire() {
-    addEventListener('pointermove', (e) => { cursor.x = e.clientX; cursor.y = e.clientY; cursor.seen = true; wake(); }, { passive: true });
+    addEventListener('pointermove', (e) => { cursor.x = e.clientX; cursor.y = e.clientY; cursor.seen = true; lastMove = now(); wake(); }, { passive: true });
     addEventListener('pointerdown', (e) => { cursor.x = e.clientX; cursor.y = e.clientY; sound.unlock(); wake(); }, { passive: true });
     addEventListener('keydown', (e) => {
       sound.unlock();
@@ -1359,7 +1525,7 @@
       if (held) release();
       else if (chatOn) closeChat();
     });
-    addEventListener('scroll', () => { lastInput = now(); }, { passive: true });
+    addEventListener('scroll', () => { lastInput = lastScroll = now(); }, { passive: true });
     addEventListener('resize', onResize);
 
     headBtn.addEventListener('click', () => {
@@ -1415,18 +1581,24 @@
     const d = dockPos();
     setHead(d.x, innerHeight + 20);
     actor.classList.add('on');
-    await wait(1600);
+    await settled();
     await moveHead(d.x, d.y, 800, SPRING);
     emote('!');
     life.surprise = now() + 350;
     wave();
-    const lost = document.querySelector('.identity .name')?.textContent.trim() === '404';
-    await quip(lost ? LINES.lost : LINES.hello, 3200, lost ? 'sad' : 'happy');
+    if (document.querySelector('.identity .name')?.textContent.trim() === '404') {
+      await quip(LINES.lost, 3200, 'sad');
+      return;
+    }
+    await wait(700);
+    if (!chatOn) intro();
   }
 
   function start() {
     if (S.quiet) root.classList.add('quiet');
     if (!sound.on) root.classList.add('muted');
+    catBack();
+    if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer }));
     if (S.open) { actor.classList.add('on'); restore(); }
     else if (!S.met) enter();
     else {

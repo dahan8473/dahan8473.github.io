@@ -7,12 +7,23 @@
   'use strict';
 
   // ---- Art ------------------------------------------------------------------
-  // Regenerate with `swift tools/cutout.swift head <photo> media/head.png`
-  // and paste the JSON it prints.
-  const HEAD = { src: '/media/head.png', w: 269, h: 344, mouth: 0.795, mouthX: [0.35, 0.669], cut: [0.152, 0.829] };
-  // A photo hand works the same way (`... hand <photo> media/hand.png`).
-  // Left null, an outline hand in the site's icon style stands in.
-  const HAND = null;
+  // Regenerate with `swift tools/cutout.swift head <photo> media/head.webp`
+  // and paste the JSON it prints. It also writes the morphed faces.
+  const HEAD = {
+    src: '/media/head.webp', w: 269, h: 344, mouth: 0.795, mouthX: [0.35, 0.669], cut: [0.152, 0.829],
+    faces: { blink: '/media/head-blink.webp', angry: '/media/head-angry.webp', sad: '/media/head-sad.webp', happy: '/media/head-happy.webp' }
+  };
+  // One photo per gesture: `swift tools/cutout.swift hand <photo> media/hands/<name>.webp <pose>`.
+  // `at` is where the gesture acts (fingertip, pinch, knuckles, palm) and
+  // `angle` the way it faces. Left null, an outline hand stands in.
+  const HANDS = {
+    point: { src: '/media/hands/point.webp', w: 209, h: 400, at: [0.27, 0.031], angle: -107 },
+    pinch: { src: '/media/hands/pinch.webp', w: 246, h: 400, at: [0.104, 0.26], angle: -112 },
+    fist: { src: '/media/hands/fist.webp', w: 300, h: 400, at: [0.652, 0.281], angle: -87 },
+    palm: { src: '/media/hands/palm.webp', w: 298, h: 400, at: [0.456, 0.413], angle: -73 },
+    back: { src: '/media/hands/back.webp', w: 289, h: 400, at: [0.616, 0.5], angle: -82 },
+    peace: { src: '/media/hands/peace.webp', w: 204, h: 400, at: [0.682, 0.517], angle: -84 }
+  };
   // David's voice, animalese style: one short clip per letter, played sped up.
   // Record it with tools/voice.html and paste the config it prints. Left
   // null, synthesized blips stand in.
@@ -38,6 +49,8 @@
     knock: ['hello?? you can talk to me btw', 'i can see you scrolling', "knock knock. it's the guy from the website"],
     bonk: ['oops', 'ow. that section came out of nowhere', 'my bad'],
     letgo: ['fine', "okay i'll put it back", 'no? okay'],
+    landed: ['again. no wait', 'okay i live here now', 'that was actually fun'],
+    dizzy: ["okay i'm gonna be sick", 'everything is spinning. is that normal'],
     // Keyed by target id (talk/targets.json). A bit only picks targets with a line.
     yank: {
       'resume-swe': "you're a recruiter right? here. resume. right there",
@@ -142,6 +155,7 @@
         </div></div>
       </button>
       <span class="dl-emote" aria-hidden="true"></span>
+      <span class="dl-shout" aria-hidden="true"></span>
     </div>
     <div class="dl-talk" role="dialog" aria-label="Chat with David" hidden>
       <div class="dl-bubble">
@@ -163,7 +177,7 @@
         </form>
       </div>
     </div>
-    <div class="dl-hand" aria-hidden="true"><div class="dl-hand-in">${HAND ? `<img src="${HAND.src}" alt="">` : ICON.hand}</div></div>`;
+    <div class="dl-hand" aria-hidden="true"><div class="dl-hand-in">${HANDS ? `<img src="${HANDS.point.src}" alt="" draggable="false">` : ICON.hand}</div></div>`;
 
   const $ = (s) => root.querySelector(s);
   const actor = $('.dl-actor');
@@ -184,23 +198,51 @@
   const micBtn = form.querySelector('.dl-mic');
   const hand = $('.dl-hand');
   const handIn = $('.dl-hand-in');
+  const handImg = hand.querySelector('img');
+  const shoutEl = $('.dl-shout');
 
-  root.querySelectorAll('.dl-skull img, .dl-jaw img').forEach((img) => { img.src = HEAD.src; });
+  const FACES = Object.assign({ neutral: HEAD.src }, HEAD.faces);
+  const faceImgs = [];
+  [skull, jaw].forEach((part) => {
+    const first = part.querySelector('img');
+    Object.keys(FACES).forEach((name, i) => {
+      const img = i ? first.cloneNode() : first;
+      img.src = FACES[name];
+      img.dataset.f = name;
+      img.hidden = i > 0;
+      if (i) first.after(img);
+      faceImgs.push(img);
+    });
+  });
   [['--m', HEAD.mouth], ['--cx0', HEAD.cut[0]], ['--cx1', HEAD.cut[1]], ['--mx0', HEAD.mouthX[0]], ['--mx1', HEAD.mouthX[1]]]
     .forEach(([k, v]) => root.style.setProperty(k, v));
 
-  const hg = HAND || { w: 26, h: 26, tip: [0.346, 0.1], angle: -90 };
+  const OUTLINE = { w: 26, h: 26, at: [0.346, 0.1], angle: -90 };
+  let hg = HANDS ? HANDS.point : OUTLINE;
   let HW, HH, NW, NH;
   function measure() {
     const sm = innerWidth < 640;
     HW = sm ? 70 : 96;
     HH = Math.round((HW * HEAD.h) / HEAD.w);
-    NW = sm ? 46 : 58;
-    NH = Math.round((NW * hg.h) / hg.w);
     root.style.setProperty('--hw', HW + 'px');
     root.style.setProperty('--hh', HH + 'px');
+    sizeHand();
+  }
+  function sizeHand() {
+    const sm = innerWidth < 640;
+    if (HANDS) { NH = sm ? 76 : 104; NW = Math.round((NH * hg.w) / hg.h); }
+    else { NW = sm ? 46 : 58; NH = NW; }
     hand.style.width = NW + 'px';
-    hand.style.transformOrigin = `${hg.tip[0] * NW}px ${hg.tip[1] * NH}px`;
+    hand.style.transformOrigin = `${hg.at[0] * NW}px ${hg.at[1] * NH}px`;
+    if (HANDS) handIn.style.transformOrigin = '50% 100%';
+  }
+  // Switch gesture photo. Call before moving the hand, since the anchor moves.
+  function pose(name) {
+    const next = HANDS && (HANDS[name] || HANDS.point);
+    if (!next || next === hg) return;
+    hg = next;
+    handImg.src = hg.src;
+    sizeHand();
   }
 
   // Web Animations helper: animate transform from wherever it is now.
@@ -322,7 +364,20 @@
   // ---- Life: mouth, sway, looking at the cursor, twitches -------------------
 
   const cursor = { x: innerWidth / 2, y: innerHeight / 2, seen: false };
-  const life = { open: 0, kick: 0, talkT: -1e9, surprise: 0, twitch: 0, nextTwitch: 0, lean: 0, leanNow: 0, shy: false, sleep: false, listen: false };
+  const life = { open: 0, kick: 0, talkT: -1e9, surprise: 0, nextBlink: 0, lean: 0, leanNow: 0, spin: 0, flying: false, shy: false, sleep: false, listen: false };
+
+  // Expressions swap whole morphed photos. Temporary ones fall back to rest.
+  let face = 'neutral';
+  let faceTimer = 0;
+  const restFace = () => (life.sleep || life.shy ? 'blink' : 'neutral');
+  function setFace(name, ms) {
+    if (!FACES[name]) name = 'neutral';
+    clearTimeout(faceTimer);
+    if (ms) faceTimer = setTimeout(() => setFace(restFace()), ms);
+    if (name === face) return;
+    face = name;
+    faceImgs.forEach((img) => { img.hidden = img.dataset.f !== name; });
+  }
 
   function tick(t) {
     const s = t / 1000;
@@ -332,7 +387,7 @@
     life.kick *= 0.8;
     if (life.sleep) life.open = Math.max(life.open, 0.1 + Math.sin(s * 1.4) * 0.06);
 
-    let rot = 0, tx = 0, ty = 0, sx = 1, sy = 1;
+    let rot = 0, tx = 0, ty = 0, sy = 1;
     if (!reduce) {
       const r = actor.getBoundingClientRect();
       const dx = cursor.x - (r.left + r.width / 2);
@@ -344,11 +399,21 @@
       if (life.shy) { rot = 13 + Math.sin(s * 40) * 0.8; tx = 5; }
       if (life.sleep) { rot = 15 + Math.sin(s * 1.4) * 2; ty = 3; }
       if (life.listen) { rot = -9 + Math.sin(s * 2.2) * 1.5; ty = -2; }
-      if (t > life.nextTwitch && !talking) { life.twitch = t + 110; life.nextTwitch = t + rand(2500, 6500); }
-      if (t < life.twitch) { sx = 1.035; sy = 0.955; }
-      sy *= 1 + Math.sin(s * 1.7) * 0.008;
+      // Thrown heads spin; once it lands the spin unwinds to the nearest upright.
+      if (!life.flying && life.spin) {
+        const up = Math.round(life.spin / 360) * 360;
+        life.spin += (up - life.spin) * 0.12;
+        if (Math.abs(up - life.spin) < 0.5) life.spin = 0;
+      }
+      rot += life.spin;
+      sy = 1 + Math.sin(s * 1.7) * 0.008;
     }
-    wob.style.transform = `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${sx},${sy.toFixed(4)})`;
+    // Blink every few seconds, sometimes twice.
+    if (t > life.nextBlink) {
+      life.nextBlink = t + (Math.random() < 0.2 ? 260 : rand(2200, 6000));
+      if (face === 'neutral') setFace('blink', 120);
+    }
+    wob.style.transform = `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scaleY(${sy.toFixed(4)})`;
     skull.style.transform = `translateY(${(-life.open * 13).toFixed(2)}%) rotate(${(-life.open * 5).toFixed(2)}deg)`;
     jaw.style.transform = `translateY(${(life.open * 3).toFixed(2)}%)`;
     if (!talk.hidden) placeTalk();
@@ -394,6 +459,9 @@
     life.lean = 0;
   }
   function dockPos() {
+    if (S.home && !chatOn) {
+      return { x: clamp(S.home.x * innerWidth, 8, innerWidth - HW - 8), y: clamp(S.home.y * innerHeight, 8, innerHeight - HH - 8) };
+    }
     const m = innerWidth < 640 ? 14 : 28;
     return { x: innerWidth - HW - m, y: innerHeight - HH - m + 4 };
   }
@@ -534,8 +602,9 @@
 
   // Lines outside the chat: bubble pops over the head, then goes away.
   let quipSeq = 0;
-  async function quip(text, hold = 2000) {
+  async function quip(text, hold = 2000, mood) {
     if (!text) return;
+    if (mood) setFace(mood, 1200 + text.length * 45);
     if (chatOn) {
       if (!asking && !sp.typing && !sp.more) await speak(text);
       return;
@@ -551,7 +620,7 @@
 
   const hs = { on: false, users: 0, homeTimer: 0 };
   function handTf(x, y, a, s = 1) {
-    return `translate3d(${(x - hg.tip[0] * NW).toFixed(1)}px,${(y - hg.tip[1] * NH).toFixed(1)}px,0) rotate(${a - hg.angle}deg) scale(${s})`;
+    return `translate3d(${(x - hg.at[0] * NW).toFixed(1)}px,${(y - hg.at[1] * NH).toFixed(1)}px,0) rotate(${a - hg.angle}deg) scale(${s})`;
   }
   function handSet(x, y, a, s) { stopTween(hand); hand.style.transform = handTf(x, y, a, s); }
   const handTo = (x, y, a, { duration = 520, easing = EASE, s = 1 } = {}) => tween(hand, handTf(x, y, a, s), { duration, easing });
@@ -629,6 +698,7 @@
   function point(el, { hold = 2200 } = {}) {
     return useHand(async () => {
       const ep = epoch;
+      pose('point');
       await ensureVisible(el);
       if (ep !== epoch) return;
       const r = el.getBoundingClientRect();
@@ -660,6 +730,7 @@
       const gx = inline ? -3 : 14;
       const gy = inline ? r0.height / 2 : 12;
       const ang = inline ? 0 : 45;
+      pose('pinch');
       await handNearHead();
       await handTo(clamp(r0.left + gx, 16, innerWidth - 16), clamp(r0.top + gy, 16, innerHeight - 16), ang, { duration: 620 });
       if (ep !== epoch) return;
@@ -714,7 +785,8 @@
     return useHand(async () => {
       const x = innerWidth * rand(0.4, 0.6);
       const y = innerHeight * rand(0.38, 0.5);
-      await handShow(x, y, -70, 2.6);
+      pose('fist');
+      await handShow(x, y, -90, HANDS ? 2.2 : 2.6);
       for (let i = 0; i < 3; i++) {
         await play(handIn, [{ transform: 'none' }, { transform: 'scale(.9) translateY(3px)' }], { duration: 110, easing: 'ease-in' });
         sound.thud();
@@ -740,11 +812,21 @@
   }
   function wave() {
     return useHand(async () => {
-      await handShow(pos.x - 6, pos.y + HH * 0.3, -75);
+      pose('palm');
+      await handShow(pos.x - NW * 0.35, pos.y + HH * 0.4, -80);
       await play(handIn, [
         { transform: 'rotate(0)' }, { transform: 'rotate(-22deg)' }, { transform: 'rotate(14deg)' },
         { transform: 'rotate(-18deg)' }, { transform: 'rotate(10deg)' }, { transform: 'rotate(0)' }
       ], { duration: 1100, easing: 'ease-in-out' });
+    });
+  }
+
+  function peace() {
+    return useHand(async () => {
+      pose('peace');
+      await handShow(pos.x - NW * 0.3, pos.y + HH * 0.35, -75);
+      await play(handIn, [{ transform: 'rotate(0)' }, { transform: 'rotate(-10deg)' }, { transform: 'rotate(6deg)' }, { transform: 'rotate(0)' }], { duration: 600, easing: 'ease-in-out' });
+      await wait(900);
     });
   }
 
@@ -760,6 +842,7 @@
     sound.thud();
     emote('!');
     squish();
+    setFace('angry', 1500);
     el.style.transformOrigin = '0 100%';
     play(el, [
       { transform: 'none' }, { transform: 'rotate(-1.4deg) translateX(-6px)' }, { transform: 'rotate(.9deg)' }, { transform: 'rotate(-.4deg)' }, { transform: 'none' }
@@ -796,7 +879,7 @@
             if (buf.length > 60) { onText(buf); buf = ''; }
             return;
           }
-          const m = /^(point|drag):([a-z0-9-]+)$/.exec(buf.slice(i + 2, j).trim());
+          const m = /^(point|drag|face):([a-z0-9-]+)$/.exec(buf.slice(i + 2, j).trim());
           if (m) onAction({ verb: m[1], id: m[2] });
           buf = buf.slice(j + 2);
         }
@@ -811,6 +894,7 @@
   let queue = Promise.resolve();
   let navTo = null;
   function act(a) {
+    if (a.verb === 'face') { setFace(a.id, 3500); return; }
     const t = targets[a.id];
     if (!t) return;
     const el = find(a.id);
@@ -874,6 +958,7 @@
     showForm();
     if (fine) input.focus({ preventScroll: true });
     if (!S.msgs.length) {
+      setFace('happy', 2500);
       await speak(LINES.greet);
       if (chatOn && !S.msgs.length) showChoices();
     } else speak(LINES.again);
@@ -887,7 +972,7 @@
     choicesEl.hidden = true;
     form.hidden = true;
     speak('');
-    hideTalk().then(() => quip(LINES.close, 800));
+    hideTalk().then(() => { quip(LINES.close, 800, 'sad'); peace(); });
     schedule(40000);
   }
   function shoo() {
@@ -895,13 +980,14 @@
     save();
     interrupt();
     root.classList.add('quiet');
-    quip(LINES.shoo, 1200);
+    quip(LINES.shoo, 1200, 'sad');
   }
   let pokes = 0;
   function poke() {
     squish();
     emote(pokes % 2 ? '?' : '!');
     life.surprise = now() + 200;
+    if (pokes >= 2) setFace('angry', 1800);
     if (!asking && !sp.typing && !sp.more) speak(LINES.poke[pokes++ % LINES.poke.length]);
   }
 
@@ -919,14 +1005,14 @@
     rec.onstart = () => {
       root.classList.add('listening');
       life.listen = true;
-      react('mic', LINES.mic, 800);
+      react('mic', LINES.mic, 800, 'happy');
     };
     rec.onresult = (e) => {
       heard = [...e.results].map((r) => r[0].transcript).join('');
       input.value = heard;
     };
     rec.onerror = (e) => {
-      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') speak(LINES.micBlocked);
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { setFace('sad', 2500); speak(LINES.micBlocked); }
     };
     rec.onend = () => {
       rec = null;
@@ -972,7 +1058,7 @@
       }
       parser.end();
     } catch (e) {
-      if (!raw) { raw = LINES.offline; parser.push(raw); parser.end(); }
+      if (!raw) { raw = LINES.offline; setFace('sad', 3000); parser.push(raw); parser.end(); }
     }
     emoteOff();
     S.msgs.push({ role: 'assistant', content: raw.trim() || '..' });
@@ -1022,7 +1108,7 @@
     if (fine && cursor.seen) {
       each(LINES.yank, (el, line) => out.push({ kind: 'yank', run: async () => {
         await Promise.all([quip(line, 1500), yank(el, { hold: 5200 })]);
-        await quip(pick(LINES.letgo), 600);
+        await quip(pick(LINES.letgo), 600, 'sad');
       } }));
     }
     each(LINES.shove, (el, line) => { if (!inView(el)) out.push({ kind: 'shove', run: () => Promise.all([quip(line, 1800), yank(el, { hold: 4200 })]) }); });
@@ -1057,13 +1143,13 @@
 
   // ---- Fourth wall ----------------------------------------------------------
 
-  function react(key, text, hold = 1800) {
+  function react(key, text, hold = 1800, mood) {
     if (S.once.includes(key)) return;
     S.once.push(key);
     save();
     if (asking || held || life.shy) return;
     wake();
-    quip(text, hold);
+    quip(text, hold, mood);
   }
 
   // Devtools docked to the window shrink the viewport while the window and
@@ -1078,17 +1164,19 @@
     wake();
     life.shy = true;
     root.classList.add('shy');
+    setFace('blink');
     emote('!');
     life.surprise = now() + 400;
     squish();
     if (!dt.covering) {
       dt.covering = true;
       hs.users++;
-      handShow(pos.x + HW * 0.1, pos.y + HH * 0.42, 180, 1.2);
+      pose('back');
+      handShow(pos.x + HW * 0.5, pos.y + HH * 0.62, -90, 1.1);
     }
     const seen = S.once.includes('devtools');
     if (!seen) { S.once.push('devtools'); save(); }
-    quip(seen ? LINES.devtoolsAgain : LINES.devtools[0], 8000);
+    quip(seen ? LINES.devtoolsAgain : LINES.devtools[0], 8000, seen ? 'angry' : null);
     if (seen) return;
     const later = (ms, line) => dt.timers.push(setTimeout(() => dt.open && quip(line, 8000), ms));
     later(2800, LINES.devtools[1]);
@@ -1100,12 +1188,14 @@
     dt.timers.forEach(clearTimeout);
     dt.timers = [];
     life.shy = false;
+    setFace('happy', 2000);
     setTimeout(() => { if (!life.shy) root.classList.remove('shy'); }, 1600);
     if (dt.covering) {
       dt.covering = false;
       if (--hs.users === 0) hs.homeTimer = setTimeout(handHome, 350);
     }
     quip(LINES.devtoolsBye, 1400);
+    peace();
   }
 
   function onResize() {
@@ -1115,11 +1205,11 @@
     const grew = innerWidth - dt.iw > 140 || innerHeight - dt.ih > 140;
     if (sameWindow && shrank && !dt.open) devtoolsOpened();
     else if (sameWindow && grew && dt.open) devtoolsClosed();
-    else if (!sameWindow && devicePixelRatio === dt.dpr && outerWidth < dt.ow - 80) react('squish', LINES.squish);
+    else if (!sameWindow && devicePixelRatio === dt.dpr && outerWidth < dt.ow - 80) react('squish', LINES.squish, 1800, 'angry');
     Object.assign(dt, { iw: innerWidth, ih: innerHeight, ow: outerWidth, oh: outerHeight, dpr: devicePixelRatio });
     measure();
     if (!dir.busy || chatOn) { const d = dockPos(); setHead(d.x, d.y); }
-    if (dt.covering) handSet(pos.x + HW * 0.1, pos.y + HH * 0.42, 180, 1.2);
+    if (dt.covering) handSet(pos.x + HW * 0.5, pos.y + HH * 0.62, -90, 1.1);
   }
 
   let lastInput = now();
@@ -1127,6 +1217,7 @@
     lastInput = now();
     if (!life.sleep) return;
     life.sleep = false;
+    setFace('neutral');
     emoteOff();
     emote('!');
     react('wake', LINES.wake, 1200);
@@ -1134,9 +1225,127 @@
   setInterval(() => {
     if (!life.sleep && !chatOn && !dir.busy && !held && !life.shy && !document.hidden && now() - lastInput > 45000) {
       life.sleep = true;
+      setFace('blink');
       emote('z', { sticky: true });
     }
   }, 5000);
+
+  // ---- Dragging and throwing the head ---------------------------------------
+
+  const drag = { on: false, moved: false, x0: 0, y0: 0, ox: 0, oy: 0, vx: 0, vy: 0, t: 0, raf: 0, weeAt: 0, weed: false, bumpAt: 0 };
+
+  function grab(e) {
+    if (e.button !== 0) return;
+    cancelAnimationFrame(drag.raf);
+    life.flying = false;
+    Object.assign(drag, { on: true, moved: false, x0: e.clientX, y0: e.clientY, vx: 0, vy: 0, t: now(), weed: false });
+    headBtn.setPointerCapture(e.pointerId);
+  }
+  function dragMove(e) {
+    if (!drag.on) return;
+    if (!drag.moved) {
+      if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return;
+      drag.moved = true;
+      interrupt();
+      wake();
+      // Pick the head up from wherever it visibly is, mid-glide or not.
+      stopTween(actor);
+      const m = new DOMMatrix(getComputedStyle(actor).transform);
+      setHead(m.m41, m.m42);
+      drag.ox = drag.x0 - pos.x;
+      drag.oy = drag.y0 - pos.y;
+      root.classList.add('dragging');
+      emote('!');
+      life.surprise = now() + 300;
+    }
+    const t = now();
+    const dt = Math.max(1, t - drag.t) / 1000;
+    const x = e.clientX - drag.ox;
+    const y = e.clientY - drag.oy;
+    drag.vx = drag.vx * 0.6 + ((x - pos.x) / dt) * 0.4;
+    drag.vy = drag.vy * 0.6 + ((y - pos.y) / dt) * 0.4;
+    drag.t = t;
+    setHead(x, y);
+    life.lean = clamp(drag.vx / 90, -30, 30);
+    if (Math.hypot(drag.vx, drag.vy) > 1500) wee();
+  }
+  function drop() {
+    if (!drag.on) return;
+    drag.on = false;
+    root.classList.remove('dragging');
+    if (!drag.moved) return;
+    // Letting go after holding still shouldn't fling it.
+    if (now() - drag.t > 80) drag.vx = drag.vy = 0;
+    fling(drag.vx, drag.vy);
+  }
+
+  function wee() {
+    const t = now();
+    if (t - drag.weeAt < 1400) return;
+    drag.weeAt = t;
+    drag.weed = true;
+    setFace('happy', 1400);
+    shout('w' + 'e'.repeat(4 + Math.floor(Math.random() * 5)));
+  }
+  function shout(text) {
+    shoutEl.textContent = text;
+    life.surprise = now() + 450;
+    [...text].forEach((ch, i) => setTimeout(() => voice(ch), i * 45));
+    play(shoutEl, [
+      { transform: 'translate(-50%, 6px) scale(.5) rotate(-8deg)', opacity: 0 },
+      { transform: 'translate(-50%, -6px) scale(1.15) rotate(4deg)', opacity: 1, offset: 0.25 },
+      { transform: 'translate(-50%, -28px) scale(1) rotate(-2deg)', opacity: 0 }
+    ], { duration: 1000, easing: 'ease-out' });
+  }
+  function bump() {
+    const t = now();
+    if (t - drag.bumpAt < 250) return;
+    drag.bumpAt = t;
+    sound.thud();
+    squish();
+    emote('!');
+    setFace('angry', 900);
+  }
+
+  // Momentum with friction, bouncing off the edges of the window.
+  function fling(vx, vy) {
+    let last = now();
+    let spun = 0;
+    life.flying = true;
+    const step = (t) => {
+      const dt = Math.min(0.033, (t - last) / 1000);
+      last = t;
+      const f = Math.pow(0.08, dt);
+      vx *= f;
+      vy *= f;
+      let x = pos.x + vx * dt;
+      let y = pos.y + vy * dt;
+      const maxX = innerWidth - HW;
+      const maxY = innerHeight - HH;
+      if (x < 0 || x > maxX) { x = clamp(x, 0, maxX); if (Math.abs(vx) > 300) bump(); vx *= -0.55; }
+      if (y < 0 || y > maxY) { y = clamp(y, 0, maxY); if (Math.abs(vy) > 300) bump(); vy *= -0.55; }
+      const turn = reduce ? 0 : vx * dt * 0.6;
+      life.spin += turn;
+      spun += Math.abs(turn);
+      life.lean = clamp(vx / 90, -30, 30);
+      setHead(x, y);
+      if (Math.hypot(vx, vy) > 1100) wee();
+      if (Math.hypot(vx, vy) > 30) { drag.raf = requestAnimationFrame(step); return; }
+      land(spun);
+    };
+    drag.raf = requestAnimationFrame(step);
+  }
+  function land(spun) {
+    life.flying = false;
+    life.lean = 0;
+    if (chatOn) setTimeout(() => { if (chatOn && !drag.on) goHome(600); }, 700);
+    else {
+      S.home = { x: pos.x / innerWidth, y: pos.y / innerHeight };
+      save();
+    }
+    if (spun > 540) { emote('@'); quip(pick(LINES.dizzy), 1400, 'sad'); }
+    else if (drag.weed) quip(pick(LINES.landed), 1200, 'happy');
+  }
 
   // ---- Wiring ---------------------------------------------------------------
 
@@ -1153,7 +1362,15 @@
     addEventListener('scroll', () => { lastInput = now(); }, { passive: true });
     addEventListener('resize', onResize);
 
-    headBtn.addEventListener('click', () => (chatOn ? poke() : openChat()));
+    headBtn.addEventListener('click', () => {
+      if (drag.moved) { drag.moved = false; return; }
+      if (chatOn) poke();
+      else openChat();
+    });
+    headBtn.addEventListener('pointerdown', grab);
+    headBtn.addEventListener('pointermove', dragMove);
+    headBtn.addEventListener('pointerup', drop);
+    headBtn.addEventListener('pointercancel', drop);
     headBtn.addEventListener('pointerenter', () => { if (!chatOn) squish(); });
     $('.dl-x').addEventListener('click', () => (chatOn ? closeChat() : shoo()));
     $('.dl-mute').addEventListener('click', () => {
@@ -1171,18 +1388,18 @@
     micBtn.addEventListener('click', listen);
 
     document.documentElement.addEventListener('mouseleave', (e) => {
-      if (fine && e.clientY <= 0 && now() > 8000) react('exit', LINES.exit, 2600);
+      if (fine && e.clientY <= 0 && now() > 8000) react('exit', LINES.exit, 2600, 'sad');
     });
     let hiddenAt = 0;
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) hiddenAt = now();
-      else if (now() - hiddenAt > 5000) react('back', LINES.back);
+      else if (now() - hiddenAt > 5000) react('back', LINES.back, 1800, 'happy');
     });
     new MutationObserver(() => {
       react('theme', document.documentElement.getAttribute('data-theme') === 'dark' ? LINES.dark : LINES.light, 1200);
     }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    addEventListener('contextmenu', () => react('rightclick', LINES.rightclick));
-    document.addEventListener('copy', () => react('copy', LINES.copy));
+    addEventListener('contextmenu', () => react('rightclick', LINES.rightclick, 1800, 'angry'));
+    document.addEventListener('copy', () => react('copy', LINES.copy, 1800, 'happy'));
     addEventListener('beforeprint', () => react('print', LINES.print));
     const footer = document.querySelector('.footer');
     if (footer && document.documentElement.scrollHeight > innerHeight * 1.4) {
@@ -1204,7 +1421,7 @@
     life.surprise = now() + 350;
     wave();
     const lost = document.querySelector('.identity .name')?.textContent.trim() === '404';
-    await quip(lost ? LINES.lost : LINES.hello, 3200);
+    await quip(lost ? LINES.lost : LINES.hello, 3200, lost ? 'sad' : 'happy');
   }
 
   function start() {
@@ -1226,6 +1443,7 @@
     measure();
     wire();
     requestAnimationFrame(tick);
+    if (HANDS) Object.values(HANDS).forEach((h) => { new Image().src = h.src; });
     fetch('/talk/targets.json')
       .then((r) => r.json())
       .then((t) => { targets = t; })

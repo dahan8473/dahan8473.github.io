@@ -258,10 +258,10 @@
       this.last = t;
       const c = ch.toLowerCase().normalize('NFD')[0];
       const code = c.charCodeAt(0);
-      if (this.voice instanceof AudioBuffer) {
-        // Animal Crossing does exactly this: the letter's own sound, cut
-        // short and played fast, so it comes out as a chirp in your voice.
-        const clip = VOICE.letters[c] || VOICE.letters['abcdefghijklmnopqrstuvwxyz'[code % 26]];
+      // Animal Crossing does exactly this: the letter's own sound, cut short
+      // and played fast, so it comes out as a chirp in your voice.
+      const clip = this.voice instanceof AudioBuffer && (VOICE.letters[c] || VOICE.letters['abcdefghijklmnopqrstuvwxyz'[code % 26]]);
+      if (clip) {
         const src = ac.createBufferSource();
         const g = ac.createGain();
         const rate = VOICE.rate * rand(0.93, 1.08);

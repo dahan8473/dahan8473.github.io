@@ -1,0 +1,43 @@
+{
+  "resume-swe": { "page": "/", "sel": "a[href$='resume-swe.pdf']", "about": "link to my SWE resume (PDF). On every page." },
+  "resume-pm": { "page": "/", "sel": "a[href$='resume-pm.pdf']", "about": "link to my PM resume (PDF). On every page." },
+  "email": { "page": "/", "sel": "a[aria-label='Email']", "about": "email me link. On every page." },
+  "github": { "page": "/", "sel": "a[aria-label='GitHub']", "about": "my GitHub. On every page." },
+  "linkedin": { "page": "/", "sel": "a[aria-label='LinkedIn']", "about": "my LinkedIn. On every page." },
+  "x": { "page": "/", "sel": "a[aria-label='X']", "about": "my X account. On every page." },
+  "home": { "page": "/", "sel": ".back", "about": "the back link to the homepage, on case study pages" },
+
+  "stats": { "page": "/", "sel": ".stats", "about": "the numbers row near the top of the homepage" },
+  "now": { "page": "/", "sel": ".intro .now", "about": "the 'Now' line: what I'm shipping right now" },
+  "build": { "page": "/", "sel": "[data-t='build']", "about": "Build section: Tethos Platform, BumBot, Kunlun" },
+  "tethos-platform": { "page": "/", "sel": "[data-t='tethos-platform']", "about": "Tethos Platform entry" },
+  "dashboard": { "page": "/", "sel": "a[href='dashboard/']", "about": "link to the 3D game dashboard case study" },
+  "rag": { "page": "/", "sel": "a[href='rag/']", "about": "link to the RAG service case study" },
+  "bumbot": { "page": "/", "sel": "[data-t='bumbot']", "about": "BumBot entry" },
+  "kunlun": { "page": "/", "sel": "[data-t='kunlun']", "about": "Kunlun entry" },
+  "lead": { "page": "/", "sel": "[data-t='lead']", "about": "Lead section: Tethos, GENESIS, Western Founders Network" },
+  "tethos": { "page": "/", "sel": "[data-t='tethos']", "about": "Tethos entry (founder and president)" },
+  "genesis": { "page": "/", "sel": "[data-t='genesis']", "about": "GENESIS entry" },
+  "wfn": { "page": "/", "sel": "[data-t='wfn']", "about": "Western Founders Network entry" },
+  "play": { "page": "/", "sel": "[data-t='play']", "about": "Play section: guitar, Muay Thai, photography" },
+  "guitar": { "page": "/", "sel": "[data-t='guitar']", "about": "Guitar entry. Clicking 'Guitar' opens four recordings." },
+  "muaythai": { "page": "/", "sel": "[data-t='muaythai']", "about": "Muay Thai entry" },
+  "photography": { "page": "/", "sel": "[data-t='photography']", "about": "Photography entry" },
+
+  "tethos-page": { "page": "/tethos/", "sel": ".header", "about": "top of the Tethos case study page" },
+  "tethos-impact": { "page": "/tethos/", "sel": "[data-t='tethos-impact']", "about": "Tethos page, Impact section" },
+  "tethos-clients": { "page": "/tethos/", "sel": "[data-t='tethos-clients']", "about": "Tethos page, client work entry" },
+  "tethos-stack": { "page": "/tethos/", "sel": "[data-t='tethos-stack']", "about": "Tethos page, tech stack section" },
+  "tethos-site": { "page": "/tethos/", "sel": "a[href='https://tethos.ca']", "about": "link to tethos.ca" },
+
+  "rag-page": { "page": "/rag/", "sel": ".header", "about": "top of the RAG service case study page" },
+  "rag-hard-part": { "page": "/rag/", "sel": "[data-t='rag-hard-part']", "about": "RAG page, the hard part: delta re-indexing" },
+
+  "dashboard-page": { "page": "/dashboard/", "sel": ".header", "about": "top of the 3D dashboard case study page" },
+  "dashboard-hard-part": { "page": "/dashboard/", "sel": "[data-t='dashboard-hard-part']", "about": "dashboard page, the terrain height bake (50x cheaper)" },
+  "dashboard-ghosts": { "page": "/dashboard/", "sel": "[data-t='dashboard-ghosts']", "about": "dashboard page, the 'empty world' ghosts" },
+  "dashboard-budget": { "page": "/dashboard/", "sel": "[data-t='dashboard-budget']", "about": "dashboard page, NPC budget and cost gates" },
+
+  "kunlun-page": { "page": "/kunlun/", "sel": ".header", "about": "top of the Kunlun case study page" },
+  "kunlun-design": { "page": "/kunlun/", "sel": "[data-t='kunlun-design']", "about": "Kunlun page, bilingual design system" }
+}

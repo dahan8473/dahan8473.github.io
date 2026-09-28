@@ -180,7 +180,8 @@
 .dl-hand-in { transform-origin: 62% 92%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.16)); }
 .dl-hand svg,
 .dl-hand img { display: block; width: 100%; height: auto; }
-.dl-hand svg path { fill: var(--bg); stroke: currentColor; }
+.dl-hand svg path { fill: none; stroke: currentColor; }
+.dl-hand svg path:first-child { fill: var(--bg); }
 
 /* Knocking on the glass leaves a ring where the knuckles hit. */
 .dl-ripple {
@@ -367,6 +368,16 @@
   font-size: 14px;
 }
 .dl-form input::placeholder { color: var(--muted); }
+.dl-form .dl-mic {
+  background: none;
+  color: var(--muted);
+}
+.dl-form .dl-mic:hover { color: var(--strong); }
+.dl.listening .dl-form .dl-mic {
+  background: #bf616a;
+  color: #fff;
+  animation: dl-rec 1.2s ease-in-out infinite;
+}
 .dl-form button {
   flex: none;
   width: 32px;
@@ -429,6 +440,10 @@ a.dl-held { display: inline-block; }
   0% { transform: translate(0, 4px); opacity: 0; }
   30% { opacity: 1; }
   100% { transform: translate(10px, -18px); opacity: 0; }
+}
+@keyframes dl-rec {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(191, 97, 106, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(191, 97, 106, 0); }
 }
 @keyframes dl-lit {
   0% { background-size: 0% 46%; }

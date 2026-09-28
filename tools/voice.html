@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Voice recorder</title>
+  <link rel="stylesheet" href="/styles.css?v=5">
+  <style>
+    main { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem; display: grid; gap: 1.5rem; }
+    h1 { font-size: 20px; font-weight: 400; margin: 0; color: var(--strong); }
+    .muted { color: var(--muted); }
+    .stage { display: flex; align-items: center; gap: 2rem; }
+    .big { font-size: 96px; line-height: 1; color: var(--strong); width: 1.2em; text-align: center; }
+    .rec { padding: 1rem 1.6rem; border: 1px solid var(--rule); border-radius: 999px; background: none; color: var(--strong); font: inherit; cursor: pointer; }
+    .rec.on { background: #bf616a; border-color: #bf616a; color: #fff; }
+    .grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 6px; }
+    .grid button { aspect-ratio: 1; border: 1px solid var(--rule); border-radius: 8px; background: none; color: var(--muted); font: inherit; cursor: pointer; }
+    .grid button.done { color: var(--strong); border-color: var(--muted); }
+    .grid button.cur { outline: 2px solid #88c0d0; outline-offset: 1px; }
+    .row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    input[type=text] { flex: 1; min-width: 240px; padding: .6rem .8rem; border: 1px solid var(--rule); border-radius: 8px; background: none; color: var(--fg); font: inherit; }
+    button.plain { padding: .5rem .9rem; border: 1px solid var(--rule); border-radius: 8px; background: none; color: var(--fg); font: inherit; cursor: pointer; }
+    pre { white-space: pre-wrap; word-break: break-all; padding: 1rem; border: 1px solid var(--rule); border-radius: 8px; font-size: 11px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Record the head's voice</h1>
+  <p class="muted">Hold <b>space</b> (or the button), say the letter's name short and clear, let go. It trims, normalizes and moves on. Click a letter to play it, shift-click to redo it. Same mic, same distance, same energy for all 26. Animal Crossing speeds these up about 2x, so say them at a normal pitch.</p>
+
+  <div class="stage">
+    <div class="big" id="letter">a</div>
+    <button class="rec" id="rec" type="button">hold to record</button>
+    <span class="muted" id="status">mic not started</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="row">
+    <input type="text" id="try" value="hey. i'm david, the floating head version">
+    <button class="plain" id="say" type="button">say it</button>
+  </div>
+  <div class="row muted">
+    <label>speed <input type="range" id="rate" min="1.4" max="3" step="0.05" value="2.1"> <span id="rateV">2.1</span>x</label>
+    <label>clip <input type="range" id="clip" min="0.06" max="0.3" step="0.01" value="0.16"> <span id="clipV">0.16</span>s</label>
+  </div>
+
+  <div class="row">
+    <button class="plain" id="export" type="button">export voice.wav + config</button>
+    <span class="muted">Put voice.wav in media/, paste the config over <code>const VOICE = null;</code> in talk/talk.js.</span>
+  </div>
+  <pre id="out" hidden></pre>
+</main>
+
+<script>
+(function () {
+  const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  const RATE = 22050;
+  const clips = {};
+  let ac, stream, recorder, chunks = [], cur = 0;
+
+  const $ = (id) => document.getElementById(id);
+  const grid = $('grid');
+  LETTERS.forEach((l, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = l;
+    b.addEventListener('click', (e) => { if (e.shiftKey || !clips[l]) select(i); else playClip(l, 1); });
+    grid.appendChild(b);
+  });
+  function select(i) {
+    cur = i;
+    $('letter').textContent = LETTERS[i];
+    [...grid.children].forEach((b, j) => { b.classList.toggle('cur', j === i); b.classList.toggle('done', !!clips[LETTERS[j]]); });
+  }
+  select(0);
+
+  async function start() {
+    if (recorder && recorder.state === 'recording') return;
+    ac = ac || new AudioContext();
+    if (!stream) {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: false } });
+    }
+    chunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+    recorder.onstop = finish;
+    recorder.start();
+    $('rec').classList.add('on');
+    $('status').textContent = 'recording "' + LETTERS[cur] + '"';
+  }
+  function stop() {
+    if (!recorder || recorder.state !== 'recording') return;
+    recorder.stop();
+    $('rec').classList.remove('on');
+  }
+  async function finish() {
+    const buf = await ac.decodeAudioData(await new Blob(chunks).arrayBuffer());
+    const data = buf.getChannelData(0);
+    const clip = trim(data, buf.sampleRate);
+    if (!clip) { $('status').textContent = "didn't hear anything, try again"; return; }
+    clips[LETTERS[cur]] = { data: clip, rate: buf.sampleRate };
+    $('status').textContent = 'got "' + LETTERS[cur] + '" (' + Math.round((clip.length / buf.sampleRate) * 1000) + 'ms)';
+    playClip(LETTERS[cur], 1);
+    const next = LETTERS.findIndex((l, i) => i > cur && !clips[l]);
+    select(next < 0 ? LETTERS.findIndex((l) => !clips[l]) : next);
+    if (cur < 0) select(25);
+  }
+
+  // Cut the silence off both ends, cap the length, normalize the peak.
+  function trim(data, sr) {
+    let peak = 0;
+    for (const v of data) peak = Math.max(peak, Math.abs(v));
+    if (peak < 0.01) return null;
+    const th = Math.max(0.015, peak * 0.12);
+    let a = 0, b = data.length - 1;
+    while (a < b && Math.abs(data[a]) < th) a++;
+    while (b > a && Math.abs(data[b]) < th) b--;
+    a = Math.max(0, a - Math.round(sr * 0.01));
+    b = Math.min(data.length, b + Math.round(sr * 0.03), a + Math.round(sr * 0.35));
+    const out = data.slice(a, b);
+    const k = 0.9 / peak;
+    for (let i = 0; i < out.length; i++) out[i] *= k;
+    const fade = Math.min(out.length, Math.round(sr * 0.008));
+    for (let i = 0; i < fade; i++) { out[i] *= i / fade; out[out.length - 1 - i] *= i / fade; }
+    return out;
+  }
+
+  function playClip(l, rate, when = 0, len = Infinity) {
+    const c = clips[l];
+    if (!c) return;
+    ac = ac || new AudioContext();
+    const b = ac.createBuffer(1, c.data.length, c.rate);
+    b.copyToChannel(c.data, 0);
+    const src = ac.createBufferSource();
+    src.buffer = b;
+    src.playbackRate.value = rate;
+    src.connect(ac.destination);
+    src.start(ac.currentTime + when, 0, Math.min(len, b.duration));
+  }
+  // Same rules as talk.js: one clip per letter, sped up, pauses on punctuation.
+  function sayIt() {
+    const rate = +$('rate').value, clip = +$('clip').value;
+    let t = 0;
+    for (const ch of $('try').value.toLowerCase()) {
+      if (clips[ch]) { playClip(ch, rate * (0.93 + Math.random() * 0.15), t, clip); t += 0.056; }
+      else t += /[.!?]/.test(ch) ? 0.3 : /[,]/.test(ch) ? 0.14 : 0.028;
+    }
+  }
+
+  async function exportIt() {
+    const have = LETTERS.filter((l) => clips[l]);
+    if (have.length < 26 && !confirm('Only ' + have.length + '/26 letters. Export anyway? Missing ones borrow another letter.')) return;
+    const gap = Math.round(RATE * 0.03);
+    const parts = [];
+    for (const l of have) {
+      const c = clips[l];
+      const off = new OfflineAudioContext(1, Math.ceil((c.data.length / c.rate) * RATE), RATE);
+      const b = off.createBuffer(1, c.data.length, c.rate);
+      b.copyToChannel(c.data, 0);
+      const s = off.createBufferSource();
+      s.buffer = b;
+      s.connect(off.destination);
+      s.start();
+      parts.push([l, (await off.startRendering()).getChannelData(0)]);
+    }
+    const total = parts.reduce((n, [, d]) => n + d.length + gap, 0);
+    const pcm = new Float32Array(total);
+    const letters = {};
+    let at = 0;
+    for (const [l, d] of parts) {
+      pcm.set(d, at);
+      letters[l] = [+(at / RATE).toFixed(4), +(d.length / RATE).toFixed(4)];
+      at += d.length + gap;
+    }
+    download(wav(pcm, RATE), 'voice.wav');
+    const config = { src: '/media/voice.wav', rate: +$('rate').value, clip: +$('clip').value, letters };
+    $('out').hidden = false;
+    $('out').textContent = 'const VOICE = ' + JSON.stringify(config) + ';';
+  }
+  function wav(pcm, sr) {
+    const v = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+    const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    w(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    w(36, 'data'); v.setUint32(40, pcm.length * 2, true);
+    pcm.forEach((s, i) => v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, s)) * 0x7fff, true));
+    return new Blob([v], { type: 'audio/wav' });
+  }
+  function download(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $('rec').addEventListener('pointerdown', start);
+  $('rec').addEventListener('pointerup', stop);
+  $('rec').addEventListener('pointerleave', stop);
+  addEventListener('keydown', (e) => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); if (!e.repeat) start(); } });
+  addEventListener('keyup', (e) => { if (e.code === 'Space' && e.target === document.body) stop(); });
+  $('say').addEventListener('click', sayIt);
+  $('export').addEventListener('click', exportIt);
+  $('rate').addEventListener('input', () => { $('rateV').textContent = $('rate').value; });
+  $('clip').addEventListener('input', () => { $('clipV').textContent = $('clip').value; });
+})();
+</script>
+</body>
+</html>

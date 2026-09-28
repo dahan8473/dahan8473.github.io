@@ -27,6 +27,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
   <link rel="preload" href="/fonts/TestSohne-Buch.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css?v=5">
+  <link rel="stylesheet" href="/talk/talk.css?v=1">
   <script>
     (function () {
       var stored = localStorage.getItem('theme');
@@ -87,7 +88,7 @@
             <p>Both land in one <code>documents</code> table, with Notion IDs namespaced so the two sources coexist.</p>
           </div>
         </article>
-        <article class="entry">
+        <article class="entry" data-t="rag-hard-part">
           <div class="role"><p class="org">The Hard Part</p></div>
           <div class="desc">
             <p>Embedding is the expensive step. Re-embedding an unchanged 50-chunk document is 50 API calls for no new information.</p>
@@ -168,5 +169,6 @@
   </footer>
 
   <script src="/theme.js?v=5"></script>
+  <script src="/talk/talk.js?v=1"></script>
 </body>
 </html>

@@ -1,2 +1,10 @@
 .DS_Store
 Thumbs.db
+
+# Real persona and anything else that must never ship publicly
+private/
+
+# Vercel function deps and local config
+node_modules/
+.vercel/
+.env*

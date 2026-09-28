@@ -27,6 +27,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
   <link rel="preload" href="/fonts/TestSohne-Buch.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css?v=5">
+  <link rel="stylesheet" href="/talk/talk.css?v=1">
   <script>
     (function () {
       var stored = localStorage.getItem('theme');
@@ -88,7 +89,7 @@
             <p>Buildings and paths flatten the ground beneath them, then ramp smoothly back to noise so nothing sits on a visible seam.</p>
           </div>
         </article>
-        <article class="entry">
+        <article class="entry" data-t="dashboard-hard-part">
           <div class="role"><p class="org">The Hard Part</p></div>
           <div class="desc">
             <p>Every entity ground-follows, so each samples terrain height per frame. Player, ghosts, NPCs and filler NPCs together ran roughly 960 FBM calls a second, and each FBM is 16 noise samples. Around 15,000 sin/floor calls a second just to stand on the ground. Fine on desktop, hot on an M1.</p>
@@ -113,7 +114,7 @@
           </div>
         </article>
 
-        <article class="entry">
+        <article class="entry" data-t="dashboard-ghosts">
           <div class="role"><p class="org">Empty World</p></div>
           <div class="desc">
             <p>There is no multiplayer. There is also never an empty world.</p>
@@ -131,7 +132,7 @@
           </div>
         </article>
 
-        <article class="entry">
+        <article class="entry" data-t="dashboard-budget">
           <div class="role"><p class="org">Budget</p></div>
           <div class="desc">
             <p>Frame cost is measured, not guessed. Shadows cost about 7 FPS on an M1 (60 down to 53), bloom about 12, vignette half a frame.</p>
@@ -196,5 +197,6 @@
   </footer>
 
   <script src="/theme.js?v=5"></script>
+  <script src="/talk/talk.js?v=1"></script>
 </body>
 </html>

@@ -12,7 +12,7 @@ Then open http://localhost:8000. The talking head works but can't reach its brai
 
 ## The talking head
 
-A cutout of my head floats around every page, splits at the mouth when it talks, and pesters visitors into chatting with it. A floating hand points at things, grabs links and whole sections and drags them to your cursor, and knocks on the screen. It notices devtools, tab switches, theme toggles, right clicks and copying.
+A cutout of my head waits for you to settle in, pops onto the page and starts the conversation: who it is, your name, then icebreakers until it finds something we have in common (have a pet? my cat waddles onto the screen and lies down). It splits at the mouth when it talks, blinks, and morphs into happy, sad or angry faces. My hands point at things, pinch links and whole sections and drag them to your cursor, knock on the screen, wave, and flash a peace sign. You can drag the head around and throw it (it yells weee). It notices devtools, tab switches, theme toggles, right clicks and copying.
 
 | Piece | Where |
 |---|---|
@@ -20,9 +20,11 @@ A cutout of my head floats around every page, splits at the mouth when it talks,
 | Lines it says on its own | `LINES` at the top of `talk/talk.js` |
 | Things it can point at | `talk/targets.json`, hooked with `data-t` in the pages |
 | Chat endpoint (Claude Haiku 4.5, streamed) | `api/chat.js`, runs on Vercel |
+| Page-view beacon | `api/visit.js` |
+| Visitor log and chat transcripts | Supabase, schema in `supabase/visitors.sql` |
 | Its brain | `api/_neuralink.js` |
 
-Replies stream as plain text with stage directions inline, like `[[point:rag]]` or `[[drag:resume-swe]]`. The page acts them out as the typewriter reaches them. Pointing at something on another page walks the visitor there after the reply.
+Replies stream as plain text with stage directions inline: `[[point:rag]]`, `[[drag:resume-swe]]`, `[[face:angry]]`, `[[summon:cat]]`, and `[[note:name=Alex]]` for things the head learns about the visitor (saved to their profile, never shown). The page acts them out as the typewriter reaches them. Pointing at something on another page walks the visitor there after the reply.
 
 ### Setup
 
@@ -30,17 +32,21 @@ Replies stream as plain text with stage directions inline, like `[[point:rag]]` 
 2. Env vars on the project:
    - `ANTHROPIC_API_KEY`
    - `DAVID_BRAIN`: `gzip -c private/persona.md | base64 | npx vercel env add DAVID_BRAIN production` (`private/` is gitignored and never ships)
+   - `SUPABASE_URL` and `SUPABASE_SECRET_KEY` for the visitor log. Use a dedicated Supabase project and run `supabase/visitors.sql` in its SQL editor once. Without these, nothing is stored.
 3. Set a monthly spend cap in the Anthropic console. That's the real rate limit.
 4. If the project URL isn't `davidliu-work.vercel.app`, change `API` at the top of `talk/talk.js`.
+
+Reading chats: the `conversations` table in Supabase, newest first by `updated_at`; `visitors.profile` has what the head learned about each person.
 
 ### Swapping in real photos
 
 ```bash
-swift tools/cutout.swift head photo.jpg media/head.png   # straight-on, mouth closed
-swift tools/cutout.swift hand photo.jpg media/hand.png   # index finger pointing
+swift tools/cutout.swift head photo.jpg media/head.webp                   # straight-on, mouth closed
+swift tools/cutout.swift hand point.jpg media/hands/point.webp point      # also pinch, fist, open
+swift tools/cutout.swift thing cat.jpg media/cat-walk.webp                # and cat-lie.webp
 ```
 
-Each prints a JSON config to paste over `HEAD` / `HAND` in `talk/talk.js`. The head config carries the mouth line, which is where the head splits.
+Each prints a JSON config to paste into `HEAD`, `HANDS` or `PET` in `talk/talk.js`. The head config carries the mouth line (where the head splits) and the morphed faces it writes next to it: blink, angry, sad, happy. `.webp` output needs `brew install webp`.
 
 ### Recording the voice
 

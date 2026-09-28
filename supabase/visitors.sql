@@ -70,7 +70,7 @@ begin
   on conflict (id) do update set last_seen = now();
 
   insert into conversations (id, visitor_id, messages, turns, last_page)
-  values (p_convo, p_visitor, p_all, (select count(*) from jsonb_array_elements(p_all) m where m->>'role' = 'user'), p_page)
+  values (p_convo, p_visitor, p_all, 1, p_page)
   on conflict (id) do update set
     messages = conversations.messages || p_new,
     turns = conversations.turns + 1,

@@ -70,6 +70,7 @@
       dashboard: 'i built a 3D island for a member dashboard. go look',
       kunlun: 'clothing brand. chinese mythology. click',
       github: "go look at my commits. or don't",
+      hackthenorth: 'this one won hack the north. look at it',
       email: 'my email. just in case'
     },
     shove: {
@@ -80,7 +81,8 @@
       'dashboard-hard-part': 'my favorite optimization. right here'
     },
     point: {
-      guitar: "that's me playing. well, a recording of me. open it",
+      guitar: "that's me playing. well, a recording of me. hit listen",
+      hackthenorth: 'we won this one. badges that play among us',
       now: "that's what i'm doing right now. roughly",
       'resume-swe': "resume's up here btw",
       'rag-hard-part': 'the actually interesting part is right here',
@@ -90,7 +92,8 @@
     roam: {
       build: 'i built all of these. ask me which one broke the most',
       lead: 'tethos is the main thing. ask me about it',
-      play: 'also badminton, chess, speed skating, watercolor, poetry.. this section ran out of room',
+      play: 'yes i actually played carnegie hall',
+      awards: "these are the ones i'm allowed to brag about",
       'tethos-impact': 'real numbers. real nonprofits',
       'dashboard-hard-part': 'the ground used to cost 15,000 sin calls a second'
     },
@@ -710,8 +713,20 @@
   function find(id) {
     const t = targets[id];
     if (!t) return null;
-    for (const el of document.querySelectorAll(t.sel)) if (!root.contains(el) && el.getClientRects().length) return el;
+    for (const el of document.querySelectorAll(t.sel)) {
+      if (!root.contains(el) && (el.getClientRects().length || el.closest('details'))) return el;
+    }
     return null;
+  }
+  // Rows on the page are <details>. Open the one we're about to point at.
+  function unfold(el) {
+    let opened = false;
+    for (let d = el.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) {
+      if (!d.open) { d.open = true; opened = true; }
+    }
+    const own = el.querySelector && el.querySelector(':scope > details');
+    if (own && !own.open) { own.open = true; opened = true; }
+    return opened ? wait(280) : Promise.resolve();
   }
   const isInline = (el) => /^inline/.test(getComputedStyle(el).display);
   function contentRect(el) {
@@ -748,6 +763,7 @@
     return useHand(async () => {
       const ep = epoch;
       pose('point');
+      await unfold(el);
       await ensureVisible(el);
       if (ep !== epoch) return;
       const r = el.getBoundingClientRect();

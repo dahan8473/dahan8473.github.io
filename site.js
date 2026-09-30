@@ -99,6 +99,17 @@
     });
   }
 
+  // Gallery arrows step one photo at a time.
+  var strip = document.querySelector('.strip');
+  document.querySelectorAll('.strip-nav button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (!strip) return;
+      var fig = strip.querySelector('figure');
+      var step = fig ? fig.getBoundingClientRect().width + 14 : 400;
+      strip.scrollBy({ left: step * Number(btn.getAttribute('data-dir')), behavior: 'smooth' });
+    });
+  });
+
   // Hover photo reveals. Add data-photo="/media/hover/name.jpg" to any element.
   var canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var targets = document.querySelectorAll('[data-photo]');
@@ -118,8 +129,8 @@
       if (visible) raf = requestAnimationFrame(frame);
     }
     document.addEventListener('mousemove', function (e) {
-      tx = Math.min(e.clientX + 24, window.innerWidth - 244);
-      ty = Math.max(12, e.clientY - 150);
+      tx = Math.min(e.clientX + 28, window.innerWidth - 268);
+      ty = Math.max(12, e.clientY - 180);
     });
     targets.forEach(function (el) {
       el.addEventListener('mouseenter', function () {

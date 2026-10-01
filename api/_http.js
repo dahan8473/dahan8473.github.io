@@ -24,3 +24,19 @@ export const isId = (v) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0
 export function clientIp(request) {
   return (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
 }
+
+export const json = (data, headers, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { ...headers, 'content-type': 'application/json', 'cache-control': 'no-store' } });
+
+// Sliding-window limit per key, per instance. Best effort.
+export function limiter(max, windowMs) {
+  const hits = new Map();
+  return (key) => {
+    const t = Date.now();
+    const recent = (hits.get(key) || []).filter((s) => t - s < windowMs);
+    recent.push(t);
+    if (hits.size > 5000) hits.clear();
+    hits.set(key, recent);
+    return recent.length > max;
+  };
+}

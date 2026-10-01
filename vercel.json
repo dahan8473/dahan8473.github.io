@@ -4,6 +4,10 @@
     "api/chat.js": {
       "maxDuration": 30,
       "includeFiles": "talk/targets.json"
+    },
+    "api/decide.js": {
+      "maxDuration": 10,
+      "includeFiles": "talk/targets.json"
     }
   }
 }

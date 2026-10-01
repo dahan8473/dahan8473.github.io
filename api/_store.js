@@ -5,14 +5,19 @@
 const URL_ = process.env.SUPABASE_URL;
 const KEY = process.env.SUPABASE_SECRET_KEY;
 
+export const hasStore = Boolean(URL_ && KEY);
+
+// Returns the function's result, or undefined when the store is off or fails.
 async function rpc(fn, args) {
-  if (!URL_ || !KEY) return;
+  if (!hasStore) return;
   // New-style sb_secret_ keys go in apikey only; legacy service_role JWTs also as a bearer.
   const headers = { apikey: KEY, 'content-type': 'application/json' };
   if (!KEY.startsWith('sb_')) headers.authorization = `Bearer ${KEY}`;
   try {
     const res = await fetch(`${URL_}/rest/v1/rpc/${fn}`, { method: 'POST', headers, body: JSON.stringify(args) });
-    if (!res.ok) console.error('store', fn, res.status, await res.text());
+    if (!res.ok) { console.error('store', fn, res.status, await res.text()); return; }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
   } catch (err) {
     console.error('store', fn, err);
   }
@@ -52,4 +57,25 @@ export function saveChat({ convo, visitor, messages, reply, page }) {
     p_notes: notesIn(reply),
     p_page: page
   });
+}
+
+// Monthly spend on the brain, in dollars. Without a store the count lives in
+// this instance only, which is a floor, not a cap; the OpenAI project budget
+// is the backstop.
+let local = 0;
+export async function spent() {
+  const v = await rpc('spent_this_month', {});
+  return v == null ? local : Number(v);
+}
+export async function addSpend(usd) {
+  local += usd;
+  if (usd > 0) await rpc('add_spend', { p_usd: usd });
+}
+
+export function recall(visitor) {
+  return rpc('recall', { p_visitor: visitor });
+}
+
+export function leaveNote({ visitor, name, contact, message, page }) {
+  return rpc('leave_note', { p_visitor: visitor, p_name: name || '', p_contact: contact || '', p_message: message, p_page: page });
 }

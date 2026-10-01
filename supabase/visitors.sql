@@ -87,3 +87,86 @@ $$;
 
 revoke execute on function track_visit(uuid, text, text, text, text, text, text) from public, anon, authenticated;
 revoke execute on function save_chat(uuid, uuid, jsonb, jsonb, jsonb, text) from public, anon, authenticated;
+
+-- ---- Added 2026-10: spend cap, notes for David, memory -----------------------
+
+-- What the brain has cost, per calendar month (UTC), in dollars.
+create table if not exists spend (
+  month text primary key,                 -- 'YYYY-MM'
+  usd numeric not null default 0,
+  updated_at timestamptz not null default now()
+);
+alter table spend enable row level security;
+
+create or replace function add_spend(p_usd numeric)
+returns numeric
+language sql
+set search_path = public
+as $$
+  insert into spend (month, usd) values (to_char(now() at time zone 'utc', 'YYYY-MM'), p_usd)
+  on conflict (month) do update set usd = spend.usd + excluded.usd, updated_at = now()
+  returning usd;
+$$;
+
+create or replace function spent_this_month()
+returns numeric
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce((select usd from spend where month = to_char(now() at time zone 'utc', 'YYYY-MM')), 0);
+$$;
+
+-- Notes visitors leave for the real David through the head.
+create table if not exists notes (
+  id bigint generated always as identity primary key,
+  visitor_id uuid references visitors (id) on delete set null,
+  name text,
+  contact text,
+  message text not null,
+  page text,
+  at timestamptz not null default now()
+);
+alter table notes enable row level security;
+
+create or replace function leave_note(p_visitor uuid, p_name text, p_contact text, p_message text, p_page text)
+returns bigint
+language sql
+set search_path = public
+as $$
+  insert into visitors (id) values (p_visitor) on conflict (id) do nothing;
+  insert into notes (visitor_id, name, contact, message, page)
+  values (p_visitor, nullif(p_name, ''), nullif(p_contact, ''), p_message, p_page)
+  returning id;
+$$;
+
+-- What the head remembers about a returning visitor.
+create or replace function recall(p_visitor uuid)
+returns jsonb
+language sql
+stable
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'name', v.name,
+    'profile', v.profile,
+    'visits', (select count(distinct date_trunc('day', at)) from page_views where visitor_id = v.id),
+    'first_seen', v.first_seen,
+    'last_seen', v.last_seen,
+    'last_asked', (
+      select coalesce(jsonb_agg(m->>'content'), '[]'::jsonb)
+      from (
+        select e.m from conversations c, jsonb_array_elements(c.messages) with ordinality as e(m, i)
+        where c.visitor_id = v.id and e.m->>'role' = 'user' and left(e.m->>'content', 1) <> '('
+        order by c.updated_at desc, e.i desc
+        limit 4
+      ) last
+    )
+  )
+  from visitors v where v.id = p_visitor;
+$$;
+
+revoke execute on function add_spend(numeric) from public, anon, authenticated;
+revoke execute on function spent_this_month() from public, anon, authenticated;
+revoke execute on function leave_note(uuid, text, text, text, text) from public, anon, authenticated;
+revoke execute on function recall(uuid) from public, anon, authenticated;

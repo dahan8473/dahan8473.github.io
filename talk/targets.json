@@ -39,10 +39,30 @@
     "sel": "[data-t='now']",
     "about": "the intro paragraph at the top"
   },
+  "nav": {
+    "page": "/",
+    "sel": ".rail",
+    "about": "the section bar on the left edge (a bar across the top on phones). Hover it to see the labels. On every page."
+  },
+  "resume": {
+    "page": "/",
+    "sel": "[data-t='resume']",
+    "about": "Resume section: SWE and PM resume PDFs, Western education, what I'm looking for"
+  },
+  "western": {
+    "page": "/",
+    "sel": "[data-t='western']",
+    "about": "Western University row in the Resume section; opens to this term's courses"
+  },
+  "experience": {
+    "page": "/",
+    "sel": "[data-t='work']",
+    "about": "Experience section: J.D. Power, Modern Engineering, Tsinghua"
+  },
   "build": {
     "page": "/",
     "sel": "[data-t='build']",
-    "about": "Projects list; each row opens for details and links"
+    "about": "Projects section; each row opens for details and links"
   },
   "tethos-platform": {
     "page": "/",
@@ -69,10 +89,15 @@
     "sel": "[data-t='tethos']",
     "about": "Tethos row in the Work list (opens to partners and GENESIS)"
   },
+  "leadership": {
+    "page": "/",
+    "sel": "[data-t='leadership']",
+    "about": "Leadership section: Tethos, Western Founders Network, mentoring"
+  },
   "tethos": {
     "page": "/",
     "sel": "[data-t='tethos']",
-    "about": "Tethos entry in the experience list (founder and president)"
+    "about": "Tethos entry in the Leadership section (founder and president)"
   },
   "genesis": {
     "page": "/",
@@ -82,12 +107,12 @@
   "wfn": {
     "page": "/",
     "sel": "[data-t='wfn']",
-    "about": "Western Founders Network entry in the experience list"
+    "about": "Western Founders Network entry in the Leadership section"
   },
   "life": {
     "page": "/",
     "sel": "[data-t='life']",
-    "about": "Life section: meowmeow photos, guitar recordings, Muay Thai, photography, travel, other hobbies"
+    "about": "Hobbies section: meowmeow photos, guitar recordings, Muay Thai, photography, travel, other hobbies"
   },
   "play": {
     "page": "/",
@@ -192,7 +217,7 @@
   "jdpower": {
     "page": "/",
     "sel": "[data-t='jdpower']",
-    "about": "J.D. Power experience entry (16-month SWE co-op)"
+    "about": "J.D. Power entry in the Experience section"
   },
   "hackthenorth": {
     "page": "/",
@@ -228,6 +253,11 @@
     "page": "/",
     "sel": "[data-t='awards']",
     "about": "Awards section"
+  },
+  "skills": {
+    "page": "/",
+    "sel": "[data-t='skills']",
+    "about": "Skills section: languages, frameworks, AI and data, systems"
   },
   "contact": {
     "page": "/",

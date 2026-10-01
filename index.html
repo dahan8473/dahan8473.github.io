@@ -25,7 +25,7 @@
   <meta name="twitter:image" content="https://davidliu.work/og.png">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css?v=8">
+  <link rel="stylesheet" href="/styles.css?v=9">
   <link rel="stylesheet" href="/talk/talk.css?v=3">
 
   <script type="application/ld+json">
@@ -53,6 +53,18 @@
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
+  <nav class="rail" aria-label="Sections">
+    <a href="#resume"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg><span>Resume</span></a>
+    <a href="#experience"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/></svg><span>Experience</span></a>
+    <a href="#projects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 8l-4 4 4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/></svg><span>Projects</span></a>
+    <a href="#leadership"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 21V4M5.5 4.5h11l-2.2 4 2.2 4h-11"/></svg><span>Leadership</span></a>
+    <a href="#awards"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4.5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5v1A3 3 0 0 0 7.4 10M17 6h2.5v1a3 3 0 0 1-2.9 3M12 13.5V18M8 20.5h8"/></svg><span>Awards</span></a>
+    <a href="#skills"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg><span>Skills</span></a>
+    <a href="#hobbies"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg><span>Hobbies</span></a>
+    <span class="sep" aria-hidden="true"></span>
+    <a href="#contact"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg><span>Contact</span></a>
+  </nav>
+
   <div class="page">
     <header class="top">
       <a class="me" href="/">David Liu</a>
@@ -78,17 +90,25 @@
         </div>
       </section>
 
-      <section class="spec" id="now" aria-labelledby="now-h">
-        <h2 id="now-h">Now</h2>
+      <section class="spec" id="resume" data-t="resume" aria-labelledby="resume-h">
+        <h2 id="resume-h">Resume</h2>
         <ul class="list">
-          <li class="row"><span class="p">Studying</span><span class="s">Software Engineering at Western, fourth year</span><span class="m">London, ON</span></li>
+          <li><a class="row" href="resume-swe.pdf"><span class="p">Software engineering</span><span class="s">Updated September 2026</span><span class="m">PDF</span></a></li>
+          <li><a class="row" href="resume-pm.pdf"><span class="p">Product</span><span class="s">Product management</span><span class="m">PDF</span></a></li>
+          <li data-t="western">
+            <details>
+              <summary class="row"><span class="p">Western University</span><span class="s">B.E.Sc. Software Engineering, co-op</span><span class="m">2022 – 2028</span></summary>
+              <div class="more">
+                <p>Fourth year, graduating April 2028. This term: Artificial Intelligence, Software Testing, Multiagent Systems, and Information Security.</p>
+              </div>
+            </details>
+          </li>
           <li class="row"><span class="p">Looking for</span><span class="s">A software engineering internship</span><span class="m">Summer 2027</span></li>
-          <li class="row"><span class="p">Handing off</span><span class="s">Tethos to the next team, staying on as an advisor</span><span class="m">2026</span></li>
         </ul>
       </section>
 
-      <section class="spec" id="work" data-t="work" aria-labelledby="work-h">
-        <h2 id="work-h">Work</h2>
+      <section class="spec" id="experience" data-t="work" aria-labelledby="experience-h">
+        <h2 id="experience-h">Experience</h2>
         <ul class="list">
           <li data-t="jdpower">
             <details>
@@ -96,17 +116,6 @@
               <div class="more">
                 <p>Sixteen months on Spring Boot services running on Kubernetes behind the Build &amp; Price sites for Jeep, RAM, Dodge, Chrysler and Maserati. Fixed the backend and data-pipeline defects blocking the model-year 2026 launch, cleaned up 2,000+ secret-scanning findings, and wrote the report on GitHub Copilot for vulnerability detection that engineering leadership adopted.</p>
                 <p class="t3">Java · Spring Boot · Kubernetes · Kafka</p>
-              </div>
-            </details>
-          </li>
-          <li data-t="tethos">
-            <details>
-              <summary class="row" data-photo="media/work/tethos-team.webp"><span class="p">Tethos</span><span class="s">Founder &amp; President</span><span class="m">2024 – now</span></summary>
-              <div class="more">
-                <p>A federally incorporated nonprofit I started at Western, where student developers build free software for nonprofits that can't afford a dev shop. It grew to 250+ developers and an 80+ person exec team across Western and UBC, shipped 20+ projects, and saved partners over $500k.</p>
-                <p><span class="t1">Partners</span> World Vision, Canadian Red Cross, London Children's Museum, International Rescue Committee.</p>
-                <p data-t="genesis"><span class="t1">GENESIS</span> Our demo day: 260+ attendees, 7 project demos, 8 sponsors, $12,000 raised.</p>
-                <p class="go"><a class="ln" href="tethos/">Case study</a><a class="ln out" href="https://tethos.ca">tethos.ca</a></p>
               </div>
             </details>
           </li>
@@ -119,12 +128,7 @@
               </div>
             </details>
           </li>
-          <li data-t="wfn">
-            <details>
-              <summary class="row"><span class="p">Western Founders Network</span><span class="s">VP of Education</span><span class="m">2023 – 2025</span></summary>
-              <div class="more"><p>Ran Ontario's largest hackathon education event.</p></div>
-            </details>
-          </li>
+          <li class="row" data-t="tsinghua"><span class="p">Tsinghua University</span><span class="s">AI Research Assistant</span><span class="m">2023</span></li>
         </ul>
       </section>
 
@@ -226,6 +230,30 @@
         </div>
       </section>
 
+      <section class="spec" id="leadership" data-t="leadership" aria-labelledby="leadership-h">
+        <h2 id="leadership-h">Leadership</h2>
+        <ul class="list">
+          <li data-t="tethos">
+            <details>
+              <summary class="row" data-photo="media/work/tethos-team.webp"><span class="p">Tethos</span><span class="s">Founder &amp; President</span><span class="m">2024 – now</span></summary>
+              <div class="more">
+                <p>A federally incorporated nonprofit I started at Western, where student developers build free software for nonprofits that can't afford a dev shop. It grew to 250+ developers and an 80+ person exec team across Western and UBC, shipped 20+ projects, and saved partners over $500k. This year I'm handing it to the next team and staying on as an advisor.</p>
+                <p><span class="t1">Partners</span> World Vision, Canadian Red Cross, London Children's Museum, International Rescue Committee.</p>
+                <p data-t="genesis"><span class="t1">GENESIS</span> Our demo day: 260+ attendees, 7 project demos, 8 sponsors, $12,000 raised.</p>
+                <p class="go"><a class="ln" href="tethos/">Case study</a><a class="ln out" href="https://tethos.ca">tethos.ca</a></p>
+              </div>
+            </details>
+          </li>
+          <li data-t="wfn">
+            <details>
+              <summary class="row"><span class="p">Western Founders Network</span><span class="s">VP of Education</span><span class="m">2023 – 2025</span></summary>
+              <div class="more"><p>Ran Ontario's largest hackathon education event.</p></div>
+            </details>
+          </li>
+          <li class="row"><span class="p">Mentoring</span><span class="s">Hack Western and Western AI mentor, Ignition Hacks judge</span><span class="m"></span></li>
+        </ul>
+      </section>
+
       <section class="spec" id="awards" data-t="awards" aria-labelledby="awards-h">
         <h2 id="awards-h">Awards</h2>
         <ul class="list">
@@ -237,8 +265,18 @@
         </ul>
       </section>
 
-      <section class="spec" id="life" data-t="life" aria-labelledby="life-h">
-        <h2 id="life-h">Life</h2>
+      <section class="spec" id="skills" data-t="skills" aria-labelledby="skills-h">
+        <h2 id="skills-h">Skills</h2>
+        <ul class="list">
+          <li class="row"><span class="p">Languages</span><span class="s">Python, Java, C++, Go, JavaScript, TypeScript, SQL, HTML/CSS</span><span class="m"></span></li>
+          <li class="row"><span class="p">Frameworks</span><span class="s">React, Next.js, Node.js, Express, Spring Boot, FastAPI, Flask, React Three Fiber, GSAP, Tailwind</span><span class="m"></span></li>
+          <li class="row"><span class="p">AI and data</span><span class="s">Anthropic and OpenAI APIs, RAG, OpenCV, PyTorch, TensorFlow, PostgreSQL, Supabase, MongoDB, Kafka</span><span class="m"></span></li>
+          <li class="row"><span class="p">Systems</span><span class="s">Docker, Kubernetes, AWS, Linux, Git, GitHub Actions, ESP32, Arduino, PlatformIO</span><span class="m"></span></li>
+        </ul>
+      </section>
+
+      <section class="spec" id="hobbies" data-t="life" aria-labelledby="hobbies-h">
+        <h2 id="hobbies-h">Hobbies</h2>
         <div>
           <p class="lead"><em>Not everything is work.</em> This part is for friends, and for recruiters who scrolled this far.</p>
           <ul class="list">
@@ -283,8 +321,6 @@
           <li><a class="row" href="https://github.com/dahan8473" aria-label="GitHub"><span class="p">GitHub</span><span class="s">dahan8473</span><span class="m">&#8599;</span></a></li>
           <li><a class="row" href="https://www.linkedin.com/in/davidmakesmoves" aria-label="LinkedIn"><span class="p">LinkedIn</span><span class="s">davidmakesmoves</span><span class="m">&#8599;</span></a></li>
           <li><a class="row" href="https://x.com/davidliu8473" aria-label="X"><span class="p">X</span><span class="s">@davidliu8473</span><span class="m">&#8599;</span></a></li>
-          <li><a class="row" href="resume-swe.pdf"><span class="p">Resume</span><span class="s">Software engineering</span><span class="m">PDF</span></a></li>
-          <li><a class="row" href="resume-pm.pdf"><span class="p">Resume</span><span class="s">Product</span><span class="m">PDF</span></a></li>
         </ul>
       </section>
     </main>
@@ -295,8 +331,8 @@
     </footer>
   </div>
 
-  <script src="/theme.js?v=7"></script>
-  <script src="/site.js?v=8"></script>
-  <script src="/talk/talk.js?v=3"></script>
+  <script src="/theme.js?v=9"></script>
+  <script src="/site.js?v=9"></script>
+  <script src="/talk/talk.js?v=4"></script>
 </body>
 </html>

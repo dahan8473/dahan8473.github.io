@@ -26,6 +26,7 @@
   --label: #86868b;
 
   --label-col: 120px;
+  --panel: rgba(255, 255, 255, 0.92);
 }
 [data-theme="dark"] {
   --bg: #0d0d0e;
@@ -39,6 +40,7 @@
   --fg: #d2d2d7;
   --muted: #86868b;
   --label: #86868b;
+  --panel: rgba(28, 28, 30, 0.92);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -105,6 +107,58 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 .theme-toggle .moon { display: none; }
 [data-theme="dark"] .theme-toggle .sun { display: none; }
 [data-theme="dark"] .theme-toggle .moon { display: block; }
+
+/* Section rail: icons on the left edge, labels slide out on hover. */
+.rail {
+  position: fixed;
+  top: 50%;
+  left: 14px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 46px;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: 0 0 0 1px var(--rule);
+  overflow: hidden;
+  transform: translateY(-50%);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  transition: width 260ms cubic-bezier(.2, .8, .2, 1), box-shadow 200ms ease;
+}
+.rail:hover, .rail:has(:focus-visible) {
+  width: 168px;
+  box-shadow: 0 0 0 1px var(--rule), 0 16px 40px -16px rgba(0, 0, 0, 0.22);
+}
+.rail a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 10px;
+  color: var(--t2);
+  white-space: nowrap;
+}
+.rail a.on { color: var(--t1); background: var(--fill); }
+@media (hover: hover) { .rail a:hover { color: var(--t1); background: var(--fill); } }
+.rail svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.rail span { opacity: 0; transition: opacity 120ms ease; }
+.rail:hover span, .rail:has(:focus-visible) span { opacity: 1; transition: opacity 200ms ease 70ms; }
+.rail .sep { height: 1px; margin: 5px 8px; background: var(--rule); }
+.spec, .strip-wrap { scroll-margin-top: 24px; }
+/* Keep the page clear of the rail when the margins get thin. */
+@media (min-width: 721px) and (max-width: 1140px) {
+  body { padding-left: 64px; }
+  .strip-wrap .strip {
+    margin-left: calc(50% - 50vw - 32px);
+    margin-right: calc(50% - 50vw + 32px);
+    padding-left: calc(64px + max(0px, (100vw - 1024px) / 2) + 28px + var(--label-col) + 24px);
+    scroll-padding-left: calc(64px + max(0px, (100vw - 1024px) / 2) + 28px + var(--label-col) + 24px);
+  }
+}
 
 /* Intro */
 .intro { padding: 72px 0 8px; }
@@ -323,6 +377,24 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
 @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 10px; } }
 
 @media (max-width: 720px) {
+  /* The rail turns into a bar across the top. */
+  body { padding-top: 52px; }
+  .rail, .rail:hover, .rail:has(:focus-visible) {
+    top: 0;
+    right: 0;
+    left: 0;
+    flex-direction: row;
+    justify-content: space-between;
+    width: auto;
+    padding: 6px 14px;
+    border-radius: 0;
+    box-shadow: 0 1px 0 var(--rule);
+    transform: none;
+  }
+  .rail a { padding: 0 9px; }
+  .rail span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .rail .sep { display: none; }
+  .spec, .strip-wrap { scroll-margin-top: 64px; }
   .page { padding: 0 20px; }
   .top .what { display: none; }
   .intro { padding-top: 40px; }

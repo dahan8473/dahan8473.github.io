@@ -81,6 +81,7 @@
       'dashboard-hard-part': 'my favorite optimization. right here'
     },
     point: {
+      nav: "everything's in this bar btw. hover it",
       guitar: "that's me playing. well, a recording of me. hit listen",
       hackthenorth: 'we won this one. badges that play among us',
       now: "that's what i'm doing right now. roughly",
@@ -138,6 +139,8 @@
       photography: 'fujifilm. do you shoot at all?',
       travel: "only two on there so far, i'm behind on that list. been anywhere good lately?",
       contact: "email's the best way. the real me reads it",
+      leadership: "tethos started as a student club. now it's a federally incorporated nonprofit",
+      skills: 'i actually use all of these. ask me about any of them',
       'tethos-impact': 'the red cross one started with a cold call. ask me',
       'dashboard-hard-part': 'the ground used to cost 15,000 sin calls a second. now it is a lookup',
       'dashboard-ghosts': 'the ghosts are my favorite detail. nobody ever lands in an empty world',

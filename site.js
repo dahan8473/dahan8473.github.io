@@ -148,4 +148,24 @@
       });
     });
   }
+
+  // Section rail: light up the section you're reading.
+  var links = [].slice.call(document.querySelectorAll('.rail a[href^="#"]'));
+  var spots = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); });
+  if (links.length) {
+    var spy = function () {
+      var line = window.innerHeight * 0.35;
+      var on = -1;
+      spots.forEach(function (el, i) { if (el && el.getBoundingClientRect().top < line) on = i; });
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) on = spots.length - 1;
+      links.forEach(function (a, i) {
+        a.classList.toggle('on', i === on);
+        if (i === on) a.setAttribute('aria-current', 'location');
+        else a.removeAttribute('aria-current');
+      });
+    };
+    window.addEventListener('scroll', spy, { passive: true });
+    window.addEventListener('resize', spy);
+    spy();
+  }
 })();

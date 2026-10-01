@@ -114,7 +114,46 @@
     mic: "oh you're actually talking to me. hi",
     micBlocked: "i can't hear you. the mic's blocked, just type it",
     offline: `my brain's not connected right now 😭 email me instead: ${EMAIL}`,
-    limit: `okay i've talked a lot. email me, the real me reads it: ${EMAIL}`
+    limit: `okay i've talked a lot. email me, the real me reads it: ${EMAIL}`,
+    // Said once each when they open, play, hover or stop on something. Keyed by data-t.
+    notice: {
+      jdpower: 'sixteen months there. the jeep and ram build and price sites run on services i worked on',
+      tethos: 'this is the big one. ask me how it started, it involves a factory and a lot of metal disks',
+      genesis: 'genesis was our demo day. 260 people came to watch students demo software for nonprofits',
+      wfn: "ontario's largest hackathon education event. i ran that",
+      'tethos-platform': "you can actually walk around that island. there are 91 kinds of fish, don't ask",
+      hackthenorth: 'no server, no phones. the badges talk to each other and signal strength decides if you can kill',
+      biopilot: 'drone footage in, crop maps out. second place, $5,000',
+      kunlun: 'my clothing brand. traditional chinese and english side by side. drop 001 is coming',
+      'rag-card': 'built that because new execs asked the same questions every september',
+      dejaview: 'pinterest board in, 3D objects in your room out. team of four',
+      snake: 'your github graph turns into a game of snake. zero dependencies',
+      clawdash: "yes i have an AI agent running on a mac mini. that's its dashboard",
+      gallery: 'real photos btw. no stock. the badges are from hack the north',
+      awards: 'the guitar one is the odd one out. ask me about it',
+      life: "you scrolled this far. you're either a friend or a very thorough recruiter",
+      meowmeow: "that's meowmeow. she's horizontal most of the day. want me to call her over?",
+      guitar: "that's actually me playing. capricho árabe is the long one",
+      muaythai: 'i coach the beginner class. do you train anything?',
+      photography: 'fujifilm. do you shoot at all?',
+      travel: "only two on there so far, i'm behind on that list. been anywhere good lately?",
+      contact: "email's the best way. the real me reads it",
+      'tethos-impact': 'the red cross one started with a cold call. ask me',
+      'dashboard-hard-part': 'the ground used to cost 15,000 sin calls a second. now it is a lookup',
+      'dashboard-ghosts': 'the ghosts are my favorite detail. nobody ever lands in an empty world',
+      'dashboard-budget': 'every effect had to earn its frames. shadows cost seven',
+      'rag-hard-part': "the whole trick is never re-embedding what didn't change",
+      'kunlun-design': 'traditional chinese, never simplified. that part matters'
+    },
+    // Small talk for when it goes quiet, in order. Functions run when said.
+    lull: [
+      "no pressure btw. you can just scroll and i'll narrate",
+      'so what brings you here? recruiter, friend, or just lost',
+      () => `it's ${clock()} here in london. what time is it for you?`,
+      "honestly i don't get many visitors. this is nice",
+      'quick question. cats or dogs?',
+      "you're a quiet one. that's okay, i talk enough for both of us"
+    ]
   };
 
   const ICON = {
@@ -142,9 +181,10 @@
   const strip = (s) => s.replace(/\s*\[\[[^\]]*\]\]/g, '').trim();
   const norm = (p) => p.replace(/index\.html$/, '').replace(/([^/])$/, '$1/');
   const here = norm(location.pathname);
+  const clock = () => new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit' }).toLowerCase();
 
   const S = Object.assign(
-    { msgs: [], open: false, met: false, quiet: false, antics: 0, once: [], pending: null, lastKind: '' },
+    { msgs: [], open: false, met: false, quiet: false, antics: 0, once: [], pending: null, lastKind: '', noticed: [], lull: 0 },
     (() => { try { return JSON.parse(sessionStorage.getItem('dl-talk')) || {}; } catch (e) { return {}; } })()
   );
   function save() {
@@ -164,6 +204,8 @@
   })();
   if (!S.convo) S.convo = uuid();
   const knownName = () => { try { return localStorage.getItem('dl-name') || ''; } catch (e) { return ''; } };
+  // Stage notes are the page talking to the model, so they don't count as the visitor's turns.
+  const talked = () => S.msgs.some((m) => m.role === 'user' && !m.note);
 
   let targets = {};
   let epoch = 0; // bumps on interrupt so half-finished bits stop touching things
@@ -619,6 +661,7 @@
     pump();
   }
   function finishSpeech() {
+    pres.said = now();
     linkify();
     const r = sp.resolve;
     sp.resolve = null;
@@ -1031,19 +1074,23 @@
     showTalk();
     showForm();
     if (fine) input.focus({ preventScroll: true });
-    if (!S.msgs.some((m) => m.role === 'user')) await greet();
+    pres.streak = 0;
+    // Clicked right after he said something: pick up from there.
+    const said = pres.last && now() - pres.last.at < 15000 ? pres.last.text : '';
+    pres.last = null;
+    if (said) { S.msgs.push({ role: 'assistant', content: said }); save(); speak(said); }
+    else if (!talked()) await greet();
     else speak(LINES.again);
   }
 
   // The head starts the conversation: who it is, then their name.
-  let introTimer = 0;
   async function greet() {
     const name = knownName();
     const line = name ? LINES.introBack(name) : LINES.intro;
     if (!S.msgs.length) { S.msgs.push({ role: 'assistant', content: line }); save(); }
     setFace('happy', 2500);
     await speak(line);
-    if (chatOn && !S.msgs.some((m) => m.role === 'user')) showChoices();
+    if (chatOn && !talked()) showChoices();
   }
   async function intro() {
     chatOn = true;
@@ -1053,11 +1100,6 @@
     showTalk();
     showForm();
     await greet();
-    // Nobody answered: tuck the chat away and let them browse.
-    clearTimeout(introTimer);
-    introTimer = setTimeout(() => {
-      if (chatOn && !asking && !input.value && !S.msgs.some((m) => m.role === 'user')) closeChat(LINES.introIgnored);
-    }, 30000);
   }
   function closeChat(line = LINES.close) {
     chatOn = false;
@@ -1120,21 +1162,27 @@
     try { rec.start(); } catch (e) { rec = null; }
   }
 
-  async function ask(q) {
+  // A note is the page asking for a line on its own (the chat went quiet),
+  // so nothing is echoed and it doesn't use up the visitor's turns.
+  async function ask(q, { note = false } = {}) {
     q = q.trim().slice(0, 500);
     if (!q || asking) return;
-    choicesEl.hidden = true;
-    input.value = '';
-    clearTimeout(introTimer);
-    if (S.msgs.filter((m) => m.role === 'user').length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }
+    if (!note) {
+      choicesEl.hidden = true;
+      input.value = '';
+      pres.streak = 0;
+      pres.lulls = 0;
+      if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }
+    }
     asking = true;
     sendBtn.disabled = true;
     micBtn.disabled = true;
-    S.msgs.push({ role: 'user', content: q });
+    S.msgs.push(note ? { role: 'user', content: q, note: true } : { role: 'user', content: q });
     save();
-    speak('', { echo: q, stream: true });
+    speak('', { echo: note ? '' : q, stream: true });
     emote('...', { sticky: true });
     let raw = '';
+    let failed = false;
     const parser = makeParser(feed, feedAction);
     try {
       const res = await fetch(API + '/chat', {
@@ -1163,8 +1211,11 @@
       }
       parser.end();
     } catch (e) {
-      if (!raw) { raw = LINES.offline; setFace('sad', 3000); parser.push(raw); parser.end(); }
+      failed = true;
+      if (!raw && note) { S.msgs.pop(); raw = lullLine(); parser.push(raw); parser.end(); }
+      else if (!raw) { raw = LINES.offline; setFace('sad', 3000); parser.push(raw); parser.end(); }
     }
+    pres.brain = !failed && !raw.includes(LINES.offline);
     emoteOff();
     S.msgs.push({ role: 'assistant', content: raw.trim() || '..' });
     save();
@@ -1177,7 +1228,6 @@
 
   function restore() {
     chatOn = true;
-    clearTimeout(introTimer);
     root.classList.add('chat');
     const d = dockPos();
     setHead(d.x, d.y);
@@ -1245,6 +1295,84 @@
     dir.busy = false;
     if (ep === epoch && !chatOn) await goHome(900);
     schedule(rand(20000, 32000));
+  }
+
+  // ---- Presence: like he's actually sitting there ---------------------------
+  // He sees what you open, play, hover on or stop to read, and says something
+  // about it. When the chat goes quiet he makes small talk instead of idling.
+
+  const pres = { ready: false, seen: '', seenAt: 0, said: now(), streak: 0, lulls: 0, out: 0, brain: false, at: '', atSince: 0, last: null };
+
+  function look(el) {
+    for (let t = el && el.closest('[data-t]'); t; t = t.parentElement && t.parentElement.closest('[data-t]')) {
+      const id = t.dataset.t;
+      if (root.contains(t) || !LINES.notice[id]) continue;
+      if (!S.noticed.includes(id)) { pres.seen = id; pres.seenAt = now(); }
+      return;
+    }
+  }
+  // Whatever sits across the middle of the screen, innermost first.
+  function reading() {
+    const mid = innerHeight * 0.45;
+    let at = '';
+    for (const el of document.querySelectorAll('[data-t]')) {
+      if (root.contains(el) || !LINES.notice[el.dataset.t]) continue;
+      const r = el.getBoundingClientRect();
+      if (r.top < mid && r.bottom > mid) at = el.dataset.t;
+    }
+    return at;
+  }
+
+  // Unprompted lines. In the chat they join the conversation, so the model
+  // knows what he just said when they answer.
+  function chime(text) {
+    pres.streak++;
+    if (!chatOn) {
+      pres.out++;
+      pres.last = { text, at: now() };
+      schedule(rand(18000, 26000));
+      return quip(text, 2600);
+    }
+    S.msgs.push({ role: 'assistant', content: text });
+    save();
+    return speak(text);
+  }
+  function lullLine() {
+    const line = LINES.lull[S.lull++ % LINES.lull.length];
+    save();
+    return typeof line === 'function' ? line() : line;
+  }
+  function lull() {
+    pres.lulls++;
+    if (!pres.brain || !talked()) return chime(lullLine());
+    pres.streak++;
+    const on = pres.at || pres.seen;
+    ask(`(stage note: it's gone quiet for a bit. fill the silence with one short line of easy small talk.${on ? ` they seem to be looking at ${on}.` : ''})`, { note: true });
+  }
+
+  function presence() {
+    if (!pres.ready) return;
+    const t = now();
+    const at = reading();
+    if (at !== pres.at) { pres.at = at; pres.atSince = t; }
+    else if (at && t - pres.atSince > 9000 && t - lastScroll > 3000 && pres.seen !== at && !S.noticed.includes(at)) { pres.seen = at; pres.seenAt = t; }
+    if (pres.seen && t - pres.seenAt > 15000) pres.seen = '';
+
+    if (document.hidden || !document.hasFocus() || asking || held || dir.busy || drag.on || life.shy || rec || sp.typing || sp.more || input.value) return;
+    const quiet = t - pres.said;
+    // Just asked them something: give them a chance to answer first.
+    const asked = chatOn && /\?\s*$/.test(strip(textEl.textContent));
+    if (pres.seen && t - pres.seenAt > 1200 && quiet > (asked ? 14000 : chatOn ? 4000 : 12000) && pres.streak < 4 && (chatOn || (!S.quiet && pres.out < 4))) {
+      S.noticed.push(pres.seen);
+      save();
+      chime(LINES.notice[pres.seen]);
+      pres.seen = '';
+      return;
+    }
+    if (!chatOn) return;
+    if (quiet > 22000 && pres.lulls < 3 && pres.streak < 4) lull();
+    // Nobody's answering: tuck the chat away and let them browse.
+    else if (!talked() && quiet > 25000 && (pres.lulls >= 2 || pres.streak >= 4)) closeChat(LINES.introIgnored);
   }
 
   // ---- Fourth wall ----------------------------------------------------------
@@ -1598,6 +1726,23 @@
       else if (sp.typing) sp.fast = true;
     });
     form.addEventListener('submit', (e) => { e.preventDefault(); ask(input.value); });
+
+    // What they open or play. Capture runs before a <details> toggles, so a
+    // row that's already open is being closed.
+    document.addEventListener('click', (e) => {
+      if (root.contains(e.target)) return;
+      const sum = e.target.closest('summary');
+      if (sum && sum.parentElement.open) return;
+      if (e.target.closest('summary, button')) look(e.target);
+    }, true);
+    if (fine) {
+      let hoverT = 0;
+      document.addEventListener('pointerover', (e) => {
+        clearTimeout(hoverT);
+        const el = e.target.closest && e.target.closest('[data-photo], .cats img, .strip figure');
+        if (el && !root.contains(el)) hoverT = setTimeout(() => look(el), 1500);
+      });
+    }
     micBtn.addEventListener('click', listen);
 
     document.documentElement.addEventListener('mouseleave', (e) => {
@@ -1645,15 +1790,18 @@
     if (S.quiet) root.classList.add('quiet');
     if (!sound.on) root.classList.add('muted');
     if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer }));
+    const met = S.met;
     if (S.open) { actor.classList.add('on'); restore(); }
-    else if (!S.met) enter();
+    else if (!met) enter().finally(() => { pres.ready = true; });
     else {
       const d = dockPos();
       setHead(d.x, d.y);
       actor.classList.add('on');
       play(headBtn, [{ transform: 'scale(0)' }, { transform: 'scale(1.1)', offset: 0.7 }, { transform: 'scale(1)' }], { duration: 320, easing: 'ease-out' });
     }
-    schedule(S.met ? rand(9000, 14000) : 13000);
+    schedule(met ? rand(9000, 14000) : 13000);
+    if (met) pres.ready = true;
+    setInterval(presence, 1000);
   }
 
   function boot() {

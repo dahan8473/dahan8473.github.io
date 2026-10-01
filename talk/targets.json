@@ -59,11 +59,6 @@
     "sel": "a[href='rag/']",
     "about": "link to the RAG service case study"
   },
-  "bumbot": {
-    "page": "/",
-    "sel": "[data-t='bumbot']",
-    "about": "the 'Building BumBot' line in the Now list"
-  },
   "kunlun": {
     "page": "/",
     "sel": "[data-t='kunlun']",
@@ -89,10 +84,20 @@
     "sel": "[data-t='wfn']",
     "about": "Western Founders Network entry in the experience list"
   },
+  "life": {
+    "page": "/",
+    "sel": "[data-t='life']",
+    "about": "Life section: meowmeow photos, guitar recordings, Muay Thai, photography, travel, other hobbies"
+  },
   "play": {
     "page": "/",
-    "sel": "[data-t='play']",
-    "about": "Elsewhere section: guitar recordings, Muay Thai, photography, other hobbies, meowmeow"
+    "sel": "[data-t='life']",
+    "about": "same as life"
+  },
+  "meowmeow": {
+    "page": "/",
+    "sel": "[data-t='meowmeow']",
+    "about": "meowmeow row with three photos of my cat"
   },
   "guitar": {
     "page": "/",
@@ -102,12 +107,17 @@
   "muaythai": {
     "page": "/",
     "sel": "[data-t='muaythai']",
-    "about": "Muay Thai chip in the hobbies list"
+    "about": "Muay Thai row in the Life section"
   },
   "photography": {
     "page": "/",
     "sel": "[data-t='photography']",
-    "about": "Photography chip in the hobbies list"
+    "about": "Photography row in the Life section"
+  },
+  "travel": {
+    "page": "/",
+    "sel": "[data-t='travel']",
+    "about": "Travel row in the Life section; opens to the places I've been"
   },
   "tethos-page": {
     "page": "/tethos/",

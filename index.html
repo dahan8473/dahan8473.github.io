@@ -25,8 +25,8 @@
   <meta name="twitter:image" content="https://davidliu.work/og.png">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css?v=7">
-  <link rel="stylesheet" href="/talk/talk.css?v=2">
+  <link rel="stylesheet" href="/styles.css?v=8">
+  <link rel="stylesheet" href="/talk/talk.css?v=3">
 
   <script type="application/ld+json">
   {
@@ -84,7 +84,6 @@
           <li class="row"><span class="p">Studying</span><span class="s">Software Engineering at Western, fourth year</span><span class="m">London, ON</span></li>
           <li class="row"><span class="p">Looking for</span><span class="s">A software engineering internship</span><span class="m">Summer 2027</span></li>
           <li class="row"><span class="p">Handing off</span><span class="s">Tethos to the next team, staying on as an advisor</span><span class="m">2026</span></li>
-          <li class="row" data-t="bumbot"><span class="p">Building</span><span class="s">BumBot, an agent that applies to jobs for you</span><span class="m">Beta</span></li>
         </ul>
       </section>
 
@@ -134,9 +133,9 @@
         <ul class="list">
           <li data-t="tethos-platform">
             <details>
-              <summary class="row" data-photo="media/work/island-overview.webp"><span class="p">Tethos Platform</span><span class="s">A member portal you walk around as a 3D island</span><span class="m">2025</span></summary>
+              <summary class="row" data-photo="media/work/island-overview.webp"><span class="p">Tethos Platform</span><span class="s">A member portal you walk around as a 3D island</span><span class="m">2026</span></summary>
               <div class="more">
-                <p>Solo-built for 400+ members with Next.js, FastAPI, Supabase and React Three Fiber: 59 API routes, role-based access, and LLM characters that remember you between visits. Standing on the ground used to cost 15,000 sin and floor calls a second, until I baked the terrain into a grid.</p>
+                <p>Solo-built for 400+ members with Next.js, FastAPI, Supabase and React Three Fiber. A 2.5D multiplayer world with 875+ 3D assets, a 91-species fishing system, and five LLM characters cloned from real execs who remember you between visits. Around it, 59 API routes and five tiers of role-based access. Standing on the ground used to cost 15,000 sin and floor calls a second, until I baked the terrain into a grid.</p>
                 <p class="go"><a class="ln" href="dashboard/">How the island works</a><a class="ln" href="rag/">The RAG service</a><a class="ln out" href="https://tethos.ca">tethos.ca</a></p>
               </div>
             </details>
@@ -238,22 +237,43 @@
         </ul>
       </section>
 
-      <section class="spec" id="elsewhere" data-t="play" aria-labelledby="elsewhere-h">
-        <h2 id="elsewhere-h">Elsewhere</h2>
-        <ul class="list">
-          <li data-t="guitar">
-            <div class="row">
-              <span class="p">Classical guitar</span>
-              <span class="s">Competed nationally, played Carnegie Hall</span>
-              <span class="m"><button class="org-toggle" type="button" aria-expanded="false" aria-controls="guitar-tracks-wrap">Listen<svg class="chev" viewBox="0 0 8 10" aria-hidden="true"></svg></button></span>
-            </div>
-            <div class="expand" id="guitar-tracks-wrap"><div class="tracks" id="guitar-tracks"></div></div>
-          </li>
-          <li class="row" data-t="muaythai"><span class="p">Muay Thai</span><span class="s">Train, and coach the beginner class</span><span class="m"></span></li>
-          <li class="row" data-t="photography"><span class="p">Photography</span><span class="s">Shot on Fujifilm</span><span class="m"></span></li>
-          <li class="row"><span class="p">Also</span><span class="s">Travel, badminton, cycling, drones, video, chess, fashion, hiking, speed skating, watercolor, poetry</span><span class="m"></span></li>
-          <li class="row"><span class="p">Meowmeow</span><span class="s">My cat. Ask the head if it has pets.</span><span class="m"></span></li>
-        </ul>
+      <section class="spec" id="life" data-t="life" aria-labelledby="life-h">
+        <h2 id="life-h">Life</h2>
+        <div>
+          <p class="lead"><em>Not everything is work.</em> This part is for friends, and for recruiters who scrolled this far.</p>
+          <ul class="list">
+            <li data-t="meowmeow">
+              <div class="row"><span class="p">Meowmeow</span><span class="s">My cat. Mostly horizontal.</span><span class="m">She/her</span></div>
+              <div class="cats">
+                <img src="media/life/meowmeow-sleep.webp" alt="Meowmeow, a black cat, asleep in a beanbag" width="750" height="1000" loading="lazy">
+                <img src="media/life/meowmeow-belly.webp" alt="Meowmeow on her back with her paws in the air" width="750" height="1000" loading="lazy">
+                <img src="media/life/meowmeow-stairs.webp" alt="Meowmeow stretched out on the floor by the stairs" width="750" height="1000" loading="lazy">
+              </div>
+            </li>
+            <li data-t="guitar">
+              <div class="row">
+                <span class="p">Classical guitar</span>
+                <span class="s">Competed nationally, played Carnegie Hall</span>
+                <span class="m"><button class="org-toggle" type="button" aria-expanded="false" aria-controls="guitar-tracks-wrap">Listen<svg class="chev" viewBox="0 0 8 10" aria-hidden="true"></svg></button></span>
+              </div>
+              <div class="expand" id="guitar-tracks-wrap"><div class="tracks" id="guitar-tracks"></div></div>
+            </li>
+            <li class="row" data-t="muaythai"><span class="p">Muay Thai</span><span class="s">Train, and coach the beginner class</span><span class="m"></span></li>
+            <li class="row" data-t="photography"><span class="p">Photography</span><span class="s">Shot on Fujifilm</span><span class="m"></span></li>
+            <li data-t="travel">
+              <details>
+                <summary class="row"><span class="p">Travel</span><span class="s">Places I've been</span><span class="m">2 so far</span></summary>
+                <div class="more wide">
+                  <ul class="places">
+                    <li><span class="t1">Beijing</span><span>A summer of AI research at Tsinghua</span><span class="t3">2023</span></li>
+                    <li><span class="t1">New York</span><span>Played Carnegie Hall</span><span class="t3"></span></li>
+                  </ul>
+                </div>
+              </details>
+            </li>
+            <li class="row"><span class="p">Also</span><span class="s">Badminton, cycling, drones, video, chess, fashion, hiking, speed skating, watercolor, poetry</span><span class="m"></span></li>
+          </ul>
+        </div>
       </section>
 
       <section class="spec" id="contact" data-t="contact" aria-labelledby="contact-h">
@@ -276,7 +296,7 @@
   </div>
 
   <script src="/theme.js?v=7"></script>
-  <script src="/site.js?v=7"></script>
-  <script src="/talk/talk.js?v=2"></script>
+  <script src="/site.js?v=8"></script>
+  <script src="/talk/talk.js?v=3"></script>
 </body>
 </html>

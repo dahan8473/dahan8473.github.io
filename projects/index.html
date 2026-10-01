@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects · David Liu</title>
+  <meta name="description" content="Projects by David Liu, with the stack and the code: Tethos Platform, Among Us IRL (1st at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.">
+  <link rel="canonical" href="https://davidliu.work/projects/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="David Liu">
+  <meta property="og:url" content="https://davidliu.work/projects/">
+  <meta property="og:title" content="Projects · David Liu">
+  <meta property="og:description" content="Projects by David Liu, with the stack and the code: Tethos Platform, Among Us IRL (1st at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.">
+  <meta property="og:image" content="https://davidliu.work/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="David Liu. davidliu.work">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@davidliu8473">
+  <meta name="twitter:creator" content="@davidliu8473">
+  <meta name="twitter:title" content="Projects · David Liu">
+  <meta name="twitter:description" content="Projects by David Liu, with the stack and the code: Tethos Platform, Among Us IRL (1st at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.">
+  <meta name="twitter:image" content="https://davidliu.work/og.png">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css?v=10">
+  <link rel="stylesheet" href="/talk/talk.css?v=3">
+  <script>
+    (function () {
+      var stored = null;
+      try { stored = localStorage.getItem('theme'); } catch (e) {}
+      var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', stored || (dark ? 'dark' : 'light'));
+    })();
+  </script>
+</head>
+<body class="projects">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <nav class="rail" aria-label="Pages">
+    <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/></svg><span>Home</span></a>
+    <a href="/resume/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg><span>Resume</span></a>
+    <a href="/projects/" class="on" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 8l-4 4 4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/></svg><span>Projects</span></a>
+    <a href="/hobbies/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg><span>Hobbies</span></a>
+    <span class="sep" aria-hidden="true"></span>
+    <a href="mailto:davidliu8473@gmail.com" aria-label="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg><span>Email</span></a>
+  </nav>
+
+  <div class="page">
+    <header class="top">
+      <a class="me" href="/">David Liu</a>
+      <span class="what">Software engineer</span>
+      <div class="end">
+        <span>London <span id="clock">--:--</span></span>
+        <button class="theme-toggle" aria-label="Toggle theme" type="button">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <header class="doc-head">
+        <div>
+          <h1>Projects</h1>
+          <p class="hint">What I've built, with the stack and the code.</p>
+        </div>
+        <p class="go"><a class="ln out" href="https://github.com/dahan8473">All of it on GitHub</a></p>
+      </header>
+
+      <div class="projs" data-t="build">
+      <article class="proj" id="tethos-platform" data-t="tethos-platform">
+        <div class="shot"><img src="/media/work/island-overview.webp" alt="Tethos Island, the member dashboard, in daylight" width="1400" height="706" loading="lazy"></div>
+        <div class="proj-head"><h2>Tethos Platform</h2><span class="t3">2026</span></div>
+        <p class="t1">A member portal you walk around as a 3D island.</p>
+        <p>Solo-built for 400+ members: a 2.5D multiplayer world with 875+ 3D assets, a 91-species fishing system, and five LLM characters who remember you between visits. Around it, 59 API routes and five tiers of role-based access.</p>
+        <p class="stack">Next.js · React · TypeScript · Supabase · FastAPI · React Three Fiber · Colyseus</p>
+        <p class="go"><a class="ln" href="/dashboard/">How the island works</a><a class="ln" href="/rag/">The RAG service</a><a class="ln out" href="https://tethos.ca">tethos.ca</a></p>
+      </article>
+      <article class="proj" id="hackthenorth" data-t="hackthenorth">
+        <div class="shot"><img src="/media/work/htn-badges.webp" alt="Two Hack the North badges running Among Us" width="1000" height="750" loading="lazy"></div>
+        <div class="proj-head"><h2>Among Us, IRL</h2><span class="t3">1st, Hack the North 2026</span></div>
+        <p class="t1">Real-life Among Us on conference badges.</p>
+        <p>36 hours, team of three. The badges sync peer to peer over an ESP-NOW mesh with no server or phones, and signal strength decides if you're close enough to kill. I wrote the game, the voting and the NFC task minigames.</p>
+        <p class="stack">C++ · ESP32-C3 · ESP-NOW · PlatformIO</p>
+        <p class="go"><a class="ln out" href="https://github.com/dahan8473/htn-amongus">GitHub</a><a class="ln out" href="https://devpost.com/software/among-us-lbrwjk">Devpost</a></p>
+      </article>
+      <article class="proj" id="biopilot" data-t="biopilot">
+        <div class="shot"><img src="/media/work/biopilot-heatmap.webp" alt="A crop-health heatmap over farm fields" width="1200" height="750" loading="lazy"></div>
+        <div class="proj-head"><h2>biopilot</h2><span class="t3">2nd, TELUS AI</span></div>
+        <p class="t1">Drone footage in, crop-health maps out.</p>
+        <p>YOLOv8 wheat-head detection, per-cell health scores, and heatmaps you can compare run to run. Won $5,000 at TELUS AI at the Edge of Innovation.</p>
+        <p class="stack">React · TypeScript · Vite · FastAPI · YOLOv8 · deck.gl · MapLibre</p>
+        <p class="go"><a class="ln out" href="https://github.com/dahan8473/biopilot">GitHub</a></p>
+      </article>
+      <article class="proj" id="kunlun" data-t="kunlun">
+        <div class="shot ink"><img src="/media/work/kunlun-liangfeng.webp" alt="Kunlun storefront: 涼風, Liangfeng, Cool Wind" width="1400" height="876" loading="lazy"></div>
+        <div class="proj-head"><h2>Kunlun</h2><span class="t3">2026</span></div>
+        <p class="t1">A clothing brand built on Chinese mythology.</p>
+        <p>Traditional Chinese and English run side by side as two voices. I built the bilingual design system and the storefront. Pre-launch.</p>
+        <p class="stack">Next.js · React · Tailwind · Stripe · Supabase · Resend</p>
+        <p class="go"><a class="ln" href="/kunlun/">Case study</a></p>
+      </article>
+      <article class="proj" id="dejaview" data-t="dejaview">
+        <div class="shot"><img src="/media/work/dejaview-landing.webp" alt="deja-view landing page" width="1400" height="748" loading="lazy"></div>
+        <div class="proj-head"><h2>deja-view</h2><span class="t3">Hackathon, 2026</span></div>
+        <p class="t1">Pinterest board in, 3D objects in your room out.</p>
+        <p>Vision models pull the items off your board and Trellis turns them into 3D models you can place in your space. Team of four.</p>
+        <p class="stack">Next.js · FastAPI · OpenAI · Gemini · Replicate Trellis · Cloudflare R2</p>
+        <p class="go"><a class="ln out" href="https://github.com/dahan8473/deja-view">GitHub</a></p>
+      </article>
+      <article class="proj" id="snake" data-t="snake">
+        <div class="shot svg"><img src="/media/work/snake.svg" alt="A contribution graph being eaten by a snake" width="880" height="192" loading="lazy"></div>
+        <div class="proj-head"><h2>snake-and-commits</h2><span class="t3">Open source</span></div>
+        <p class="t1">Your contribution graph as a game of Snake.</p>
+        <p>A GitHub Action with BFS pathfinding and no self-collisions, in one standard-library Python file with zero dependencies.</p>
+        <p class="stack">Python · GitHub Actions · SVG</p>
+        <p class="go"><a class="ln out" href="https://github.com/dahan8473/snake-and-commits">GitHub</a></p>
+      </article>
+      </div>
+
+      <section class="more-projs" aria-labelledby="more-h">
+        <h2 id="more-h">More</h2>
+        <ul class="list">
+          <li class="row" data-t="rag-card"><span class="p">RAG service</span><span class="s">Cited answers from Tethos's Drive and Notion. Never re-embeds what didn't change.<span class="stack">FastAPI · pgvector · OpenAI embeddings · Docker · Cloud Run</span></span><span class="m"><a class="ln" href="/rag/">Case study</a></span></li>
+          <li class="row" data-t="clawdash"><span class="p">clawdash</span><span class="s">Mission control for the AI agent I run on a Mac mini: live sessions, cron countdowns, token spend.<span class="stack">Next.js · TypeScript · Tailwind · WebSockets</span></span><span class="m"><a class="ln out" href="https://github.com/dahan8473/clawdash">GitHub</a></span></li>
+          <li class="row" data-t="ur5"><span class="p">UR5 motion library</span><span class="s">Six programs for a collaborative robot arm, from my Modern Engineering internship.<span class="stack">Python · RTDE · OpenCV</span></span><span class="m"><a class="ln out" href="https://github.com/dahan8473/ModernEngineering_UR">GitHub</a></span></li>
+          <li class="row" data-t="wec"><span class="p">WEC 2024</span><span class="s">Our 2024 Western Engineering Competition entry.<span class="stack">Unity · C#</span></span><span class="m"><a class="ln out" href="https://github.com/dahan8473/WEC_24">GitHub</a></span></li>
+          <li class="row" data-t="this-site"><span class="p">davidliu.work</span><span class="s">This site, and the floating head that talks like me.<span class="stack">HTML · CSS · JavaScript · Claude</span></span><span class="m"><a class="ln out" href="https://github.com/dahan8473/dahan8473.github.io">GitHub</a></span></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span>&copy; 2026 David Liu</span>
+      <span>Hand-written HTML. Zero dependencies.</span>
+    </footer>
+  </div>
+
+  <script src="/theme.js?v=10"></script>
+  <script src="/site.js?v=10"></script>
+  <script src="/talk/talk.js?v=5"></script>
+</body>
+</html>

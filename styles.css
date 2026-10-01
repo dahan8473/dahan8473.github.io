@@ -77,7 +77,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 .skip { position: absolute; left: 12px; top: -48px; padding: 6px 10px; border-radius: 8px; background: var(--t1); color: var(--bg); }
 .skip:focus { top: 12px; }
 
-.page { max-width: 960px; margin: 0 auto; padding: 0 28px; }
+.page { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
 
 /* Header */
 .top {
@@ -148,39 +148,21 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 .rail span { opacity: 0; transition: opacity 120ms ease; }
 .rail:hover span, .rail:has(:focus-visible) span { opacity: 1; transition: opacity 200ms ease 70ms; }
 .rail .sep { height: 1px; margin: 5px 8px; background: var(--rule); }
-.spec, .strip-wrap { scroll-margin-top: 24px; }
 /* Keep the page clear of the rail when the margins get thin. */
-@media (min-width: 721px) and (max-width: 1140px) {
+@media (min-width: 721px) and (max-width: 1240px) {
   body { padding-left: 64px; }
-  .strip-wrap .strip {
-    margin-left: calc(50% - 50vw - 32px);
-    margin-right: calc(50% - 50vw + 32px);
-    padding-left: calc(64px + max(0px, (100vw - 1024px) / 2) + 28px + var(--label-col) + 24px);
-    scroll-padding-left: calc(64px + max(0px, (100vw - 1024px) / 2) + 28px + var(--label-col) + 24px);
-  }
 }
 
-/* Intro */
-.intro { padding: 72px 0 8px; }
-.intro p { max-width: 36em; color: var(--t2); }
-.intro p em { font-style: normal; color: var(--t1); }
-.intro p + p { margin-top: 18px; }
-.intro .links { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 26px; }
+/* Page heads: a title, a quiet line under it, links on the right. */
+.doc-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; padding: 64px 0 40px; }
+.doc-head h1 { color: var(--t1); font-weight: 500; }
+.doc-head .hint { margin-top: 4px; color: var(--t3); }
+.go { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.stack { color: var(--t3); }
 
-/* Spec sheet: label column, content column */
-.spec {
-  display: grid;
-  grid-template-columns: var(--label-col) minmax(0, 1fr);
-  gap: 0 24px;
-  padding: 64px 0 0;
-}
-.spec > h2 { color: var(--t3); padding-top: 12px; }
-.spec > h2 a { color: inherit; }
-
+/* Lists of rows */
 .list > li { border-bottom: 1px solid var(--rule); }
 .list > li:first-child { border-top: 1px solid var(--rule); }
-
-/* One row: primary, secondary, meta. */
 .row {
   display: grid;
   grid-template-columns: 180px minmax(0, 1fr) 170px;
@@ -191,82 +173,78 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 .row .p { color: var(--t1); }
 .row .s { color: var(--t2); }
 .row .m { color: var(--t3); text-align: right; white-space: nowrap; }
+.row .m .ln + .ln { margin-left: 16px; }
+.row .s .stack { display: block; margin-top: 2px; }
 a.row:hover .p, a.row:hover .s { color: var(--t1); }
 a.row:hover .m { color: var(--t2); }
 
-/* Rows that open: native <details>, no script. */
-details > summary { list-style: none; cursor: pointer; }
-details > summary::-webkit-details-marker { display: none; }
-details > summary .m::after {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin: 0 2px 2px 12px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(45deg);
-  transition: transform 200ms ease;
-}
-details[open] > summary .m::after { transform: rotate(-135deg); margin-bottom: -2px; }
-details > summary:hover .p, details > summary:hover .s { color: var(--t1); }
-.more { padding: 0 0 18px; color: var(--t2); max-width: 40em; }
-.more p + p { margin-top: 10px; }
-.more .go { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 10px; }
-details[open] .more { animation: open 260ms ease both; }
+/* Home: who I am, then three doors. */
+.hello { max-width: 38em; padding: clamp(48px, 12vh, 128px) 0 0; }
+.hello p { color: var(--t2); }
+.hello p + p { margin-top: 18px; }
+.hello em { font-style: normal; color: var(--t1); }
+.doors { margin-top: 48px; }
+.doc-head + * > .doors:first-child { margin-top: 0; }
+.doors .row { grid-template-columns: 160px minmax(0, 1fr) 24px; }
+a.row .m { transition: transform 200ms ease; }
+a.row:hover .m { transform: translateX(3px); }
+.reach { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 32px; }
 
-/* Gallery: a strip of real photos that runs past the right edge. */
-.strip-wrap { margin-top: 64px; }
-.strip-head { display: grid; grid-template-columns: var(--label-col) 1fr auto; gap: 0 24px; align-items: baseline; }
-.strip-head h2 { color: var(--t3); }
-.strip-head .hint { color: var(--t3); }
-.strip-nav { display: flex; gap: 6px; }
-.strip-nav button {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--fill);
-  color: var(--t2);
-  font: inherit;
-  cursor: pointer;
+/* Resume: the document on the left, notes in the margin on the right. */
+.doc { max-width: 680px; }
+.r-sec { padding-bottom: 40px; scroll-margin-top: 24px; }
+.r-sec > h2 { padding-bottom: 8px; margin-bottom: 6px; border-bottom: 1px solid var(--rule); color: var(--t3); }
+.r-item { position: relative; margin: 0 -14px; padding: 10px 14px; border-radius: 12px; outline: none; }
+.r-item:not(.plain) { cursor: pointer; }
+.r-item.on, .r-item.pinned { background: var(--fill); }
+.r-item:focus-visible { box-shadow: 0 0 0 2px #0071e3; }
+.r-line { display: flex; justify-content: space-between; gap: 16px; color: var(--t2); }
+.r-line > :last-child { flex: none; text-align: right; }
+.r-line b { font-weight: 400; color: var(--t1); }
+.r-bullets { margin-top: 6px; color: var(--t2); }
+.r-bullets li { position: relative; padding-left: 16px; }
+.r-bullets li + li { margin-top: 4px; }
+.r-bullets li::before { content: ''; position: absolute; left: 2px; top: 0.72em; width: 4px; height: 4px; border-radius: 50%; background: var(--t3); }
+.r-more { padding-top: 10px; }
+.note { display: none; color: var(--t2); }
+.note > div { padding-left: 16px; border-left: 1px solid var(--rule); }
+.note p + p, .note img + p, .note p + img { margin-top: 10px; }
+.note img { border-radius: 10px; background: var(--fill); }
+.note .go { margin-top: 10px; }
+.r-item.on .note { display: block; padding-top: 12px; animation: open 220ms ease both; }
+.hint .touch { display: none; }
+@media (hover: none) { .hint .mouse { display: none; } .hint .touch { display: inline; } }
+/* Wide enough: the note floats in the margin next to its entry. The left
+   padding bridges the gap so the pointer can reach the note's links. */
+@media (min-width: 1180px) and (hover: hover) {
+  .note { display: block; position: absolute; top: 0; left: 100%; width: 340px; padding: 10px 0 0 40px; opacity: 0; pointer-events: none; transition: opacity 160ms ease; }
+  .r-item.on .note { padding-top: 10px; opacity: 1; pointer-events: auto; animation: none; }
 }
-.strip-nav button:hover { color: var(--t1); }
-.strip {
-  display: flex;
-  gap: 14px;
-  /* Full bleed, but the first photo lines up with the content column. */
-  margin: 16px calc(50% - 50vw) 0;
-  padding: 0 28px 8px calc(max(0px, (100vw - 960px) / 2) + 28px + var(--label-col) + 24px);
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-padding-left: calc(max(0px, (100vw - 960px) / 2) + 28px + var(--label-col) + 24px);
-  scrollbar-width: none;
-}
-.strip::-webkit-scrollbar { display: none; }
-.strip figure { flex: none; width: min(420px, 78vw); scroll-snap-align: start; }
-.strip img {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: 14px;
-  background: var(--fill);
-}
-.strip figure.wide { width: min(560px, 86vw); }
-.strip figure.wide img { aspect-ratio: 16 / 9; }
-.strip .ink img { background: #0c0d0f; object-fit: contain; padding: 8% 6%; }
-.strip figcaption { margin-top: 10px; color: var(--t3); }
-.strip figcaption span { color: var(--t2); }
 
-/* Life */
-.lead { max-width: 46em; padding: 12px 0 22px; color: var(--t2); }
-.lead em { font-style: normal; color: var(--t1); }
-.cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 2px 0 18px; }
+/* Projects: the big ones with pictures, then a list. */
+.projs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px 40px; }
+.proj { scroll-margin-top: 24px; }
+.proj p { color: var(--t2); }
+.proj p + p { margin-top: 8px; }
+.proj .t1 { color: var(--t1); }
+.proj .go { margin-top: 10px; }
+.shot { margin-bottom: 18px; }
+.shot img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 14px; background: var(--fill); }
+.shot.ink img { background: #0c0d0f; object-fit: contain; padding: 6% 5%; }
+.shot.svg img { object-fit: contain; padding: 14% 8%; }
+.proj-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 4px; }
+.proj-head h2 { color: var(--t1); font-weight: 500; }
+.more-projs { padding-top: 72px; }
+.more-projs > h2 { padding-bottom: 12px; color: var(--t3); }
+
+/* Hobbies */
+.also { margin-top: 28px; max-width: 40em; color: var(--t2); }
+.also .t1 { margin-right: 6px; }
+.cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .cats img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 12px; background: var(--fill); }
-.more.wide { max-width: none; }
-.places li { display: grid; grid-template-columns: 180px minmax(0, 1fr) 170px; gap: 4px 20px; padding: 6px 0; }
-.places li > :last-child { text-align: right; }
+.cats.big { margin-top: 40px; }
+.case-shot.ink img { background: #0c0d0f; object-fit: contain; padding: 6% 5%; }
+.case .desc .tracks { margin-top: -8px; }
 
 /* Hover preview for rows with data-photo (site.js). */
 .hover-photo {
@@ -284,22 +262,6 @@ details[open] .more { animation: open 260ms ease both; }
 .hover-photo.on { opacity: 1; }
 
 /* Guitar recordings (site.js builds the rows) */
-.org-toggle {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--t2);
-  font: inherit;
-  cursor: pointer;
-}
-.org-toggle:hover { color: var(--t1); }
-.org-toggle .chev { display: none; }
-.expand { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 260ms ease; }
-.expand.open { grid-template-rows: 1fr; }
-.expand > * { overflow: hidden; min-height: 0; }
-/* Spacing lives inside the clipped box so the closed row has no height. */
-.tracks > :first-child { margin-top: 6px; }
-.tracks > :last-child { margin-bottom: 4px; }
 .track { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 0; }
 .track button {
   display: inline-grid;
@@ -378,7 +340,7 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
 
 @media (max-width: 720px) {
   /* The rail turns into a bar across the top. */
-  body { padding-top: 52px; }
+  body { padding-top: 58px; }
   .rail, .rail:hover, .rail:has(:focus-visible) {
     top: 0;
     right: 0;
@@ -391,23 +353,23 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
     box-shadow: 0 1px 0 var(--rule);
     transform: none;
   }
-  .rail a { padding: 0 9px; }
-  .rail span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .rail a { flex: 1; flex-direction: column; justify-content: center; gap: 2px; height: 44px; padding: 0; font-size: 11px; letter-spacing: 0; }
+  .rail span, .rail:hover span { opacity: 1; }
   .rail .sep { display: none; }
-  .spec, .strip-wrap { scroll-margin-top: 64px; }
   .page { padding: 0 20px; }
   .top .what { display: none; }
-  .intro { padding-top: 40px; }
-  .spec, .case .section { grid-template-columns: 1fr; padding-top: 48px; }
-  .spec > h2, .case .label { padding: 0 0 10px; }
+  .hello { padding-top: 40px; }
+  .doc-head { padding: 40px 0 28px; }
+  .r-sec, .proj { scroll-margin-top: 72px; }
+  .r-line { flex-wrap: wrap; gap: 0 12px; }
+  .case .section { grid-template-columns: 1fr; padding-top: 48px; }
+  .case .label { padding: 0 0 10px; }
   .row { grid-template-columns: minmax(0, 1fr) auto; }
   .row .s { grid-column: 1 / -1; grid-row: 2; }
-  .places li { grid-template-columns: minmax(0, 1fr) auto; }
-  .places li > :nth-child(2) { grid-column: 1 / -1; grid-row: 2; color: var(--t2); }
+  .doors .row { grid-template-columns: minmax(0, 1fr) auto; }
+  .projs { grid-template-columns: 1fr; gap: 48px; }
+  .more-projs { padding-top: 56px; }
   .cats { gap: 8px; }
-  .strip-head { grid-template-columns: 1fr auto; }
-  .strip-head .hint { display: none; }
-  .strip { padding-left: 20px; scroll-padding-left: 20px; }
   .case .entries > .entry { grid-template-columns: 1fr; }
   .kv { grid-template-columns: 1fr; }
   .hover-photo { display: none; }

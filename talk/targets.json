@@ -1,148 +1,233 @@
 {
-  "resume-swe": {
-    "page": "/",
-    "sel": "a[href$='resume-swe.pdf']",
-    "about": "link to my SWE resume (PDF). On every page."
-  },
-  "resume-pm": {
-    "page": "/",
-    "sel": "a[href$='resume-pm.pdf']",
-    "about": "link to my PM resume (PDF). On every page."
-  },
-  "email": {
-    "page": "/",
-    "sel": "a[aria-label='Email']",
-    "about": "email me link. On every page."
-  },
-  "github": {
-    "page": "/",
-    "sel": "a[aria-label='GitHub']",
-    "about": "my GitHub. On every page."
-  },
-  "linkedin": {
-    "page": "/",
-    "sel": "a[aria-label='LinkedIn']",
-    "about": "my LinkedIn. On every page."
-  },
-  "x": {
-    "page": "/",
-    "sel": "a[aria-label='X']",
-    "about": "my X account. On every page."
-  },
   "home": {
     "page": "/",
     "sel": ".top .me",
-    "about": "my name at the top, links home"
-  },
-  "now": {
-    "page": "/",
-    "sel": "[data-t='now']",
-    "about": "the intro paragraph at the top"
+    "about": "my name at the top; links home. On every page."
   },
   "nav": {
     "page": "/",
     "sel": ".rail",
-    "about": "the section bar on the left edge (a bar across the top on phones). Hover it to see the labels. On every page."
+    "about": "the page bar on the left edge (across the top on phones): Home, Resume, Projects, Hobbies, Email. On every page. Hover it to see labels."
+  },
+  "email": {
+    "page": "/",
+    "sel": "a[aria-label='Email']",
+    "about": "email me. On every page, in the page bar."
+  },
+  "now": {
+    "page": "/",
+    "sel": "[data-t='now']",
+    "about": "home page intro: who I am and what I am doing now"
+  },
+  "resume-door": {
+    "page": "/",
+    "sel": ".doors a[href='/resume/']",
+    "about": "the Resume link on the home page"
+  },
+  "github": {
+    "page": "/",
+    "sel": "a[aria-label='GitHub']",
+    "about": "my GitHub, on the home page"
+  },
+  "linkedin": {
+    "page": "/",
+    "sel": "a[aria-label='LinkedIn']",
+    "about": "my LinkedIn, on the home page"
+  },
+  "x": {
+    "page": "/",
+    "sel": "a[aria-label='X']",
+    "about": "my X account, on the home page"
+  },
+  "contact": {
+    "page": "/",
+    "sel": "[data-t='contact']",
+    "about": "email and social links on the home page"
   },
   "resume": {
-    "page": "/",
-    "sel": "[data-t='resume']",
-    "about": "Resume section: SWE and PM resume PDFs, Western education, what I'm looking for"
+    "page": "/resume/",
+    "sel": ".doc",
+    "about": "the resume page. Every entry opens a note with more detail, photos and links when hovered or clicked."
+  },
+  "resume-swe": {
+    "page": "/resume/",
+    "sel": "a[href='/resume-swe.pdf']",
+    "about": "PDF of my SWE resume, top of the resume page"
+  },
+  "resume-pm": {
+    "page": "/resume/",
+    "sel": "a[href='/resume-pm.pdf']",
+    "about": "PDF of my product resume, top of the resume page"
   },
   "western": {
-    "page": "/",
+    "page": "/resume/",
     "sel": "[data-t='western']",
-    "about": "Western University row in the Resume section; opens to this term's courses"
+    "about": "Western University, resume Education"
   },
   "experience": {
-    "page": "/",
-    "sel": "[data-t='work']",
-    "about": "Experience section: J.D. Power, Modern Engineering, Tsinghua"
+    "page": "/resume/",
+    "sel": "#experience",
+    "about": "resume Experience section: J.D. Power, Modern Engineering, Tsinghua"
   },
-  "build": {
-    "page": "/",
-    "sel": "[data-t='build']",
-    "about": "Projects section; each row opens for details and links"
+  "jdpower": {
+    "page": "/resume/",
+    "sel": "[data-t='jdpower']",
+    "about": "J.D. Power internship on the resume"
   },
-  "tethos-platform": {
-    "page": "/",
-    "sel": "[data-t='tethos-platform']",
-    "about": "Tethos Platform entry"
+  "modern": {
+    "page": "/resume/",
+    "sel": "[data-t='modern']",
+    "about": "Modern Engineering internship (UR5 robot arm) on the resume"
   },
-  "dashboard": {
-    "page": "/",
-    "sel": "a[href='dashboard/']",
-    "about": "link to the 3D game dashboard case study"
-  },
-  "rag": {
-    "page": "/",
-    "sel": "a[href='rag/']",
-    "about": "link to the RAG service case study"
-  },
-  "kunlun": {
-    "page": "/",
-    "sel": "[data-t='kunlun']",
-    "about": "Kunlun entry"
-  },
-  "lead": {
-    "page": "/",
-    "sel": "[data-t='tethos']",
-    "about": "Tethos row in the Work list (opens to partners and GENESIS)"
+  "tsinghua": {
+    "page": "/resume/",
+    "sel": "[data-t='tsinghua']",
+    "about": "Tsinghua research assistant on the resume"
   },
   "leadership": {
-    "page": "/",
-    "sel": "[data-t='leadership']",
-    "about": "Leadership section: Tethos, Western Founders Network, mentoring"
+    "page": "/resume/",
+    "sel": "#leadership",
+    "about": "resume Leadership section: Tethos, Western Founders Network, mentoring"
   },
   "tethos": {
-    "page": "/",
+    "page": "/resume/",
     "sel": "[data-t='tethos']",
-    "about": "Tethos entry in the Leadership section (founder and president)"
+    "about": "Tethos (founder and president) on the resume; its note links the case study"
+  },
+  "lead": {
+    "page": "/resume/",
+    "sel": "[data-t='tethos']",
+    "about": "same as tethos"
   },
   "genesis": {
-    "page": "/",
+    "page": "/resume/",
     "sel": "[data-t='genesis']",
-    "about": "GENESIS demo day, inside the Tethos row"
+    "about": "GENESIS demo day, a line in the Tethos entry"
   },
   "wfn": {
-    "page": "/",
+    "page": "/resume/",
     "sel": "[data-t='wfn']",
-    "about": "Western Founders Network entry in the Leadership section"
+    "about": "Western Founders Network on the resume"
+  },
+  "awards": {
+    "page": "/resume/",
+    "sel": "#awards",
+    "about": "resume Awards section"
+  },
+  "skills": {
+    "page": "/resume/",
+    "sel": "#skills",
+    "about": "resume Skills section"
+  },
+  "build": {
+    "page": "/projects/",
+    "sel": "[data-t='build']",
+    "about": "projects page: the big projects with pictures, stacks and GitHub links"
+  },
+  "tethos-platform": {
+    "page": "/projects/",
+    "sel": "[data-t='tethos-platform']",
+    "about": "Tethos Platform (the 3D island member portal)"
+  },
+  "hackthenorth": {
+    "page": "/projects/",
+    "sel": "[data-t='hackthenorth']",
+    "about": "Among Us IRL, 1st at Hack the North 2026"
+  },
+  "biopilot": {
+    "page": "/projects/",
+    "sel": "[data-t='biopilot']",
+    "about": "biopilot, 2nd at TELUS AI"
+  },
+  "kunlun": {
+    "page": "/projects/",
+    "sel": "[data-t='kunlun']",
+    "about": "Kunlun clothing brand"
+  },
+  "dejaview": {
+    "page": "/projects/",
+    "sel": "[data-t='dejaview']",
+    "about": "deja-view hackathon project"
+  },
+  "snake": {
+    "page": "/projects/",
+    "sel": "[data-t='snake']",
+    "about": "snake-and-commits GitHub Action"
+  },
+  "rag-card": {
+    "page": "/projects/",
+    "sel": "[data-t='rag-card']",
+    "about": "RAG service row"
+  },
+  "clawdash": {
+    "page": "/projects/",
+    "sel": "[data-t='clawdash']",
+    "about": "clawdash row"
+  },
+  "ur5": {
+    "page": "/projects/",
+    "sel": "[data-t='ur5']",
+    "about": "UR5 robot arm motion library row"
+  },
+  "wec": {
+    "page": "/projects/",
+    "sel": "[data-t='wec']",
+    "about": "WEC 2024 entry row"
+  },
+  "this-site": {
+    "page": "/projects/",
+    "sel": "[data-t='this-site']",
+    "about": "this website, with its GitHub link"
+  },
+  "dashboard": {
+    "page": "/projects/",
+    "sel": "a[href='/dashboard/']",
+    "about": "link to the 3D island case study"
+  },
+  "rag": {
+    "page": "/projects/",
+    "sel": "a[href='/rag/']",
+    "about": "link to the RAG service case study"
   },
   "life": {
-    "page": "/",
+    "page": "/hobbies/",
     "sel": "[data-t='life']",
-    "about": "Hobbies section: meowmeow photos, guitar recordings, Muay Thai, photography, travel, other hobbies"
+    "about": "hobbies page: a list of hobbies, each with its own page"
   },
   "play": {
-    "page": "/",
+    "page": "/hobbies/",
     "sel": "[data-t='life']",
     "about": "same as life"
   },
   "meowmeow": {
-    "page": "/",
+    "page": "/hobbies/meowmeow/",
     "sel": "[data-t='meowmeow']",
-    "about": "meowmeow row with three photos of my cat"
+    "about": "my cat meowmeow; her page has three photos"
   },
   "guitar": {
-    "page": "/",
-    "sel": "[data-t='guitar']",
-    "about": "classical guitar row; its Listen button opens four recordings"
+    "page": "/hobbies/guitar/",
+    "sel": "#guitar-tracks",
+    "about": "four recordings of me playing classical guitar, on the guitar page"
   },
   "muaythai": {
-    "page": "/",
+    "page": "/hobbies/muay-thai/",
     "sel": "[data-t='muaythai']",
-    "about": "Muay Thai row in the Life section"
+    "about": "Muay Thai page"
   },
   "photography": {
-    "page": "/",
+    "page": "/hobbies/photography/",
     "sel": "[data-t='photography']",
-    "about": "Photography row in the Life section"
+    "about": "Photography page"
   },
   "travel": {
-    "page": "/",
+    "page": "/hobbies/travel/",
     "sel": "[data-t='travel']",
-    "about": "Travel row in the Life section; opens to the places I've been"
+    "about": "Travel page: places I have been"
+  },
+  "fashion": {
+    "page": "/hobbies/fashion/",
+    "sel": "[data-t='fashion']",
+    "about": "Fashion page (Kunlun)"
   },
   "tethos-page": {
     "page": "/tethos/",
@@ -208,65 +293,5 @@
     "page": "/kunlun/",
     "sel": "[data-t='kunlun-design']",
     "about": "Kunlun page, bilingual design system"
-  },
-  "work": {
-    "page": "/",
-    "sel": "[data-t='work']",
-    "about": "Work list: J.D. Power, Tethos, Modern Engineering, Western Founders Network; rows open for details"
-  },
-  "jdpower": {
-    "page": "/",
-    "sel": "[data-t='jdpower']",
-    "about": "J.D. Power entry in the Experience section"
-  },
-  "hackthenorth": {
-    "page": "/",
-    "sel": "[data-t='hackthenorth']",
-    "about": "Among Us IRL project card, Hack the North 2026 winner, with Devpost and code links"
-  },
-  "biopilot": {
-    "page": "/",
-    "sel": "[data-t='biopilot']",
-    "about": "biopilot project card, 2nd at TELUS AI, crop-health heatmap"
-  },
-  "rag-card": {
-    "page": "/",
-    "sel": "[data-t='rag-card']",
-    "about": "RAG microservice project card"
-  },
-  "dejaview": {
-    "page": "/",
-    "sel": "[data-t='dejaview']",
-    "about": "deja-view project card"
-  },
-  "snake": {
-    "page": "/",
-    "sel": "[data-t='snake']",
-    "about": "snake-and-commits project card with the animated snake"
-  },
-  "clawdash": {
-    "page": "/",
-    "sel": "[data-t='clawdash']",
-    "about": "clawdash project card"
-  },
-  "awards": {
-    "page": "/",
-    "sel": "[data-t='awards']",
-    "about": "Awards section"
-  },
-  "skills": {
-    "page": "/",
-    "sel": "[data-t='skills']",
-    "about": "Skills section: languages, frameworks, AI and data, systems"
-  },
-  "contact": {
-    "page": "/",
-    "sel": "#contact",
-    "about": "contact footer with my email"
-  },
-  "gallery": {
-    "page": "/",
-    "sel": "#gallery",
-    "about": "the sideways photo strip: Tethos, Hack the North badges, the island, biopilot, Kunlun"
   }
 }

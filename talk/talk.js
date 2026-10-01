@@ -66,6 +66,7 @@
     // Keyed by target id (talk/targets.json). A bit only picks targets with a line.
     yank: {
       'resume-swe': "you're a recruiter right? here. resume. right there",
+      'resume-door': "you're a recruiter right? here. resume. right there",
       rag: "this one's good. click it",
       dashboard: 'i built a 3D island for a member dashboard. go look',
       kunlun: 'clothing brand. chinese mythology. click',
@@ -130,16 +131,19 @@
       dejaview: 'pinterest board in, 3D objects in your room out. team of four',
       snake: 'your github graph turns into a game of snake. zero dependencies',
       clawdash: "yes i have an AI agent running on a mac mini. that's its dashboard",
-      gallery: 'real photos btw. no stock. the badges are from hack the north',
       awards: 'the guitar one is the odd one out. ask me about it',
-      life: "you scrolled this far. you're either a friend or a very thorough recruiter",
+      life: 'the cat page is objectively the best page on this site',
+      western: 'fourth year. graduating 2028 if everything goes to plan',
+      modern: "i programmed a robot arm to sand parts. the code's on github",
+      tsinghua: 'a summer in beijing doing lip-sync research',
+      fashion: "that's kunlun. drop 001 is coming",
+      'this-site': "you're looking at it. i'm the head",
       meowmeow: "that's meowmeow. she's horizontal most of the day. want me to call her over?",
       guitar: "that's actually me playing. capricho árabe is the long one",
       muaythai: 'i coach the beginner class. do you train anything?',
       photography: 'fujifilm. do you shoot at all?',
       travel: "only two on there so far, i'm behind on that list. been anywhere good lately?",
       contact: "email's the best way. the real me reads it",
-      leadership: "tethos started as a student club. now it's a federally incorporated nonprofit",
       skills: 'i actually use all of these. ask me about any of them',
       'tethos-impact': 'the red cross one started with a cold call. ask me',
       'dashboard-hard-part': 'the ground used to cost 15,000 sin calls a second. now it is a lookup',
@@ -1736,13 +1740,13 @@
       if (root.contains(e.target)) return;
       const sum = e.target.closest('summary');
       if (sum && sum.parentElement.open) return;
-      if (e.target.closest('summary, button')) look(e.target);
+      if (e.target.closest('summary, button, .r-item')) look(e.target);
     }, true);
     if (fine) {
       let hoverT = 0;
       document.addEventListener('pointerover', (e) => {
         clearTimeout(hoverT);
-        const el = e.target.closest && e.target.closest('[data-photo], .cats img, .strip figure');
+        const el = e.target.closest && e.target.closest('[data-photo], .cats img, .r-item, .proj .shot');
         if (el && !root.contains(el)) hoverT = setTimeout(() => look(el), 1500);
       });
     }

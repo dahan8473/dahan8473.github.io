@@ -20,18 +20,6 @@
 
   var players = [];
 
-  // Expandable entries: any .org-toggle opens the element named by aria-controls.
-  // Collapsing stops audio so nothing plays invisibly.
-  document.querySelectorAll('.org-toggle').forEach(function (btn) {
-    var wrap = document.getElementById(btn.getAttribute('aria-controls'));
-    if (!wrap) return;
-    btn.addEventListener('click', function () {
-      var open = wrap.classList.toggle('open');
-      btn.setAttribute('aria-expanded', String(open));
-      if (!open) players.forEach(function (p) { p.stop(); });
-    });
-  });
-
   var mount = document.getElementById('guitar-tracks');
   if (mount && TRACKS.length) {
     TRACKS.forEach(function (t) {
@@ -99,17 +87,6 @@
     });
   }
 
-  // Gallery arrows step one photo at a time.
-  var strip = document.querySelector('.strip');
-  document.querySelectorAll('.strip-nav button').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      if (!strip) return;
-      var fig = strip.querySelector('figure');
-      var step = fig ? fig.getBoundingClientRect().width + 14 : 400;
-      strip.scrollBy({ left: step * Number(btn.getAttribute('data-dir')), behavior: 'smooth' });
-    });
-  });
-
   // Hover photo reveals. Add data-photo="/media/hover/name.jpg" to any element.
   var canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var targets = document.querySelectorAll('[data-photo]');
@@ -149,23 +126,29 @@
     });
   }
 
-  // Section rail: light up the section you're reading.
-  var links = [].slice.call(document.querySelectorAll('.rail a[href^="#"]'));
-  var spots = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); });
-  if (links.length) {
-    var spy = function () {
-      var line = window.innerHeight * 0.35;
-      var on = -1;
-      spots.forEach(function (el, i) { if (el && el.getBoundingClientRect().top < line) on = i; });
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) on = spots.length - 1;
-      links.forEach(function (a, i) {
-        a.classList.toggle('on', i === on);
-        if (i === on) a.setAttribute('aria-current', 'location');
-        else a.removeAttribute('aria-current');
+  // Resume: hover an entry and its note shows up in the margin; click to
+  // keep it there. Narrow screens and touch open it inline on tap instead.
+  var items = [].slice.call(document.querySelectorAll('.r-item:not(.plain)'));
+  if (items.length) {
+    var margin = window.matchMedia('(min-width: 1180px) and (hover: hover)');
+    var hovered = null;
+    var pinned = null;
+    var show = function () {
+      var on = (margin.matches && hovered) || pinned;
+      items.forEach(function (el) {
+        el.classList.toggle('on', el === on);
+        el.classList.toggle('pinned', el === pinned);
       });
     };
-    window.addEventListener('scroll', spy, { passive: true });
-    window.addEventListener('resize', spy);
-    spy();
+    var pin = function (el) { pinned = pinned === el ? null : el; show(); };
+    items.forEach(function (el) {
+      el.addEventListener('mouseenter', function () { hovered = el; show(); });
+      el.addEventListener('mouseleave', function () { if (hovered === el) hovered = null; show(); });
+      el.addEventListener('click', function (e) { if (!e.target.closest('a')) pin(el); });
+      el.addEventListener('keydown', function (e) {
+        if (e.target === el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pin(el); }
+      });
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && pinned) pin(pinned); });
   }
 })();

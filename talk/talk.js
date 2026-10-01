@@ -1370,7 +1370,7 @@
       return;
     }
     if (!chatOn) return;
-    if (quiet > 22000 && pres.lulls < 3 && pres.streak < 4) lull();
+    if (quiet > 22000 && pres.lulls < (talked() ? 3 : 2) && pres.streak < 4) lull();
     // Nobody's answering: tuck the chat away and let them browse.
     else if (!talked() && quiet > 25000 && (pres.lulls >= 2 || pres.streak >= 4)) closeChat(LINES.introIgnored);
   }

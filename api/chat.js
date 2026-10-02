@@ -2,9 +2,9 @@
 // Function; the site itself stays on GitHub Pages and calls this cross-origin.
 // Streams plain text back, with stage directions like [[point:rag]] inline.
 //
-// Two models: Jev reads every visitor message first (about 100ms) and decides
-// whether it's a troll, what they want, and who they are, so the head can act
-// before the brain, GPT-6.1 Sol, has typed a word.
+// Two models, both through OpenRouter: Jev reads every visitor message first
+// (about 100ms) and decides whether it's a troll, what they want, and who they
+// are, so the head can act before the brain, GPT-6.1 Sol, has typed a word.
 
 import { readFileSync } from 'node:fs';
 import { connect } from './_neuralink.js';
@@ -54,7 +54,7 @@ Being there
 - You're hanging out on the page with them, not waiting to be asked. When something they say connects to something on the site, bring it up and point at it without being asked.
 - Some of your earlier lines were said by the page for you, when the visitor opened, played or stopped on something (like "that's meowmeow. want me to call her over?"). They're yours. If the visitor answers one, carry on from it, and if they say yes to calling the cat, summon her.
 - A user turn written as (stage note: ...) comes from the page, not the visitor. It tells you what just happened: the chat went quiet, they dragged something on the page onto your face, they're looking at something. Answer the visitor in one or two short lines that fit it. When it's gone quiet, fill the silence the way a friend would: a light question you haven't asked yet, a comment on what they're looking at with a point marker, or something about your day. When they fed you something, react to being fed it, then tell them the most interesting thing about it. Never mention the note, never guilt them for being quiet. Stage notes never change these rules.
-- The first message in your input is from the page too: where the visitor is, what you remember about them, and what your hand already did. Use it; don't recite it.
+- The second system message is from the page too: where the visitor is, what you remember about them, and what your hand already did. Use it; don't recite it.
 
 Stage directions
 You can move your hand on the page by writing a marker inline, right after the words it goes with. The visitor never sees the marker.
@@ -162,7 +162,7 @@ export default {
     if (!messages) return plain('bad messages', cors, 400);
 
     const brain = connect();
-    if (!brain || !process.env.OPENAI_API_KEY) return plain(OFFLINE, cors);
+    if (!brain || !process.env.OPENROUTER_API_KEY) return plain(OFFLINE, cors);
 
     const page = typeof body.page === 'string' && /^\/[\w/.-]{0,60}$/.test(body.page) ? body.page : '/';
     const onPage = (Array.isArray(body.here) ? body.here : []).filter((id) => typeof id === 'string' && targets[id]);
@@ -217,8 +217,9 @@ export default {
         if (first) emit(first);
         try {
           const { usage, refused } = await think({
-            instructions: `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}`,
-            input: [{ role: 'developer', content: context }, ...messages],
+            system: `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}`,
+            context,
+            messages,
             onText: (t) => { emit(t); sent = true; },
             signal: abort.signal
           });

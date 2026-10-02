@@ -138,7 +138,7 @@
         { "t": "Co-op" },
         { "t": "Class of 2028" },
         { "t": "This term", "c": [
-          { "t": "Artificial Intelligence" },
+          { "t": "Artificial Intelligence", "id": "wu-ai" },
           { "t": "Software Testing" },
           { "t": "Multiagent Systems", "id": "wu-mas" },
           { "t": "Information Security", "id": "wu-sec" }
@@ -174,6 +174,28 @@
       { "t": "Also", "id": "also", "c": [
         { "t": "Badminton" }, { "t": "Swimming" }, { "t": "Cycling" }, { "t": "Flying drones", "id": "hb-drones" }, { "t": "Video production", "id": "hb-video" },
         { "t": "Chess" }, { "t": "Hiking" }, { "t": "Speed skating" }, { "t": "Watercolor" }, { "t": "Poetry" }
+      ] }
+    ] },
+    { "t": "Takes", "id": "takes", "c": [
+      { "t": "Free will", "id": "tk-freewill", "c": [
+        { "t": "We don't have it" },
+        { "t": "Everything influences everything" },
+        { "t": "Outlook matters more" },
+        { "t": "Same bus, different window" }
+      ] },
+      { "t": "Where AI is going", "id": "tk-ai", "c": [
+        { "t": "Taste over technical skill" },
+        { "t": "Speeds everything up" },
+        { "t": "Power in a few hands", "id": "tk-power" },
+        { "t": "AGI within 5 years" }
+      ] },
+      { "t": "AI versions of people", "id": "tk-clone", "c": [
+        { "t": "A perfect one isn't possible" },
+        { "t": "Wouldn't support one" },
+        { "t": "Small ones are fun" }
+      ] },
+      { "t": "Profit vs ethics", "id": "tk-ethics", "c": [
+        { "t": "Leans ethics" }
       ] }
     ] },
     { "t": "Stories", "id": "stories", "c": [
@@ -289,6 +311,10 @@
     ["jd-power", "sk-kafka"],
     ["jd-ci", "sk-gha"],
     ["tp-economy", "sk-sql"],
-    ["wu-sec", "jd-power"]
+    ["wu-sec", "jd-power"],
+    ["tk-clone", "site-head"],
+    ["tk-ethics", "tethos-association"],
+    ["tk-ai", "wu-ai"],
+    ["tk-ai", "tp-agents"]
   ]
 }

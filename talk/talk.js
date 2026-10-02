@@ -164,6 +164,15 @@
       { id: 'map', line: 'if you had a map like this, what would be the biggest node?', page: '/brain/', only: true },
       { id: 'wall', line: 'what would you write on the wall? :)', page: '/notes/', only: true }
     ],
+    // One deep question a visit, once they've answered some small talk, never
+    // for recruiters. David's takes live in api/chat.js under Deep questions.
+    deep: [
+      { id: 'freewill', line: (name) => `${name ? name + ', ' : ''}do you think we have free will?` },
+      { id: 'ai', line: 'kinda ironic asking this as an ai clone of myself, but where do you think all this ai stuff is going?' },
+      { id: 'clone', line: 'if you could make an ai version of yourself like me, would you?' },
+      { id: 'still', line: 'if an ai was trained perfectly on you, would it still be you?' },
+      { id: 'scale', line: (name) => `${name ? name + ', ' : ''}rate yourself. when it comes to tech, 1 is all profit and 10 is all ethics. where are you?`, scale: ['all profit', 'all ethics'] }
+    ],
     // The mini tour: [page, target to point at, line]
     tour: [
       ['/', 'now', "okay! quick tour. this is home, it's just me saying hi"],
@@ -1201,6 +1210,7 @@
     micBtn.disabled = asking;
   }
   function showChoices() {
+    choicesEl.classList.remove('scale');
     choicesEl.replaceChildren(...LINES.choices.map(([c, does]) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -1328,6 +1338,7 @@
       choicesEl.hidden = true;
       input.value = '';
       pres.streak = 0;
+      if (pres.waiting) { S.smallAnswered = true; save(); }
       pres.waiting = false;
       if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }
     }
@@ -1688,7 +1699,38 @@
     // and once at most for someone who never answered the hello.
     return quiet > 60000 && t - pres.smallAt > 100000 && t - lastInput < 20000 && pres.out < 6 && (talked() || !(S.small || []).length);
   }
+  // The deep one: asked word for word, since David wrote them. The scale one
+  // gets 1 to 10 buttons under the bubble.
+  const deepDue = () => chatOn && !S.deep && S.smallAnswered && S.who !== 'recruiter';
+  async function deepTalk() {
+    const d = pick(LINES.deep);
+    S.deep = d.id;
+    save();
+    pres.smallAt = now();
+    pres.waiting = true;
+    await chime(typeof d.line === 'function' ? d.line(knownName()) : d.line);
+    if (d.scale && chatOn && !asking && !input.value) showScale(d.scale);
+  }
+  function showScale([lo, hi]) {
+    const row = document.createElement('div');
+    row.className = 'dl-scale';
+    for (let i = 1; i <= 10; i++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = i;
+      b.setAttribute('aria-label', `${i} out of 10`);
+      b.addEventListener('click', () => ask(`${i}/10`));
+      row.appendChild(b);
+    }
+    const ends = document.createElement('p');
+    ends.className = 'dl-scale-ends';
+    ends.append(Object.assign(document.createElement('span'), { textContent: lo }), Object.assign(document.createElement('span'), { textContent: hi }));
+    choicesEl.replaceChildren(row, ends);
+    choicesEl.classList.add('scale');
+    choicesEl.hidden = false;
+  }
   function smallTalk() {
+    if (deepDue()) return deepTalk();
     const q = smallLine();
     if (!q) return;
     pres.smallAt = now();

@@ -118,6 +118,7 @@ Replies cost money, so there's a monthly cap in the chat function (default $20, 
 | `LINES` in `talk/talk.js` | Every line the head says on its own |
 | `talk/targets.json` | Everything the head can point at |
 | `brain/` | The second brain page. `map.json` is the graph, `graph.json` the synced notes |
+| `tools/build.py` | Writes the pages (home, resume, projects, every hobby, brain, notes). Edit it, then `python3 tools/build.py` |
 | `tools/brain/sync.mjs` | Condenses my Obsidian notes into the second brain |
 | `api/chat.js` | The conversation: Jev first, then the brain, streamed |
 | `api/decide.js` | Jev picks the head's next move |

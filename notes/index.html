@@ -25,7 +25,7 @@
   <meta name="twitter:image" content="https://davidliu.work/og.png">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css?v=13">
+  <link rel="stylesheet" href="/styles.css?v=14">
   <link rel="stylesheet" href="/talk/talk.css?v=5">
   <script>
     (function () {
@@ -67,25 +67,30 @@
       <header class="doc-head">
         <div>
           <h1>Notes</h1>
-          <p class="hint">Leave me a note. Sign it, or don't.</p>
+          <p class="hint">Leave me a note on the wall. Sign it, or don't. Want it to stay between us? Tell the head.</p>
         </div>
       </header>
 
-      <form class="wall-form" data-t="wall" novalidate>
-        <label class="sr" for="wall-msg">Your note</label>
-        <textarea id="wall-msg" name="message" rows="3" maxlength="500" placeholder="Say hi, leave feedback, tell me something cool" required></textarea>
-        <div class="wall-row">
-          <label class="sr" for="wall-name">Your name</label>
-          <input id="wall-name" name="name" maxlength="60" placeholder="Your name, or leave it blank" autocomplete="name">
-          <button type="submit">Post</button>
-        </div>
-        <p class="wall-status" role="status" aria-live="polite"></p>
-        <p class="hint">Notes go up after a quick check. Want it to stay between us? Tell the head.</p>
-      </form>
+      <section class="board" data-t="wall" aria-label="The note wall">
+        <ul class="board-notes" aria-label="Notes from visitors"></ul>
+        <button class="pad" type="button" aria-label="Leave a note">
+          <span class="pad-sheet"></span>
+          <span class="pad-sheet"></span>
+          <span class="pad-sheet top"><span class="pad-label">leave a<br>note here</span></span>
+          <span class="pen" aria-hidden="true"><i></i></span>
+        </button>
+      </section>
+      <p class="board-status" role="status" aria-live="polite"></p>
 
-      <ul class="wall" aria-label="Notes from visitors">
-        <li class="wall-empty">No notes yet. Be the first.</li>
-      </ul>
+      <template id="write-note">
+        <form class="sticky writing c0" role="dialog" aria-label="Write a note">
+          <label class="sr" for="wall-msg">Your note</label>
+          <textarea id="wall-msg" name="message" maxlength="280" placeholder="write something..." required></textarea>
+          <label class="sr" for="wall-name">Your name</label>
+          <input id="wall-name" name="name" maxlength="40" placeholder="sign it (or don't)" autocomplete="name">
+          <div class="write-actions"><button type="button" class="cancel">cancel</button><button type="submit" class="stick">stick it</button></div>
+        </form>
+      </template>
     </main>
 
     <footer class="foot">
@@ -94,7 +99,7 @@
     </footer>
   </div>
 
-  <script src="/site.js?v=12"></script>
+  <script src="/site.js?v=13"></script>
   <script src="/talk/talk.js?v=7"></script>
 </body>
 </html>

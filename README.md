@@ -15,7 +15,7 @@ My personal site. A floating cutout of my head lives on it. It's an AI version o
 - **Eats things.** Drag anything on the page onto its face. It eats it, then tells you about it.
 - **Notices you.** Open something or stop to read it and it says something about it, once. It also reacts to inspect element, right clicks, dark mode, leaving the tab, and getting thrown across the screen.
 - **Gives tours.** "just lookin around" gets you a walk through every page.
-- **Takes notes.** Tell it you want to leave me a private note and it passes it on. Public notes go on the wall at `/notes/`.
+- **Takes notes.** `/notes/` is a board of sticky notes. Peel one off the pad in the corner, write on it, and it sticks to the wall (Jev checks it first). Tell the head you want to leave me a private note and it passes it on instead.
 - **Can't be talked out of being me.** Prompt injection and trolls get caught by Jev before they reach the brain.
 - **Answers fast.** First word in under a second.
 
@@ -32,7 +32,7 @@ It's supposed to feel like I'm there, not like a chatbot in the corner. So it do
 | ![The projects page](docs/screens/projects.webp) | ![The guitar page with four recordings](docs/screens/guitar.webp) |
 | Projects, with the stack and the code. | Recordings keep playing while you browse. |
 | ![The second brain graph](docs/screens/brain.webp) | ![The note wall](docs/screens/notes.webp) |
-| The second brain. Click a note and the head tells you about it. | The note wall. |
+| The second brain. Click a note and the head tells you about it. | The note wall, with sample notes. Click one to bring it into focus. |
 | ![The resume in dark mode](docs/screens/resume-dark.webp) | |
 | Dark mode. | |
 

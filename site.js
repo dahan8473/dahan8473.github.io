@@ -893,6 +893,36 @@
     inboxStop = function () { alive = false; clearInterval(timer); };
   }
 
+  // ---- Games and 3D scenes -------------------------------------------------------
+  // A page can carry a piece: <div data-play="muaythai"> loads /play/muaythai.js,
+  // <div data-3d="globe"> loads /3d/globe.js. Each module exports mount(el) and
+  // returns a function that cleans it up; swapping pages calls it.
+  var pieces = [];
+  function setupPieces() {
+    pieces.forEach(function (stop) { try { stop(); } catch (e) {} });
+    pieces = [];
+    document.querySelectorAll('main [data-play], main [data-3d]').forEach(function (el) {
+      var play = el.getAttribute('data-play');
+      var url = (play ? '/play/' + play : '/3d/' + el.getAttribute('data-3d')) + '.js?v=' + (el.getAttribute('data-v') || '1');
+      var live = true;
+      pieces.push(function () { live = false; });
+      import(url).then(function (mod) {
+        if (!live || !document.contains(el)) return;
+        el.classList.add('piece-on');
+        var stop = mod.mount(el);
+        if (typeof stop === 'function') pieces.push(stop);
+      }).catch(function (err) {
+        el.classList.add('piece-failed');
+        if (window.console) console.warn('piece', url, err);
+      });
+    });
+  }
+  // Meowmeow's page: "call her over" asks the head to send the cat in.
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-cat-call]');
+    if (b && window.dlCat) window.dlCat();
+  });
+
   // ---- Per page --------------------------------------------------------------------
   function setup() {
     tick();
@@ -903,6 +933,7 @@
     setupWall();
     setupBrain();
     setupInbox();
+    setupPieces();
   }
 
   // ---- Router: swap pages in place ----------------------------------------------

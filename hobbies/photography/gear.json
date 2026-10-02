@@ -1,0 +1,7 @@
+{
+  "_how": "The cameras on the photography page. Specs show on hover. lenses: add the ones you own.",
+  "bodies": [
+    { "id": "xt200", "name": "Fujifilm X-T200", "specs": ["24.2 MP APS-C sensor", "4K video at 30p", "3.5 in vari-angle touchscreen", "370 g"], "lenses": [] },
+    { "id": "a7r2", "name": "Sony A7R II", "specs": ["42.4 MP full-frame BSI sensor", "5-axis in-body stabilization", "4K video", "625 g"], "lenses": [] }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "_how": "One entry per place. lat/lng in degrees. videos are YouTube ids (unlisted is fine). photos are paths under /media/travel/.",
+  "places": [
+    { "id": "beijing", "name": "Beijing", "country": "China", "lat": 39.9042, "lng": 116.4074, "date": "Summer 2023", "note": "A summer of AI research at Tsinghua University.", "videos": [], "photos": [] },
+    { "id": "new-york", "name": "New York", "country": "USA", "lat": 40.7128, "lng": -74.006, "date": "", "note": "Played Carnegie Hall.", "videos": [], "photos": [] }
+  ]
+}

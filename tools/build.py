@@ -6,7 +6,8 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 22, 7, 20, 17
+V_CSS, V_TALKCSS, V_JS, V_TALK = 23, 7, 21, 17
+V_PIECE = 1  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -371,7 +372,7 @@ GROUPS = [
     ('meowmeow', 'Meowmeow', 'My cat. Always chudding around.', '/media/life/meowmeow-sleep.webp'),
     ('guitar', 'Classical guitar', 'Competed nationally, played Carnegie Hall. Four recordings.', None),
     ('photography', 'Photography', 'Fujifilm X-T200 and Sony A7R II.', None),
-  ], [('watercolor', 'Watercolor'), ('poetry', 'Poetry')]),
+  ], [('watercolor', 'Watercolor and poetry')]),
 ]
 # Page order, for previous and next.
 HOBBIES = [h[:2] for _, rows, more in GROUPS for h in rows + more]
@@ -424,48 +425,61 @@ def hobby(slug, name, tagline, sections, shot='', kind='Hobby'):
     write(f'hobbies/{slug}/index.html', page(f'/hobbies/{slug}/', name, f'{name}, one of David Liu\'s hobbies. {tagline}', body, 'hobbies', cls='case', back=('/hobbies/', 'Hobbies')))
 
 
+def piece(kind, name, note, cls='', src=''):
+    # A container site.js fills with /play/<name>.js or /3d/<name>.js. The note
+    # shows until it loads (and if it can't).
+    attr = 'data-play' if kind == 'play' else 'data-3d'
+    box = 'play' if kind == 'play' else 'stage3d'
+    data = f' data-src="{src}"' if src else ''
+    classes = f'{box} {cls}'.strip()
+    return f'      <div class="{classes}" {attr}="{name}" data-v="{V_PIECE}"{data}><p class="piece-note">{note}</p></div>\n'
+
+
 hobby('meowmeow', 'Meowmeow', 'My cat. She/her, black, and always chudding around.', [
-  ('Meet her', [('Ask the head', '<p>Tell the floating head you have a pet and it will call her over. She walks in from the edge of the screen and lies down.</p>')], None),
+  ('Meet her', [('Call her over', '<p>She walks in from the edge of the screen and plops down. <button class="ln cat-call" type="button" data-cat-call>Call her</button></p>')], None),
 ], shot='''      <div class="cats big">
         <img src="/media/life/meowmeow-sleep.webp" alt="Meowmeow, a black cat, asleep in a beanbag" width="750" height="1000">
         <img src="/media/life/meowmeow-belly.webp" alt="Meowmeow on her back with her paws in the air" width="750" height="1000">
         <img src="/media/life/meowmeow-stairs.webp" alt="Meowmeow stretched out on the floor by the stairs" width="750" height="1000">
       </div>
 ''', kind='The cat')
-hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegie Hall. These are recordings of me playing.", [
+hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegie Hall. Play it yourself, or listen to me.", [
   ('Recordings', [('Four pieces', '<div class="tracks" id="guitar-tracks"></div>')], 'guitar'),
   ('Highlights', [('Carnegie Hall', '<p>Performed there.</p>'), ('NW Guitar Competition', '<p>2nd place, classical guitar.</p>')], None),
-])
+], shot=piece('3d', 'guitar', 'Loading the guitar...', 'tall'))
 hobby('muay-thai', 'Muay Thai', 'I train at the Muay Thai club at Western, and coach its beginner class.', [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
-])
+], shot=piece('play', 'muaythai', 'Loading the ring...'))
 hobby('climbing', 'Rock climbing', "I boulder. I can only do a V2 right now.", [
   ('Grade', [('V2', "<p>My max, for now. If you climb, tell the head what you can do.</p>")], None),
+], shot=piece('play', 'climbing', 'Loading the wall...'))
+hobby('swimming', 'Swimming', 'I swim.', [
+  ('Awards', [('Coming soon', "<p>Digging them out.</p>")], None),
+], shot=piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/swimming/photos.json'))
+hobby('badminton', 'Badminton', 'I play badminton. These are my rackets.', [
+  ('You', [('Do you play?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
+], shot=piece('3d', 'racket', 'Loading the rackets...'))
+hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
+  ('You', [('Do you ride?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
+], shot=piece('3d', 'bike', 'Loading the bike...'))
+hobby('hiking', 'Hiking', "I hike. Haven't written this page up yet.", [
+  ('You', [('Do you hike?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
 ])
-SOON = {
-  'chess': ('I play chess.', 'Do you play?'),
-  'drones': ('I fly drones.', 'Do you fly?'),
-  'video': ('I make videos.', 'Do you make videos?'),
-  'watercolor': ('I paint with watercolor.', 'Do you paint?'),
-  'poetry': ('I write poetry.', 'Do you write?'),
-  'swimming': ('I swim.', 'Do you swim?'),
-  'badminton': ('I play badminton.', 'Do you play?'),
-  'cycling': ('I cycle.', 'Do you ride?'),
-  'hiking': ('I hike.', 'Do you hike?'),
-  'speed-skating': ('I speed skate.', 'Do you skate?'),
-}
-for slug, name in [m for _, _, more in GROUPS for m in more]:
-    line, ask = SOON[slug]
-    hobby(slug, name, f"{line} Haven't written this page up yet.", [
-      ('You', [(ask, "<p>Tell the head. It'll want to hear about it.</p>")], None),
-    ])
-hobby('photography', 'Photography', 'I shoot on a Fujifilm X-T200 and a Sony A7R II.', [
+hobby('speed-skating', 'Speed skating', 'I speed skate. These are my trophies.', [
+  ('You', [('Do you skate?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
+], shot=piece('play', 'gallery', 'Trophy photos coming soon.', src='/hobbies/speed-skating/photos.json'))
+hobby('chess', 'Chess', 'I play chess.', [
+  ('You', [('Do you play?', "<p>Tell the head your rating. It'll want to know.</p>")], None),
+], shot=piece('play', 'chess', 'Setting up the board...'))
+hobby('drones', 'Flying drones', 'I fly drones. Click it to see the footage.', [], shot=piece('3d', 'drone', 'Loading the drone...') + piece('play', 'videos', 'Footage coming soon.', src='/hobbies/drones/videos.json'))
+hobby('video', 'Video production', 'Things I made.', [], shot=piece('play', 'videos', 'Videos coming soon.', src='/hobbies/video/videos.json'))
+hobby('watercolor', 'Watercolor and poetry', 'A painting on the front, a poem on the back. Flip it over.', [], shot=piece('play', 'flipcard', 'Loading...', src='/hobbies/watercolor/pieces.json'))
+hobby('photography', 'Photography', 'I shoot on a Fujifilm X-T200 and a Sony A7R II. Hover the cameras, click one to see what I took with it.', [
   ('Gear', [('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Sony A7R II', '<p>Full frame.</p>')], 'gear'),
-  ('Photos', [('Still choosing', "<p>I'm picking which ones go up.</p>")], None),
-])
-hobby('travel', 'Travel', "Places I've been. The list is shorter than the trips.", [
+], shot=piece('3d', 'cameras', 'Loading the cameras...', 'tall') + piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/photography/photos.json'))
+hobby('travel', 'Travel', "Places I've been. Spin the globe, click a place.", [
   ('Places', [('Beijing, 2023', '<p>A summer of AI research at Tsinghua University.</p>'), ('New York', '<p>Played Carnegie Hall.</p>')], 'travel'),
-])
+], shot=piece('3d', 'globe', 'Loading the globe...', 'tall'))
 hobby('fashion', 'Fashion', "I'm building Kunlun, a clothing brand built on Chinese mythology. Traditional Chinese and English run side by side as two voices.", [
   ('Kunlun', [('The brand', '<p>Kunlun is the axis mountain of Chinese myth, and each drop is a step up it. I built the bilingual design system and the storefront. Pre-launch.</p><p class="go"><a class="ln" href="/kunlun/">Kunlun case study</a></p>')], None),
 ], shot='''      <figure class="case-shot ink">

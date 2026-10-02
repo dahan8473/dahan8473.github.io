@@ -363,6 +363,13 @@ a.row:hover .m { transform: translateX(3px); }
 .imsg-send:disabled { opacity: 0; transform: scale(0.6); cursor: default; }
 .imsg-note { max-width: 560px; margin: 16px auto 0; text-align: center; font-size: 13px; color: var(--t3); }
 
+/* Pieces: games and 3D scenes a page loads (site.js setupPieces). */
+.stage3d { position: relative; width: 100%; aspect-ratio: 16 / 10; margin: 40px 0 8px; }
+.stage3d.tall { aspect-ratio: 4 / 3; }
+.play { position: relative; margin: 40px 0 8px; }
+.piece-note { color: var(--t3); }
+.piece-on > .piece-note { display: none; }
+
 /* Hobbies */
 .brain-page .doc-head { padding: 36px 0 22px; }
 /* The map runs the full width of the window and fades out at the edges, so

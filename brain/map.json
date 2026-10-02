@@ -172,7 +172,7 @@
         { "t": "Always chudding around" }
       ] },
       { "t": "Also", "id": "also", "c": [
-        { "t": "Badminton" }, { "t": "Cycling" }, { "t": "Flying drones", "id": "hb-drones" }, { "t": "Video production", "id": "hb-video" },
+        { "t": "Badminton" }, { "t": "Swimming" }, { "t": "Cycling" }, { "t": "Flying drones", "id": "hb-drones" }, { "t": "Video production", "id": "hb-video" },
         { "t": "Chess" }, { "t": "Hiking" }, { "t": "Speed skating" }, { "t": "Watercolor" }, { "t": "Poetry" }
       ] }
     ] },

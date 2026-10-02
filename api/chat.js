@@ -129,7 +129,7 @@ const INTENTS = {
   hobbies: 'asks about hobbies or life outside work: music, guitar, sports, travel, the cat',
   pets: 'mentions their own pet, or asks if David has pets',
   contact: 'wants to reach David: email, LinkedIn, hiring, scheduling a call',
-  tour: 'wants a tour, or to be shown around the site',
+  tour: 'asks you to give them a tour or show them around (a question about what is on the site is other, not tour)',
   note: 'wants you to pass a private message on to the real David (not a question about how the note wall works)',
   smalltalk: 'greeting, telling their name, small talk, or answering a question the head asked',
   other: 'anything else'

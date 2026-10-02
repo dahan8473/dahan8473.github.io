@@ -7,7 +7,7 @@
   "nav": {
     "page": "/",
     "sel": ".rail",
-    "about": "the page bar on the left edge (across the top on phones): Home, Resume, Projects, Hobbies, Email. On every page. Hover it to see labels."
+    "about": "the icon bar on the left edge (across the top on phones): Home, Resume, Projects, Hobbies, Brain, Notes, then Email. On every page. Hover it to see the names."
   },
   "email": {
     "page": "/",
@@ -292,12 +292,17 @@
   "wall": {
     "page": "/notes/",
     "sel": "[data-t='wall']",
-    "about": "the note wall form where visitors post public notes, signed or anonymous"
+    "about": "the note wall: sticky notes visitors left for David, each where they stuck it. Click one to read it up close."
+  },
+  "note-pad": {
+    "page": "/notes/",
+    "sel": "[data-t='note-pad']",
+    "about": "the pad of sticky notes in the wall's top corner ('Leave a note here'). Click it to write a note, then pick where it sticks."
   },
   "notes": {
     "page": "/notes/",
     "sel": "a[href='/notes/']",
-    "about": "link to the note wall"
+    "about": "the Notes page in the bar: the note wall"
   },
   "gear": {
     "page": "/hobbies/photography/",

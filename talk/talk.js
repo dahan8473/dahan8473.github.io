@@ -145,11 +145,22 @@
       fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },
     // Where the 404 offers to take them.
-    ways: [['home', '/'], ['resume', '/resume/'], ['projects', '/projects/'], ['hobbies', '/hobbies/'], ['notes', '/notes/']],
-    // The one gentle check-in when it's been quiet a long time. Functions get their name.
-    lull: [
-      "no pressure btw. you can just scroll and i'll narrate",
-      (name) => `${name || 'hey'}, you got any pets?`
+    ways: [['home', '/'], ['resume', '/resume/'], ['projects', '/projects/'], ['hobbies', '/hobbies/'], ['brain', '/brain/'], ['notes', '/notes/']],
+    // Small talk through the visit: [topic, line, page it fits best]. One at a
+    // time, the page's own first. Functions get their name.
+    small: [
+      ['pets', (name) => `${name || 'hey'}, random question. do you have any pets?`, '/hobbies/meowmeow/'],
+      ['build', "do you code too? what's the last thing you built?", '/projects/'],
+      ['music', 'do you play any music?', '/hobbies/guitar/'],
+      ['travel', 'been anywhere good lately?', '/hobbies/travel/'],
+      ['style', "what's your style like?", '/hobbies/fashion/'],
+      ['brain', 'if you had a map like this, what would be the biggest node?', '/brain/'],
+      ['wall', 'what would you write on the wall? :)', '/notes/'],
+      ['fun', "what do you do when you're not working?", '/hobbies/'],
+      ['sports', 'do you play any sports?'],
+      ['make', 'do you make anything for fun? art, code, clothes, videos, anything'],
+      ['games', 'chess or video games?'],
+      ['found', "how'd you end up on my site btw?"]
     ],
     // The mini tour: [page, target to point at, line]
     tour: [
@@ -157,6 +168,7 @@
       ['/resume/', 'jdpower', 'this is my resume. hover anything and more pops up on the side'],
       ['/projects/', 'hackthenorth', "stuff i've built. this one was my first hardware project"],
       ['/hobbies/', 'life', 'and the stuff i do for fun'],
+      ['/brain/', 'brain', "this is my second brain. everything i know about me, as a map you can drag around"],
       ['/notes/', 'wall', 'you can leave a note on the wall before you go :)']
     ],
     tourEnd: "that's it! i'm way more fun when you talk to me, so ask me anything :)",
@@ -194,7 +206,7 @@
   const clock = () => new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit' }).toLowerCase();
 
   const S = Object.assign(
-    { msgs: [], open: false, met: false, quiet: false, antics: 0, once: [], pending: null, lastKind: '', noticed: [], lull: 0 },
+    { msgs: [], open: false, met: false, quiet: false, antics: 0, once: [], pending: null, lastKind: '', noticed: [], small: [] },
     (() => { try { return JSON.parse(sessionStorage.getItem('dl-talk')) || {}; } catch (e) { return {}; } })()
   );
   function save() {
@@ -1214,7 +1226,7 @@
     if (fine) input.focus({ preventScroll: true });
     pres.streak = 0;
     // Clicked right after he said something: pick up from there.
-    const said = pres.last && now() - pres.last.at < 15000 ? pres.last.text : '';
+    const said = pres.last && now() - pres.last.at < (pres.last.keep || 15000) ? pres.last.text : '';
     pres.last = null;
     if (said) { S.msgs.push({ role: 'assistant', content: said }); save(); speak(said); }
     else if (!talked()) await greet();
@@ -1304,7 +1316,7 @@
 
   // A note is the page asking for a line on its own (the chat went quiet),
   // so nothing is echoed and it doesn't use up the visitor's turns.
-  async function ask(q, { note = false } = {}) {
+  async function ask(q, { note = false, fallback = '' } = {}) {
     q = q.trim().slice(0, 500);
     if (!q || asking) return;
     if (!note && S.noting) return takeNote(q);
@@ -1314,7 +1326,7 @@
       choicesEl.hidden = true;
       input.value = '';
       pres.streak = 0;
-      pres.lulls = 0;
+      pres.waiting = false;
       if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }
     }
     asking = true;
@@ -1355,7 +1367,7 @@
       parser.end();
     } catch (e) {
       failed = true;
-      if (!raw && note) { S.msgs.pop(); raw = lullLine(); parser.push(raw); parser.end(); }
+      if (!raw && note) { S.msgs.pop(); raw = fallback || smallLine() || LINES.offline; parser.push(raw); parser.end(); }
       else if (!raw) { raw = LINES.offline; setFace('sad', 3000); parser.push(raw); parser.end(); }
     }
     pres.brain = !failed && !raw.includes(LINES.offline);
@@ -1617,7 +1629,7 @@
   // He sees what you open, play, hover on or stop to read, and says something
   // about it. When the chat goes quiet he makes small talk instead of idling.
 
-  const pres = { ready: false, seen: '', seenAt: 0, said: now(), streak: 0, lulls: 0, out: 0, brain: false, at: '', atSince: 0, last: null };
+  const pres = { ready: false, seen: '', seenAt: 0, said: now(), streak: 0, out: 0, brain: false, at: '', atSince: 0, last: null, smallAt: now(), waiting: false };
 
   function look(el) {
     for (let t = el && el.closest('[data-t]'); t; t = t.parentElement && t.parentElement.closest('[data-t]')) {
@@ -1653,20 +1665,37 @@
     save();
     return speak(text);
   }
-  function lullLine() {
-    const line = LINES.lull[S.lull++ % LINES.lull.length];
+  // Small talk through the visit, like a friend sitting next to you: a light
+  // question now and then, never a second one before they've answered the
+  // last. Mid-conversation the brain asks it in its own words, so it doesn't
+  // ask about pets after they've told it about their dog.
+  const SMALL_MAX = 6;
+  function smallLine() {
+    const asked = S.small || [];
+    const open = LINES.small.filter(([id]) => !asked.includes(id));
+    const hit = open.find(([, , page]) => page === here) || open.find(([, , page]) => !page) || open[0];
+    if (!hit) return '';
+    S.small = [...asked, hit[0]];
     save();
-    return typeof line === 'function' ? line(knownName()) : line;
+    return typeof hit[1] === 'function' ? hit[1](knownName()) : hit[1];
   }
-  function lull() {
-    if (S.lulled) return;
-    S.lulled = true;
-    save();
-    pres.lulls++;
-    if (!pres.brain || !talked()) return chime(lullLine());
+  function smallDue(t, quiet) {
+    if (S.quiet || (S.small || []).length >= SMALL_MAX) return false;
+    if (chatOn) return !pres.waiting && quiet > 40000 && t - pres.smallAt > 60000 && pres.streak < 3;
+    // Browsing with the chat tucked away: only while they're actually around,
+    // and once at most for someone who never answered the hello.
+    return quiet > 60000 && t - pres.smallAt > 100000 && t - lastInput < 20000 && pres.out < 6 && (talked() || !(S.small || []).length);
+  }
+  function smallTalk() {
+    const line = smallLine();
+    if (!line) return;
+    pres.smallAt = now();
+    if (!chatOn) { chime(line); if (pres.last) pres.last.keep = 30000; return; }
+    pres.waiting = true;
+    if (!pres.brain || !talked()) return chime(line);
     pres.streak++;
     const on = pres.at || pres.seen;
-    ask(`(stage note: it's gone quiet for a bit. fill the silence with one short line of easy small talk.${on ? ` they seem to be looking at ${on}.` : ''})`, { note: true });
+    ask(`(stage note: it's gone quiet for a bit. ask them one light small talk question in your own words, like "${line}". if they already told you something like that, ask a different one you haven't asked yet.${on ? ` they seem to be looking at ${on}.` : ''})`, { note: true, fallback: line });
   }
 
   function presence() {
@@ -1688,11 +1717,9 @@
       pres.seen = '';
       return;
     }
-    if (!chatOn) return;
-    // One gentle check-in after a long quiet, ever. No chains of prompts.
-    if (quiet > 40000 && !S.lulled && pres.streak < 3) lull();
+    if (smallDue(t, quiet)) return smallTalk();
     // Nobody's answering: tuck the chat away and let them browse.
-    else if (!talked() && quiet > 30000 && (S.lulled || pres.streak >= 3)) closeChat(LINES.introIgnored);
+    if (chatOn && !talked() && quiet > 30000 && (pres.waiting || pres.streak >= 3)) closeChat(LINES.introIgnored);
   }
 
   // ---- Feeding ----------------------------------------------------------------

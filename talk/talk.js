@@ -48,119 +48,119 @@
   // ---- Lines ----------------------------------------------------------------
   // Everything the head says without asking the model. Lowercase, no em dashes.
   const LINES = {
-    lost: "this page doesn't exist. i'm lost too. i'm a head",
-    intro: "hey! i'm david. well, the floating head version of him. what's your name?",
-    introBack: (name) => `oh hey ${name}. you came back 😭 what are we looking at today?`,
-    introIgnored: "okay i'll let you look around. click me if you want to talk",
-    again: 'back again. what else',
-    choices: ["i'm a recruiter", 'just looking around', 'skip the small talk'],
-    cat: ['she likes you', "that's meowmeow btw", 'she only does that for people she likes'],
+    intro: [
+      "belloo! i'm david. well, the floating head version of him. what's your name?",
+      "oh hey. i'm david, or what's left of him. what's your name?",
+      "heyyy. i'm david's head. he left me in charge. what's your name?",
+      "oh! a visitor. hi, i'm david. mostly. what's your name?"
+    ],
+    introBack: (name) => `${name.toUpperCase()} YOU CAME BACK! it's been so boring. david didn't code anything for me to do while you were gone`,
+    introIgnored: "okay, i'll let you look around. just lmk if you have any questions!",
+    again: 'welcome back!',
+    // Quick replies under the intro: [label, what it does]
+    choices: [['wanna know more about you', 'ask'], ['just lookin around', 'tour'], ["i'm hiring", 'ask']],
+    lost: "you're lost huh. me too. where were you trying to go?",
+    found: "it's right over here!",
+    cat: ['she likes you', "that's meowmeow btw. she's not allowed on the keyboard", "she doesn't do that for everyone"],
     close: "okay. i'll be right here",
-    shoo: "fine. i'll stay in my corner 😭",
-    poke: ['ow', 'hey', "that's my face", 'okay you can stop now', 'i will remember this'],
-    knock: ['hello?? you can talk to me btw', 'i can see you scrolling', "knock knock. it's the guy from the website"],
-    bonk: ['oops', 'ow. that section came out of nowhere', 'my bad'],
-    letgo: ['fine', "okay i'll put it back", 'no? okay'],
-    landed: ['again. no wait', 'okay i live here now', 'that was actually fun'],
-    dizzy: ["okay i'm gonna be sick", 'everything is spinning. is that normal'],
-    // Keyed by target id (talk/targets.json). A bit only picks targets with a line.
+    shoo: "fine. i'll be quiet. i'll just be here 😭",
+    poke: ['ow', 'hey', "that's my face", 'okay you can stop now', "i'm telling david"],
+    knock: ['hellloooo?', 'am i muted 😭', 'i can see u scrolling..', 'yea ok just ignore me'],
+    bonk: ['oops', 'ow. who put that there', 'my bad'],
+    letgo: ['fine', "okay i'll put it back", 'no? cool. cool cool'],
+    landed: ['again! no wait'],
+    dizzy: ["ok i'm gonna be sick", 'hold on i might throw up'],
+    fed: ['nom nom. okay so about this one...'],
+    carry: ['look what i found'],
+    putBack: 'okay okay, putting it back',
+    mischief: { take: 'you can have this back when you talk to me', give: 'fine. i was bored' },
+    // Keyed by target id (talk/targets.json). Fetching something to the cursor
+    // only happens when they asked, or when it clearly fits who they are.
     yank: {
-      'resume-swe': "you're a recruiter right? here. resume. right there",
-      'resume-door': "you're a recruiter right? here. resume. right there",
-      rag: "this one's good. click it",
-      dashboard: 'i built a 3D island for a member dashboard. go look',
-      kunlun: 'clothing brand. chinese mythology. click',
-      github: "go look at my commits. or don't",
-      hackthenorth: 'this one won hack the north. look at it',
-      email: 'my email. just in case'
+      'resume-swe': "psst. recruiter? resume's right here",
+      'resume-door': "psst. recruiter? resume's right here",
+      rag: "ooo this one's good, give it a click",
+      dashboard: 'i built a whole 3D game for this, you should take a look',
+      kunlun: 'i made a clothing brand. based on chinese mythology. click',
+      github: 'take a look at my commits here!',
+      hackthenorth: 'this one won hack the north. just saying...',
+      email: "here's my email. talk to me here!"
     },
     shove: {
-      build: "here, i'll bring the good part to you",
-      lead: 'the part where i run a nonprofit',
+      build: "here, i'll bring the good stuff to you",
+      lead: "oo i'm really proud of this one. this is a nonprofit i'm running, take a look!",
       play: 'the fun section. i play classical guitar',
-      'tethos-impact': 'this part. read this part',
-      'dashboard-hard-part': 'my favorite optimization. right here'
+      'tethos-impact': 'this part. read this part'
     },
     point: {
-      nav: "everything's in this bar btw. hover it",
-      guitar: "that's me playing. well, a recording of me. hit listen",
-      hackthenorth: 'we won this one. badges that play among us',
-      now: "that's what i'm doing right now. roughly",
-      'resume-swe': "resume's up here btw",
-      'rag-hard-part': 'the actually interesting part is right here',
-      'dashboard-ghosts': 'the ghosts are my favorite detail on this page',
-      'kunlun-design': 'traditional chinese, never simplified. that part matters'
+      nav: 'everything about me is in this bar!',
+      guitar: 'these are real recordings of me playing! you can listen while you browse the site',
+      now: "here's a summary of what i'm doing rn",
+      'resume-swe': "resume's up here if you wanna keep it :)"
     },
     roam: {
-      build: 'i built all of these. ask me which one broke the most',
-      lead: 'tethos is the main thing. ask me about it',
-      play: 'yes i actually played carnegie hall',
-      awards: "these are the ones i'm allowed to brag about",
-      'tethos-impact': 'real numbers. real nonprofits',
-      'dashboard-hard-part': 'the ground used to cost 15,000 sin calls a second'
+      build: 'i built all of these projects. ask me which one made me cry',
+      awards: 'heh.. 🙂‍↕️'
     },
     // Fourth wall
-    devtools: ['woah woah woah. what are you doing', "close that. i'm shy", 'we literally just met today', "okay fine. it's hand-written html. nothing to see 😭"],
+    devtools: ['woah woah woah. what are you doing', "close that. i'm shy", 'we literally just met'],
     devtoolsAgain: 'inspect element again? we talked about this',
-    devtoolsBye: 'thank you. that was a lot',
-    exit: "wait where are you going. i didn't even show you the 3D island",
-    back: "oh you're back. i didn't move. i can't, i'm a head",
-    dark: 'ooh. dark mode',
-    light: 'flashbang 😭',
-    rightclick: 'right click? what are you gonna do, save my face?',
+    devtoolsBye: 'thank you. that was a lot 😮‍💨',
+    exit: 'wait wait where are you going, i got more to show u!!!',
+    back: "oh you're back! i didn't move. i can't, i'm a head",
+    dark: 'ooh dark mode. good choice',
+    light: 'flashbang 😭 my eyes',
+    rightclick: 'right click? what are you gonna do, save my face? 😳',
     copy: 'copying my stuff? go ahead honestly',
-    print: "you're printing my website? on paper?",
-    squish: 'stop squishing me',
+    print: "no way you're printing my website ON PAPER. you can just download my resume you know",
+    squish: "i'm claustrophobic you know",
     wake: "huh? oh. i wasn't sleeping",
-    footer: 'you made it to the footer. nobody makes it to the footer',
-    mic: "oh you're actually talking to me. hi",
-    micBlocked: "i can't hear you. the mic's blocked, just type it",
-    offline: `my brain's not connected right now 😭 email me instead: ${EMAIL}`,
-    limit: `okay i've talked a lot. email me, the real me reads it: ${EMAIL}`,
-    // Said once each when they open, play, hover or stop on something. Keyed by data-t.
+    mic: "oh you're actually talking to me 😳 hi",
+    micBlocked: "i can't hear you, you're muted. make sure to unblock your mic",
+    offline: `my brain's not connected rn 😭 email me instead: ${EMAIL}`,
+    limit: `okay we've talked a lot 😭 the real me would love to keep going over email: ${EMAIL}`,
+    // Said once each, when they open, click, or stop to read something. Keyed by data-t.
     notice: {
-      jdpower: 'sixteen months there. the jeep and ram build and price sites run on services i worked on',
-      tethos: 'this is the big one. ask me how it started, it involves a factory and a lot of metal disks',
+      western: 'fourth year! graduating 2028 if all goes well 🤞',
+      jdpower: 'ooo sixteen months here. ask me anything about it',
+      modern: 'i programmed a robot arm to move and polish parts. i felt like tony stark in this internship',
+      tsinghua: 'ahhh take me back 🥹',
       genesis: 'genesis was our demo day. 260 people came to watch students demo software for nonprofits',
-      wfn: "ontario's largest hackathon education event. i ran that",
-      'tethos-platform': "you can actually walk around that island. there are 91 kinds of fish, don't ask",
-      hackthenorth: 'no server, no phones. the badges talk to each other and signal strength decides if you can kill',
-      biopilot: 'drone footage in, crop maps out. second place, $5,000',
-      kunlun: 'my clothing brand. traditional chinese and english side by side. drop 001 is coming',
-      'rag-card': 'built that because new execs asked the same questions every september',
-      dejaview: 'pinterest board in, 3D objects in your room out. team of four',
-      snake: 'your github graph turns into a game of snake. zero dependencies',
-      clawdash: "yes i have an AI agent running on a mac mini. that's its dashboard",
-      awards: 'the guitar one is the odd one out. ask me about it',
-      life: 'the cat page is objectively the best page on this site',
-      western: 'fourth year. graduating 2028 if everything goes to plan',
-      modern: "i programmed a robot arm to sand parts. the code's on github",
-      tsinghua: 'a summer in beijing doing lip-sync research',
-      fashion: "that's kunlun. drop 001 is coming",
-      'this-site': "you're looking at it. i'm the head",
-      meowmeow: "that's meowmeow. she's horizontal most of the day. want me to call her over?",
-      guitar: "that's actually me playing. capricho árabe is the long one",
-      muaythai: 'i coach the beginner class. do you train anything?',
-      photography: 'fujifilm. do you shoot at all?',
-      travel: "only two on there so far, i'm behind on that list. been anywhere good lately?",
-      contact: "email's the best way. the real me reads it",
-      skills: 'i actually use all of these. ask me about any of them',
-      'tethos-impact': 'the red cross one started with a cold call. ask me',
-      'dashboard-hard-part': 'the ground used to cost 15,000 sin calls a second. now it is a lookup',
-      'dashboard-ghosts': 'the ghosts are my favorite detail. nobody ever lands in an empty world',
-      'dashboard-budget': 'every effect had to earn its frames. shadows cost seven',
-      'rag-hard-part': "the whole trick is never re-embedding what didn't change",
-      'kunlun-design': 'traditional chinese, never simplified. that part matters'
+      wfn: "this was the first student club i was in! while i was VP i hosted ontario's largest hackathon education event!",
+      'tethos-platform': 'you can actually walk around that island. i made models for 91 kinds of fish, i just really like fish',
+      hackthenorth: 'ooo this was my first hardware project! it was really fun running around the hackathon at night testing it with my teammates',
+      biopilot: 'this was the first hackathon i won!',
+      kunlun: "my clothing brand. i'm still working on the pieces for the first drop rn",
+      'rag-card': 'added a rag service cuz i wanna keep a centralized knowledge base for future years!',
+      dejaview: 'this was my proudest hackathon project! it scrapes the media you watch, finds furniture you like and places it in a virtual 3D scan of your room! pretty dystopian i know, but so am i haha',
+      snake: 'i made this cuz i thought it would look cool on my github. turns out a lot of ppl like this kinda stuff too haha',
+      awards: 'heh.. 🙂‍↕️',
+      skills: 'ask me about any of these!',
+      contact: "email's the best way to reach me!",
+      meowmeow: "that's meowmeow! she's really fat and sleeps all day. want me to call her over?",
+      guitar: 'these are real recordings of me playing! you can listen while you browse the site',
+      muaythai: 'i coach the beginner class! do you train anything?',
+      photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
+      fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },
-    // Small talk for when it goes quiet, in order. Functions run when said.
+    // The one gentle check-in when it's been quiet a long time. Functions get their name.
     lull: [
       "no pressure btw. you can just scroll and i'll narrate",
-      'so what brings you here? recruiter, friend, or just lost',
-      () => `it's ${clock()} here in london. what time is it for you?`,
-      "honestly i don't get many visitors. this is nice",
-      'quick question. cats or dogs?',
-      "you're a quiet one. that's okay, i talk enough for both of us"
-    ]
+      (name) => `${name || 'hey'}, you got any pets?`
+    ],
+    // The mini tour: [page, target to point at, line]
+    tour: [
+      ['/', 'now', "okay! quick tour. this is home, it's just me saying hi"],
+      ['/resume/', 'jdpower', 'this is my resume. hover anything and more pops up on the side'],
+      ['/projects/', 'hackthenorth', "stuff i've built. this one was my first hardware project"],
+      ['/hobbies/', 'life', 'and the stuff i do for fun'],
+      ['/notes/', 'wall', 'you can leave a note on the wall before you go :)']
+    ],
+    tourEnd: "that's it! i'm way more fun when you talk to me, so ask me anything :)",
+    wall: "if you want a private note sent to him, just text me and let me know. i won't tell anyone else, trust 🤐",
+    noteContact: 'got it 🤐 want him to be able to reply? drop your email, or say skip',
+    noteSent: 'sent. my lips are sealed 🤐',
+    noteFailed: `my mail's broken rn 😭 email him directly: ${EMAIL}`
   };
 
   const ICON = {
@@ -1057,10 +1057,11 @@
     micBtn.disabled = asking;
   }
   function showChoices() {
-    choicesEl.replaceChildren(...LINES.choices.map((c) => {
+    choicesEl.replaceChildren(...LINES.choices.map(([c, does]) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = c;
+      // TODO(head-v2): 'tour' starts the mini tour once it lands.
       b.addEventListener('click', () => ask(c));
       return b;
     }));
@@ -1093,7 +1094,7 @@
   // The head starts the conversation: who it is, then their name.
   async function greet() {
     const name = knownName();
-    const line = name ? LINES.introBack(name) : LINES.intro;
+    const line = name ? LINES.introBack(name) : pick(LINES.intro);
     if (!S.msgs.length) { S.msgs.push({ role: 'assistant', content: line }); save(); }
     setFace('happy', 2500);
     await speak(line);
@@ -1242,7 +1243,7 @@
     showForm();
     const last = [...S.msgs].reverse().find((m) => m.role === 'assistant');
     speak('');
-    textEl.textContent = last ? strip(last.content) : LINES.intro;
+    textEl.textContent = last ? strip(last.content) : LINES.intro[0];
     linkify();
     if (S.pending) {
       const a = S.pending;
@@ -1347,7 +1348,7 @@
   function lullLine() {
     const line = LINES.lull[S.lull++ % LINES.lull.length];
     save();
-    return typeof line === 'function' ? line() : line;
+    return typeof line === 'function' ? line(knownName()) : line;
   }
   function lull() {
     pres.lulls++;
@@ -1766,12 +1767,6 @@
     addEventListener('contextmenu', () => react('rightclick', LINES.rightclick, 1800, 'angry'));
     document.addEventListener('copy', () => react('copy', LINES.copy, 1800, 'happy'));
     addEventListener('beforeprint', () => react('print', LINES.print));
-    const footer = document.querySelector('.footer');
-    if (footer && document.documentElement.scrollHeight > innerHeight * 1.4) {
-      new IntersectionObserver((entries, io) => {
-        if (entries[0].isIntersecting && scrollY > 200) { io.disconnect(); react('footer', LINES.footer); }
-      }).observe(footer);
-    }
   }
 
   async function enter() {

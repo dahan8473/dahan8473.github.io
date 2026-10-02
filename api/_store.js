@@ -76,6 +76,10 @@ export function recall(visitor) {
   return rpc('recall', { p_visitor: visitor });
 }
 
-export function leaveNote({ visitor, name, contact, message, page }) {
-  return rpc('leave_note', { p_visitor: visitor, p_name: name || '', p_contact: contact || '', p_message: message, p_page: page });
+export function leaveNote({ visitor, name, contact, message, page, wall = false, flagged = false }) {
+  return rpc('leave_note', { p_visitor: visitor, p_name: name || '', p_contact: contact || '', p_message: message, p_page: page, p_public: wall, p_flagged: flagged });
+}
+
+export async function wallNotes() {
+  return (await rpc('list_wall', {})) || [];
 }

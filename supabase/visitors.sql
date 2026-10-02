@@ -129,15 +129,31 @@ create table if not exists notes (
 );
 alter table notes enable row level security;
 
-create or replace function leave_note(p_visitor uuid, p_name text, p_contact text, p_message text, p_page text)
+-- Public notes show on the wall at /notes/. Jev screens them first; anything
+-- it flags stays private (flagged) and only David sees it.
+alter table notes add column if not exists public boolean not null default false;
+alter table notes add column if not exists flagged boolean not null default false;
+
+drop function if exists leave_note(uuid, text, text, text, text);
+create or replace function leave_note(p_visitor uuid, p_name text, p_contact text, p_message text, p_page text, p_public boolean, p_flagged boolean)
 returns bigint
 language sql
 set search_path = public
 as $$
   insert into visitors (id) values (p_visitor) on conflict (id) do nothing;
-  insert into notes (visitor_id, name, contact, message, page)
-  values (p_visitor, nullif(p_name, ''), nullif(p_contact, ''), p_message, p_page)
+  insert into notes (visitor_id, name, contact, message, page, public, flagged)
+  values (p_visitor, nullif(p_name, ''), nullif(p_contact, ''), p_message, p_page, p_public, p_flagged)
   returning id;
+$$;
+
+create or replace function list_wall()
+returns jsonb
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object('name', name, 'message', message, 'at', at) order by at desc), '[]'::jsonb)
+  from (select name, message, at from notes where public and not flagged order by at desc limit 100) w;
 $$;
 
 -- What the head remembers about a returning visitor.
@@ -168,5 +184,6 @@ $$;
 
 revoke execute on function add_spend(numeric) from public, anon, authenticated;
 revoke execute on function spent_this_month() from public, anon, authenticated;
-revoke execute on function leave_note(uuid, text, text, text, text) from public, anon, authenticated;
+revoke execute on function leave_note(uuid, text, text, text, text, boolean, boolean) from public, anon, authenticated;
+revoke execute on function list_wall() from public, anon, authenticated;
 revoke execute on function recall(uuid) from public, anon, authenticated;

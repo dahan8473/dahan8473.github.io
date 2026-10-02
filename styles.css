@@ -241,7 +241,12 @@ a.row:hover .m { transform: translateX(3px); }
 
 /* Notes: a board of notes, in the same quiet language as the rest. */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.board { position: relative; min-height: 420px; margin: 0 -14px; border-radius: 16px; background: var(--fill); transition: min-height 300ms ease; }
+.board-wrap { margin: 0 -14px; overflow-x: auto; overflow-y: hidden; border-radius: 16px; scrollbar-width: none; }
+.board-wrap::-webkit-scrollbar { display: none; }
+.board { position: relative; border-radius: 16px; background: var(--fill); }
+.board.placing { cursor: crosshair; }
+.wall-write { display: none; }
+.write-btn { padding: 0; border: 0; background: none; color: var(--t1); font: inherit; cursor: pointer; }
 .board-notes { position: absolute; inset: 0; }
 .board-status { min-height: 1.6em; margin-top: 14px; color: var(--t2); }
 
@@ -253,7 +258,7 @@ a.row:hover .m { transform: translateX(3px); }
   flex-direction: column;
   width: var(--note, 176px);
   height: var(--note, 176px);
-  padding: 16px;
+  padding: calc(var(--note, 176px) * 0.09);
   border: 0;
   border-radius: 12px;
   background: var(--panel);
@@ -267,12 +272,14 @@ a.row:hover .m { transform: translateX(3px); }
 }
 .sticky .msg { flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; max-height: calc(1.45em * 5); line-height: 1.45; overflow-wrap: anywhere; }
 .sticky .by { margin-top: auto; padding-top: 8px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sticky:hover, .sticky:focus-visible { box-shadow: 0 0 0 1px var(--t3), 0 1px 2px rgba(0, 0, 0, 0.04); }
+.sticky:hover, .sticky:focus-visible { box-shadow: 0 0 0 1px var(--t3), 0 1px 2px rgba(0, 0, 0, 0.04); z-index: 40; }
+.sticky.ghost { z-index: 60; pointer-events: none; transition: none; box-shadow: 0 0 0 1px var(--t3), 0 18px 40px -18px rgba(0, 0, 0, 0.35); }
+.sticky.pending { opacity: 0.6; }
 .sticky.pinned .msg { -webkit-line-clamp: 4; max-height: calc(1.45em * 4); padding-right: 14px; }
 .sticky.pinned::after { content: ''; position: absolute; top: 14px; right: 14px; width: 14px; height: 14px; background: var(--t3); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; }
 
 /* The pad in the corner: a small stack of blank notes and a pen. */
-.pad { position: absolute; top: 24px; right: 24px; width: 150px; height: 150px; padding: 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; z-index: 3; }
+.pad { position: absolute; top: calc(22px * var(--s, 1)); right: calc(22px * var(--s, 1)); width: calc(var(--note, 176px) * 0.85); height: calc(var(--note, 176px) * 0.85); padding: 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; z-index: 45; }
 .pad-sheet { position: absolute; inset: 0; border-radius: 12px; background: var(--panel); box-shadow: 0 0 0 1px var(--rule); }
 .pad-sheet:nth-child(1) { transform: translate(6px, 6px); }
 .pad-sheet:nth-child(2) { transform: translate(3px, 3px); }
@@ -439,11 +446,11 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
   .projs { grid-template-columns: 1fr; gap: 48px; }
   .more-projs { padding-top: 56px; }
   .cats { gap: 8px; }
-  .board { margin: 0 -6px; }
-  .sticky { padding: 12px; font-size: 14px; }
+  .board-wrap { margin: 0 -20px; border-radius: 0; }
+  .wall-write { display: flex; }
+  .board { border-radius: 0; }
   .sticky .msg { -webkit-line-clamp: 4; max-height: calc(1.45em * 4); }
   .sticky.lifted { font-size: 18px; }
-  .pad { top: 14px; right: 14px; width: 120px; height: 120px; font-size: 14px; }
   .pad-sheet.top { padding: 12px; }
   .case .entries > .entry { grid-template-columns: 1fr; }
   .kv { grid-template-columns: 1fr; }

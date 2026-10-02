@@ -119,7 +119,7 @@ Replies cost money, so there's a monthly cap in the chat function (default $20, 
 | `tools/brain/sync.mjs` | Condenses my Obsidian notes into the second brain |
 | `api/chat.js` | The conversation: Jev first, then the brain, streamed |
 | `api/decide.js` | Jev picks the head's next move |
-| `api/note.js`, `api/wall.js` | Notes for me, and the public wall |
+| `api/note.js`, `api/wall.js` | Notes for me (sent to my Telegram), and the public wall |
 | `api/visit.js` | Page-view beacon |
 | `supabase/visitors.sql` | Visitors, chats, notes, and the spend counter |
 | `tools/cutout.swift` | Cuts my head, hands and cat out of photos with Apple's Vision framework |
@@ -148,7 +148,7 @@ npx vercel deploy --prod
 | `DAVID_BRAIN` | What the head knows about me |
 | `DAVID_CORTEX` | The second brain, from `tools/brain/sync.mjs push` |
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Visitor memory, chat logs, notes and the spend counter. Use a dedicated Supabase project and run `supabase/visitors.sql` in it once. |
-| `RESEND_API_KEY` | Emails me private notes |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Messages me on Telegram when someone leaves a note |
 | `MONTHLY_CAP_USD` | Optional, defaults to 20 |
 
 If the project URL changes, update `API` at the top of `talk/talk.js` and `site.js`.

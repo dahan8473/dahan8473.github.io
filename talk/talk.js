@@ -163,7 +163,7 @@
     wall: "if you want a private note sent to him, just text me and let me know. i won't tell anyone else, trust 🤐",
     noteContact: 'got it 🤐 want him to be able to reply? drop your email, or say skip',
     noteSent: 'sent. my lips are sealed 🤐',
-    noteFailed: `my mail's broken rn 😭 email him directly: ${EMAIL}`
+    noteFailed: `hm that didn't go through 😭 email him directly: ${EMAIL}`
   };
 
   const ICON = {

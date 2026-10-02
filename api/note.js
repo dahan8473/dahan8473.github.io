@@ -1,35 +1,18 @@
-// Notes for the real David, left through the head: saved, then emailed to him.
+// Notes for the real David, left through the head or on the wall: saved, then
+// sent to him on Telegram.
 
 import { corsFor, preflight, plain, json, isId, clientIp, limiter } from './_http.js';
 import { leaveNote } from './_store.js';
 import { decide, noul } from './_jev.js';
+import { tell } from './_notify.js';
 
-const TO = 'davidliu8473@gmail.com';
 const limited = limiter(5, 60 * 60 * 1000);
-const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 
-async function mail({ name, contact, message, page }) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return false;
-  const replyTo = (contact.match(EMAIL) || [])[0];
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        from: 'davidliu.work <onboarding@resend.dev>',
-        to: [TO],
-        ...(replyTo ? { reply_to: replyTo } : {}),
-        subject: `Note from ${name || 'a visitor'} on davidliu.work`,
-        text: `${message}\n\nFrom: ${name || 'no name given'}\nReply to: ${contact || 'no contact given'}\nLeft on: https://davidliu.work${page}`
-      })
-    });
-    if (!res.ok) console.error('resend', res.status, await res.text());
-    return res.ok;
-  } catch (err) {
-    console.error('resend', err);
-    return false;
-  }
+function telegramText({ name, contact, message, page }, where) {
+  const lines = [where, '', message, '', `from: ${name || 'no name'}`];
+  if (contact) lines.push(`reply to: ${contact}`);
+  lines.push(`on: davidliu.work${page}`);
+  return lines.join('\n');
 }
 
 export default {
@@ -49,7 +32,10 @@ export default {
       name: typeof body.name === 'string' ? body.name.trim().slice(0, 60) : '',
       contact: typeof body.contact === 'string' ? body.contact.trim().slice(0, 200) : '',
       message,
-      page: typeof body.page === 'string' && /^\/[\w/.-]{0,60}$/.test(body.page) ? body.page : '/'
+      page: typeof body.page === 'string' && /^\/[\w/.-]{0,60}$/.test(body.page) ? body.page : '/',
+      // Where on the wall the writer stuck it, 0 to 1 each way.
+      x: Number.isFinite(body.x) ? Math.min(1, Math.max(0, body.x)) : null,
+      y: Number.isFinite(body.y) ? Math.min(1, Math.max(0, body.y)) : null
     };
     // Wall notes are public, so Jev reads them first. Anything it flags (or
     // anything it can't check) stays private and only David sees it.
@@ -64,7 +50,8 @@ export default {
       flagged = !a || a.unsafe.noul > 0.5;
       wall = !flagged;
     }
-    const [id, mailed] = await Promise.all([leaveNote({ ...note, wall, flagged }), mail(note)]);
-    return json({ saved: id != null, posted: id != null && wall, mailed }, headers);
+    const where = wall ? 'New note on your wall' : flagged ? "A note that didn't pass the check for the wall (kept private)" : 'Private note for you';
+    const [id, sent] = await Promise.all([leaveNote({ ...note, wall, flagged }), tell(telegramText(note, where))]);
+    return json({ saved: id != null, posted: id != null && wall, mailed: sent }, headers);
   }
 };

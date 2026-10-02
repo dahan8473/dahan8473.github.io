@@ -169,18 +169,23 @@
   });
 
   // ---- Note wall ------------------------------------------------------------------
-  // A board of notes in a grid, each tilted a hair (seeded by its text so it
-  // stays put between visits). Click one to bring it into focus; click the
-  // pad in the corner to write one.
+  // A big wall where each note stays wherever its writer stuck it, tilted a few
+  // degrees, newer ones on top. Click a note to bring it into focus. The pad in
+  // the corner: write a note, then click the spot on the wall to stick it.
   var when = new Intl.DateTimeFormat('en-CA', { month: 'short', day: 'numeric' });
-  var WELCOME = { message: 'hi! leave me a note. say hi, or tell me something cool :)', name: 'david', pinned: true };
+  // The wall in its own units; it scales to fit, and scrolls sideways on phones.
+  var VW = 1200, VH = 780, NS = 184;
+  var WELCOME = { id: 'welcome', message: 'hi! leave me a note. say hi, or tell me something cool :)', name: 'david', pinned: true, x: 0.03, y: 0.05 };
   function seed(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return function () { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }; }
   function sticky(n) {
     var b = document.createElement('button');
     b.type = 'button';
-    var rnd = seed((n.message || '') + (n.at || ''));
     b.className = 'sticky' + (n.pinned ? ' pinned' : '');
-    b._tilt = rnd() * 2 - 1;
+    var rnd = seed((n.message || '') + (n.at || '') + (n.id || ''));
+    n.tilt = n.pinned ? -1.5 : n.tilt != null ? n.tilt : (rnd() * 2 - 1) * 4;
+    // Old notes without a spot get a steady one from their text.
+    if (n.x == null || n.y == null) { n.x = 0.05 + rnd() * 0.8; n.y = 0.08 + rnd() * 0.84; }
+    b._note = n;
     var msg = document.createElement('span');
     msg.className = 'msg';
     msg.textContent = n.message;
@@ -192,47 +197,42 @@
     return b;
   }
   function setupWall() {
-    var board = document.querySelector('.board');
+    var wrap = document.querySelector('.board-wrap');
+    var board = wrap && wrap.querySelector('.board');
     if (!board) return;
     var list = board.querySelector('.board-notes');
     var pad = board.querySelector('.pad');
     var status = document.querySelector('.board-status');
     var notes = [WELCOME];
-    var size = function () { return window.innerWidth < 721 ? 140 : 176; };
+    var scale = 1;
 
-    // Grid cells, skipping the corner the pad sits in; tilt and jitter per note.
-    function layout() {
-      var S = size(), gap = window.innerWidth < 721 ? 14 : 26, inset = window.innerWidth < 721 ? 14 : 26;
-      var W = board.clientWidth - inset * 2;
-      var cols = Math.max(2, Math.floor((W + gap) / (S + gap)));
-      var padCols = Math.ceil((pad.offsetWidth + 20) / (S + gap));
-      var cell = 0, maxY = 0;
-      [].forEach.call(list.querySelectorAll('.sticky'), function (el) {
-        var col, row;
-        for (;;) { col = cell % cols; row = Math.floor(cell / cols); cell++; if (!(row === 0 && col >= cols - padCols)) break; }
-        var spare = (W - cols * S - (cols - 1) * gap) / Math.max(1, cols - 1);
-        var x = inset + col * (S + gap + spare);
-        var y = inset + row * (S + gap);
-        el.style.setProperty('--note', S + 'px');
-        el.style.setProperty('--x', x.toFixed(1) + 'px');
-        el.style.setProperty('--y', y.toFixed(1) + 'px');
-        el.style.setProperty('--r', (el._tilt * 1.2).toFixed(2) + 'deg');
-        maxY = Math.max(maxY, y + S);
-      });
-      board.style.minHeight = Math.max(maxY + inset + 10, pad.offsetHeight + 80) + 'px';
+    function spot(el) {
+      var n = el._note;
+      el.style.setProperty('--x', (n.x * (VW - NS) * scale).toFixed(1) + 'px');
+      el.style.setProperty('--y', (n.y * (VH - NS) * scale).toFixed(1) + 'px');
+      el.style.setProperty('--r', n.tilt.toFixed(2) + 'deg');
+    }
+    function measure() {
+      scale = Math.max(wrap.clientWidth / VW, 0.62);
+      board.style.width = (VW * scale).toFixed(0) + 'px';
+      board.style.height = (VH * scale).toFixed(0) + 'px';
+      board.style.setProperty('--note', (NS * scale).toFixed(1) + 'px');
+      board.style.setProperty('--s', scale.toFixed(3));
+      board.style.fontSize = scale < 0.8 ? '14px' : '';
+      [].forEach.call(board.querySelectorAll('.sticky'), spot);
     }
     function render() {
-      list.replaceChildren.apply(list, notes.map(function (n) { var li = document.createElement('li'); var b = sticky(n); b._note = n; li.appendChild(b); return li; }));
-      layout();
+      list.replaceChildren.apply(list, notes.map(function (n) { var li = document.createElement('li'); li.appendChild(sticky(n)); return li; }));
+      measure();
     }
     render();
     fetch(API + '/wall').then(function (r) { return r.ok ? r.json() : []; }).then(function (got) {
       if (!got.length) return;
-      notes = got.concat([WELCOME]);
+      notes = [WELCOME].concat(got);
       render();
     }).catch(function () {});
-    var ro = new ResizeObserver(layout);
-    ro.observe(board);
+    var ro = new ResizeObserver(measure);
+    ro.observe(wrap);
 
     // Lifting: animate a fixed copy from where it sits to the middle.
     var dim = null;
@@ -252,14 +252,14 @@
     function fly(el, from, to, opts) {
       var dx = from.left - to.left, dy = from.top - to.top, k = from.width / to.width;
       return el.animate([
-        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + k + ') rotate(' + (opts.r0 || 0) + 'deg)', opacity: opts.o0 == null ? 1 : opts.o0 },
-        { transform: 'none', opacity: 1 }
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + k + ') rotate(' + (opts.r0 || 0) + 'deg)' },
+        { transform: 'none' }
       ], { duration: reduce ? 0 : 420, easing: 'cubic-bezier(.2,.8,.2,1)', direction: opts.reverse ? 'reverse' : 'normal', fill: 'both' }).finished;
     }
     function center(w) { return { left: (window.innerWidth - w) / 2, top: Math.max(24, (window.innerHeight - w) / 2), width: w }; }
     var lifted = null;
     function lift(src) {
-      if (lifted) return;
+      if (lifted || placing) return;
       var r = src.getBoundingClientRect();
       var copy = sticky(src._note);
       copy.classList.add('lifted');
@@ -272,7 +272,7 @@
       src.style.visibility = 'hidden';
       lifted = { copy: copy, src: src };
       openDim(drop);
-      fly(copy, r, c, { r0: parseFloat(src.style.getPropertyValue('--r')) || 0 });
+      fly(copy, r, c, { r0: src._note.tilt });
       copy.focus();
       copy.addEventListener('click', drop);
     }
@@ -280,8 +280,7 @@
       if (!lifted) return;
       var l = lifted; lifted = null;
       closeDim();
-      var r = l.src.getBoundingClientRect();
-      fly(l.copy, r, l.copy.getBoundingClientRect(), { reverse: true, r0: parseFloat(l.src.style.getPropertyValue('--r')) || 0 }).then(function () {
+      fly(l.copy, l.src.getBoundingClientRect(), l.copy.getBoundingClientRect(), { reverse: true, r0: l.src._note.tilt }).then(function () {
         l.copy.remove();
         l.src.style.visibility = '';
         l.src.focus({ preventScroll: true });
@@ -289,83 +288,126 @@
     }
     list.addEventListener('click', function (e) { var b = e.target.closest('.sticky'); if (b) lift(b); });
 
-    // Writing: a sheet peels off the pad and comes to the middle.
+    // Writing: a sheet comes off the pad to the middle of the screen.
     var writing = null;
-    pad.addEventListener('click', function () {
-      if (writing || lifted) return;
-      var tpl = document.getElementById('write-note');
-      var form = tpl.content.firstElementChild.cloneNode(true);
+    var draft = { message: '', name: '' };
+    function openWriter() {
+      if (writing || lifted || placing) return;
+      var form = document.getElementById('write-note').content.firstElementChild.cloneNode(true);
       form.classList.add('lifted');
+      form.message.value = draft.message;
+      form.name.value = draft.name;
       document.body.appendChild(form);
       var w = form.offsetWidth, c = center(w);
       form.style.left = c.left + 'px';
       form.style.top = c.top + 'px';
-      var from = pad.querySelector('.pad-sheet.top').getBoundingClientRect();
       writing = form;
       openDim(cancel);
-      fly(form, from, c, { r0: 0 }).then(function () { form.message.focus(); });
+      fly(form, pad.querySelector('.pad-sheet.top').getBoundingClientRect(), c, {}).then(function () { form.message.focus(); });
       form.querySelector('.cancel').addEventListener('click', cancel);
-      form.addEventListener('submit', post);
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var message = form.message.value.trim();
+        if (!message) { form.message.focus(); return; }
+        draft = { message: message, name: form.name.value.trim() };
+        writing = null;
+        closeDim();
+        form.remove();
+        startPlacing();
+      });
       status.textContent = '';
-    });
+    }
     function cancel() {
       if (!writing) return;
       var f = writing; writing = null;
+      draft = { message: f.message.value, name: f.name.value };
       closeDim();
-      fly(f, pad.querySelector('.pad-sheet.top').getBoundingClientRect(), f.getBoundingClientRect(), { reverse: true, r0: 0 }).then(function () { f.remove(); pad.focus({ preventScroll: true }); });
+      fly(f, pad.querySelector('.pad-sheet.top').getBoundingClientRect(), f.getBoundingClientRect(), { reverse: true }).then(function () { f.remove(); pad.focus({ preventScroll: true }); });
     }
-    function post(e) {
-      e.preventDefault();
-      var f = writing;
-      var message = f.message.value.trim();
-      if (!message) { f.message.focus(); return; }
-      var name = f.name.value.trim();
+    pad.addEventListener('click', openWriter);
+    var writeBtn = document.querySelector('.write-btn');
+    if (writeBtn) writeBtn.addEventListener('click', openWriter);
+
+    // Placing: the note follows the pointer over the wall; click to stick it.
+    var placing = null;
+    function startPlacing() {
+      var n = { message: draft.message, name: draft.name, x: 0.45, y: 0.4, at: new Date().toISOString() };
+      var ghost = sticky(n);
+      ghost.classList.add('ghost');
+      ghost.tabIndex = -1;
+      list.appendChild(ghost);
+      spot(ghost);
+      placing = { ghost: ghost, n: n };
+      board.classList.add('placing');
+      status.textContent = 'Now click anywhere on the wall to stick it. Arrow keys and Enter work too. Esc to go back.';
+      board.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+    }
+    function moveTo(clientX, clientY) {
+      if (!placing) return;
+      var r = board.getBoundingClientRect();
+      var w = NS * scale;
+      placing.n.x = Math.min(1, Math.max(0, (clientX - r.left - w / 2) / ((VW - NS) * scale)));
+      placing.n.y = Math.min(1, Math.max(0, (clientY - r.top - w / 2) / ((VH - NS) * scale)));
+      spot(placing.ghost);
+    }
+    board.addEventListener('pointermove', function (e) { if (placing) moveTo(e.clientX, e.clientY); });
+    board.addEventListener('click', function (e) {
+      if (!placing || e.target.closest('.pad')) return;
+      e.stopPropagation();
+      moveTo(e.clientX, e.clientY);
+      stick();
+    }, true);
+    function stopPlacing() {
+      board.classList.remove('placing');
+      var p = placing; placing = null;
+      return p;
+    }
+    function stick() {
+      var p = stopPlacing();
+      if (!p) return;
+      var g = p.ghost;
+      g.classList.remove('ghost');
+      g.classList.add('pending');
+      status.textContent = 'Sticking it...';
       var visitor = null;
       try { visitor = localStorage.getItem('dl-visitor'); } catch (err) {}
-      f.querySelector('.stick').disabled = true;
-      f.querySelector('.stick').textContent = 'Posting...';
       fetch(API + '/note', {
         method: 'POST',
         headers: { 'content-type': 'text/plain' },
-        body: JSON.stringify({ public: true, visitor: visitor, name: name, message: message, page: '/notes/' })
+        body: JSON.stringify({ public: true, visitor: visitor, name: p.n.name, message: p.n.message, page: '/notes/', x: p.n.x, y: p.n.y })
       }).then(function (r) { return r.ok ? r.json() : { saved: false }; }).catch(function () { return { saved: false }; }).then(function (res) {
-        if (!res.saved && !res.mailed && !res.posted) {
-          f.querySelector('.stick').disabled = false;
-          f.querySelector('.stick').textContent = 'Post';
-          status.textContent = "That didn't go through. Email me instead: davidliu8473@gmail.com";
-          return;
-        }
-        writing = null;
-        closeDim();
-        var from = f.getBoundingClientRect();
+        g.classList.remove('pending');
         if (res.posted) {
-          // Onto the board, newest first.
-          var n = { message: message, name: name, at: new Date().toISOString() };
-          notes = [n].concat(notes);
-          render();
-          var el = list.querySelector('.sticky');
-          el.style.visibility = 'hidden';
-          el.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
-          setTimeout(function () {
-            var to = el.getBoundingClientRect();
-            f.animate([{ transform: 'none' }, { transform: 'translate(' + (to.left - from.left) + 'px,' + (to.top - from.top) + 'px) scale(' + (to.width / from.width) + ') rotate(' + (parseFloat(el.style.getPropertyValue('--r')) || 0) + 'deg)' }], { duration: reduce ? 0 : 520, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' }).finished.then(function () {
-              f.remove();
-              el.style.visibility = '';
-            });
-          }, 250);
-          status.textContent = 'Posted. Thank you!';
-        } else {
+          notes.push(p.n);
+          draft = { message: '', name: '' };
+          status.textContent = 'Stuck. Thank you!';
+        } else if (res.saved || res.mailed) {
           // Didn't pass the check: it shrinks away to the head, privately.
+          draft = { message: '', name: '' };
+          var from = g.getBoundingClientRect();
           var head = document.querySelector('.dl-head');
           var to = head ? head.getBoundingClientRect() : { left: window.innerWidth - 80, top: window.innerHeight - 80, width: 40 };
-          f.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (to.left + to.width / 2 - from.left - from.width / 2) + 'px,' + (to.top + 40 - from.top - from.height / 2) + 'px) scale(.08)', opacity: 0 }], { duration: reduce ? 0 : 700, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' }).finished.then(function () { f.remove(); });
+          g.animate([{ transform: getComputedStyle(g).transform, opacity: 1 }, { transform: 'translate(' + (to.left + to.width / 2 - from.left) + 'px,' + (to.top + 40 - from.top) + 'px) scale(.08)', opacity: 0 }], { duration: reduce ? 0 : 700, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' }).finished.then(function () { g.parentNode && g.remove(); });
           status.textContent = "Sent to David privately. It didn't pass the check for the wall.";
+        } else {
+          g.remove();
+          status.textContent = "That didn't go through. Your note is still in the pad; try again, or email me: davidliu8473@gmail.com";
         }
       });
     }
-    var onKey = function (e) { if (e.key === 'Escape') { if (lifted) drop(); else if (writing) cancel(); } };
+    var onKey = function (e) {
+      if (placing) {
+        var step = 0.025, n = placing.n;
+        if (e.key === 'Escape') { e.preventDefault(); stopPlacing().ghost.remove(); status.textContent = ''; openWriter(); return; }
+        if (e.key === 'Enter') { e.preventDefault(); stick(); return; }
+        var k = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+        if (k) { e.preventDefault(); n.x = Math.min(1, Math.max(0, n.x + k[0])); n.y = Math.min(1, Math.max(0, n.y + k[1])); spot(placing.ghost); }
+        return;
+      }
+      if (e.key === 'Escape') { if (lifted) drop(); else if (writing) cancel(); }
+    };
     document.addEventListener('keydown', onKey);
-    wallStop = function () { ro.disconnect(); document.removeEventListener('keydown', onKey); closeDim(); if (writing) writing.remove(); if (lifted) lifted.copy.remove(); writing = lifted = null; };
+    wallStop = function () { ro.disconnect(); document.removeEventListener('keydown', onKey); closeDim(); if (writing) writing.remove(); if (lifted) lifted.copy.remove(); writing = lifted = placing = null; };
   }
   var wallStop = null;
 

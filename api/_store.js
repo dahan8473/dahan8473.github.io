@@ -76,8 +76,12 @@ export function recall(visitor) {
   return rpc('recall', { p_visitor: visitor });
 }
 
-export function leaveNote({ visitor, name, contact, message, page, wall = false, flagged = false }) {
-  return rpc('leave_note', { p_visitor: visitor, p_name: name || '', p_contact: contact || '', p_message: message, p_page: page, p_public: wall, p_flagged: flagged });
+export async function leaveNote({ visitor, name, contact, message, page, wall = false, flagged = false, x = null, y = null }) {
+  const note = { p_visitor: visitor, p_name: name || '', p_contact: contact || '', p_message: message, p_page: page, p_public: wall, p_flagged: flagged };
+  const id = await rpc('leave_note', { ...note, p_x: x, p_y: y });
+  if (id != null || !hasStore) return id;
+  // A database from before supabase/2026-10-02-note-positions.sql: same note, no spot.
+  return rpc('leave_note', note);
 }
 
 export async function wallNotes() {

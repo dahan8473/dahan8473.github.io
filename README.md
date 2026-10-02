@@ -4,7 +4,7 @@ My personal site. A floating cutout of my head lives on it. It's an AI version o
 
 [![The demo](docs/poster.webp)](https://davidliu.work/docs/demo.mp4)
 
-**[Watch the 57-second demo](https://davidliu.work/docs/demo.mp4)**
+**[Watch the 75-second demo](https://davidliu.work/docs/demo.mp4)**
 
 ## What the head does
 
@@ -15,7 +15,7 @@ My personal site. A floating cutout of my head lives on it. It's an AI version o
 - **Eats things.** Drag anything on the page onto its face. It eats it, then tells you about it.
 - **Notices you.** Open something or stop to read it and it says something about it, once. It also reacts to inspect element, right clicks, dark mode, leaving the tab, and getting thrown across the screen.
 - **Gives tours.** "just lookin around" gets you a walk through every page.
-- **Takes notes.** `/notes/` is a board of sticky notes. Peel one off the pad in the corner, write on it, and it sticks to the wall (Jev checks it first). Tell the head you want to leave me a private note and it passes it on instead.
+- **Takes notes.** `/notes/` is a wall of sticky notes. Take one off the pad in the corner, write on it, and stick it wherever you want. It stays where you put it (Jev checks it first). Tell the head you want to leave me a private note and it passes it on instead. Either way I get a ping on Telegram.
 - **Can't be talked out of being me.** Prompt injection and trolls get caught by Jev before they reach the brain.
 - **Answers fast.** First word in under a second.
 
@@ -31,8 +31,8 @@ It's supposed to feel like I'm there, not like a chatbot in the corner. So it do
 | The hand brings the resume to your cursor. | Carrying a project card around. |
 | ![The projects page](docs/screens/projects.webp) | ![The guitar page with four recordings](docs/screens/guitar.webp) |
 | Projects, with the stack and the code. | Recordings keep playing while you browse. |
-| ![The second brain graph](docs/screens/brain.webp) | ![The note wall](docs/screens/notes.webp) |
-| The second brain, as a map. Drag it around, click to see what connects. | The note wall, with sample notes. Click one to bring it into focus. |
+| ![The second brain map](docs/screens/brain.webp) | ![The note wall](docs/screens/notes.webp) |
+| The second brain, as a map. Drag it around, click to see what connects. | The note wall, with sample notes, each where someone stuck it. Click one to read it up close. |
 | ![The resume in dark mode](docs/screens/resume-dark.webp) | |
 | Dark mode. | |
 

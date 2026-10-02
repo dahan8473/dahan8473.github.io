@@ -458,7 +458,7 @@
         // Tree links hold the clusters together; cross links only lean on them.
         l.k = l.cross ? 0.015 : Math.max(0.3, 1 / Math.min(ca, cb));
         var kind = l.b.kind;
-        l.len = l.cross ? 260 : kind === 'topic' ? 330 : kind === 'branch' ? 100 + l.b.kids.length * 7 : l.a.kind === 'topic' ? 60 : 38;
+        l.len = l.cross ? 260 : kind === 'topic' ? 330 : kind === 'branch' ? 100 + l.b.kids.length * 7 : l.a.kind === 'topic' ? 50 + l.a.kids.length * 4 : 30 + l.a.kids.length * 2;
       });
       var RANK = { root: 0, topic: 1, branch: 2, leaf: 3 };
       var order = nodes.slice().sort(function (a, b) { return RANK[a.kind] - RANK[b.kind] || b.kids.length - a.kids.length || a.depth - b.depth; });
@@ -583,14 +583,23 @@
           var a = labelAlpha(n, must);
           if (focus && !must) a *= 0.15;
           if (a < 0.02) return;
-          var x = sx(n), y = sy(n) + n.r * scale + (n.kind === 'leaf' ? 11 : 14);
-          if (x < -100 || x > W + 100 || y < -20 || y > H + 20) return;
+          // Leaves put their label on the side facing away from their parent,
+          // so a fan of them reads like a radial tree. Everything else sits below.
+          var rr = n.r * scale, x = sx(n), y = sy(n) + rr + 14, align = 'center';
+          if (n.kind === 'leaf') {
+            var dx = n.x - n.parent.x, dy = n.y - n.parent.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+            if (Math.abs(dx / d) > 0.45) { align = dx > 0 ? 'left' : 'right'; x += dx > 0 ? rr + 5 : -rr - 5; y = sy(n) + 4; }
+            else y = dy > 0 ? sy(n) + rr + 11 : sy(n) - rr - 5;
+          }
+          if (x < -200 || x > W + 200 || y < -20 || y > H + 20) return;
           ctx.font = FONT[n.kind] + '-apple-system, BlinkMacSystemFont, "Geist", sans-serif';
           var w = (n.w = n.w || {})[ctx.font] || (n.w[ctx.font] = ctx.measureText(n.title).width);
-          var box = { x0: x - w / 2 - 3, x1: x + w / 2 + 3, y0: y - 11, y1: y + 3 };
+          var left = align === 'left' ? x : align === 'right' ? x - w : x - w / 2;
+          var box = { x0: left - 3, x1: left + w + 3, y0: y - 11, y1: y + 3 };
           if (RANK[n.kind] > 1 && boxes.some(function (b) { return b.x0 < box.x1 && box.x0 < b.x1 && b.y0 < box.y1 && box.y0 < b.y1; })) return;
           boxes.push(box);
           ctx.globalAlpha = a;
+          ctx.textAlign = align;
           ctx.lineWidth = 3;
           ctx.strokeStyle = bg;
           ctx.strokeText(n.title, x, y);

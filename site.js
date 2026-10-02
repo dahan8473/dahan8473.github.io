@@ -548,26 +548,69 @@
         if (n.kind === 'branch') return clamp((view.k - 0.3) / 0.15);
         return clamp((view.k - 0.95) / 0.35);
       }
+      // Dark mode is a night sky: the nodes are stars with a soft glow that
+      // twinkles, the links faint constellation lines, and a dim field of
+      // background stars that drifts a little when the map pans.
+      var night = function () { return document.documentElement.getAttribute('data-theme') === 'dark'; };
+      function starSprite(rgb) {
+        var c = document.createElement('canvas'), g = c.getContext('2d'), z = 64;
+        c.width = c.height = z;
+        var grad = g.createRadialGradient(z / 2, z / 2, 0, z / 2, z / 2, z / 2);
+        grad.addColorStop(0, 'rgba(255,255,255,1)');
+        grad.addColorStop(0.16, 'rgba(' + rgb + ',0.6)');
+        grad.addColorStop(0.45, 'rgba(' + rgb + ',0.14)');
+        grad.addColorStop(1, 'rgba(' + rgb + ',0)');
+        g.fillStyle = grad;
+        g.fillRect(0, 0, z, z);
+        return c;
+      }
+      var star = starSprite('200,216,255'), starLit = starSprite('136,192,208');
+      var GLOW = { root: 9, topic: 8, branch: 6, leaf: 5 };
+      var dust = [];
+      for (var q = 0; q < 260; q++) dust.push({ x: Math.random(), y: Math.random(), r: Math.random() * 0.9 + 0.25, a: Math.random() * 0.45 + 0.12, p: Math.random() * 6.28, z: Math.random() * 0.12 + 0.03 });
+      nodes.forEach(function (n) { n.tw = Math.random() * 6.28; });
       function draw(t) {
         var t1 = color('--t1'), t2 = color('--t2'), t3 = color('--t3'), rule = color('--rule'), bg = color('--bg');
+        var dark = night();
         var accent = '#88c0d0';
         var glow = t < litUntil;
         var focus = picked || hover;
         var on = function (n) { return !focus || n === focus || (near[focus.id] && near[focus.id][n.id]); };
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, W, H);
-        ctx.lineWidth = 1;
+        if (dark) {
+          ctx.fillStyle = '#cfdcf2';
+          dust.forEach(function (d) {
+            var x = ((d.x * W - view.cx * view.k * d.z) % W + W) % W;
+            var y = ((d.y * H - view.cy * view.k * d.z) % H + H) % H;
+            ctx.globalAlpha = d.a * (reduce ? 1 : 0.6 + 0.4 * Math.sin(t / 900 + d.p));
+            ctx.beginPath(); ctx.arc(x, y, d.r, 0, Math.PI * 2); ctx.fill();
+          });
+        }
+        ctx.lineWidth = dark ? 0.8 : 1;
         links.forEach(function (l) {
           var touch = focus && (l.a === focus || l.b === focus);
           var shine = glow && (lit[l.a.id] || lit[l.b.id]);
-          ctx.strokeStyle = touch || shine ? accent : rule;
-          ctx.globalAlpha = focus ? (touch ? 0.9 : 0.35) : l.cross ? 0.7 : 1;
+          ctx.strokeStyle = touch || shine ? accent : dark ? '#bed2f5' : rule;
+          ctx.globalAlpha = dark
+            ? (focus ? (touch ? 0.85 : 0.05) : shine ? 0.8 : l.cross ? 0.07 : 0.15)
+            : (focus ? (touch ? 0.9 : 0.35) : l.cross ? 0.7 : 1);
           ctx.beginPath(); ctx.moveTo(sx(l.a), sy(l.a)); ctx.lineTo(sx(l.b), sy(l.b)); ctx.stroke();
         });
         var scale = Math.min(1.25, Math.max(0.7, Math.sqrt(view.k)));
         nodes.forEach(function (n) {
           var shine = glow && lit[n.id];
           var r = n.r * scale + (shine ? 1.5 + Math.sin(t / 180) * 1.2 : 0);
+          if (dark) {
+            var tw = reduce ? 1 : 0.78 + 0.22 * Math.sin(t / 700 + n.tw);
+            var base = on(n) ? 1 : 0.18, g = GLOW[n.kind] * r * tw;
+            ctx.globalAlpha = base * (n.kind === 'leaf' ? 0.6 : 0.9) * tw;
+            ctx.drawImage(n === focus || shine ? starLit : star, sx(n) - g / 2, sy(n) - g / 2, g, g);
+            ctx.globalAlpha = base;
+            ctx.fillStyle = n === focus || shine ? accent : '#f4f7ff';
+            ctx.beginPath(); ctx.arc(sx(n), sy(n), Math.max(0.8, r * 0.5), 0, Math.PI * 2); ctx.fill();
+            return;
+          }
           ctx.globalAlpha = on(n) ? 1 : 0.15;
           ctx.fillStyle = n === focus || shine ? accent : n.kind === 'leaf' ? t3 : n.kind === 'branch' ? t2 : t1;
           ctx.beginPath(); ctx.arc(sx(n), sy(n), r, 0, Math.PI * 2); ctx.fill();
@@ -614,7 +657,7 @@
         if (hot()) { tick(); dirty = true; }
         if (!steered && hot()) fit(0.08);
         var glowing = t < litUntil;
-        if (dirty || glowing || lastLit) { draw(t); dirty = false; }
+        if (dirty || glowing || lastLit || (!reduce && night())) { draw(t); dirty = false; }
         lastLit = glowing;
         raf = requestAnimationFrame(frame);
       }
@@ -623,6 +666,8 @@
       raf = requestAnimationFrame(frame);
       var ro = new ResizeObserver(size);
       ro.observe(wrap);
+      var mo = new MutationObserver(function () { dirty = true; });
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
       // ---- Input: drag a node, pan the canvas, wheel or pinch to zoom.
       function world(e) {
@@ -722,7 +767,7 @@
         litUntil = performance.now() + 8000;
       };
       document.addEventListener('dl:recall', onRecall);
-      brainStop = function () { alive = false; cancelAnimationFrame(raf); ro.disconnect(); document.removeEventListener('dl:recall', onRecall); document.removeEventListener('keydown', onKey); };
+      brainStop = function () { alive = false; cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); document.removeEventListener('dl:recall', onRecall); document.removeEventListener('keydown', onKey); };
     }).catch(function () {});
   }
 

@@ -315,8 +315,17 @@ a.row:hover .m { transform: translateX(3px); }
 
 /* Hobbies */
 .brain-page .doc-head { padding: 36px 0 22px; }
-.brain { position: relative; height: clamp(440px, calc(100svh - 250px), 1000px); border-radius: 16px; background: var(--fill); overflow: hidden; }
-.brain canvas { display: block; touch-action: none; cursor: grab; }
+/* The map runs the full width of the window and fades out at the edges, so
+   it reads as open space rather than a box. */
+.brain-page { overflow-x: clip; }
+.brain { position: relative; width: 100vw; margin-left: calc(50% - 50vw); height: clamp(440px, calc(100svh - 230px), 1000px); overflow: hidden; }
+.brain canvas {
+  display: block;
+  touch-action: none;
+  cursor: grab;
+  -webkit-mask-image: radial-gradient(ellipse 74% 70% at 50% 50%, #000 58%, transparent 100%);
+  mask-image: radial-gradient(ellipse 74% 70% at 50% 50%, #000 58%, transparent 100%);
+}
 .brain canvas.grabbing { cursor: grabbing; }
 .brain-meta { color: var(--t3); font-variant-numeric: tabular-nums; }
 .hob-group + .hob-group { margin-top: 44px; }

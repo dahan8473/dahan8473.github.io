@@ -6,7 +6,7 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 18, 6, 17, 15
+V_CSS, V_TALKCSS, V_JS, V_TALK = 19, 7, 18, 16
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -140,9 +140,9 @@ def link(href, text):
 # ---- Home -------------------------------------------------------------------
 
 home = '''      <section class="hello" data-t="now">
-        <p><em>Hi, I'm David.</em> I build for purpose, not for profit.</p>
-        <p>I study Software Engineering at Western, run <em>Tethos</em>, a nonprofit where 250+ student developers build free software for other nonprofits, and just finished <em>sixteen months at J.D. Power</em> as a software engineering intern. I'm looking for a software engineering internship for Summer 2027.</p>
-        <p>The floating head in the corner is an AI version of me, wired into <a class="ln" href="/brain/">my second brain</a>: a condensed copy of the notes I keep in Obsidian. So it knows a lot about me. Ask it anything.</p>
+        <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
+        <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers build free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
+        <p>The floating head in the corner is an AI version of me, wired into <a class="ln" href="/brain/">my second brain</a>, a condensed copy of my Obsidian notes. It knows a lot about me, so ask it anything.</p>
       </section>
 
       <ul class="list doors">

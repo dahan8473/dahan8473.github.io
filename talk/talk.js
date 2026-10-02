@@ -1122,7 +1122,7 @@
             return;
           }
           const inner = buf.slice(i + 2, j).trim();
-          const m = /^(point|drag|face|summon|carry|mode|recall):([a-z0-9,-]+)$/.exec(inner);
+          const m = /^(point|drag|face|summon|carry|mode|recall|show):([a-z0-9,-]+)$/.exec(inner);
           const n = /^note:\s*([a-z_]+)\s*=\s*(.+)$/i.exec(inner);
           if (m) onAction({ verb: m[1], id: m[2] });
           else if (n) onAction({ verb: 'note', id: n[1].toLowerCase(), value: n[2].trim() });
@@ -1144,6 +1144,7 @@
     if (a.verb === 'summon') { if (a.id === 'cat') summonCat(); return; }
     if (a.verb === 'mode') { mode = a.id; return; }
     if (a.verb === 'recall') { recall(a.id.split(',')); return; }
+    if (a.verb === 'show') { show(a.id); return; }
     if (a.verb === 'note') {
       if (a.id === 'name') try { localStorage.setItem('dl-name', a.value.slice(0, 40)); } catch (e) {}
       if (a.id === 'who') { S.who = a.value.slice(0, 20); save(); }
@@ -1161,6 +1162,35 @@
       if (ep !== epoch) return;
       return a.verb === 'drag' ? yank(el, { hold: 7000 }) : a.verb === 'carry' ? carry(el) : point(el);
     }).catch(() => {});
+  }
+  // [[show:id]]: the head holds up a picture next to the bubble for a bit.
+  const SHOW = {
+    bus: { src: '/media/life/nothing-matters.webp', alt: 'Two guys on the same bus, both thinking "nothing matters". One looks at a rock wall and is sad, the other looks at a sunset and is happy.' }
+  };
+  let showing = null;
+  function show(id) {
+    const s = SHOW[id];
+    if (!s) return;
+    unshow();
+    const fig = document.createElement('figure');
+    fig.className = 'dl-show';
+    fig.appendChild(Object.assign(new Image(), { src: s.src, alt: s.alt }));
+    fig.addEventListener('click', unshow);
+    const b = talk.getBoundingClientRect();
+    const w = Math.min(300, innerWidth - 24);
+    let x = b.left - w - 18, y = b.top;
+    if (x < 12) { x = clamp(b.right - w, 12, innerWidth - w - 12); y = b.top - w * 0.9 - 14; }
+    Object.assign(fig.style, { left: x + 'px', top: Math.max(12, y) + 'px', width: w + 'px' });
+    root.appendChild(fig);
+    showing = fig;
+    setTimeout(() => { if (showing === fig) unshow(); }, 16000);
+  }
+  function unshow() {
+    const f = showing;
+    if (!f) return;
+    showing = null;
+    f.classList.add('out');
+    setTimeout(() => f.remove(), 300);
   }
   // The second brain: which notes the head is pulling from, shown in the
   // bubble and lit up on /brain/. Titles come from the public map.
@@ -1340,6 +1370,7 @@
       choicesEl.hidden = true;
       input.value = '';
       pres.streak = 0;
+      unshow();
       if (pres.waiting) { S.smallAnswered = true; save(); }
       pres.waiting = false;
       if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }

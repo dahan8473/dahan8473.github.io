@@ -593,3 +593,22 @@ a.dl-held { display: inline-block; }
 }
 .dl-recall::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: currentColor; vertical-align: 1px; animation: dl-recall 1.2s ease-in-out infinite; }
 @keyframes dl-recall { 50% { opacity: 0.3; } }
+
+/* [[show:id]]: a picture the head holds up next to the bubble. */
+.dl-show {
+  position: fixed;
+  z-index: 3;
+  margin: 0;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--talk-paper);
+  box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.4);
+  transform: rotate(-2.5deg);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: dl-show-in 360ms cubic-bezier(.34, 1.56, .64, 1);
+}
+.dl-show img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.dl-show.out { opacity: 0; transform: rotate(-2.5deg) scale(0.94); transition: opacity 260ms ease, transform 260ms ease; }
+@keyframes dl-show-in { from { opacity: 0; transform: rotate(-8deg) scale(0.8); } }
+@media (prefers-reduced-motion: reduce) { .dl-show { animation: none; } }

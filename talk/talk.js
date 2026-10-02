@@ -141,6 +141,7 @@
       meowmeow: "that's meowmeow! she's really fat and sleeps all day. want me to call her over?",
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',
       muaythai: 'i coach the beginner class! do you train anything?',
+      climbing: 'man i can only do a v2 :( do you climb?',
       photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
       fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },
@@ -156,6 +157,7 @@
       { id: 'fun', line: "what do you do when you're not working?", page: '/hobbies/' },
       { id: 'sports', line: 'do you play any sports or train anything?', page: '/hobbies/muay-thai/', notice: 'muaythai' },
       { id: 'music', line: 'do you play any music?', page: '/hobbies/guitar/' },
+      { id: 'climb', line: 'do you climb at all?', page: '/hobbies/climbing/', only: true, notice: 'climbing' },
       { id: 'travel', line: 'been anywhere good lately?', page: '/hobbies/travel/' },
       { id: 'make', line: 'do you make anything for fun? art, code, clothes, videos, anything', page: '/hobbies/fashion/' },
       { id: 'photos', line: 'do you take photos at all?', notice: 'photography' },

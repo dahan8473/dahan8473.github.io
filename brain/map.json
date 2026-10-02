@@ -154,6 +154,10 @@
         { "t": "Western's club" },
         { "t": "Coaching the beginner class" }
       ] },
+      { "t": "Rock climbing", "id": "climbing", "c": [
+        { "t": "Bouldering" },
+        { "t": "V2, for now" }
+      ] },
       { "t": "Photography", "id": "photography", "c": [
         { "t": "Fujifilm X-T200" },
         { "t": "Sony A7R II" }

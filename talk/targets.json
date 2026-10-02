@@ -209,6 +209,11 @@
     "sel": "[data-t='muaythai']",
     "about": "Muay Thai page"
   },
+  "climbing": {
+    "page": "/hobbies/climbing/",
+    "sel": "[data-t='climbing']",
+    "about": "Rock climbing page: I boulder, and I can only do a V2"
+  },
   "photography": {
     "page": "/hobbies/photography/",
     "sel": "[data-t='photography']",

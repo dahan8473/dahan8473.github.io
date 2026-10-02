@@ -136,7 +136,7 @@ function readMessage(latest, messages) {
     intent: choice('What does the visitor want with their `latest` message? Use `transcript` for context.', INTENTS),
     target: choice('Which single thing on David\'s site is the `latest` message most about?', PICKABLE),
     who: choice('Who is this visitor most likely, going by `transcript` and `latest`?', WHO)
-  }, { timeout: 900 });
+  }, { timeout: 1500 });
 }
 
 function memoryLine(m) {
@@ -186,16 +186,19 @@ export default {
     };
     if (usd >= CAP) return reply(TIRED);
     if (read?.bouncer?.noul > 0.85) return reply(BOUNCED[Math.floor(Math.random() * BOUNCED.length)]);
-    const intent = read?.intent?.probabilities?.[read.intent.choice] > 0.6 ? read.intent.choice : 'other';
-    if (intent === 'note') return reply(NOTE);
-    if (intent === 'tour') return reply(TOUR);
+    // Note and tour skip the brain, so they need a clear read. Hand moves can
+    // go on less, since the brain still writes the words.
+    const p = read?.intent?.probabilities?.[read.intent.choice] || 0;
+    const intent = p > 0.45 ? read.intent.choice : 'other';
+    if (intent === 'note' && p > 0.6) return reply(NOTE);
+    if (intent === 'tour' && p > 0.6) return reply(TOUR);
 
     // Fast actions go out before the brain has started, so the hand is
     // already moving while the reply is being written.
     let first = '';
     let did = '';
     const target = read?.target?.choice;
-    const sure = target && target !== 'none' && read.target.probabilities[target] > 0.55;
+    const sure = target && target !== 'none' && read.target.probabilities[target] > 0.8;
     if (intent === 'resume') { first = '[[drag:resume-swe]] '; did = 'resume-swe'; }
     else if ((intent === 'project' || intent === 'hobbies') && sure) { first = `[[point:${target}]] `; did = target; }
     const who = read?.who?.probabilities?.[read.who.choice] > 0.6 && read.who.choice !== 'unknown' ? read.who.choice : '';

@@ -8,3 +8,4 @@ private/
 node_modules/
 .vercel/
 .env*
+.vercel

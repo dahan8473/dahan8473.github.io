@@ -136,7 +136,7 @@
       snake: 'i made this cuz i thought it would look cool on my github. turns out a lot of ppl like this kinda stuff too haha',
       awards: 'heh.. 🙂‍↕️',
       skills: 'ask me about any of these!',
-      brain: "this is my second brain! click any note and i'll tell you about it",
+      brain: "this is my second brain! double click anything and i'll tell you about it",
       contact: "email's the best way to reach me!",
       meowmeow: "that's meowmeow! she's really fat and sleeps all day. want me to call her over?",
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',

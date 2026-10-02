@@ -307,6 +307,6 @@
   "brain": {
     "page": "/brain/",
     "sel": "[data-t='brain']",
-    "about": "the second brain page: a graph of the notes you think with, from David's Obsidian vault. Clicking a note asks you about it."
+    "about": "the second brain page: a graph of everything you know about David (projects, leadership, experience, education, hobbies, stories, awards, skills) and how it connects. Double clicking a node asks you about it."
   }
 }

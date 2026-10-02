@@ -25,7 +25,7 @@
   <meta name="twitter:image" content="https://davidliu.work/og.png">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css?v=16">
+  <link rel="stylesheet" href="/styles.css?v=17">
   <link rel="stylesheet" href="/talk/talk.css?v=5">
   <script>
     (function () {
@@ -67,17 +67,14 @@
       <header class="doc-head">
         <div>
           <h1>Second brain</h1>
-          <p class="hint">A condensed copy of the notes I keep in Obsidian. The head reads from it when you talk to it. Click a note and it'll tell you about it.</p>
+          <p class="hint">What the head knows about me. Drag it around, click to see what connects, double click to ask about it.</p>
         </div>
         <p class="brain-meta"></p>
       </header>
 
-      <div class="brain" data-t="brain">
-        <canvas class="brain-graph" aria-hidden="true"></canvas>
-        <div class="brain-card" hidden><p class="bc-title"></p><p class="bc-blurb"></p><p class="bc-hint">Click to ask the head</p></div>
+      <div class="brain" data-t="brain" role="img" aria-label="A graph of everything the head knows about David: projects, leadership, experience, education, hobbies, stories, awards and skills">
+        <canvas class="brain-graph"></canvas>
       </div>
-
-      <ul class="list brain-list" aria-label="Notes in the second brain"></ul>
     </main>
 
     <footer class="foot">
@@ -85,7 +82,7 @@
     </footer>
   </div>
 
-  <script src="/site.js?v=15"></script>
-  <script src="/talk/talk.js?v=9"></script>
+  <script src="/site.js?v=16"></script>
+  <script src="/talk/talk.js?v=10"></script>
 </body>
 </html>

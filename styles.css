@@ -314,6 +314,11 @@ a.row:hover .m { transform: translateX(3px); }
 .playing-now .eq { display: inline-flex; }
 
 /* Hobbies */
+.brain-page .doc-head { padding: 36px 0 22px; }
+.brain { position: relative; height: clamp(440px, calc(100svh - 250px), 1000px); border-radius: 16px; background: var(--fill); overflow: hidden; }
+.brain canvas { display: block; touch-action: none; cursor: grab; }
+.brain canvas.grabbing { cursor: grabbing; }
+.brain-meta { color: var(--t3); font-variant-numeric: tabular-nums; }
 .also { margin-top: 28px; max-width: 40em; color: var(--t2); }
 .also .t1 { margin-right: 6px; }
 .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -436,6 +441,7 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
   .top .what { display: none; }
   .hello { padding-top: 40px; }
   .doc-head { padding: 40px 0 28px; }
+  .brain { height: 68svh; min-height: 400px; }
   .r-sec, .proj { scroll-margin-top: 72px; }
   .r-line { flex-wrap: wrap; gap: 0 12px; }
   .case .section { grid-template-columns: 1fr; padding-top: 48px; }

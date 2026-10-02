@@ -8,7 +8,7 @@ My personal site. A floating cutout of my head lives on it. It's an AI version o
 
 ## What the head does
 
-- **Knows me.** It's wired into my second brain. When it pulls from a note, the bubble says what it's recalling, and that note lights up on `/brain/`.
+- **Knows me.** It's wired into my second brain. When it pulls from a note, the bubble says what it's recalling, and that note lights up on the map at `/brain/`.
 - **Starts the conversation.** It waits for you to settle in, pops onto the page, introduces itself and asks your name.
 - **Acts before it talks.** Every message goes through Jev first. In about 100ms it knows what you want, so the hand is already moving when the reply starts typing. Say you're a recruiter and it walks you to my resume and puts the PDF next to your cursor.
 - **Picks things up.** The hand points at things, brings them to your cursor, and carries photos and project cards around before putting them back.
@@ -32,7 +32,7 @@ It's supposed to feel like I'm there, not like a chatbot in the corner. So it do
 | ![The projects page](docs/screens/projects.webp) | ![The guitar page with four recordings](docs/screens/guitar.webp) |
 | Projects, with the stack and the code. | Recordings keep playing while you browse. |
 | ![The second brain graph](docs/screens/brain.webp) | ![The note wall](docs/screens/notes.webp) |
-| The second brain. Click a note and the head tells you about it. | The note wall, with sample notes. Click one to bring it into focus. |
+| The second brain, as a map. Drag it around, click to see what connects. | The note wall, with sample notes. Click one to bring it into focus. |
 | ![The resume in dark mode](docs/screens/resume-dark.webp) | |
 | Dark mode. | |
 
@@ -89,7 +89,7 @@ What the head knows about me isn't in this repo. It gets loaded when the functio
 I keep my notes in Obsidian. `tools/brain/sync.mjs` reads the notes I've picked (a list that lives outside the repo), condenses each one, and writes two things:
 
 - the private copy the head reads from, uploaded to Vercel as `DAVID_CORTEX`
-- `brain/graph.json`, the public map on `/brain/`: each note's title, one line, and how the notes connect
+- `brain/graph.json`: each note's title, one line, and how the notes connect
 
 Condensing keeps my words and drops anything that shouldn't leave the vault: other people's names, contact details, internal stuff. Some stories are marked friends-only, and the head keeps those away from recruiters.
 
@@ -97,6 +97,8 @@ Condensing keeps my words and drops anything that shouldn't leave the vault: oth
 OPENROUTER_API_KEY=... node tools/brain/sync.mjs   # condense
 node tools/brain/sync.mjs push                       # upload, then redeploy
 ```
+
+`/brain/` draws everything as one graph, Obsidian style. `brain/map.json` is the tree (me, then topics like projects, leadership and hobbies, then what's under each, down to single facts) plus the cross links, like which skills went into which project. The synced notes hang off it by id, so a note the head recalls lights up in place. Big nodes are topics, small ones are stories and facts. Drag nodes or the canvas, scroll or pinch to zoom, click a node to see what it touches, double click to ask the head about it.
 
 Every note is in the head's instructions (cached, so it's cheap). For each message, Jev picks the notes that fit, the page shows "recalling", and the brain leans on them.
 
@@ -111,11 +113,11 @@ Replies cost money, so there's a monthly cap in the chat function (default $20, 
 | `index.html`, `resume/`, `projects/`, `hobbies/`, `brain/`, `notes/` | The pages |
 | `tethos/`, `dashboard/`, `rag/`, `kunlun/` | Case studies |
 | `styles.css` | The whole site's styles. One typeface, hierarchy by opacity. |
-| `site.js` | Page swaps, the guitar player, resume notes, hover photos, the note wall |
+| `site.js` | Page swaps, the guitar player, resume notes, hover photos, the note wall, the brain map |
 | `talk/talk.js`, `talk/talk.css` | The head, the hand, the cat, and everything they do |
 | `LINES` in `talk/talk.js` | Every line the head says on its own |
 | `talk/targets.json` | Everything the head can point at |
-| `brain/` | The second brain page and its public map |
+| `brain/` | The second brain page. `map.json` is the graph, `graph.json` the synced notes |
 | `tools/brain/sync.mjs` | Condenses my Obsidian notes into the second brain |
 | `api/chat.js` | The conversation: Jev first, then the brain, streamed |
 | `api/decide.js` | Jev picks the head's next move |

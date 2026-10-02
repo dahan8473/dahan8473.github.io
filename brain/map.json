@@ -1,0 +1,290 @@
+{
+  "t": "David Liu", "id": "david",
+  "c": [
+    { "t": "Technical projects", "id": "projects", "c": [
+      { "t": "Tethos Platform", "id": "tethos-platform", "c": [
+        { "t": "Walkable 3D island", "id": "tp-island" },
+        { "t": "875+ 3D assets" },
+        { "t": "91-species fishing system" },
+        { "t": "Five LLM characters", "id": "tp-npcs", "c": [
+          { "t": "Cloned from real execs" },
+          { "t": "Remember you between visits" }
+        ] },
+        { "t": "Dual-currency economy", "id": "tp-economy" },
+        { "t": "Multi-agent dev pipeline", "id": "tp-agents", "c": [
+          { "t": "Build agent" },
+          { "t": "QA agent" },
+          { "t": "Reviewer agent" },
+          { "t": "70+ unattended builds" }
+        ] },
+        { "t": "59 API routes" },
+        { "t": "Five access tiers" },
+        { "t": "Recruiting dashboard", "c": [ { "t": "240+ applications" } ] },
+        { "t": "Baked terrain grid" },
+        { "t": "Colyseus multiplayer" }
+      ] },
+      { "t": "Among Us, IRL", "id": "among-us-irl", "c": [
+        { "t": "ESP32-C3 badges", "id": "au-badges" },
+        { "t": "ESP-NOW mesh", "id": "au-mesh" },
+        { "t": "Signal-strength kills" },
+        { "t": "NFC tasks", "c": [ { "t": "Motion minigames" } ] },
+        { "t": "On-badge voting" },
+        { "t": "Our own firmware" },
+        { "t": "36 hours, team of three" }
+      ] },
+      { "t": "biopilot", "id": "biopilot", "c": [
+        { "t": "Drone footage in", "id": "bp-drone" },
+        { "t": "YOLOv8 wheat heads", "id": "bp-yolo" },
+        { "t": "Per-cell health scores" },
+        { "t": "Heatmaps run to run" },
+        { "t": "deck.gl and MapLibre" }
+      ] },
+      { "t": "Kunlun", "id": "kunlun", "c": [
+        { "t": "Bilingual design system" },
+        { "t": "Storefront", "id": "kl-store" },
+        { "t": "Drop I, Liangfeng" },
+        { "t": "Chinese mythology", "id": "kl-myth" }
+      ] },
+      { "t": "deja-view", "id": "deja-view", "c": [
+        { "t": "Scrapes what you watch" },
+        { "t": "3D scan of your room" },
+        { "t": "Team of four" },
+        { "t": "Pretty dystopian" }
+      ] },
+      { "t": "RAG service", "id": "rag-service", "c": [
+        { "t": "Drive and Notion" },
+        { "t": "pgvector", "id": "rag-pgvector" },
+        { "t": "Cited answers" },
+        { "t": "Never re-embeds the unchanged" },
+        { "t": "Cloud Run", "id": "rag-cloudrun" }
+      ] },
+      { "t": "snake-and-commits", "id": "snake", "c": [
+        { "t": "BFS pathfinding" },
+        { "t": "No self-collisions" },
+        { "t": "One stdlib Python file" }
+      ] },
+      { "t": "UR5 motion library", "id": "ur5", "c": [
+        { "t": "Object retrieval" },
+        { "t": "Conveyor placement" },
+        { "t": "Part sanding" },
+        { "t": "Camera-guided stacking", "id": "ur5-stacking" }
+      ] },
+      { "t": "WEC 2024", "id": "wec", "c": [ { "t": "Unity and C#" } ] },
+      { "t": "davidliu.work", "id": "site", "c": [
+        { "t": "The floating head", "id": "site-head" },
+        { "t": "This map", "id": "site-brain" },
+        { "t": "The note wall" },
+        { "t": "Guitar player" }
+      ] },
+      { "t": "sudo", "id": "sudo", "c": [ { "t": "Discord moderation" } ] }
+    ] },
+    { "t": "Leadership", "id": "leadership", "c": [
+      { "t": "Tethos Association", "id": "tethos-association", "c": [
+        { "t": "250+ student developers" },
+        { "t": "80+ person exec team" },
+        { "t": "Chapters", "c": [ { "t": "Western", "id": "ta-western" }, { "t": "UBC" } ] },
+        { "t": "Federally incorporated nonprofit" },
+        { "t": "20+ pro-bono projects", "id": "ta-projects", "c": [
+          { "t": "Canadian Red Cross", "id": "ta-redcross" },
+          { "t": "World Vision" },
+          { "t": "London Children's Museum" }
+        ] },
+        { "t": "$500,000+ saved" },
+        { "t": "GENESIS", "id": "genesis", "c": [
+          { "t": "260+ attendees" },
+          { "t": "7 project demos" },
+          { "t": "8 sponsors" },
+          { "t": "$12,000 raised" }
+        ] },
+        { "t": "Handing it to the next team" }
+      ] },
+      { "t": "Western Founders Network", "id": "wfn", "c": [
+        { "t": "VP of Education" },
+        { "t": "Hackathon education event" }
+      ] },
+      { "t": "Mentoring and judging", "id": "mentoring", "c": [
+        { "t": "Hack Western", "id": "hack-western" },
+        { "t": "Western AI" },
+        { "t": "Ignition Hacks judge" },
+        { "t": "Muay Thai beginners", "id": "mt-coach" }
+      ] }
+    ] },
+    { "t": "Experience", "id": "experience", "c": [
+      { "t": "J.D. Power", "id": "jd-power", "c": [
+        { "t": "16-month co-op" },
+        { "t": "Spring Boot on Kubernetes", "id": "jd-services" },
+        { "t": "Build & Price sites", "id": "jd-bp", "c": [
+          { "t": "Jeep" }, { "t": "RAM" }, { "t": "Dodge" }, { "t": "Chrysler" }, { "t": "Maserati" }
+        ] },
+        { "t": "Model-year 2026 launch" },
+        { "t": "2,000+ secrets cleaned up" },
+        { "t": "Copilot security report", "c": [ { "t": "Adopted by leadership" } ] },
+        { "t": "Swagger UI migration" },
+        { "t": "CI/CD", "id": "jd-ci" }
+      ] },
+      { "t": "Modern Engineering", "id": "modern-engineering", "c": [
+        { "t": "Delta, BC" },
+        { "t": "UR5 robot arm", "id": "me-arm" },
+        { "t": "Python over RTDE" }
+      ] },
+      { "t": "Tsinghua University", "id": "tsinghua", "c": [
+        { "t": "AI research assistant" },
+        { "t": "Wav2Lip lip-sync", "id": "ts-lipsync" }
+      ] }
+    ] },
+    { "t": "Education", "id": "education", "c": [
+      { "t": "Western University", "id": "western-university", "c": [
+        { "t": "Software Engineering" },
+        { "t": "Co-op" },
+        { "t": "Class of 2028" },
+        { "t": "This term", "c": [
+          { "t": "Artificial Intelligence" },
+          { "t": "Software Testing" },
+          { "t": "Multiagent Systems", "id": "wu-mas" },
+          { "t": "Information Security", "id": "wu-sec" }
+        ] }
+      ] }
+    ] },
+    { "t": "Hobbies", "id": "hobbies", "c": [
+      { "t": "Classical guitar", "id": "guitar", "c": [
+        { "t": "Four recordings" },
+        { "t": "Competed nationally" }
+      ] },
+      { "t": "Muay Thai", "id": "muaythai", "c": [
+        { "t": "Western's club" },
+        { "t": "Coaching the beginner class" }
+      ] },
+      { "t": "Photography", "id": "photography", "c": [
+        { "t": "Fujifilm X-T200" },
+        { "t": "Sony A7R II" }
+      ] },
+      { "t": "Travel", "id": "travel", "c": [
+        { "t": "Beijing", "id": "tr-beijing" },
+        { "t": "New York", "id": "tr-newyork" }
+      ] },
+      { "t": "Fashion", "id": "fashion" },
+      { "t": "Meowmeow", "id": "meowmeow", "c": [
+        { "t": "Black cat" },
+        { "t": "Mostly horizontal" }
+      ] },
+      { "t": "Also", "id": "also", "c": [
+        { "t": "Badminton" }, { "t": "Cycling" }, { "t": "Flying drones", "id": "hb-drones" }, { "t": "Video production", "id": "hb-video" },
+        { "t": "Chess" }, { "t": "Hiking" }, { "t": "Speed skating" }, { "t": "Watercolor" }, { "t": "Poetry" }
+      ] }
+    ] },
+    { "t": "Stories", "id": "stories", "c": [
+      { "t": "Metal disks in the trash", "id": "metal-disks-in-the-trash" },
+      { "t": "The Red Cross cold call", "id": "the-red-cross-cold-call" },
+      { "t": "A virtual island", "id": "a-virtual-island" },
+      { "t": "Among Us at Hack the North", "id": "among-us-at-hack-the-north" },
+      { "t": "Carnegie Hall", "id": "carnegie-hall" },
+      { "t": "Slightly better beginner", "id": "slightly-better-beginner" },
+      { "t": "Designing my own clothes", "id": "designing-my-own-clothes" },
+      { "t": "Cursed traveler", "id": "cursed-traveler" },
+      { "t": "Web Summit side door", "id": "web-summit-side-door" }
+    ] },
+    { "t": "Awards", "id": "awards", "c": [
+      { "t": "1st, Hack the North 2026", "id": "aw-htn" },
+      { "t": "2nd, TELUS AI", "id": "aw-telus" },
+      { "t": "Top 5, UofT Hacks" },
+      { "t": "Finalist, WEC", "id": "aw-wec" },
+      { "t": "2nd, NW Guitar Competition", "id": "aw-guitar" }
+    ] },
+    { "t": "Skills", "id": "skills", "c": [
+      { "t": "Languages", "c": [
+        { "t": "Python", "id": "sk-python" }, { "t": "Java", "id": "sk-java" }, { "t": "C++", "id": "sk-cpp" }, { "t": "Go" },
+        { "t": "JavaScript", "id": "sk-js" }, { "t": "TypeScript", "id": "sk-ts" }, { "t": "SQL", "id": "sk-sql" }, { "t": "HTML/CSS", "id": "sk-html" }
+      ] },
+      { "t": "Frameworks", "c": [
+        { "t": "React", "id": "sk-react" }, { "t": "Next.js", "id": "sk-next" }, { "t": "Node.js" }, { "t": "Express" },
+        { "t": "Spring Boot", "id": "sk-spring" }, { "t": "FastAPI", "id": "sk-fastapi" }, { "t": "Flask" },
+        { "t": "React Three Fiber", "id": "sk-r3f" }, { "t": "GSAP" }, { "t": "Tailwind", "id": "sk-tailwind" }
+      ] },
+      { "t": "AI and data", "c": [
+        { "t": "Anthropic API", "id": "sk-anthropic" }, { "t": "OpenAI API", "id": "sk-openai" }, { "t": "RAG", "id": "sk-rag" },
+        { "t": "OpenCV", "id": "sk-opencv" }, { "t": "PyTorch", "id": "sk-pytorch" }, { "t": "TensorFlow" },
+        { "t": "PostgreSQL", "id": "sk-postgres" }, { "t": "Supabase", "id": "sk-supabase" }, { "t": "MongoDB" }, { "t": "Kafka", "id": "sk-kafka" }
+      ] },
+      { "t": "Systems", "c": [
+        { "t": "Docker", "id": "sk-docker" }, { "t": "Kubernetes", "id": "sk-k8s" }, { "t": "AWS" }, { "t": "Linux" },
+        { "t": "Git" }, { "t": "GitHub Actions", "id": "sk-gha" }, { "t": "ESP32", "id": "sk-esp32" }, { "t": "Arduino" }, { "t": "PlatformIO", "id": "sk-pio" }
+      ] }
+    ] }
+  ],
+  "links": [
+    ["metal-disks-in-the-trash", "tethos-association"],
+    ["the-red-cross-cold-call", "ta-redcross"],
+    ["a-virtual-island", "tethos-platform"],
+    ["a-virtual-island", "tp-island"],
+    ["among-us-at-hack-the-north", "among-us-irl"],
+    ["among-us-at-hack-the-north", "aw-htn"],
+    ["carnegie-hall", "guitar"],
+    ["carnegie-hall", "tr-newyork"],
+    ["slightly-better-beginner", "muaythai"],
+    ["slightly-better-beginner", "mt-coach"],
+    ["designing-my-own-clothes", "kunlun"],
+    ["designing-my-own-clothes", "fashion"],
+    ["cursed-traveler", "travel"],
+    ["fashion", "kunlun"],
+    ["kl-myth", "fashion"],
+    ["tethos-platform", "tethos-association"],
+    ["rag-service", "tethos-platform"],
+    ["sudo", "tethos-association"],
+    ["genesis", "hb-video"],
+    ["ta-western", "western-university"],
+    ["hack-western", "western-university"],
+    ["wfn", "western-university"],
+    ["mt-coach", "muaythai"],
+    ["aw-htn", "among-us-irl"],
+    ["aw-telus", "biopilot"],
+    ["aw-wec", "wec"],
+    ["aw-guitar", "guitar"],
+    ["ur5", "me-arm"],
+    ["ur5", "modern-engineering"],
+    ["ur5-stacking", "sk-opencv"],
+    ["tsinghua", "tr-beijing"],
+    ["ts-lipsync", "sk-pytorch"],
+    ["bp-drone", "hb-drones"],
+    ["bp-yolo", "sk-pytorch"],
+    ["site-brain", "stories"],
+    ["site-head", "sk-openai"],
+    ["tp-agents", "sk-anthropic"],
+    ["tp-agents", "wu-mas"],
+    ["tp-npcs", "sk-openai"],
+    ["tp-economy", "sk-postgres"],
+    ["tp-island", "sk-r3f"],
+    ["tethos-platform", "sk-next"],
+    ["tethos-platform", "sk-ts"],
+    ["tethos-platform", "sk-supabase"],
+    ["tethos-platform", "sk-fastapi"],
+    ["among-us-irl", "sk-cpp"],
+    ["au-badges", "sk-esp32"],
+    ["au-badges", "sk-pio"],
+    ["biopilot", "sk-react"],
+    ["biopilot", "sk-ts"],
+    ["biopilot", "sk-fastapi"],
+    ["kunlun", "sk-next"],
+    ["kunlun", "sk-tailwind"],
+    ["kl-store", "sk-supabase"],
+    ["deja-view", "sk-next"],
+    ["deja-view", "sk-fastapi"],
+    ["deja-view", "sk-openai"],
+    ["rag-service", "sk-rag"],
+    ["rag-service", "sk-fastapi"],
+    ["rag-pgvector", "sk-postgres"],
+    ["rag-cloudrun", "sk-docker"],
+    ["snake", "sk-python"],
+    ["snake", "sk-gha"],
+    ["ur5", "sk-python"],
+    ["site", "sk-html"],
+    ["site", "sk-js"],
+    ["sudo", "sk-anthropic"],
+    ["jd-services", "sk-spring"],
+    ["jd-services", "sk-java"],
+    ["jd-services", "sk-k8s"],
+    ["jd-power", "sk-kafka"],
+    ["jd-ci", "sk-gha"],
+    ["tp-economy", "sk-sql"],
+    ["wu-sec", "jd-power"]
+  ]
+}

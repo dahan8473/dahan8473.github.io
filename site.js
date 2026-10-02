@@ -412,178 +412,309 @@
   var wallStop = null;
 
   // ---- Second brain -------------------------------------------------------------
-  // The public map of the head's notes (brain/graph.json): a small force layout
-  // on a canvas, Obsidian style. Hover a note to read its line, click to ask the
-  // head about it. Notes the head is recalling light up.
+  // Everything the head knows about me as one graph, Obsidian style: the tree in
+  // brain/map.json plus the links between notes in brain/graph.json. Drag nodes
+  // or the canvas, scroll or pinch to zoom, click a node to see what it touches,
+  // double click to ask the head about it. Notes it's recalling light up.
   var brainStop = null;
-  var CLUSTERS = { stories: 'Stories', work: 'Work', places: 'Places' };
+  var R = { root: 11, topic: 7.5, branch: 4.2, leaf: 2.6 };
+  var Q = { root: 1400, topic: 800, branch: 220, leaf: 50 };
+  var FONT = { root: '600 15px ', topic: '500 13.5px ', branch: '400 12px ', leaf: '400 11px ' };
   function setupBrain() {
     if (brainStop) { brainStop(); brainStop = null; }
     var wrap = document.querySelector('.brain');
     var canvas = wrap && wrap.querySelector('canvas');
     if (!canvas) return;
-    var card = wrap.querySelector('.brain-card');
-    var list = document.querySelector('.brain-list');
     var meta = document.querySelector('.brain-meta');
     var alive = true;
-    var ask = function (n) { if (window.dlAsk) window.dlAsk('tell me about "' + n.title + '"'); };
-    fetch('/brain/graph.json').then(function (r) { return r.json(); }).then(function (g) {
+    brainStop = function () { alive = false; };
+    var json = function (u) { return fetch(u).then(function (r) { return r.json(); }); };
+    Promise.all([json('/brain/map.json'), json('/brain/graph.json').catch(function () { return { nodes: [], links: [] }; })]).then(function (res) {
       if (!alive) return;
-      meta.textContent = g.nodes.length + ' notes · synced ' + new Date(g.updated + 'T12:00:00').toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
-      g.nodes.forEach(function (n) {
-        var li = document.createElement('li');
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'row';
-        b.dataset.id = n.id;
-        b.innerHTML = '<span class="p"></span><span class="s"></span><span class="m"></span>';
-        b.querySelector('.p').textContent = n.title;
-        b.querySelector('.s').textContent = n.blurb;
-        b.querySelector('.m').textContent = CLUSTERS[n.cluster] || '';
-        b.addEventListener('click', function () { ask(n); });
-        li.appendChild(b);
-        list.appendChild(li);
-      });
-
-      // Nodes: me in the middle, a hub per cluster, then the notes.
-      var nodes = [{ id: 'me', title: 'David', kind: 'me' }];
-      Object.keys(CLUSTERS).forEach(function (c) { nodes.push({ id: 'hub-' + c, title: CLUSTERS[c], kind: 'hub' }); });
-      g.nodes.forEach(function (n) { nodes.push({ id: n.id, title: n.title, blurb: n.blurb, cluster: n.cluster, kind: 'note' }); });
-      var byId = {};
-      nodes.forEach(function (n, i) {
-        var a = (i / nodes.length) * Math.PI * 2;
-        n.x = Math.cos(a) * 160; n.y = Math.sin(a) * 120; n.vx = 0; n.vy = 0;
+      var nodes = [], byId = {}, links = [], seen = {};
+      function link(a, b, cross) {
+        var k = a < b ? a + '|' + b : b + '|' + a;
+        if (a === b || seen[k] || !byId[a] || !byId[b]) return;
+        seen[k] = 1;
+        links.push({ a: byId[a], b: byId[b], cross: cross });
+        if (!cross) { byId[a].deg++; byId[b].deg++; }
+      }
+      function add(t, parent, i) {
+        var n = { id: t.id || parent.id + '/' + i, title: t.t, parent: parent, kids: [], deg: 0, depth: parent ? parent.depth + 1 : 0, x: 0, y: 0, vx: 0, vy: 0 };
+        nodes.push(n);
         byId[n.id] = n;
+        if (parent) { parent.kids.push(n); link(parent.id, n.id); }
+        (t.c || []).forEach(function (c, j) { add(c, n, j); });
+        return n;
+      }
+      var root = add(res[0], null, 0);
+      // Notes synced after the map was last edited still show up, under Stories.
+      res[1].nodes.forEach(function (n, i) { if (!byId[n.id]) add({ t: n.title, id: n.id }, byId.stories || root, 'n' + i); });
+      res[0].links.concat(res[1].links).forEach(function (l) { link(l[0], l[1], true); });
+      nodes.forEach(function (n) { n.kind = !n.parent ? 'root' : n.depth === 1 ? 'topic' : n.kids.length ? 'branch' : 'leaf'; n.r = R[n.kind]; n.q = Q[n.kind]; });
+      links.forEach(function (l) {
+        var ca = l.a.deg, cb = l.b.deg;
+        l.bias = ca / (ca + cb);
+        // Tree links hold the clusters together; cross links only lean on them.
+        l.k = l.cross ? 0.015 : Math.max(0.3, 1 / Math.min(ca, cb));
+        var kind = l.b.kind;
+        l.len = l.cross ? 260 : kind === 'topic' ? 330 : kind === 'branch' ? 100 + l.b.kids.length * 7 : l.a.kind === 'topic' ? 60 : 38;
       });
-      byId.me.x = byId.me.y = 0;
-      var links = [];
-      Object.keys(CLUSTERS).forEach(function (c) { links.push(['me', 'hub-' + c, 130]); });
-      g.nodes.forEach(function (n) { links.push(['hub-' + n.cluster, n.id, 75]); });
-      g.links.forEach(function (l) { if (byId[l[0]] && byId[l[1]]) links.push([l[0], l[1], 110]); });
+      var RANK = { root: 0, topic: 1, branch: 2, leaf: 3 };
+      var order = nodes.slice().sort(function (a, b) { return RANK[a.kind] - RANK[b.kind] || b.kids.length - a.kids.length || a.depth - b.depth; });
       var near = {};
-      links.forEach(function (l) { (near[l[0]] = near[l[0]] || {})[l[1]] = 1; (near[l[1]] = near[l[1]] || {})[l[0]] = 1; });
+      links.forEach(function (l) { (near[l.a.id] = near[l.a.id] || {})[l.b.id] = 1; (near[l.b.id] = near[l.b.id] || {})[l.a.id] = 1; });
+      meta.textContent = nodes.length + ' nodes · ' + links.length + ' links';
 
-      function step() {
+      // Start from a radial tree so the forces only have to relax it, stretched
+      // to the canvas: wide on a desktop, tall on a phone.
+      var wide = wrap.clientWidth > wrap.clientHeight * 1.1;
+      var GX = wide ? 0.005 : 0.012, GY = wide ? 0.016 : 0.007;
+      var leaves = function (n) { return n.kids.length ? n.kids.reduce(function (s, k) { return s + leaves(k); }, 0) : 1; };
+      (function place(n, a0, a1) {
+        var a = (a0 + a1) / 2, d = [0, 300, 430, 520, 590][n.depth] || 650;
+        n.x = Math.cos(a) * d * (wide ? 1.5 : 1); n.y = Math.sin(a) * d * (wide ? 1 : 1.4);
+        var total = leaves(n), at = a0;
+        n.kids.forEach(function (k) { var span = (a1 - a0) * leaves(k) / total; place(k, at, at + span); at += span; });
+      })(root, 0, Math.PI * 2);
+
+      // A small d3-style force simulation: springs, many-body repulsion, gravity.
+      var alpha = 1, alphaTarget = 0, ALPHA_MIN = 0.002, DECAY = 1 - Math.pow(ALPHA_MIN, 1 / 300);
+      function tick() {
+        alpha += (alphaTarget - alpha) * DECAY;
+        links.forEach(function (l) {
+          var a = l.a, b = l.b;
+          var dx = b.x + b.vx - a.x - a.vx, dy = b.y + b.vy - a.y - a.vy;
+          var d = Math.sqrt(dx * dx + dy * dy) || 1e-6;
+          var f = (d - l.len) / d * alpha * l.k;
+          dx *= f; dy *= f;
+          b.vx -= dx * l.bias; b.vy -= dy * l.bias;
+          a.vx += dx * (1 - l.bias); a.vy += dy * (1 - l.bias);
+        });
         for (var i = 0; i < nodes.length; i++) {
+          var a = nodes[i];
           for (var j = i + 1; j < nodes.length; j++) {
-            var a = nodes[i], b = nodes[j];
-            var dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy + 0.01, d = Math.sqrt(d2);
-            var f = 2600 / d2;
-            a.vx -= (dx / d) * f; a.vy -= (dy / d) * f; b.vx += (dx / d) * f; b.vy += (dy / d) * f;
+            var b = nodes[j];
+            var dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+            if (l2 > 250000) continue;
+            if (l2 < 25) l2 = 25;
+            var fa = b.q * alpha / l2, fb = a.q * alpha / l2;
+            a.vx -= dx * fa; a.vy -= dy * fa;
+            b.vx += dx * fb; b.vy += dy * fb;
           }
         }
-        links.forEach(function (l) {
-          var a = byId[l[0]], b = byId[l[1]];
-          var dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
-          var f = (d - l[2]) * 0.03;
-          a.vx += (dx / d) * f; a.vy += (dy / d) * f; b.vx -= (dx / d) * f; b.vy -= (dy / d) * f;
-        });
         nodes.forEach(function (n) {
-          n.vx -= n.x * 0.004; n.vy -= n.y * 0.006;
-          n.vx *= 0.82; n.vy *= 0.82;
-          if (n.kind !== 'me') { n.x += n.vx; n.y += n.vy; }
+          if (n.fx != null) { n.x = n.fx; n.y = n.fy; n.vx = n.vy = 0; return; }
+          n.vx -= n.x * GX * alpha; n.vy -= n.y * GY * alpha;
+          n.vx *= 0.6; n.vy *= 0.6;
+          n.x += n.vx; n.y += n.vy;
         });
+        root.x = root.y = 0;
       }
+      var hot = function () { return alpha > ALPHA_MIN || alphaTarget > 0; };
 
       var ctx = canvas.getContext('2d');
-      var W = 0, H = 0, dpr = 1, hover = null, lit = {}, litUntil = 0, ticks = 0;
-      // Fit the layout to the canvas; eased so it doesn't jump while settling.
-      var view = { s: 1, cx: 0, cy: 0 };
-      function fit() {
-        var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-        nodes.forEach(function (n) { x0 = Math.min(x0, n.x); x1 = Math.max(x1, n.x); y0 = Math.min(y0, n.y); y1 = Math.max(y1, n.y); });
-        var target = Math.min((W - 220) / Math.max(1, x1 - x0), (H - 90) / Math.max(1, y1 - y0), 2.2);
-        view.s += (target - view.s) * 0.15;
-        view.cx += ((x0 + x1) / 2 - view.cx) * 0.15;
-        view.cy += ((y0 + y1) / 2 - view.cy) * 0.15;
+      var W = 0, H = 0, dpr = 1;
+      var view = { k: 1, cx: 0, cy: 0 }, steered = false;
+      var hover = null, picked = null, lit = {}, litUntil = 0, dirty = true;
+      var sx = function (n) { return (n.x - view.cx) * view.k + W / 2; };
+      var sy = function (n) { return (n.y - view.cy) * view.k + H / 2; };
+      function bounds() {
+        var b = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
+        nodes.forEach(function (n) { b.x0 = Math.min(b.x0, n.x); b.x1 = Math.max(b.x1, n.x); b.y0 = Math.min(b.y0, n.y); b.y1 = Math.max(b.y1, n.y); });
+        return b;
       }
-      var X = function (n) { return (n.x - view.cx) * view.s; };
-      var Y = function (n) { return (n.y - view.cy) * view.s; };
+      // Until someone touches the view, keep the whole map in frame.
+      function fit(ease) {
+        var b = bounds(), pad = W < 560 ? 30 : 70;
+        var k = Math.max(0.2, Math.min(1.6, (W - pad * 2) / Math.max(1, b.x1 - b.x0), (H - pad * 2) / Math.max(1, b.y1 - b.y0)));
+        view.k += (k - view.k) * ease;
+        view.cx += ((b.x0 + b.x1) / 2 - view.cx) * ease;
+        view.cy += ((b.y0 + b.y1) / 2 - view.cy) * ease;
+      }
       function size() {
         dpr = window.devicePixelRatio || 1;
-        W = wrap.clientWidth; H = Math.round(Math.min(560, Math.max(380, W * 0.55)));
+        W = wrap.clientWidth; H = wrap.clientHeight;
         canvas.width = W * dpr; canvas.height = H * dpr;
         canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+        if (!steered) fit(1);
+        dirty = true;
       }
       function color(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+      var clamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+      function labelAlpha(n, focusOn) {
+        if (focusOn) return 1;
+        if (n.kind === 'root' || n.kind === 'topic') return 1;
+        if (n.kind === 'branch') return clamp((view.k - 0.3) / 0.15);
+        return clamp((view.k - 0.95) / 0.35);
+      }
       function draw(t) {
-        var t1 = color('--t1'), t2 = color('--t2'), t3 = color('--t3'), rule = color('--rule');
+        var t1 = color('--t1'), t2 = color('--t2'), t3 = color('--t3'), rule = color('--rule'), bg = color('--bg');
         var accent = '#88c0d0';
         var glow = t < litUntil;
-        ctx.setTransform(dpr, 0, 0, dpr, W / 2 * dpr, H / 2 * dpr);
-        ctx.clearRect(-W / 2, -H / 2, W, H);
-        var focus = hover ? hover.id : null;
-        var on = function (id) { return !focus || id === focus || (near[focus] && near[focus][id]); };
+        var focus = picked || hover;
+        var on = function (n) { return !focus || n === focus || (near[focus.id] && near[focus.id][n.id]); };
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+        ctx.lineWidth = 1;
         links.forEach(function (l) {
-          var a = byId[l[0]], b = byId[l[1]];
-          var hot = glow && (lit[a.id] || lit[b.id]);
-          ctx.strokeStyle = hot ? accent : rule;
-          ctx.globalAlpha = on(a.id) && on(b.id) ? 1 : 0.25;
-          ctx.lineWidth = hot ? 1.5 : 1;
-          ctx.beginPath(); ctx.moveTo(X(a), Y(a)); ctx.lineTo(X(b), Y(b)); ctx.stroke();
+          var touch = focus && (l.a === focus || l.b === focus);
+          var shine = glow && (lit[l.a.id] || lit[l.b.id]);
+          ctx.strokeStyle = touch || shine ? accent : rule;
+          ctx.globalAlpha = focus ? (touch ? 0.9 : 0.35) : l.cross ? 0.7 : 1;
+          ctx.beginPath(); ctx.moveTo(sx(l.a), sy(l.a)); ctx.lineTo(sx(l.b), sy(l.b)); ctx.stroke();
         });
+        var scale = Math.min(1.25, Math.max(0.7, Math.sqrt(view.k)));
         nodes.forEach(function (n) {
-          var hot = glow && lit[n.id];
-          var r = n.kind === 'me' ? 7 : n.kind === 'hub' ? 5 : 4;
-          if (hot) r += 1.5 + Math.sin(t / 180) * 1.2;
-          ctx.globalAlpha = on(n.id) ? 1 : 0.2;
-          ctx.fillStyle = hot ? accent : n.kind === 'note' ? t2 : t1;
-          ctx.beginPath(); ctx.arc(X(n), Y(n), r, 0, Math.PI * 2); ctx.fill();
-          ctx.font = (n.kind === 'note' ? '400 12px ' : '500 13px ') + '-apple-system, BlinkMacSystemFont, "Geist", sans-serif';
-          ctx.fillStyle = hot || n === hover ? t1 : n.kind === 'note' ? t3 : t2;
-          ctx.textAlign = 'center';
-          ctx.fillText(n.title, X(n), Y(n) + r + 14);
+          var shine = glow && lit[n.id];
+          var r = n.r * scale + (shine ? 1.5 + Math.sin(t / 180) * 1.2 : 0);
+          ctx.globalAlpha = on(n) ? 1 : 0.15;
+          ctx.fillStyle = n === focus || shine ? accent : n.kind === 'leaf' ? t3 : n.kind === 'branch' ? t2 : t1;
+          ctx.beginPath(); ctx.arc(sx(n), sy(n), r, 0, Math.PI * 2); ctx.fill();
+        });
+        // Labels: the ones in focus first, then by size. Below the topics, one
+        // that would land on a label already drawn is skipped.
+        ctx.textAlign = 'center';
+        ctx.lineJoin = 'round';
+        var boxes = [];
+        var forced = function (n) { return n === hover || (focus && on(n)) || (glow && lit[n.id]); };
+        order.filter(forced).concat(order.filter(function (n) { return !forced(n); })).forEach(function (n) {
+          var must = forced(n), shine = glow && lit[n.id];
+          var a = labelAlpha(n, must);
+          if (focus && !must) a *= 0.15;
+          if (a < 0.02) return;
+          var x = sx(n), y = sy(n) + n.r * scale + (n.kind === 'leaf' ? 11 : 14);
+          if (x < -100 || x > W + 100 || y < -20 || y > H + 20) return;
+          ctx.font = FONT[n.kind] + '-apple-system, BlinkMacSystemFont, "Geist", sans-serif';
+          var w = (n.w = n.w || {})[ctx.font] || (n.w[ctx.font] = ctx.measureText(n.title).width);
+          var box = { x0: x - w / 2 - 3, x1: x + w / 2 + 3, y0: y - 11, y1: y + 3 };
+          if (RANK[n.kind] > 1 && boxes.some(function (b) { return b.x0 < box.x1 && box.x0 < b.x1 && b.y0 < box.y1 && box.y0 < b.y1; })) return;
+          boxes.push(box);
+          ctx.globalAlpha = a;
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = bg;
+          ctx.strokeText(n.title, x, y);
+          ctx.fillStyle = n === focus || shine ? t1 : n.kind === 'leaf' ? t3 : n.kind === 'branch' ? t2 : t1;
+          ctx.fillText(n.title, x, y);
         });
         ctx.globalAlpha = 1;
       }
-      var raf = 0;
+      var raf = 0, lastLit = false;
       function frame(t) {
         if (!alive) return;
-        if (ticks < 400) { step(); step(); ticks += 2; }
-        fit();
-        draw(t);
+        if (hot()) { tick(); dirty = true; }
+        if (!steered && hot()) fit(0.08);
+        var glowing = t < litUntil;
+        if (dirty || glowing || lastLit) { draw(t); dirty = false; }
+        lastLit = glowing;
         raf = requestAnimationFrame(frame);
       }
+      for (var k = 0; k < (reduce ? 400 : 80); k++) tick();
       size();
-      if (reduce) for (var k = 0; k < 400; k++) step();
-      if (reduce) ticks = 400;
-      if (reduce) for (var q = 0; q < 60; q++) fit();
       raf = requestAnimationFrame(frame);
       var ro = new ResizeObserver(size);
       ro.observe(wrap);
 
-      function pickAt(e) {
+      // ---- Input: drag a node, pan the canvas, wheel or pinch to zoom.
+      function world(e) {
         var rect = canvas.getBoundingClientRect();
-        var x = e.clientX - rect.left - W / 2, y = e.clientY - rect.top - H / 2;
-        var best = null, bd = 18 * 18;
-        nodes.forEach(function (n) { var d = (X(n) - x) * (X(n) - x) + (Y(n) - y) * (Y(n) - y); if (d < bd) { bd = d; best = n; } });
+        return { x: (e.clientX - rect.left - W / 2) / view.k + view.cx, y: (e.clientY - rect.top - H / 2) / view.k + view.cy, sx: e.clientX - rect.left, sy: e.clientY - rect.top };
+      }
+      function pickAt(e) {
+        var p = world(e), best = null, bd = Infinity;
+        nodes.forEach(function (n) {
+          var dx = sx(n) - p.sx, dy = sy(n) - p.sy, d = dx * dx + dy * dy, reach = Math.max(12, n.r * view.k + 6);
+          if (d < reach * reach && d < bd) { bd = d; best = n; }
+        });
         return best;
       }
-      canvas.addEventListener('pointermove', function (e) {
-        hover = pickAt(e);
-        canvas.style.cursor = hover && hover.kind === 'note' ? 'pointer' : 'default';
-        if (hover && hover.kind === 'note') {
-          card.hidden = false;
-          card.querySelector('.bc-title').textContent = hover.title;
-          card.querySelector('.bc-blurb').textContent = hover.blurb;
-          card.style.left = Math.min(W - 260, Math.max(0, X(hover) + W / 2 + 14)) + 'px';
-          card.style.top = Math.min(H - 120, Math.max(0, Y(hover) + H / 2 - 20)) + 'px';
-        } else card.hidden = true;
+      function zoomAt(px, py, k) {
+        k = Math.max(0.15, Math.min(4, k));
+        var wx = (px - W / 2) / view.k + view.cx, wy = (py - H / 2) / view.k + view.cy;
+        view.k = k;
+        view.cx = wx - (px - W / 2) / k; view.cy = wy - (py - H / 2) / k;
+        steered = dirty = true;
+      }
+      var ptrs = new Map(), drag = null, pinch = null, lastTap = null;
+      function ask(n) {
+        if (!window.dlAsk || n.kind === 'root') return;
+        var up = n.parent && n.parent.kind !== 'root' && n.parent.kind !== 'topic' ? ' (' + n.parent.title + ')' : '';
+        window.dlAsk('tell me about "' + n.title + '"' + up);
+      }
+      function tap(n) {
+        var t = performance.now();
+        if (n && lastTap && lastTap.n === n && t - lastTap.t < 380) { lastTap = null; ask(n); return; }
+        lastTap = { n: n, t: t };
+        picked = n;
+        dirty = true;
+      }
+      canvas.addEventListener('pointerdown', function (e) {
+        canvas.setPointerCapture(e.pointerId);
+        ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (ptrs.size === 2) {
+          var p = Array.from(ptrs.values());
+          if (drag && drag.node) { drag.node.fx = drag.node.fy = null; alphaTarget = 0; }
+          drag = null;
+          pinch = { d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y), k: view.k };
+          return;
+        }
+        var n = pickAt(e), p0 = world(e);
+        drag = { node: n, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, moved: false, dx: n ? n.x - p0.x : 0, dy: n ? n.y - p0.y : 0 };
+        canvas.classList.add('grabbing');
       });
-      canvas.addEventListener('pointerleave', function () { hover = null; card.hidden = true; });
-      canvas.addEventListener('click', function (e) { var n = pickAt(e); if (n && n.kind === 'note') ask(n); });
+      canvas.addEventListener('pointermove', function (e) {
+        if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pinch && ptrs.size === 2) {
+          var p = Array.from(ptrs.values()), rect = canvas.getBoundingClientRect();
+          zoomAt((p[0].x + p[1].x) / 2 - rect.left, (p[0].y + p[1].y) / 2 - rect.top, pinch.k * Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) / pinch.d);
+          return;
+        }
+        if (!drag) {
+          var h = pickAt(e);
+          if (h !== hover) { hover = h; dirty = true; canvas.style.cursor = h ? 'pointer' : ''; }
+          return;
+        }
+        if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 4) return;
+        drag.moved = true;
+        if (drag.node && drag.node !== root) {
+          var w = world(e);
+          drag.node.fx = w.x + drag.dx; drag.node.fy = w.y + drag.dy;
+          alphaTarget = 0.3; if (alpha < 0.3) alpha = 0.3;
+          steered = true;
+        } else {
+          view.cx -= (e.clientX - drag.lx) / view.k;
+          view.cy -= (e.clientY - drag.ly) / view.k;
+          steered = dirty = true;
+        }
+        drag.lx = e.clientX; drag.ly = e.clientY;
+      });
+      function release(e) {
+        ptrs.delete(e.pointerId);
+        canvas.classList.remove('grabbing');
+        if (pinch) { if (!ptrs.size) pinch = null; return; }
+        if (!drag) return;
+        if (drag.node) { drag.node.fx = drag.node.fy = null; alphaTarget = 0; }
+        if (!drag.moved && e.type === 'pointerup') tap(drag.node);
+        drag = null;
+      }
+      canvas.addEventListener('pointerup', release);
+      canvas.addEventListener('pointercancel', release);
+      canvas.addEventListener('pointerleave', function () { if (!drag && hover) { hover = null; dirty = true; } });
+      canvas.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        var rect = canvas.getBoundingClientRect();
+        zoomAt(e.clientX - rect.left, e.clientY - rect.top, view.k * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015)));
+      }, { passive: false });
+      var onKey = function (e) { if (e.key === 'Escape' && picked) { picked = null; dirty = true; } };
+      document.addEventListener('keydown', onKey);
       var onRecall = function (e) {
         lit = {};
         e.detail.ids.forEach(function (id) { lit[id] = 1; });
         litUntil = performance.now() + 8000;
-        document.querySelectorAll('.brain-list button').forEach(function (b) { b.classList.toggle('lit', !!lit[b.dataset.id]); });
-        setTimeout(function () { document.querySelectorAll('.brain-list button.lit').forEach(function (b) { b.classList.remove('lit'); }); }, 8000);
       };
       document.addEventListener('dl:recall', onRecall);
-      brainStop = function () { alive = false; cancelAnimationFrame(raf); ro.disconnect(); document.removeEventListener('dl:recall', onRecall); };
+      brainStop = function () { alive = false; cancelAnimationFrame(raf); ro.disconnect(); document.removeEventListener('dl:recall', onRecall); document.removeEventListener('keydown', onKey); };
     }).catch(function () {});
-    var stopFetch = function () { alive = false; };
-    brainStop = function () { stopFetch(); };
   }
 
   // ---- Per page --------------------------------------------------------------------

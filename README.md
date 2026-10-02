@@ -1,53 +1,136 @@
 # davidliu.work
 
-Personal site. Plain HTML/CSS, no build step, served with GitHub Pages on a custom domain.
+My personal site. A floating cutout of my head lives on it. It talks to you, points at things, carries them around, and keeps the conversation going while you browse.
 
-## Preview locally
+[![The demo](docs/poster.webp)](https://davidliu.work/docs/demo.mp4)
 
-```bash
-python3 -m http.server
-```
+**[Watch the 57-second demo](https://davidliu.work/docs/demo.mp4)**
 
-Then open http://localhost:8000. The talking head works but can't reach its brain this way; use `npx vercel dev` for the chat.
+## What the head does
 
-## The talking head
+- **Starts the conversation.** It waits for you to settle in, pops onto the page, introduces itself and asks your name.
+- **Acts before it talks.** Every message goes through Jev first. In about 100ms it knows what you want, so the hand is already moving when the reply starts typing. Say you're a recruiter and it walks you to my resume and puts the PDF next to your cursor.
+- **Picks things up.** The hand points at things, brings them to your cursor, and carries photos and project cards around before putting them back.
+- **Eats things.** Drag anything on the page onto its face. It eats it, then tells you about it.
+- **Notices you.** Open something or stop to read it and it says something about it, once. It also reacts to inspect element, right clicks, dark mode, leaving the tab, and getting thrown across the screen.
+- **Gives tours.** "just lookin around" gets you a walk through every page.
+- **Takes notes.** Tell it you want to leave me a private note and it passes it on. Public notes go on the wall at `/notes/`.
+- **Can't be talked out of being me.** Prompt injection and trolls get caught by Jev before they reach the brain.
 
-A cutout of my head waits for you to settle in, pops onto the page and starts the conversation: who it is, your name, then icebreakers until it finds something we have in common (have a pet? my cat waddles onto the screen and lies down). It splits at the mouth when it talks, blinks, and morphs into happy, sad or angry faces. My hands point at things, pinch links and whole sections and drag them to your cursor, knock on the screen, wave, and flash a peace sign. You can drag the head around and throw it (it yells weee). It notices devtools, tab switches, theme toggles, right clicks and copying.
+It's supposed to feel like I'm there, not like a chatbot in the corner. So it doesn't push: one check-in if it gets quiet, and it only drags things to your cursor when you ask, or when you're clearly a recruiter and it's the resume.
 
-| Piece | Where |
+## Screenshots
+
+| | |
 |---|---|
-| Head, hand, bubble, bits, reactions | `talk/talk.js`, `talk/talk.css` |
-| Lines it says on its own | `LINES` at the top of `talk/talk.js` |
-| Things it can point at | `talk/targets.json`, hooked with `data-t` in the pages |
-| Chat endpoint (Claude Haiku 4.5, streamed) | `api/chat.js`, runs on Vercel |
-| Page-view beacon | `api/visit.js` |
-| Visitor log and chat transcripts | Supabase, schema in `supabase/visitors.sql` |
-| Its brain | `api/_neuralink.js` |
+| ![The home page, with the head saying hi](docs/screens/home.webp) | ![The resume with a note open in the margin](docs/screens/resume.webp) |
+| The head says hi on your first visit. | The resume. Hover any entry and a note opens in the margin. |
+| ![The hand bringing the resume to the cursor](docs/screens/fetch.webp) | ![The head carrying a project card](docs/screens/carry.webp) |
+| The hand brings the resume to your cursor. | Carrying a project card around. |
+| ![The projects page](docs/screens/projects.webp) | ![The guitar page with four recordings](docs/screens/guitar.webp) |
+| Projects, with the stack and the code. | Recordings keep playing while you browse. |
+| ![The note wall](docs/screens/notes.webp) | ![The resume in dark mode](docs/screens/resume-dark.webp) |
+| The note wall. | Dark mode. |
 
-Replies stream as plain text with stage directions inline: `[[point:rag]]`, `[[drag:resume-swe]]`, `[[face:angry]]`, `[[summon:cat]]`, and `[[note:name=Alex]]` for things the head learns about the visitor (saved to their profile, never shown). The page acts them out as the typewriter reaches them. Pointing at something on another page walks the visitor there after the reply.
+<img src="docs/screens/phone.webp" width="300" alt="The site on a phone">
 
-### Setup
+## How it works
 
-1. Import this repo as a Vercel project named `davidliu-work` (framework: Other). Pages stays the host for the site; Vercel only runs `api/`.
-2. Env vars on the project:
-   - `ANTHROPIC_API_KEY`
-   - `DAVID_BRAIN`: `gzip -c private/persona.md | base64 | npx vercel env add DAVID_BRAIN production` (`private/` is gitignored and never ships)
-   - `SUPABASE_URL` and `SUPABASE_SECRET_KEY` for the visitor log. Use a dedicated Supabase project and run `supabase/visitors.sql` in its SQL editor once. Without these, nothing is stored.
-3. Set a monthly spend cap in the Anthropic console. That's the real rate limit.
-4. If the project URL isn't `davidliu-work.vercel.app`, change `API` at the top of `talk/talk.js`.
+The site is hand-written HTML, CSS and JavaScript. No framework, no build step, served by GitHub Pages. Pages swap in place instead of reloading, so the head stays mid-conversation and the music keeps playing.
 
-Reading chats: the `conversations` table in Supabase, newest first by `updated_at`; `visitors.profile` has what the head learned about each person.
+The head talks to a few small functions on Vercel. Two models, both through OpenRouter:
 
-### Swapping in real photos
+| Model | Job |
+|---|---|
+| **Jev** (`typesafe/jev-1.13`) | Fast typed decisions. Reads every message (troll or not, what you want, which thing on the site it's about, who you are), picks the head's next move while you browse, and screens public notes. About 100ms, fractions of a cent. |
+| **GPT-6.1 Sol** (`openai/gpt-6.1-sol`) | Writes the replies, in my voice, at low reasoning effort. |
 
-```bash
-swift tools/cutout.swift head photo.jpg media/head.webp                   # straight-on, mouth closed
-swift tools/cutout.swift hand point.jpg media/hands/point.webp point      # also pinch, fist, open
-swift tools/cutout.swift thing cat.jpg media/cat-walk.webp                # and cat-lie.webp
+```mermaid
+sequenceDiagram
+  participant V as Visitor
+  participant H as Head (talk.js)
+  participant C as api/chat
+  participant J as Jev
+  participant G as GPT-6.1 Sol
+  V->>H: "can i see your resume?"
+  H->>C: the message, and what's on the page
+  C->>J: bouncer, intent, target, who
+  J-->>C: resume, recruiter (~100ms)
+  C-->>H: [[drag:resume-swe]], so the hand moves now
+  C->>G: rules, site map, what it knows about me
+  G-->>H: the reply, streamed, with stage directions
 ```
 
-Each prints a JSON config to paste into `HEAD`, `HANDS` or `PET` in `talk/talk.js`. The head config carries the mouth line (where the head splits) and the morphed faces it writes next to it: blink, angry, sad, happy. `.webp` output needs `brew install webp`.
+Replies stream as plain text with stage directions inline. The page acts them out when the typewriter gets to them:
 
-### Recording the voice
+| Marker | What happens |
+|---|---|
+| `[[point:ID]]` | The hand flies over and taps it, walking to another page first if it has to. |
+| `[[drag:ID]]` | The hand brings it to your cursor. |
+| `[[carry:ID]]` | The head picks it up and floats around with it. |
+| `[[face:happy]]` | My photo morphs into that face. Also `sad` and `angry`. |
+| `[[summon:cat]]` | My cat walks in from the edge of the screen and lies down. |
+| `[[note:key=value]]` | Remembers something you told it. Never shown. |
+| `[[mode:note]]` | Takes a private note for me. `[[mode:tour]]` starts the tour. |
 
-Open http://localhost:8000/tools/voice.html, hold space and say each letter. Export drops `voice.wav` (goes in `media/`) and prints the `VOICE` config for `talk/talk.js`. Until then it chirps with synthesized blips.
+IDs come from `talk/targets.json`, hooked into the pages with `data-t`.
+
+What the head knows about me isn't in this repo. It gets loaded when the function starts.
+
+### Spend
+
+Replies cost money, so there's a monthly cap in the chat function (default $20, after which the head falls back to its own lines), per-IP limits, 25 messages per visit, and a credit limit on the OpenRouter key as the backstop. The head's own lines (comments, the tour, notes, the bouncer) never touch GPT.
+
+## Repo
+
+| Path | What's in it |
+|---|---|
+| `index.html`, `resume/`, `projects/`, `hobbies/`, `notes/` | The pages |
+| `tethos/`, `dashboard/`, `rag/`, `kunlun/` | Case studies |
+| `styles.css` | The whole site's styles. One typeface, hierarchy by opacity. |
+| `site.js` | Page swaps, the guitar player, resume notes, hover photos, the note wall |
+| `talk/talk.js`, `talk/talk.css` | The head, the hand, the cat, and everything they do |
+| `LINES` in `talk/talk.js` | Every line the head says on its own |
+| `talk/targets.json` | Everything the head can point at |
+| `api/chat.js` | The conversation: Jev first, then GPT, streamed |
+| `api/decide.js` | Jev picks the head's next move |
+| `api/note.js`, `api/wall.js` | Notes for me, and the public wall |
+| `api/visit.js` | Page-view beacon |
+| `supabase/visitors.sql` | Visitors, chats, notes, and the spend counter |
+| `tools/cutout.swift` | Cuts my head, hands and cat out of photos with Apple's Vision framework |
+| `tools/voice.html` | Records letters for the head's voice |
+
+## Run it locally
+
+```bash
+python3 -m http.server 8000
+```
+
+Open http://localhost:8000. Everything works except the brain, so the head sticks to its own lines. For the brain, run `npx vercel dev` with the environment variables below.
+
+## Deploy
+
+The site deploys through GitHub Pages on push. The functions in `api/` run as the Vercel project `davidliu-work`:
+
+```bash
+npx vercel deploy --prod
+```
+
+| Environment variable | What it's for |
+|---|---|
+| `OPENROUTER_API_KEY` | GPT-6.1 Sol and Jev |
+| `DAVID_BRAIN` | What the head knows about me |
+| `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Visitor memory, chat logs, notes and the spend counter. Use a dedicated Supabase project and run `supabase/visitors.sql` in it once. |
+| `RESEND_API_KEY` | Emails me private notes |
+| `MONTHLY_CAP_USD` | Optional, defaults to 20 |
+
+If the project URL changes, update `API` at the top of `talk/talk.js` and `site.js`.
+
+## New photos
+
+```bash
+swift tools/cutout.swift head photo.jpg media/head.webp
+swift tools/cutout.swift hand point.jpg media/hands/point.webp point
+```
+
+Each prints a config to paste into `HEAD`, `HANDS` or `PET` at the top of `talk/talk.js`. Needs `brew install webp`.

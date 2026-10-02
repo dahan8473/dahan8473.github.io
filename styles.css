@@ -63,6 +63,8 @@ img { display: block; max-width: 100%; height: auto; }
 ::selection { background: rgba(0, 113, 227, 0.2); }
 
 a { color: inherit; text-decoration: none; transition: color 150ms ease, opacity 150ms ease; }
+/* Page swaps move focus to <main> for screen readers; no ring for that. */
+main:focus { outline: none; }
 a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid #0071e3; outline-offset: 3px; border-radius: 4px; }
 
 .t1 { color: var(--t1); }

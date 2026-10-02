@@ -792,7 +792,11 @@
     var area = form.querySelector('textarea'), nameIn = form.querySelector('input'), send = form.querySelector('.imsg-send');
     var from = form.querySelector('.imsg-from');
     var visitor = visitorId(), known = [], alive = true, pending = null;
-    try { nameIn.value = localStorage.getItem('dl-name') || ''; } catch (e) {}
+    // Replies they haven't seen come in like iMessage: the typing dots for a
+    // beat, then the message. Telegram doesn't tell bots when David is typing,
+    // so the dots play once a reply has arrived.
+    var shown = {}, queue = [], typing = false, first = true, timers = [], seenAt = '';
+    try { nameIn.value = localStorage.getItem('dl-name') || ''; seenAt = localStorage.getItem('dl-inbox-seen') || ''; } catch (e) {}
     var HOUR = 3600000;
     // "Today 5:29 PM", "Yesterday 5:29 PM", "Monday 5:29 PM", "Oct 2, 2026 at 5:29 PM"
     function stamp(at) {
@@ -805,7 +809,8 @@
     }
     function render() {
       list.replaceChildren();
-      var all = pending ? known.concat([pending]) : known;
+      var all = known.filter(function (m) { return m.sender !== 'david' || shown[m.id]; });
+      if (pending) all = all.concat([pending]);
       if (!all.length) {
         var empty = document.createElement('li');
         empty.className = 'imsg-empty';
@@ -837,18 +842,49 @@
         st.textContent = last.failed ? 'Not Delivered' : last.sending ? 'Sending...' : 'Delivered';
         list.appendChild(st);
       }
+      if (typing) {
+        var dots = document.createElement('li');
+        dots.className = 'b them tail imsg-typing' + (last && last.sender !== 'david' ? ' gap' : '');
+        dots.setAttribute('aria-label', 'David is typing');
+        dots.innerHTML = '<i></i><i></i><i></i>';
+        list.appendChild(dots);
+      }
       list.scrollTop = list.scrollHeight;
       from.hidden = known.some(function (m) { return m.sender !== 'david'; });
-      var reply = known.filter(function (m) { return m.sender === 'david'; }).pop();
+      var reply = known.filter(function (m) { return m.sender === 'david' && shown[m.id]; }).pop();
       // Seen here, so the head doesn't announce these on the next page.
       if (reply) try { localStorage.setItem('dl-inbox-seen', reply.at); } catch (e) {}
+    }
+    function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+    // One reply at a time: dots, then the message. Longer replies type longer.
+    function pump() {
+      if (typing || !queue.length || !alive) return;
+      var m = queue.shift();
+      typing = true;
+      render();
+      later(function () {
+        typing = false;
+        shown[m.id] = true;
+        render();
+        if (queue.length) later(pump, 450);
+      }, reduce ? 600 : Math.min(3200, Math.max(1100, 700 + m.body.length * 30)));
     }
     function load() {
       if (!visitor) return render();
       fetch(API + '/inbox?visitor=' + visitor).then(function (r) { return r.json(); }).then(function (d) {
         if (!alive) return;
         var next = d.messages || [];
-        if (next.length !== known.length || !list.children.length) { known = next; render(); }
+        if (next.length === known.length && list.children.length) return;
+        known = next;
+        known.forEach(function (m) {
+          if (shown[m.id] || queue.indexOf(m) !== -1) return;
+          // On arrival, anything already seen shows straight away.
+          if (m.sender !== 'david' || (first && m.at <= seenAt)) shown[m.id] = true;
+          else if (!queue.some(function (q) { return q.id === m.id; })) queue.push(m);
+        });
+        first = false;
+        render();
+        pump();
       }).catch(function () { if (alive && !list.children.length) render(); });
     }
     function grow() {
@@ -871,6 +907,7 @@
           if (!alive) return;
           if (!d.sent) throw new Error('not sent');
           known.push(d.message);
+          shown[d.message.id] = true;
           pending = null;
           render();
           try { localStorage.setItem('dl-inbox', '1'); if (name) localStorage.setItem('dl-name', name); } catch (e2) {}
@@ -889,8 +926,8 @@
     area.addEventListener('input', grow);
     grow();
     load();
-    var timer = setInterval(function () { if (!document.hidden) load(); }, 15000);
-    inboxStop = function () { alive = false; clearInterval(timer); };
+    var timer = setInterval(function () { if (!document.hidden) load(); }, 6000);
+    inboxStop = function () { alive = false; clearInterval(timer); timers.forEach(clearTimeout); };
   }
 
   // ---- Games and 3D scenes -------------------------------------------------------

@@ -222,9 +222,9 @@ export default {
     else if ((intent === 'project' || intent === 'hobbies') && sure) { first = `[[point:${target}]] `; did = target; }
     const who = read?.who?.probabilities?.[read.who.choice] > 0.6 && read.who.choice !== 'unknown' ? read.who.choice : '';
     if (who && who !== body.who) first += `[[note:who=${who}]]`;
-    const recall = recalled(read);
-    if (recall.length) first = `[[recall:${recall.join(',')}]]` + first;
-    const titles = recall.map((id) => cortexNotes().find((n) => n.id === id)?.title).filter(Boolean);
+    const notes = recalled(read);
+    if (notes.length) first = `[[recall:${notes.join(',')}]]` + first;
+    const titles = notes.map((id) => cortexNotes().find((n) => n.id === id)?.title).filter(Boolean);
 
     const context = [
       `The visitor is on ${page}. Things you can point at without leaving this page: ${onPage.join(', ') || 'none'}.`,

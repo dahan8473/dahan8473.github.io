@@ -303,5 +303,10 @@
     "page": "/hobbies/photography/",
     "sel": "[data-t='gear']",
     "about": "my cameras: a Fujifilm X-T200 and a Sony A7R II"
+  },
+  "brain": {
+    "page": "/brain/",
+    "sel": "[data-t='brain']",
+    "about": "the second brain page: a graph of the notes you think with, from David's Obsidian vault. Clicking a note asks you about it."
   }
 }

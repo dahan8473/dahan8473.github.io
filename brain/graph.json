@@ -1,0 +1,155 @@
+{
+  "updated": "2026-10-02",
+  "nodes": [
+    {
+      "id": "metal-disks-in-the-trash",
+      "title": "Metal disks in the trash",
+      "cluster": "stories",
+      "blurb": "Discarded metal disks inspired David to build software with purpose."
+    },
+    {
+      "id": "the-red-cross-cold-call",
+      "title": "The Red Cross cold call",
+      "cluster": "stories",
+      "blurb": "A nervous phone pitch won Tethos its first big partner."
+    },
+    {
+      "id": "a-virtual-island",
+      "title": "A virtual island",
+      "cluster": "stories",
+      "blurb": "Building a virtual island to bring the Tethos community together."
+    },
+    {
+      "id": "among-us-at-hack-the-north",
+      "title": "Among Us at Hack the North",
+      "cluster": "stories",
+      "blurb": "Building real-life Among Us on badges at Hack the North"
+    },
+    {
+      "id": "carnegie-hall",
+      "title": "Carnegie Hall",
+      "cluster": "stories",
+      "blurb": "Classical guitar, Carnegie Hall, and virtual concerts for healthcare workers."
+    },
+    {
+      "id": "slightly-better-beginner",
+      "title": "Slightly better beginner",
+      "cluster": "stories",
+      "blurb": "Coaching Muay Thai beginners as a slightly better beginner."
+    },
+    {
+      "id": "designing-my-own-clothes",
+      "title": "Designing my own clothes",
+      "cluster": "stories",
+      "blurb": "Designing clothes and starting Kunlun, inspired by Taoist geography and wuxia."
+    },
+    {
+      "id": "cursed-traveler",
+      "title": "Cursed traveler",
+      "cluster": "stories",
+      "blurb": "Travel mishaps taught David to embrace uncertainty and kind strangers."
+    },
+    {
+      "id": "web-summit-side-door",
+      "title": "Web Summit side door",
+      "cluster": "stories",
+      "blurb": "David’s unconventional route into Web Summit."
+    },
+    {
+      "id": "tethos-association",
+      "title": "Tethos Association",
+      "cluster": "work",
+      "blurb": "Founding Tethos and building technology for social impact at Western."
+    },
+    {
+      "id": "kunlun",
+      "title": "Kunlun",
+      "cluster": "work",
+      "blurb": "David's mythology-inspired clothing label and self-built bilingual storefront."
+    },
+    {
+      "id": "sudo",
+      "title": "sudo",
+      "cluster": "work",
+      "blurb": "A Discord moderation bot controlled through Claude Code."
+    },
+    {
+      "id": "genesis",
+      "title": "GENESIS",
+      "cluster": "work",
+      "blurb": "TSI’s annual project showcase, combining demos, design, video, and social media."
+    },
+    {
+      "id": "hack-western",
+      "title": "Hack Western",
+      "cluster": "places",
+      "blurb": "Student-run hackathon at Western University, registered as a Canadian nonprofit."
+    },
+    {
+      "id": "jd-power",
+      "title": "J.D. Power",
+      "cluster": "places",
+      "blurb": "David's first co-op in automotive software engineering at J.D. Power."
+    },
+    {
+      "id": "western-university",
+      "title": "Western University",
+      "cluster": "places",
+      "blurb": "David's university, where he studies Software Engineering and founded Tethos."
+    }
+  ],
+  "links": [
+    [
+      "metal-disks-in-the-trash",
+      "the-red-cross-cold-call"
+    ],
+    [
+      "sudo",
+      "tethos-association"
+    ],
+    [
+      "hack-western",
+      "tethos-association"
+    ],
+    [
+      "designing-my-own-clothes",
+      "kunlun"
+    ],
+    [
+      "hack-western",
+      "western-university"
+    ],
+    [
+      "metal-disks-in-the-trash",
+      "tethos-association"
+    ],
+    [
+      "tethos-association",
+      "the-red-cross-cold-call"
+    ],
+    [
+      "a-virtual-island",
+      "tethos-association"
+    ],
+    [
+      "genesis",
+      "tethos-association"
+    ],
+    [
+      "tethos-association",
+      "western-university"
+    ],
+    [
+      "slightly-better-beginner",
+      "western-university"
+    ],
+    [
+      "jd-power",
+      "western-university"
+    ],
+    [
+      "a-virtual-island",
+      "cursed-traveler"
+    ]
+  ]
+}

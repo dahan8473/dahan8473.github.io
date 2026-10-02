@@ -223,6 +223,181 @@
     });
   }
 
+  // ---- Second brain -------------------------------------------------------------
+  // The public map of the head's notes (brain/graph.json): a small force layout
+  // on a canvas, Obsidian style. Hover a note to read its line, click to ask the
+  // head about it. Notes the head is recalling light up.
+  var brainStop = null;
+  var CLUSTERS = { stories: 'Stories', work: 'Work', places: 'Places' };
+  function setupBrain() {
+    if (brainStop) { brainStop(); brainStop = null; }
+    var wrap = document.querySelector('.brain');
+    var canvas = wrap && wrap.querySelector('canvas');
+    if (!canvas) return;
+    var card = wrap.querySelector('.brain-card');
+    var list = document.querySelector('.brain-list');
+    var meta = document.querySelector('.brain-meta');
+    var alive = true;
+    var ask = function (n) { if (window.dlAsk) window.dlAsk('tell me about "' + n.title + '"'); };
+    fetch('/brain/graph.json').then(function (r) { return r.json(); }).then(function (g) {
+      if (!alive) return;
+      meta.textContent = g.nodes.length + ' notes · synced ' + new Date(g.updated + 'T12:00:00').toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+      g.nodes.forEach(function (n) {
+        var li = document.createElement('li');
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'row';
+        b.dataset.id = n.id;
+        b.innerHTML = '<span class="p"></span><span class="s"></span><span class="m"></span>';
+        b.querySelector('.p').textContent = n.title;
+        b.querySelector('.s').textContent = n.blurb;
+        b.querySelector('.m').textContent = CLUSTERS[n.cluster] || '';
+        b.addEventListener('click', function () { ask(n); });
+        li.appendChild(b);
+        list.appendChild(li);
+      });
+
+      // Nodes: me in the middle, a hub per cluster, then the notes.
+      var nodes = [{ id: 'me', title: 'David', kind: 'me' }];
+      Object.keys(CLUSTERS).forEach(function (c) { nodes.push({ id: 'hub-' + c, title: CLUSTERS[c], kind: 'hub' }); });
+      g.nodes.forEach(function (n) { nodes.push({ id: n.id, title: n.title, blurb: n.blurb, cluster: n.cluster, kind: 'note' }); });
+      var byId = {};
+      nodes.forEach(function (n, i) {
+        var a = (i / nodes.length) * Math.PI * 2;
+        n.x = Math.cos(a) * 160; n.y = Math.sin(a) * 120; n.vx = 0; n.vy = 0;
+        byId[n.id] = n;
+      });
+      byId.me.x = byId.me.y = 0;
+      var links = [];
+      Object.keys(CLUSTERS).forEach(function (c) { links.push(['me', 'hub-' + c, 130]); });
+      g.nodes.forEach(function (n) { links.push(['hub-' + n.cluster, n.id, 75]); });
+      g.links.forEach(function (l) { if (byId[l[0]] && byId[l[1]]) links.push([l[0], l[1], 110]); });
+      var near = {};
+      links.forEach(function (l) { (near[l[0]] = near[l[0]] || {})[l[1]] = 1; (near[l[1]] = near[l[1]] || {})[l[0]] = 1; });
+
+      function step() {
+        for (var i = 0; i < nodes.length; i++) {
+          for (var j = i + 1; j < nodes.length; j++) {
+            var a = nodes[i], b = nodes[j];
+            var dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy + 0.01, d = Math.sqrt(d2);
+            var f = 2600 / d2;
+            a.vx -= (dx / d) * f; a.vy -= (dy / d) * f; b.vx += (dx / d) * f; b.vy += (dy / d) * f;
+          }
+        }
+        links.forEach(function (l) {
+          var a = byId[l[0]], b = byId[l[1]];
+          var dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+          var f = (d - l[2]) * 0.03;
+          a.vx += (dx / d) * f; a.vy += (dy / d) * f; b.vx -= (dx / d) * f; b.vy -= (dy / d) * f;
+        });
+        nodes.forEach(function (n) {
+          n.vx -= n.x * 0.004; n.vy -= n.y * 0.006;
+          n.vx *= 0.82; n.vy *= 0.82;
+          if (n.kind !== 'me') { n.x += n.vx; n.y += n.vy; }
+        });
+      }
+
+      var ctx = canvas.getContext('2d');
+      var W = 0, H = 0, dpr = 1, hover = null, lit = {}, litUntil = 0, ticks = 0;
+      // Fit the layout to the canvas; eased so it doesn't jump while settling.
+      var view = { s: 1, cx: 0, cy: 0 };
+      function fit() {
+        var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        nodes.forEach(function (n) { x0 = Math.min(x0, n.x); x1 = Math.max(x1, n.x); y0 = Math.min(y0, n.y); y1 = Math.max(y1, n.y); });
+        var target = Math.min((W - 220) / Math.max(1, x1 - x0), (H - 90) / Math.max(1, y1 - y0), 2.2);
+        view.s += (target - view.s) * 0.15;
+        view.cx += ((x0 + x1) / 2 - view.cx) * 0.15;
+        view.cy += ((y0 + y1) / 2 - view.cy) * 0.15;
+      }
+      var X = function (n) { return (n.x - view.cx) * view.s; };
+      var Y = function (n) { return (n.y - view.cy) * view.s; };
+      function size() {
+        dpr = window.devicePixelRatio || 1;
+        W = wrap.clientWidth; H = Math.round(Math.min(560, Math.max(380, W * 0.55)));
+        canvas.width = W * dpr; canvas.height = H * dpr;
+        canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      }
+      function color(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+      function draw(t) {
+        var t1 = color('--t1'), t2 = color('--t2'), t3 = color('--t3'), rule = color('--rule');
+        var accent = '#88c0d0';
+        var glow = t < litUntil;
+        ctx.setTransform(dpr, 0, 0, dpr, W / 2 * dpr, H / 2 * dpr);
+        ctx.clearRect(-W / 2, -H / 2, W, H);
+        var focus = hover ? hover.id : null;
+        var on = function (id) { return !focus || id === focus || (near[focus] && near[focus][id]); };
+        links.forEach(function (l) {
+          var a = byId[l[0]], b = byId[l[1]];
+          var hot = glow && (lit[a.id] || lit[b.id]);
+          ctx.strokeStyle = hot ? accent : rule;
+          ctx.globalAlpha = on(a.id) && on(b.id) ? 1 : 0.25;
+          ctx.lineWidth = hot ? 1.5 : 1;
+          ctx.beginPath(); ctx.moveTo(X(a), Y(a)); ctx.lineTo(X(b), Y(b)); ctx.stroke();
+        });
+        nodes.forEach(function (n) {
+          var hot = glow && lit[n.id];
+          var r = n.kind === 'me' ? 7 : n.kind === 'hub' ? 5 : 4;
+          if (hot) r += 1.5 + Math.sin(t / 180) * 1.2;
+          ctx.globalAlpha = on(n.id) ? 1 : 0.2;
+          ctx.fillStyle = hot ? accent : n.kind === 'note' ? t2 : t1;
+          ctx.beginPath(); ctx.arc(X(n), Y(n), r, 0, Math.PI * 2); ctx.fill();
+          ctx.font = (n.kind === 'note' ? '400 12px ' : '500 13px ') + '-apple-system, BlinkMacSystemFont, "Geist", sans-serif';
+          ctx.fillStyle = hot || n === hover ? t1 : n.kind === 'note' ? t3 : t2;
+          ctx.textAlign = 'center';
+          ctx.fillText(n.title, X(n), Y(n) + r + 14);
+        });
+        ctx.globalAlpha = 1;
+      }
+      var raf = 0;
+      function frame(t) {
+        if (!alive) return;
+        if (ticks < 400) { step(); step(); ticks += 2; }
+        fit();
+        draw(t);
+        raf = requestAnimationFrame(frame);
+      }
+      size();
+      if (reduce) for (var k = 0; k < 400; k++) step();
+      if (reduce) ticks = 400;
+      if (reduce) for (var q = 0; q < 60; q++) fit();
+      raf = requestAnimationFrame(frame);
+      var ro = new ResizeObserver(size);
+      ro.observe(wrap);
+
+      function pickAt(e) {
+        var rect = canvas.getBoundingClientRect();
+        var x = e.clientX - rect.left - W / 2, y = e.clientY - rect.top - H / 2;
+        var best = null, bd = 18 * 18;
+        nodes.forEach(function (n) { var d = (X(n) - x) * (X(n) - x) + (Y(n) - y) * (Y(n) - y); if (d < bd) { bd = d; best = n; } });
+        return best;
+      }
+      canvas.addEventListener('pointermove', function (e) {
+        hover = pickAt(e);
+        canvas.style.cursor = hover && hover.kind === 'note' ? 'pointer' : 'default';
+        if (hover && hover.kind === 'note') {
+          card.hidden = false;
+          card.querySelector('.bc-title').textContent = hover.title;
+          card.querySelector('.bc-blurb').textContent = hover.blurb;
+          card.style.left = Math.min(W - 260, Math.max(0, X(hover) + W / 2 + 14)) + 'px';
+          card.style.top = Math.min(H - 120, Math.max(0, Y(hover) + H / 2 - 20)) + 'px';
+        } else card.hidden = true;
+      });
+      canvas.addEventListener('pointerleave', function () { hover = null; card.hidden = true; });
+      canvas.addEventListener('click', function (e) { var n = pickAt(e); if (n && n.kind === 'note') ask(n); });
+      var onRecall = function (e) {
+        lit = {};
+        e.detail.ids.forEach(function (id) { lit[id] = 1; });
+        litUntil = performance.now() + 8000;
+        document.querySelectorAll('.brain-list button').forEach(function (b) { b.classList.toggle('lit', !!lit[b.dataset.id]); });
+        setTimeout(function () { document.querySelectorAll('.brain-list button.lit').forEach(function (b) { b.classList.remove('lit'); }); }, 8000);
+      };
+      document.addEventListener('dl:recall', onRecall);
+      brainStop = function () { alive = false; cancelAnimationFrame(raf); ro.disconnect(); document.removeEventListener('dl:recall', onRecall); };
+    }).catch(function () {});
+    var stopFetch = function () { alive = false; };
+    brainStop = function () { stopFetch(); };
+  }
+
   // ---- Per page --------------------------------------------------------------------
   function setup() {
     tick();
@@ -230,6 +405,7 @@
     mountTracks();
     hovered = pinned = null;
     setupWall();
+    setupBrain();
   }
 
   // ---- Router: swap pages in place ----------------------------------------------

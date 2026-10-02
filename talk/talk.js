@@ -137,6 +137,7 @@
       snake: 'i made this cuz i thought it would look cool on my github. turns out a lot of ppl like this kinda stuff too haha',
       awards: 'heh.. 🙂‍↕️',
       skills: 'ask me about any of these!',
+      brain: "this is my second brain! click any note and i'll tell you about it",
       contact: "email's the best way to reach me!",
       meowmeow: "that's meowmeow! she's really fat and sleeps all day. want me to call her over?",
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',
@@ -245,6 +246,7 @@
           <button class="dl-x" type="button" aria-label="Close">${ICON.x}</button>
         </div>
         <p class="dl-echo" hidden></p>
+        <p class="dl-recall" hidden></p>
         <p class="dl-text" aria-live="polite"></p>
         <button class="dl-more" type="button" aria-label="Continue" hidden>&#9660;</button>
       </div>
@@ -270,6 +272,7 @@
   const talk = $('.dl-talk');
   const bubble = $('.dl-bubble');
   const echoEl = $('.dl-echo');
+  const recallEl = $('.dl-recall');
   const textEl = $('.dl-text');
   const moreBtn = $('.dl-more');
   const choicesEl = $('.dl-choices');
@@ -622,6 +625,7 @@
     sp.done = new Promise((r) => { sp.resolve = r; });
     textEl.textContent = '';
     moreBtn.hidden = true;
+    recallEl.hidden = true;
     echoEl.textContent = echo;
     echoEl.hidden = !echo;
     if (text) feed(text);
@@ -1094,7 +1098,7 @@
             return;
           }
           const inner = buf.slice(i + 2, j).trim();
-          const m = /^(point|drag|face|summon|carry|mode):([a-z0-9-]+)$/.exec(inner);
+          const m = /^(point|drag|face|summon|carry|mode|recall):([a-z0-9,-]+)$/.exec(inner);
           const n = /^note:\s*([a-z_]+)\s*=\s*(.+)$/i.exec(inner);
           if (m) onAction({ verb: m[1], id: m[2] });
           else if (n) onAction({ verb: 'note', id: n[1].toLowerCase(), value: n[2].trim() });
@@ -1115,6 +1119,7 @@
     if (a.verb === 'face') { setFace(a.id, 3500); return; }
     if (a.verb === 'summon') { if (a.id === 'cat') summonCat(); return; }
     if (a.verb === 'mode') { mode = a.id; return; }
+    if (a.verb === 'recall') { recall(a.id.split(',')); return; }
     if (a.verb === 'note') {
       if (a.id === 'name') try { localStorage.setItem('dl-name', a.value.slice(0, 40)); } catch (e) {}
       if (a.id === 'who') { S.who = a.value.slice(0, 20); save(); }
@@ -1133,6 +1138,19 @@
       return a.verb === 'drag' ? yank(el, { hold: 7000 }) : a.verb === 'carry' ? carry(el) : point(el);
     }).catch(() => {});
   }
+  // The second brain: which notes the head is pulling from, shown in the
+  // bubble and lit up on /brain/. Titles come from the public map.
+  let brainMap = null;
+  const brainTitles = () => (brainMap ??= fetch('/brain/graph.json').then((r) => r.json()).then((g) => Object.fromEntries(g.nodes.map((n) => [n.id, n.title]))).catch(() => ({})));
+  async function recall(ids) {
+    const titles = await brainTitles();
+    const names = ids.map((id) => titles[id]).filter(Boolean);
+    document.dispatchEvent(new CustomEvent('dl:recall', { detail: { ids } }));
+    if (!names.length) return;
+    recallEl.textContent = 'recalling ' + names.join(' · ');
+    recallEl.hidden = false;
+  }
+
   // Pages swap in place (site.js), so the head and the music stay. Without
   // that, it's a normal load and S.pending finishes the gesture on arrival.
   async function navigate(page) {
@@ -1543,6 +1561,22 @@
       touring = false;
     }
   }
+  // The page can hand the head a question (clicking a note on /brain/).
+  window.dlAsk = async (q) => {
+    if (asking) return;
+    if (!chatOn) {
+      interrupt();
+      chatOn = true;
+      S.open = true;
+      save();
+      root.classList.add('chat');
+      await goHome(420);
+      showTalk();
+      showForm();
+    }
+    ask(q);
+  };
+
   async function startTour(label) {
     choicesEl.hidden = true;
     S.msgs.push({ role: 'user', content: label });

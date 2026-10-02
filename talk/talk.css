@@ -574,3 +574,13 @@ a.dl-held { display: inline-block; }
 /* Feeding: while something is being dragged, the head leans in for it. */
 .dl.hungry .dl-head { scale: 1.08; transition: scale 200ms ease; }
 .dl.chomping .dl-head { scale: 1.18; }
+
+/* The second brain: which notes the head is pulling from. */
+.dl-recall {
+  margin: 0 46px 6px 0;
+  color: var(--talk-accent);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+.dl-recall::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: currentColor; vertical-align: 1px; animation: dl-recall 1.2s ease-in-out infinite; }
+@keyframes dl-recall { 50% { opacity: 0.3; } }

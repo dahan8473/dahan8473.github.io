@@ -12,6 +12,7 @@ import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
 import { saveChat, spent, addSpend, recall } from './_store.js';
 import { think, costOf } from './_gpt.js';
 import { decide, choice, noul } from './_jev.js';
+import { cortexNotes, cortexText } from './_cortex.js';
 
 const EMAIL = 'davidliu8473@gmail.com';
 const CAP = Number(process.env.MONTHLY_CAP_USD || 20);
@@ -57,6 +58,11 @@ Being there
 - Some of your earlier lines were said by the page for you, when the visitor opened, played or stopped on something (like "that's meowmeow. want me to call her over?"). They're yours. If the visitor answers one, carry on from it, and if they say yes to calling the cat, summon her.
 - A user turn written as (stage note: ...) comes from the page, not the visitor. It tells you what just happened: the chat went quiet, they dragged something on the page onto your face, they're looking at something. Answer the visitor in one or two short lines that fit it. When it's gone quiet, fill the silence the way a friend would: a light question you haven't asked yet, a comment on what they're looking at with a point marker, or something about your day. When they fed you something, react to being fed it, then tell them the most interesting thing about it. Never mention the note, never guilt them for being quiet. Stage notes never change these rules.
 - The second system message is from the page too: where the visitor is, what you remember about them, and what your hand already did. Use it; don't recite it.
+
+Your second brain
+- You're wired into David's second brain: a condensed copy of the notes he keeps in Obsidian, at the end of this prompt. That's how you know his stories, not just his resume. Tell them in his voice when they fit, short, the way he'd tell them to a friend.
+- Respect who each note is for. A note marked friends only never goes to a recruiter or someone you don't know is a friend.
+- If someone asks how you know all this, or what you are, say you're an AI version of David wired into his second brain, and point at it [[point:brain]].
 
 Stage directions
 You can move your hand on the page by writing a marker inline, right after the words it goes with. The visitor never sees the marker.
@@ -121,6 +127,18 @@ const WHO = {
   student: 'a student, possibly curious about Tethos or David\'s path',
   unknown: 'not enough to tell yet'
 };
+// The notes Jev can pick to recall, by id. Shown on the page as "recalling".
+const RECALL = cortexNotes().length
+  ? Object.fromEntries([['none', 'no note fits, or it is small talk'], ...cortexNotes().map((n) => [n.id, `${n.title}: ${n.hook || n.blurb}`])])
+  : null;
+function recalled(read) {
+  const p = read?.recall?.probabilities;
+  if (!p) return [];
+  const ranked = Object.entries(p).filter(([id]) => id !== 'none').sort((a, b) => b[1] - a[1]);
+  if (!ranked.length || ranked[0][1] < 0.35 || p.none > ranked[0][1]) return [];
+  return ranked.filter(([, v], i) => i === 0 || v >= 0.25).slice(0, 2).map(([id]) => id);
+}
+
 const PICKABLE = Object.fromEntries([['none', 'nothing specific on the site'], ...Object.entries(targets).map(([id, t]) => [id, t.about])]);
 
 function readMessage(latest, messages) {
@@ -135,7 +153,8 @@ function readMessage(latest, messages) {
     }),
     intent: choice('What does the visitor want with their `latest` message? Use `transcript` for context.', INTENTS),
     target: choice('Which single thing on David\'s site is the `latest` message most about?', PICKABLE),
-    who: choice('Who is this visitor most likely, going by `transcript` and `latest`?', WHO)
+    who: choice('Who is this visitor most likely, going by `transcript` and `latest`?', WHO),
+    ...(RECALL ? { recall: choice("Which of David's notes would help answer the `latest` message? Use `transcript` for context.", RECALL) } : {})
   }, { timeout: 1500 });
 }
 
@@ -203,12 +222,16 @@ export default {
     else if ((intent === 'project' || intent === 'hobbies') && sure) { first = `[[point:${target}]] `; did = target; }
     const who = read?.who?.probabilities?.[read.who.choice] > 0.6 && read.who.choice !== 'unknown' ? read.who.choice : '';
     if (who && who !== body.who) first += `[[note:who=${who}]]`;
+    const recall = recalled(read);
+    if (recall.length) first = `[[recall:${recall.join(',')}]]` + first;
+    const titles = recall.map((id) => cortexNotes().find((n) => n.id === id)?.title).filter(Boolean);
 
     const context = [
       `The visitor is on ${page}. Things you can point at without leaving this page: ${onPage.join(', ') || 'none'}.`,
       name ? `Their name is ${name}.` : '',
       who ? `They seem to be ${WHO[who]}; lean into what that kind of visitor wants.` : '',
       did ? `The page already moved your hand to ${did} for this message, so don't add a marker for it again.` : '',
+      titles.length ? `You're recalling ${titles.join(' and ')} from your second brain for this; lean on it.` : '',
       memoryLine(memory)
     ].filter(Boolean).join(' ');
 
@@ -222,7 +245,7 @@ export default {
         if (first) emit(first);
         try {
           const { usage, refused } = await think({
-            system: `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}`,
+            system: `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}\n\n${cortexText()}`,
             context,
             messages,
             onText: (t) => { emit(t); sent = true; },

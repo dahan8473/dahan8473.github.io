@@ -277,6 +277,20 @@ a.row:hover .m { transform: translateX(3px); }
 .wall .wall-empty { color: var(--t3); }
 .wall li.fresh { animation: open 320ms ease both; }
 
+/* Second brain */
+.brain { position: relative; margin: 0 -14px; border-radius: 16px; background: var(--fill); overflow: hidden; }
+.brain canvas { display: block; }
+.brain-card { position: absolute; width: 250px; padding: 12px 14px; border-radius: 12px; background: var(--panel); box-shadow: 0 0 0 1px var(--rule), 0 16px 40px -16px rgba(0, 0, 0, 0.25); pointer-events: none; }
+.brain-card .bc-title { color: var(--t1); }
+.brain-card .bc-blurb { margin-top: 2px; color: var(--t2); }
+.brain-card .bc-hint { margin-top: 6px; color: var(--t3); font-size: 13px; }
+.brain-meta { color: var(--t3); }
+.brain-list { margin-top: 40px; }
+.brain-list button.row { width: 100%; border: 0; background: none; font: inherit; text-align: left; cursor: pointer; color: inherit; }
+.brain-list button.row:hover .p, .brain-list button.row:hover .s { color: var(--t1); }
+.brain-list button.lit .p { color: #4c9bb0; }
+.brain-list button.lit .m { color: #4c9bb0; }
+
 /* Now playing: the guitar keeps going while you browse. */
 .playing-now { display: none; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; }
 .playing-now.on { display: inline-flex; }

@@ -7,12 +7,12 @@
   "nav": {
     "page": "/",
     "sel": ".rail",
-    "about": "the icon bar on the left edge (across the top on phones): Home, Resume, Projects, Hobbies, Brain, Notes, then Email. On every page. Hover it to see the names."
+    "about": "the icon bar on the left edge (across the top on phones): Home, Resume, Projects, Hobbies, Brain, Notes, then Messages. On every page. Hover it to see the names."
   },
   "email": {
     "page": "/",
     "sel": "a[aria-label='Email']",
-    "about": "email me. On every page, in the page bar."
+    "about": "my email, on the home page and at the bottom of the messages page"
   },
   "now": {
     "page": "/",
@@ -353,6 +353,11 @@
     "page": "/notes/",
     "sel": "[data-t='note-pad']",
     "about": "the pad of sticky notes in the wall's top corner ('Leave a note here'). Click it to write a note, then pick where it sticks."
+  },
+  "inbox": {
+    "page": "/messages/",
+    "sel": "[data-t='inbox']",
+    "about": "the messages page: an inbox with the real David. It goes straight to his phone, and his replies show up there (and you tell them)"
   },
   "notes": {
     "page": "/notes/",

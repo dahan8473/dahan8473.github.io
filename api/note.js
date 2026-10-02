@@ -2,7 +2,7 @@
 // sent to him on Telegram.
 
 import { corsFor, preflight, plain, json, isId, clientIp, limiter } from './_http.js';
-import { leaveNote } from './_store.js';
+import { leaveNote, addMessage, tagMessage } from './_store.js';
 import { decide, noul } from './_jev.js';
 import { tell } from './_notify.js';
 
@@ -51,7 +51,14 @@ export default {
       wall = !flagged;
     }
     const where = wall ? 'New note on your wall' : flagged ? "A note that didn't pass the check for the wall (kept private)" : 'Private note for you';
-    const [id, sent] = await Promise.all([leaveNote({ ...note, wall, flagged }), tell(telegramText(note, where))]);
-    return json({ saved: id != null, posted: id != null && wall, mailed: sent }, headers);
+    // Notes that only David sees can get an answer: they join the visitor's
+    // inbox thread, and his reply to the Telegram message comes back there.
+    const text = telegramText(note, where) + (wall ? '' : '\n\nReply to this message and it shows up on the site for them.');
+    const [id, tg] = await Promise.all([leaveNote({ ...note, wall, flagged }), tell(text)]);
+    if (!wall && tg) {
+      const row = await addMessage({ visitor: note.visitor, sender: 'visitor', name: note.name || null, body: note.message });
+      if (row) await tagMessage(row.id, tg);
+    }
+    return json({ saved: id != null, posted: id != null && wall, mailed: Boolean(tg) }, headers);
   }
 };

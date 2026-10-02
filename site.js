@@ -771,6 +771,87 @@
     }).catch(function () {});
   }
 
+  // ---- Messages -----------------------------------------------------------------
+  // A thread with the real David on /messages/. Sending goes to his Telegram;
+  // his replies come back through api/telegram.js. While the page is open it
+  // checks for new ones every 15 seconds.
+  var inboxStop = null;
+  function visitorId() {
+    var v = null;
+    try {
+      v = localStorage.getItem('dl-visitor');
+      if (!v && window.crypto && crypto.randomUUID) localStorage.setItem('dl-visitor', (v = crypto.randomUUID()));
+    } catch (e) {}
+    return v;
+  }
+  function setupInbox() {
+    if (inboxStop) { inboxStop(); inboxStop = null; }
+    var box = document.querySelector('.inbox');
+    if (!box) return;
+    var list = box.querySelector('.thread'), form = box.querySelector('.compose'), status = box.querySelector('.inbox-status');
+    var area = form.querySelector('textarea'), nameIn = form.querySelector('input'), send = form.querySelector('button');
+    var visitor = visitorId(), known = [], alive = true, seen = '';
+    try { seen = localStorage.getItem('dl-inbox-seen') || ''; nameIn.value = localStorage.getItem('dl-name') || ''; } catch (e) {}
+    var when = function (at) { return new Date(at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
+    function render() {
+      list.replaceChildren();
+      if (!known.length) {
+        var empty = document.createElement('li');
+        empty.className = 'empty';
+        empty.textContent = 'No messages yet. Say hi.';
+        list.appendChild(empty);
+        return;
+      }
+      known.forEach(function (m) {
+        var li = document.createElement('li'), who = document.createElement('p'), body = document.createElement('p');
+        li.className = 'msg ' + (m.sender === 'david' ? 'david' : 'you') + (m.sender === 'david' && m.at > seen ? ' fresh' : '');
+        who.className = 'who';
+        who.textContent = (m.sender === 'david' ? 'David' : 'You') + ' · ' + when(m.at);
+        body.className = 'body';
+        body.textContent = m.body;
+        li.append(who, body);
+        list.appendChild(li);
+      });
+      // Seen here, so the head doesn't announce these on the next page.
+      var last = known.filter(function (m) { return m.sender === 'david'; }).pop();
+      if (last) try { localStorage.setItem('dl-inbox-seen', last.at); } catch (e) {}
+    }
+    function load() {
+      if (!visitor) return render();
+      fetch(API + '/inbox?visitor=' + visitor).then(function (r) { return r.json(); }).then(function (d) {
+        if (!alive) return;
+        var next = d.messages || [];
+        if (next.length !== known.length || !known.length) { known = next; render(); }
+      }).catch(function () { if (alive && !known.length) render(); });
+    }
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = area.value.trim();
+      if (!text || !visitor || send.disabled) return;
+      send.disabled = true;
+      status.textContent = 'Sending...';
+      var name = nameIn.value.trim();
+      fetch(API + '/inbox', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ visitor: visitor, name: name, message: text }) })
+        .then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
+        .then(function (res) {
+          if (!alive) return;
+          if (res.d.sent) {
+            known.push(res.d.message);
+            render();
+            area.value = '';
+            status.textContent = "Sent. It's on my phone now.";
+            try { localStorage.setItem('dl-inbox', '1'); if (name) localStorage.setItem('dl-name', name); } catch (e2) {}
+          } else status.textContent = res.status === 429 ? "That's a lot of messages. Give it a bit." : "That didn't go through. Try again, or email me.";
+        })
+        .catch(function () { if (alive) status.textContent = "That didn't go through. Try again, or email me."; })
+        .then(function () { send.disabled = false; });
+    });
+    area.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) form.requestSubmit(); });
+    load();
+    var timer = setInterval(function () { if (!document.hidden) load(); }, 15000);
+    inboxStop = function () { alive = false; clearInterval(timer); };
+  }
+
   // ---- Per page --------------------------------------------------------------------
   function setup() {
     tick();
@@ -780,6 +861,7 @@
     if (wallStop) { wallStop(); wallStop = null; }
     setupWall();
     setupBrain();
+    setupInbox();
   }
 
   // ---- Router: swap pages in place ----------------------------------------------

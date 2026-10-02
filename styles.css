@@ -313,6 +313,27 @@ a.row:hover .m { transform: translateX(3px); }
 .playing-now:hover { color: var(--t1); }
 .playing-now .eq { display: inline-flex; }
 
+/* Messages: a thread with the real me. Mine on the left, theirs on the right. */
+.inbox { max-width: 640px; }
+.thread { display: flex; flex-direction: column; gap: 10px; margin: 0 0 24px; padding: 0; list-style: none; }
+.thread .empty { color: var(--t3); }
+.msg { max-width: 82%; padding: 10px 14px; border-radius: 14px; }
+.msg .who { font-size: 12px; color: var(--t3); }
+.msg .body { margin-top: 2px; color: var(--t1); white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.you { align-self: flex-end; background: var(--fill); }
+.msg.david { align-self: flex-start; box-shadow: 0 0 0 1px var(--rule); }
+.msg.fresh { box-shadow: 0 0 0 1px #88c0d0; }
+.compose textarea,
+.compose input { width: 100%; border: 0; border-radius: 14px; background: transparent; box-shadow: 0 0 0 1px var(--rule); color: var(--t1); font: inherit; }
+.compose textarea { display: block; min-height: 88px; padding: 12px 14px; resize: vertical; }
+.compose-row { display: flex; gap: 10px; margin-top: 10px; }
+.compose input { flex: 1; min-width: 0; padding: 9px 14px; border-radius: 999px; }
+.compose textarea:focus, .compose input:focus { outline: none; box-shadow: 0 0 0 1px var(--t3); }
+.compose button { padding: 9px 20px; border: 0; border-radius: 999px; background: var(--t1); color: var(--bg); font: inherit; cursor: pointer; }
+.compose button:disabled { opacity: 0.5; cursor: default; }
+.inbox-status { min-height: 1.5em; margin-top: 10px; color: var(--t3); }
+.inbox-alt { margin-top: 28px; color: var(--t3); }
+
 /* Hobbies */
 .brain-page .doc-head { padding: 36px 0 22px; }
 /* The map runs the full width of the window and fades out at the edges, so

@@ -23,6 +23,22 @@ async function rpc(fn, args) {
   }
 }
 
+// Plain table access, for the inbox.
+async function rest(path, { method = 'GET', body, prefer } = {}) {
+  if (!hasStore) return;
+  const headers = { apikey: KEY, 'content-type': 'application/json' };
+  if (!KEY.startsWith('sb_')) headers.authorization = `Bearer ${KEY}`;
+  if (prefer) headers.prefer = prefer;
+  try {
+    const res = await fetch(`${URL_}/rest/v1/${path}`, { method, headers, body: body && JSON.stringify(body) });
+    if (!res.ok) { console.error('store', method, path.split('?')[0], res.status, await res.text()); return; }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  } catch (err) {
+    console.error('store', path.split('?')[0], err);
+  }
+}
+
 export function trackVisit({ visitor, path, referrer, request }) {
   const h = (k) => request.headers.get(k) || null;
   const city = h('x-vercel-ip-city');
@@ -87,3 +103,17 @@ export async function leaveNote({ visitor, name, contact, message, page, wall = 
 export async function wallNotes() {
   return (await rpc('list_wall', {})) || [];
 }
+
+// The inbox: a visitor messages the real David, it goes to his Telegram, and
+// his reply to that Telegram message comes back into their thread.
+export async function addMessage({ visitor, sender, name = null, body }) {
+  await rest('visitors?on_conflict=id', { method: 'POST', body: { id: visitor }, prefer: 'resolution=ignore-duplicates' });
+  const rows = await rest('messages', { method: 'POST', body: { visitor_id: visitor, sender, name, body }, prefer: 'return=representation' });
+  return rows && rows[0];
+}
+export const tagMessage = (id, tg) => rest(`messages?id=eq.${Number(id)}`, { method: 'PATCH', body: { tg_id: tg } });
+export async function messageByTelegram(tg) {
+  const rows = await rest(`messages?tg_id=eq.${Number(tg)}&select=id,visitor_id&limit=1`);
+  return rows && rows[0];
+}
+export const thread = (visitor) => rest(`messages?visitor_id=eq.${visitor}&select=id,sender,body,at&order=at.asc&limit=200`);

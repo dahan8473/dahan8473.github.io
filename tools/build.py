@@ -6,7 +6,7 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 19, 7, 18, 16
+V_CSS, V_TALKCSS, V_JS, V_TALK = 20, 7, 19, 17
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -16,6 +16,7 @@ ICONS = {
   'brain': '<circle cx="6" cy="7" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="12" cy="17.5" r="2.2"/><path d="M8.2 6.7l7.6-.5M7.2 9l3.6 6.6M17 8.1l-3.9 7.4"/>',
   'notes': '<path d="M5 4.5h14a1 1 0 0 1 1 1V15l-5.5 5.5H5a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1z"/><path d="M14.5 20.5V16a1 1 0 0 1 1-1H20M8 9h8M8 12.5h5"/>',
   'email': '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/>',
+  'messages': '<path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8.5a1.5 1.5 0 0 1-1.5 1.5h-8.5L6 20v-3.5H5A1.5 1.5 0 0 1 3.5 15V6.5A1.5 1.5 0 0 1 5 5z"/><path d="M8 9.5h8M8 12.5h5"/>',
 }
 RAIL = [('home', '/', 'Home'), ('resume', '/resume/', 'Resume'), ('projects', '/projects/', 'Projects'), ('hobbies', '/hobbies/', 'Hobbies'), ('brain', '/brain/', 'Brain'), ('notes', '/notes/', 'Notes')]
 
@@ -26,7 +27,8 @@ def rail(on):
         cur = ' class="on" aria-current="page"' if key == on else ''
         out.append(f'    <a href="{href}"{cur}><svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[key]}</svg><span>{name}</span></a>')
     out.append('    <span class="sep" aria-hidden="true"></span>')
-    out.append(f'    <a href="mailto:davidliu8473@gmail.com" aria-label="Email"><svg viewBox="0 0 24 24" aria-hidden="true">{ICONS["email"]}</svg><span>Email</span></a>')
+    cur = ' class="on" aria-current="page"' if on == 'messages' else ''
+    out.append(f'    <a href="/messages/"{cur}><svg viewBox="0 0 24 24" aria-hidden="true">{ICONS["messages"]}</svg><span>Messages</span></a>')
     out.append('  </nav>')
     return '\n'.join(out) + '\n'
 
@@ -511,6 +513,33 @@ notes = '''      <header class="doc-head">
 write('notes/index.html', page('/notes/', 'Notes', 'Leave David Liu a note, signed or anonymous.', notes, 'notes', cls='notes'))
 
 
+# ---- Messages -----------------------------------------------------------------
+
+messages = '''      <header class="doc-head">
+        <div>
+          <h1>Messages</h1>
+          <p class="hint">Message the real me. It goes straight to my phone, and when I reply it shows up here. The head will tell you too.</p>
+        </div>
+      </header>
+
+      <section class="inbox" data-t="inbox" aria-label="Your messages with David">
+        <ol class="thread" aria-live="polite"></ol>
+        <form class="compose">
+          <label class="sr" for="inbox-text">Message</label>
+          <textarea id="inbox-text" name="message" rows="3" maxlength="1000" placeholder="Write me something" required></textarea>
+          <div class="compose-row">
+            <label class="sr" for="inbox-name">Your name</label>
+            <input id="inbox-name" name="name" maxlength="40" placeholder="Your name, or leave it blank" autocomplete="name">
+            <button type="submit">Send</button>
+          </div>
+        </form>
+        <p class="inbox-status" role="status"></p>
+        <p class="inbox-alt">Rather email? <a class="ln" href="mailto:davidliu8473@gmail.com" aria-label="Email">davidliu8473@gmail.com</a></p>
+      </section>
+'''
+write('messages/index.html', page('/messages/', 'Messages', 'Message David Liu directly. It goes to his phone, and his replies show up here.', messages, 'messages', cls='messages'))
+
+
 # ---- Brain ----------------------------------------------------------------------
 
 brain = '''      <header class="doc-head">
@@ -532,6 +561,7 @@ write('brain/index.html', page('/brain/', 'Second brain', "The notes the AI vers
 for rel in ['tethos/index.html', 'dashboard/index.html', 'rag/index.html', 'kunlun/index.html', '404.html']:
     path = os.path.join(REPO, rel)
     html = open(path, encoding='utf-8').read()
+    html = re.sub(r'  <nav class="rail" aria-label="Pages">[\s\S]*?</nav>\n', lambda m: rail(''), html, count=1)
     for asset, v in [('styles.css', V_CSS), ('talk/talk.css', V_TALKCSS), ('site.js', V_JS), ('talk/talk.js', V_TALK)]:
         html = re.sub(r'(/' + re.escape(asset) + r'\?v=)\d+', lambda m: m.group(1) + str(v), html)
     open(path, 'w', encoding='utf-8').write(html)

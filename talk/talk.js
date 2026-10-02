@@ -146,7 +146,7 @@
       fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },
     // Where the 404 offers to take them.
-    ways: [['home', '/'], ['resume', '/resume/'], ['projects', '/projects/'], ['hobbies', '/hobbies/'], ['brain', '/brain/'], ['notes', '/notes/']],
+    ways: [['home', '/'], ['resume', '/resume/'], ['projects', '/projects/'], ['hobbies', '/hobbies/'], ['brain', '/brain/'], ['notes', '/notes/'], ['messages', '/messages/']],
     // Small talk through the visit, all about them. Each topic leads to
     // something of mine the brain can connect (see Small talk in api/chat.js).
     // The page's own topic goes first, then this order. `only` waits for its
@@ -186,7 +186,9 @@
     ],
     tourEnd: "that's it! i'm way more fun when you talk to me, so ask me anything :)",
     wall: "if you want a private note sent to him, just text me and let me know. i won't tell anyone else, trust 🤐",
-    noteContact: 'got it 🤐 want him to be able to reply? drop your email, or say skip',
+    noteContact: "got it 🤐 if he replies it'll show up in messages. want an email too? drop it, or say skip",
+    // The real David answered something they sent him (messages or a private note).
+    replied: (text, more) => `the real me just replied!! 👀 he said: "${text}"${more ? " there's more in messages" : ''}`,
     noteSent: 'sent. my lips are sealed 🤐',
     noteFailed: `hm that didn't go through 😭 email him directly: ${EMAIL}`
   };
@@ -1457,6 +1459,7 @@
       });
       const r = res.ok ? await res.json() : {};
       ok = Boolean(r.saved || r.mailed);
+      if (ok) try { localStorage.setItem('dl-inbox', '1'); } catch (e) {}
     } catch (e) {}
     emoteOff();
     setFace(ok ? 'happy' : 'sad', 2000);
@@ -1797,6 +1800,33 @@
     if (smallDue(t, quiet)) return smallTalk();
     // Nobody's answering: tuck the chat away and let them browse.
     if (chatOn && !talked() && quiet > 30000 && (pres.waiting || pres.streak >= 3)) closeChat(LINES.introIgnored);
+  }
+
+  // ---- Replies from the real David --------------------------------------------
+  // Anyone who messaged him (on /messages/ or with a private note) hears from
+  // the head when he answers, on whatever page they're on.
+  async function checkReplies() {
+    let asked = false, seen = '';
+    try { asked = localStorage.getItem('dl-inbox') === '1'; seen = localStorage.getItem('dl-inbox-seen') || ''; } catch (e) {}
+    if (!asked || document.hidden || here === '/messages/' || asking || touring || held || carried) return;
+    let d;
+    try { d = await (await fetch(`${API}/inbox?visitor=${visitor}`)).json(); } catch (e) { return; }
+    const fresh = (d.messages || []).filter((m) => m.sender === 'david' && m.at > seen);
+    if (!fresh.length || asking || here === '/messages/') return;
+    try { localStorage.setItem('dl-inbox-seen', fresh[fresh.length - 1].at); } catch (e) {}
+    interrupt();
+    wake();
+    if (!chatOn) {
+      chatOn = true;
+      S.open = true;
+      save();
+      root.classList.add('chat');
+      await goHome(420);
+      showTalk();
+      showForm();
+    }
+    setFace('happy', 2500);
+    await say(LINES.replied(fresh[fresh.length - 1].body, fresh.length > 1));
   }
 
   // ---- Feeding ----------------------------------------------------------------
@@ -2270,6 +2300,9 @@
     schedule(met ? rand(9000, 14000) : 13000);
     if (met) pres.ready = true;
     setInterval(presence, 1000);
+    // Replies from the real David: once a few seconds in, then every minute.
+    setTimeout(checkReplies, 4000);
+    setInterval(checkReplies, 60000);
   }
 
   function boot() {

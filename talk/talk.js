@@ -59,6 +59,7 @@
     again: 'welcome back!',
     // Quick replies under the intro: [label, what it does]
     choices: [['wanna know more about you', 'ask'], ['just lookin around', 'tour'], ["i'm hiring", 'ask']],
+    tourStart: 'okay! follow me',
     lost: "you're lost huh. me too. where were you trying to go?",
     found: "it's right over here!",
     cat: ['she likes you', "that's meowmeow btw. she's not allowed on the keyboard", "she doesn't do that for everyone"],
@@ -143,6 +144,8 @@
       photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
       fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },
+    // Where the 404 offers to take them.
+    ways: [['home', '/'], ['resume', '/resume/'], ['projects', '/projects/'], ['hobbies', '/hobbies/'], ['notes', '/notes/']],
     // The one gentle check-in when it's been quiet a long time. Functions get their name.
     lull: [
       "no pressure btw. you can just scroll and i'll narrate",
@@ -187,7 +190,7 @@
   const now = () => performance.now();
   const strip = (s) => s.replace(/\s*\[\[[^\]]*\]\]/g, '').trim();
   const norm = (p) => p.replace(/index\.html$/, '').replace(/([^/])$/, '$1/');
-  const here = norm(location.pathname);
+  let here = norm(location.pathname);
   const clock = () => new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit' }).toLowerCase();
 
   const S = Object.assign(
@@ -896,6 +899,102 @@
     h.stop();
   }
 
+  // Pick something up and float around holding it. A copy rides along under
+  // the head while the real one fades out of the page, then it goes back.
+  let carried = null;
+  const carryable = (el) => {
+    const r = el.getBoundingClientRect();
+    return r.width > 40 && r.width < innerWidth * 0.7 && r.height < innerHeight * 0.7;
+  };
+  function carry(el, { hold = 6500 } = {}) {
+    if (reduce || carried || held || !carryable(el)) return point(el);
+    return useHand(async () => {
+      const ep = epoch;
+      pose('pinch');
+      await unfold(el);
+      await ensureVisible(el);
+      if (ep !== epoch) return;
+      const r = el.getBoundingClientRect();
+      await handNearHead();
+      await handTo(r.right - 16, r.top + 12, 45, { duration: 560 });
+      if (ep !== epoch) return;
+      sound.tick();
+      const k = Math.min(1, 170 / r.width, 150 / r.height);
+      const ghost = el.cloneNode(true);
+      ghost.removeAttribute('id');
+      ghost.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+      ghost.classList.remove('on', 'pinned');
+      ghost.classList.add('dl-carried');
+      Object.assign(ghost.style, { width: r.width + 'px', height: r.height + 'px', transform: `translate(${r.left}px,${r.top}px)` });
+      root.insertBefore(ghost, hand);
+      el.classList.add('dl-gone');
+      const c = { el, ghost, k, w: r.width, h: r.height, x: r.left, y: r.top, s: 1, raf: 0 };
+      carried = c;
+      const loop = () => {
+        if (carried !== c) return;
+        const tx = pos.x + HW * 0.5 - c.w * c.k * 0.5;
+        const ty = pos.y + HH * 0.78;
+        c.x += (tx - c.x) * 0.16;
+        c.y += (ty - c.y) * 0.16;
+        c.s += (c.k - c.s) * 0.16;
+        const tilt = Math.sin(now() / 260) * 3;
+        ghost.style.transform = `translate(${c.x.toFixed(1)}px,${c.y.toFixed(1)}px) scale(${c.s.toFixed(3)}) rotate(${tilt.toFixed(2)}deg)`;
+        handSet(c.x + c.w * c.s - 10, c.y + 8, 45, 1);
+        c.raf = requestAnimationFrame(loop);
+      };
+      c.raf = requestAnimationFrame(loop);
+      quip(pick(LINES.carry), 1400, 'happy');
+      for (let i = 0; i < 2 && ep === epoch; i++) {
+        await moveHead(rand(innerWidth * 0.15, innerWidth * 0.75), rand(innerHeight * 0.2, innerHeight * 0.55), 1300);
+        await wait(rand(700, 1200));
+      }
+      await wait(Math.max(0, hold - 5000));
+      await putBack();
+    });
+  }
+  async function putBack() {
+    const c = carried;
+    if (!c) return;
+    cancelAnimationFrame(c.raf);
+    quip(LINES.putBack, 900);
+    const r = c.el.getBoundingClientRect();
+    handTo(r.right - 16, r.top + 12, 45, { duration: 620, easing: SPRING });
+    await play(c.ghost, [{ transform: c.ghost.style.transform }, { transform: `translate(${r.left}px,${r.top}px) scale(1)` }], { duration: 620, easing: SPRING });
+    c.el.classList.remove('dl-gone');
+    c.ghost.remove();
+    carried = null;
+  }
+
+  // Ignored for a long time: the hand walks off with the page bar, and gives
+  // it back when they talk to the head, change pages, or after a while.
+  let giveBack = null;
+  async function mischief() {
+    const bar = document.querySelector('.rail');
+    if (!bar || S.once.includes('mischief')) return;
+    S.once.push('mischief');
+    save();
+    await useHand(async () => {
+      const r = bar.getBoundingClientRect();
+      pose('pinch');
+      await handNearHead();
+      await handTo(r.left + r.width / 2, r.top + 14, 90, { duration: 620 });
+      sound.tick();
+      const narrow = innerWidth < 721;
+      bar.style.translate = narrow ? '0 -130%' : '-150% 0';
+      await handTo(narrow ? r.left + r.width / 2 : -60, narrow ? -60 : r.top + 14, 90, { duration: 600 });
+    });
+    quip(LINES.mischief.take, 2600, 'happy');
+    let back = false;
+    giveBack = () => {
+      if (back) return;
+      back = true;
+      giveBack = null;
+      bar.style.translate = '';
+      quip(LINES.mischief.give, 1400);
+    };
+    setTimeout(() => giveBack && giveBack(), 25000);
+  }
+
   function knock() {
     return useHand(async () => {
       const x = innerWidth * rand(0.4, 0.6);
@@ -995,7 +1094,7 @@
             return;
           }
           const inner = buf.slice(i + 2, j).trim();
-          const m = /^(point|drag|face|summon):([a-z0-9-]+)$/.exec(inner);
+          const m = /^(point|drag|face|summon|carry|mode):([a-z0-9-]+)$/.exec(inner);
           const n = /^note:\s*([a-z_]+)\s*=\s*(.+)$/i.exec(inner);
           if (m) onAction({ verb: m[1], id: m[2] });
           else if (n) onAction({ verb: 'note', id: n[1].toLowerCase(), value: n[2].trim() });
@@ -1011,11 +1110,14 @@
 
   let queue = Promise.resolve();
   let navTo = null;
+  let mode = '';
   function act(a) {
     if (a.verb === 'face') { setFace(a.id, 3500); return; }
     if (a.verb === 'summon') { if (a.id === 'cat') summonCat(); return; }
+    if (a.verb === 'mode') { mode = a.id; return; }
     if (a.verb === 'note') {
       if (a.id === 'name') try { localStorage.setItem('dl-name', a.value.slice(0, 40)); } catch (e) {}
+      if (a.id === 'who') { S.who = a.value.slice(0, 20); save(); }
       return;
     }
     const t = targets[a.id];
@@ -1028,11 +1130,19 @@
     const ep = epoch;
     queue = queue.then(() => {
       if (ep !== epoch) return;
-      return a.verb === 'drag' ? yank(el, { hold: 7000 }) : point(el);
+      return a.verb === 'drag' ? yank(el, { hold: 7000 }) : a.verb === 'carry' ? carry(el) : point(el);
     }).catch(() => {});
   }
+  // Pages swap in place (site.js), so the head and the music stay. Without
+  // that, it's a normal load and S.pending finishes the gesture on arrival.
+  async function navigate(page) {
+    if (norm(page) === here) return;
+    if (window.dlGo) { await window.dlGo(page); await wait(350); return; }
+    location.href = page;
+    await new Promise(() => {});
+  }
   // The thing they asked about lives on another page: point at the link
-  // that goes there, then go, and finish the gesture on arrival.
+  // that goes there, go, and finish the gesture there.
   async function goTo(a) {
     const page = targets[a.id].page;
     S.pending = a;
@@ -1044,7 +1154,10 @@
     });
     if (via) await point(via, { hold: 500 });
     else await wait(700);
-    location.href = page;
+    await navigate(page);
+    S.pending = null;
+    save();
+    act(a);
   }
 
   // ---- Chat -----------------------------------------------------------------
@@ -1061,8 +1174,7 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = c;
-      // TODO(head-v2): 'tour' starts the mini tour once it lands.
-      b.addEventListener('click', () => ask(c));
+      b.addEventListener('click', () => (does === 'tour' ? startTour(c) : ask(c)));
       return b;
     }));
     choicesEl.hidden = false;
@@ -1070,6 +1182,7 @@
 
   async function openChat() {
     interrupt();
+    if (giveBack) giveBack();
     wake();
     emote('!');
     life.surprise = now() + 450;
@@ -1110,6 +1223,7 @@
     await greet();
   }
   function closeChat(line = LINES.close) {
+    touring = false;
     chatOn = false;
     S.open = false;
     save();
@@ -1123,6 +1237,7 @@
     schedule(40000);
   }
   function shoo() {
+    touring = false;
     S.quiet = true;
     save();
     interrupt();
@@ -1175,7 +1290,10 @@
   async function ask(q, { note = false } = {}) {
     q = q.trim().slice(0, 500);
     if (!q || asking) return;
+    if (!note && S.noting) return takeNote(q);
     if (!note) {
+      touring = false;
+      if (giveBack) giveBack();
       choicesEl.hidden = true;
       input.value = '';
       pres.streak = 0;
@@ -1231,7 +1349,44 @@
     await sp.done;
     asking = false;
     if (chatOn) showForm();
+    if (mode === 'note') { S.noting = 'message'; save(); }
+    else if (mode === 'tour') tour();
+    mode = '';
     if (navTo) { const a = navTo; navTo = null; await queue; goTo(a); }
+  }
+
+  // Private notes for the real David, taken in the chat. They skip the brain
+  // and the chat log and go straight to him.
+  async function takeNote(q) {
+    choicesEl.hidden = true;
+    input.value = '';
+    if (S.noting === 'message') {
+      S.noteMsg = q;
+      S.noting = 'contact';
+      save();
+      return speak(LINES.noteContact, { echo: q });
+    }
+    const contact = /^(skip|no|nah|nope|no thanks)\b/i.test(q) ? '' : q;
+    const message = S.noteMsg;
+    S.noting = null;
+    S.noteMsg = '';
+    save();
+    asking = true;
+    emote('...', { sticky: true });
+    let ok = false;
+    try {
+      const res = await fetch(API + '/note', {
+        method: 'POST',
+        headers: { 'content-type': 'text/plain' },
+        body: JSON.stringify({ visitor, name: knownName(), contact, message, page: here })
+      });
+      const r = res.ok ? await res.json() : {};
+      ok = Boolean(r.saved || r.mailed);
+    } catch (e) {}
+    emoteOff();
+    setFace(ok ? 'happy' : 'sad', 2000);
+    await speak(ok ? LINES.noteSent : LINES.noteFailed, { echo: q });
+    asking = false;
   }
 
   function restore() {
@@ -1255,7 +1410,7 @@
 
   // ---- Director: the bits it does on its own --------------------------------
 
-  const dir = { timer: 0, busy: false, count: 0 };
+  const dir = { timer: 0, busy: false, count: 0, moves: [] };
   function schedule(ms) {
     clearTimeout(dir.timer);
     if (!reduce && !S.quiet) dir.timer = setTimeout(nextBit, ms);
@@ -1264,45 +1419,165 @@
     epoch++;
     clearTimeout(dir.timer);
     release();
+    putBack();
   }
 
-  function bits() {
-    const out = [];
-    const each = (map, fn) => Object.keys(map).forEach((id) => { const el = find(id); if (el) fn(el, map[id]); });
-    if (fine && cursor.seen) {
-      each(LINES.yank, (el, line) => out.push({ kind: 'yank', run: async () => {
-        await Promise.all([quip(line, 1500), yank(el, { hold: 5200 })]);
-        await quip(pick(LINES.letgo), 600, 'sad');
-      } }));
+  // What's on screen and what they're doing, for Jev to decide on.
+  let pageAt = now();
+  function activity() {
+    const t = now();
+    if (input.value) return 'typing';
+    if (t - lastScroll < 2000) return 'scrolling';
+    if (t - lastMove < 2000) return 'hovering';
+    return t - lastInput > 30000 ? 'idle' : 'reading';
+  }
+  async function decideMove() {
+    try {
+      const res = await fetch(API + '/decide', {
+        method: 'POST',
+        headers: { 'content-type': 'text/plain' },
+        body: JSON.stringify({
+          page: here,
+          chat_open: chatOn,
+          talked: talked(),
+          visitor_type: S.who || '',
+          activity: activity(),
+          looking_at: pres.at,
+          seconds_on_page: (now() - pageAt) / 1000,
+          seconds_idle: (now() - lastInput) / 1000,
+          seconds_quiet: (now() - pres.said) / 1000,
+          pages_seen: S.pages || 1,
+          recent_moves: dir.moves.slice(-6),
+          on_screen: Object.keys(targets).filter((id) => { const el = find(id); return el && inView(el); })
+        })
+      });
+      return res.ok ? await res.json() : null;
+    } catch (e) { return null; }
+  }
+
+  const roamBit = (el, line) => ({ kind: 'roam', run: async () => { const ep = epoch; await roam(el); if (ep === epoch) await quip(line, 2200); } });
+  const pointBit = (el, line) => ({ kind: 'point', run: () => Promise.all([quip(line, 1800), point(el, { hold: 1600 })]) });
+  // Jev's move, turned into something the head does. Fetching to the cursor
+  // only happens for a visitor who reads as a recruiter.
+  function bitFor(move, id) {
+    const el = id && find(id);
+    if (move === 'comment' && el && LINES.notice[id] && !S.noticed.includes(id)) return { kind: 'comment', run: () => { S.noticed.push(id); save(); return chime(LINES.notice[id]); } };
+    if (move === 'comment' && el && LINES.roam[id] && inView(el)) return roamBit(el, LINES.roam[id]);
+    if (move === 'point' && el && LINES.point[id]) return pointBit(el, LINES.point[id]);
+    if (move === 'fetch' && el && S.who === 'recruiter' && fine && cursor.seen && LINES.yank[id]) {
+      return { kind: 'fetch', run: async () => { await Promise.all([quip(LINES.yank[id], 1500), yank(el, { hold: 5200 })]); await quip(pick(LINES.letgo), 600, 'sad'); } };
     }
-    each(LINES.shove, (el, line) => { if (!inView(el)) out.push({ kind: 'shove', run: () => Promise.all([quip(line, 1800), yank(el, { hold: 4200 })]) }); });
-    each(LINES.roam, (el, line) => { if (inView(el)) out.push({ kind: 'roam', run: async () => { const ep = epoch; await roam(el); if (ep === epoch) await quip(line, 2200); } }); });
-    each(LINES.point, (el, line) => { if (inView(el)) out.push({ kind: 'point', run: () => Promise.all([quip(line, 1800), point(el, { hold: 1600 })]) }); });
-    const bonkable = ['build', 'lead', 'play', 'tethos-impact', 'rag-hard-part', 'dashboard-hard-part', 'kunlun-design'].map(find).find((el) => el && inView(el));
+    if (move === 'carry' && el && carryable(el)) return { kind: 'carry', run: () => carry(el) };
+    if (move === 'mess' && !talked() && !S.once.includes('mischief')) return { kind: 'mess', run: mischief };
+    if (move === 'nap' && now() - lastInput > 30000) return { kind: 'nap', run: async () => { life.sleep = true; setFace('blink'); emote('z', { sticky: true }); } };
+    return null;
+  }
+  // Without Jev: a few gentle bits. Nothing that makes them click.
+  function localBits() {
+    const out = [];
+    const each = (map, fn) => Object.keys(map).forEach((id) => { const el = find(id); if (el && inView(el)) fn(el, map[id]); });
+    each(LINES.roam, (el, line) => out.push(roamBit(el, line)));
+    each(LINES.point, (el, line) => out.push(pointBit(el, line)));
+    const pic = [...document.querySelectorAll('main .shot img, main .cats img')].find(inView);
+    if (pic && !S.once.includes('carried')) out.push({ kind: 'carry', run: () => { S.once.push('carried'); save(); return carry(pic.closest('.proj') || pic); } });
+    const bonkable = ['build', 'lead', 'play'].map(find).find((el) => el && inView(el));
     if (bonkable) out.push({ kind: 'bonk', run: async () => { const ep = epoch; await bonk(bonkable); if (ep === epoch) await quip(pick(LINES.bonk), 1200); } });
-    if (!S.msgs.length && dir.count > 0) out.push({ kind: 'knock', run: () => Promise.all([knock(), wait(400).then(() => quip(pick(LINES.knock), 1800))]) });
+    if (!talked() && dir.count > 0 && !S.once.includes('knock')) {
+      out.push({ kind: 'knock', run: () => { S.once.push('knock'); save(); return Promise.all([knock(), wait(400).then(() => quip(pick(LINES.knock), 1800))]); } });
+    }
     return out;
   }
+  const idleNow = () => chatOn || held || carried || touring || dir.busy || document.hidden || life.sleep || life.shy;
   async function nextBit() {
     if (S.quiet || reduce) return;
-    if (chatOn || held || dir.busy || document.hidden || life.sleep || life.shy) return schedule(9000);
+    if (idleNow()) return schedule(9000);
     if (dir.count >= 4 || S.antics >= 12) return;
-    const all = bits();
-    const fresh = all.filter((b) => b.kind !== S.lastKind);
-    const pool = fresh.length ? fresh : all;
-    if (!pool.length) return schedule(15000);
-    const kind = pick([...new Set(pool.map((b) => b.kind))]);
-    const bit = pick(pool.filter((b) => b.kind === kind));
+    dir.busy = true;
+    const d = await decideMove();
+    dir.busy = false;
+    if (idleNow()) return schedule(9000);
+    let bit = d && d.move ? bitFor(d.move, d.item) : null;
+    if (!d || !d.move) {
+      const all = localBits().filter((b) => b.kind !== S.lastKind);
+      bit = all.length ? pick(all) : null;
+    }
+    if (!bit) return schedule(rand(15000, 25000));
     dir.busy = true;
     dir.count++;
+    dir.moves.push(bit.kind);
     S.antics++;
-    S.lastKind = kind;
+    S.lastKind = bit.kind;
     save();
     const ep = epoch;
     try { await bit.run(); } catch (e) {}
     dir.busy = false;
-    if (ep === epoch && !chatOn) await goHome(900);
+    if (ep === epoch && !chatOn && !life.sleep) await goHome(900);
     schedule(rand(20000, 32000));
+  }
+
+  // ---- Tour -------------------------------------------------------------------
+
+  let touring = false;
+  function say(text) {
+    if (!chatOn) return quip(text, 1800);
+    S.msgs.push({ role: 'assistant', content: text });
+    save();
+    return speak(text);
+  }
+  async function tour() {
+    if (touring) return;
+    touring = true;
+    interrupt();
+    try {
+      for (const [page, id, line] of LINES.tour) {
+        if (!touring) return;
+        await navigate(page);
+        if (!touring) return;
+        const el = find(id);
+        await Promise.all([say(line), el ? point(el, { hold: 1200 }) : null]);
+        if (el && el.matches('.r-item') && window.dlPin) window.dlPin(el);
+        await wait(1500);
+      }
+      if (touring) await say(LINES.tourEnd);
+    } finally {
+      touring = false;
+    }
+  }
+  async function startTour(label) {
+    choicesEl.hidden = true;
+    S.msgs.push({ role: 'user', content: label });
+    save();
+    await speak(LINES.tourStart, { echo: label });
+    tour();
+  }
+
+  // ---- 404: offer directions ------------------------------------------------------
+
+  const is404 = () => document.querySelector('.identity .name')?.textContent.trim() === '404';
+  async function lost() {
+    chatOn = true;
+    S.open = true;
+    save();
+    root.classList.add('chat');
+    await goHome(420);
+    showTalk();
+    showForm();
+    setFace('sad', 2000);
+    await speak(LINES.lost);
+    choicesEl.replaceChildren(...LINES.ways.map(([label, page]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.addEventListener('click', async () => {
+        choicesEl.hidden = true;
+        await navigate(page);
+        const el = document.querySelector('main h1, main .hello, main .header');
+        speak(LINES.found);
+        if (el) point(el, { hold: 1600 });
+      });
+      return b;
+    }));
+    choicesEl.hidden = false;
   }
 
   // ---- Presence: like he's actually sitting there ---------------------------
@@ -1351,6 +1626,9 @@
     return typeof line === 'function' ? line(knownName()) : line;
   }
   function lull() {
+    if (S.lulled) return;
+    S.lulled = true;
+    save();
     pres.lulls++;
     if (!pres.brain || !talked()) return chime(lullLine());
     pres.streak++;
@@ -1363,10 +1641,10 @@
     const t = now();
     const at = reading();
     if (at !== pres.at) { pres.at = at; pres.atSince = t; }
-    else if (at && t - pres.atSince > 9000 && t - lastScroll > 3000 && pres.seen !== at && !S.noticed.includes(at)) { pres.seen = at; pres.seenAt = t; }
+    else if (at && t - pres.atSince > 12000 && t - lastScroll > 3000 && pres.seen !== at && !S.noticed.includes(at)) { pres.seen = at; pres.seenAt = t; }
     if (pres.seen && t - pres.seenAt > 15000) pres.seen = '';
 
-    if (document.hidden || !document.hasFocus() || asking || held || dir.busy || drag.on || life.shy || rec || sp.typing || sp.more || input.value) return;
+    if (document.hidden || !document.hasFocus() || asking || held || carried || touring || dir.busy || drag.on || life.shy || rec || sp.typing || sp.more || input.value || S.noting) return;
     const quiet = t - pres.said;
     // Just asked them something: give them a chance to answer first.
     const asked = chatOn && /\?\s*$/.test(strip(textEl.textContent));
@@ -1378,9 +1656,34 @@
       return;
     }
     if (!chatOn) return;
-    if (quiet > 22000 && pres.lulls < (talked() ? 3 : 2) && pres.streak < 4) lull();
+    // One gentle check-in after a long quiet, ever. No chains of prompts.
+    if (quiet > 40000 && !S.lulled && pres.streak < 3) lull();
     // Nobody's answering: tuck the chat away and let them browse.
-    else if (!talked() && quiet > 25000 && (pres.lulls >= 2 || pres.streak >= 4)) closeChat(LINES.introIgnored);
+    else if (!talked() && quiet > 30000 && (S.lulled || pres.streak >= 3)) closeChat(LINES.introIgnored);
+  }
+
+  // ---- Feeding ----------------------------------------------------------------
+  // "nom nom", then it talks about whatever it was fed: the brain when it's
+  // up, the canned line otherwise.
+  async function eat(id) {
+    interrupt();
+    wake();
+    for (let i = 0; i < 3; i++) { voice('o'); squish(); await wait(170); }
+    setFace('happy', 1800);
+    if (!chatOn) {
+      chatOn = true;
+      S.open = true;
+      save();
+      root.classList.add('chat');
+      await goHome(420);
+      showTalk();
+      showForm();
+    }
+    if (asking) return;
+    const t = targets[id];
+    await say(LINES.fed[0]);
+    if (t && pres.brain) ask(`(stage note: the visitor dragged ${id} (${t.about}) onto your face and fed it to you)`, { note: true });
+    else if (LINES.notice[id]) { await wait(500); say(LINES.notice[id]); }
   }
 
   // ---- Fourth wall ----------------------------------------------------------
@@ -1743,15 +2046,38 @@
       if (sum && sum.parentElement.open) return;
       if (e.target.closest('summary, button, .r-item')) look(e.target);
     }, true);
-    if (fine) {
-      let hoverT = 0;
-      document.addEventListener('pointerover', (e) => {
-        clearTimeout(hoverT);
-        const el = e.target.closest && e.target.closest('[data-photo], .cats img, .r-item, .proj .shot');
-        if (el && !root.contains(el)) hoverT = setTimeout(() => look(el), 1500);
-      });
-    }
     micBtn.addEventListener('click', listen);
+
+    // Feeding: drag anything from the page onto the head's face.
+    let fed = '';
+    document.addEventListener('dragstart', (e) => {
+      const t = e.target.closest ? e.target.closest('[data-t]') : e.target.parentElement?.closest('[data-t]');
+      fed = t && !root.contains(t) ? t.dataset.t : '';
+      root.classList.add('hungry');
+    });
+    document.addEventListener('dragend', () => root.classList.remove('hungry', 'chomping'));
+    headBtn.addEventListener('dragenter', (e) => { e.preventDefault(); root.classList.add('chomping'); life.surprise = now() + 300; });
+    headBtn.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; life.kick = 1; });
+    headBtn.addEventListener('dragleave', () => root.classList.remove('chomping'));
+    headBtn.addEventListener('drop', (e) => {
+      e.preventDefault();
+      root.classList.remove('hungry', 'chomping');
+      eat(fed);
+      fed = '';
+    });
+
+    // Page swaps (site.js): the head stays, the page under it changes.
+    document.addEventListener('dl:page', () => {
+      here = norm(location.pathname);
+      pageAt = now();
+      S.pages = (S.pages || 1) + 1;
+      save();
+      pres.at = '';
+      pres.seen = '';
+      if (giveBack) giveBack();
+      if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: '' }));
+      if (here === '/notes/') setTimeout(() => react('wall', LINES.wall, 3000), 2500);
+    });
 
     document.documentElement.addEventListener('mouseleave', (e) => {
       if (fine && e.clientY <= 0 && now() > 8000) react('exit', LINES.exit, 2600, 'sad');
@@ -1766,7 +2092,11 @@
     }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     addEventListener('contextmenu', () => react('rightclick', LINES.rightclick, 1800, 'angry'));
     document.addEventListener('copy', () => react('copy', LINES.copy, 1800, 'happy'));
-    addEventListener('beforeprint', () => react('print', LINES.print));
+    addEventListener('beforeprint', () => {
+      react('print', LINES.print);
+      const pdf = find('resume-swe');
+      if (pdf && !S.once.includes('print-fetch')) { S.once.push('print-fetch'); setTimeout(() => yank(pdf, { hold: 7000 }), 600); }
+    });
   }
 
   async function enter() {
@@ -1780,10 +2110,7 @@
     emote('!');
     life.surprise = now() + 350;
     wave();
-    if (document.querySelector('.identity .name')?.textContent.trim() === '404') {
-      await quip(LINES.lost, 3200, 'sad');
-      return;
-    }
+    if (is404()) return lost();
     await wait(700);
     if (!chatOn) intro();
   }
@@ -1800,7 +2127,9 @@
       setHead(d.x, d.y);
       actor.classList.add('on');
       play(headBtn, [{ transform: 'scale(0)' }, { transform: 'scale(1.1)', offset: 0.7 }, { transform: 'scale(1)' }], { duration: 320, easing: 'ease-out' });
+      if (is404()) setTimeout(lost, 900);
     }
+    if (here === '/notes/') setTimeout(() => react('wall', LINES.wall, 3000), 3000);
     schedule(met ? rand(9000, 14000) : 13000);
     if (met) pres.ready = true;
     setInterval(presence, 1000);

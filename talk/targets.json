@@ -159,11 +159,6 @@
     "sel": "[data-t='rag-card']",
     "about": "RAG service row"
   },
-  "clawdash": {
-    "page": "/projects/",
-    "sel": "[data-t='clawdash']",
-    "about": "clawdash row"
-  },
   "ur5": {
     "page": "/projects/",
     "sel": "[data-t='ur5']",
@@ -293,5 +288,20 @@
     "page": "/kunlun/",
     "sel": "[data-t='kunlun-design']",
     "about": "Kunlun page, bilingual design system"
+  },
+  "wall": {
+    "page": "/notes/",
+    "sel": "[data-t='wall']",
+    "about": "the note wall form where visitors post public notes, signed or anonymous"
+  },
+  "notes": {
+    "page": "/notes/",
+    "sel": "a[href='/notes/']",
+    "about": "link to the note wall"
+  },
+  "gear": {
+    "page": "/hobbies/photography/",
+    "sel": "[data-t='gear']",
+    "about": "my cameras: a Fujifilm X-T200 and a Sony A7R II"
   }
 }

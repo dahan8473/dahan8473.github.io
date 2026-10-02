@@ -12,11 +12,9 @@ const MOVES = {
   wait: 'do nothing for now. Best when the visitor is reading, typing, or the head did something recently',
   comment: 'say one short line about what the visitor is looking at',
   point: 'point the hand at something on screen worth noticing',
-  fetch: "grab an item and bring it to the visitor's cursor so they click it. Best for recruiters with the resume or a strong project",
-  carry: 'pick up an item, like a photo or a project card, and hold it while floating around for a bit. Playful',
-  smalltalk: 'start easy small talk. Only when the chat is open and it has gone quiet',
-  mess: 'mess with the page: hide the nav, tilt or swap something, then put it back. Only when the chat is closed and the visitor has ignored the head for a long time',
-  tour: 'offer the visitor a tour of the site. Best early in a visit, or when they bounce between pages like they are lost',
+  fetch: "bring the resume to the visitor's cursor. Only when the visitor is clearly a recruiter",
+  carry: 'pick up a photo or a project card and hold it while floating around for a bit. Playful, and rare',
+  mess: 'hide the page bar for a bit, then give it back. Only when the chat is closed and the visitor has ignored the head for a long time',
   nap: 'fall asleep. Only when the visitor has been idle for a long time'
 };
 const ACTIVITY = new Set(['scrolling', 'reading', 'hovering', 'typing', 'idle', 'away']);
@@ -57,7 +55,7 @@ export default {
     for (const id of onScreen) items[id] = targets[id].about;
 
     const answers = await decide(state, {
-      move: choice('What should the floating head do next? It should feel like a person in the room: present, playful, never pushy or repetitive. Use `visitor`, `chat` and `recent`.', MOVES),
+      move: choice('What should the floating head do next? It should feel like a person in the room: present and playful, never pushy, needy, or repetitive. Waiting is usually right. Use `visitor`, `chat` and `recent`.', MOVES),
       item: choice('Which on-screen item should that move use? For comments, what the visitor is looking at. Otherwise whatever this kind of visitor would care about most.', items)
     }, { timeout: 1200 });
 

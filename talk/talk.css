@@ -555,3 +555,22 @@ a.dl-held { display: inline-block; }
   .dl-talk { width: min(290px, calc(100vw - 24px)); }
   .dl-bubble { padding: 18px 20px; }
 }
+
+/* Carrying: a copy of the thing rides under the head; the real one fades. */
+.dl-carried {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0 !important;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.35);
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.dl-gone { opacity: 0.12; transition: opacity 300ms ease; }
+
+/* Feeding: while something is being dragged, the head leans in for it. */
+.dl.hungry .dl-head { scale: 1.08; transition: scale 200ms ease; }
+.dl.chomping .dl-head { scale: 1.18; }

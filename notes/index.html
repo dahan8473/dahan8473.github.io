@@ -25,7 +25,7 @@
   <meta name="twitter:image" content="https://davidliu.work/og.png">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css?v=14">
+  <link rel="stylesheet" href="/styles.css?v=15">
   <link rel="stylesheet" href="/talk/talk.css?v=5">
   <script>
     (function () {
@@ -73,33 +73,34 @@
 
       <section class="board" data-t="wall" aria-label="The note wall">
         <ul class="board-notes" aria-label="Notes from visitors"></ul>
-        <button class="pad" type="button" aria-label="Leave a note">
+        <button class="pad" type="button">
           <span class="pad-sheet"></span>
           <span class="pad-sheet"></span>
-          <span class="pad-sheet top"><span class="pad-label">leave a<br>note here</span></span>
-          <span class="pen" aria-hidden="true"><i></i></span>
+          <span class="pad-sheet top">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"/><path d="M13.5 6.5l4 4"/></svg>
+            <span class="pad-label">Leave a note here</span>
+          </span>
         </button>
       </section>
       <p class="board-status" role="status" aria-live="polite"></p>
 
       <template id="write-note">
-        <form class="sticky writing c0" role="dialog" aria-label="Write a note">
+        <form class="sticky writing" role="dialog" aria-label="Write a note">
           <label class="sr" for="wall-msg">Your note</label>
-          <textarea id="wall-msg" name="message" maxlength="280" placeholder="write something..." required></textarea>
+          <textarea id="wall-msg" name="message" maxlength="280" placeholder="Write something" required></textarea>
           <label class="sr" for="wall-name">Your name</label>
-          <input id="wall-name" name="name" maxlength="40" placeholder="sign it (or don't)" autocomplete="name">
-          <div class="write-actions"><button type="button" class="cancel">cancel</button><button type="submit" class="stick">stick it</button></div>
+          <input id="wall-name" name="name" maxlength="40" placeholder="Your name, or leave it blank" autocomplete="name">
+          <div class="write-actions"><button type="button" class="cancel">Cancel</button><button type="submit" class="stick">Post</button></div>
         </form>
       </template>
     </main>
 
     <footer class="foot">
       <span>&copy; 2026 David Liu</span>
-      <span>Hand-written HTML. Zero dependencies.</span>
     </footer>
   </div>
 
-  <script src="/site.js?v=13"></script>
-  <script src="/talk/talk.js?v=7"></script>
+  <script src="/site.js?v=14"></script>
+  <script src="/talk/talk.js?v=8"></script>
 </body>
 </html>

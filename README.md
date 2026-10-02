@@ -40,7 +40,7 @@ It's supposed to feel like I'm there, not like a chatbot in the corner. So it do
 
 ## How it works
 
-The site is hand-written HTML, CSS and JavaScript. No framework, no build step, served by GitHub Pages. Pages swap in place instead of reloading, so the head stays mid-conversation and the music keeps playing.
+The site is served by GitHub Pages. Pages swap in place instead of reloading, so the head stays mid-conversation and the music keeps playing.
 
 The head talks to a few small functions on Vercel. The models all go through OpenRouter:
 

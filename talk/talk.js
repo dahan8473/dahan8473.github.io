@@ -1,8 +1,7 @@
 /* Talking head for davidliu.work.
    A cutout of David's head floats around the page and pesters visitors into
    talking to it. A floating hand points at things, grabs links and whole
-   sections, and drags them to the cursor. Replies stream from /api/chat.
-   Zero dependencies, like the rest of the site. */
+   sections, and drags them to the cursor. Replies stream from /api/chat. */
 (function () {
   'use strict';
 

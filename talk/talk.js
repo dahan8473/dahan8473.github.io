@@ -1697,7 +1697,7 @@
     if (!pres.brain || !talked()) return chime(q.text);
     pres.streak++;
     const on = pres.at || pres.seen;
-    ask(`(stage note: it's gone quiet for a bit. small talk, topic ${q.id}: ask about them in your own words, like "${q.text}". if they already told you about that, pick another topic you haven't asked about.${on ? ` they seem to be looking at ${on}.` : ''})`, { note: true, fallback: q.text });
+    ask(`(stage note: it's gone quiet for a bit. small talk, topic ${q.id}: ask about them in your own words, like "${q.text}". just the question, your side comes later. if they already told you about that, pick another topic you haven't asked about.${on ? ` they seem to be looking at ${on}.` : ''})`, { note: true, fallback: q.text });
   }
 
   function presence() {

@@ -146,21 +146,23 @@
     },
     // Where the 404 offers to take them.
     ways: [['home', '/'], ['resume', '/resume/'], ['projects', '/projects/'], ['hobbies', '/hobbies/'], ['brain', '/brain/'], ['notes', '/notes/']],
-    // Small talk through the visit: [topic, line, page it fits best]. One at a
-    // time, the page's own first. Functions get their name.
+    // Small talk through the visit, all about them. Each topic leads to
+    // something of mine the brain can connect (see Small talk in api/chat.js).
+    // The page's own topic goes first, then this order. `only` waits for its
+    // page; `notice` skips it if that notice line already asked the same thing.
     small: [
-      ['pets', (name) => `${name || 'hey'}, random question. do you have any pets?`, '/hobbies/meowmeow/'],
-      ['build', "do you code too? what's the last thing you built?", '/projects/'],
-      ['music', 'do you play any music?', '/hobbies/guitar/'],
-      ['travel', 'been anywhere good lately?', '/hobbies/travel/'],
-      ['style', "what's your style like?", '/hobbies/fashion/'],
-      ['brain', 'if you had a map like this, what would be the biggest node?', '/brain/'],
-      ['wall', 'what would you write on the wall? :)', '/notes/'],
-      ['fun', "what do you do when you're not working?", '/hobbies/'],
-      ['sports', 'do you play any sports?'],
-      ['make', 'do you make anything for fun? art, code, clothes, videos, anything'],
-      ['games', 'chess or video games?'],
-      ['found', "how'd you end up on my site btw?"]
+      { id: 'pets', line: (name) => `${name || 'hey'}, random question. do you have any pets?`, page: '/hobbies/meowmeow/' },
+      { id: 'work', line: 'what are you working on these days?', page: '/projects/' },
+      { id: 'fun', line: "what do you do when you're not working?", page: '/hobbies/' },
+      { id: 'sports', line: 'do you play any sports or train anything?', page: '/hobbies/muay-thai/', notice: 'muaythai' },
+      { id: 'music', line: 'do you play any music?', page: '/hobbies/guitar/' },
+      { id: 'travel', line: 'been anywhere good lately?', page: '/hobbies/travel/' },
+      { id: 'make', line: 'do you make anything for fun? art, code, clothes, videos, anything', page: '/hobbies/fashion/' },
+      { id: 'photos', line: 'do you take photos at all?', notice: 'photography' },
+      { id: 'games', line: 'chess or video games?' },
+      { id: 'found', line: "how'd you end up on my site btw?" },
+      { id: 'map', line: 'if you had a map like this, what would be the biggest node?', page: '/brain/', only: true },
+      { id: 'wall', line: 'what would you write on the wall? :)', page: '/notes/', only: true }
     ],
     // The mini tour: [page, target to point at, line]
     tour: [
@@ -1367,7 +1369,7 @@
       parser.end();
     } catch (e) {
       failed = true;
-      if (!raw && note) { S.msgs.pop(); raw = fallback || smallLine() || LINES.offline; parser.push(raw); parser.end(); }
+      if (!raw && note) { S.msgs.pop(); raw = fallback || smallLine()?.text || LINES.offline; parser.push(raw); parser.end(); }
       else if (!raw) { raw = LINES.offline; setFace('sad', 3000); parser.push(raw); parser.end(); }
     }
     pres.brain = !failed && !raw.includes(LINES.offline);
@@ -1672,12 +1674,12 @@
   const SMALL_MAX = 6;
   function smallLine() {
     const asked = S.small || [];
-    const open = LINES.small.filter(([id]) => !asked.includes(id));
-    const hit = open.find(([, , page]) => page === here) || open.find(([, , page]) => !page) || open[0];
-    if (!hit) return '';
-    S.small = [...asked, hit[0]];
+    const open = LINES.small.filter((s) => !asked.includes(s.id) && !(s.notice && S.noticed.includes(s.notice)));
+    const hit = open.find((s) => s.page === here) || open.find((s) => !s.only);
+    if (!hit) return null;
+    S.small = [...asked, hit.id];
     save();
-    return typeof hit[1] === 'function' ? hit[1](knownName()) : hit[1];
+    return { id: hit.id, text: typeof hit.line === 'function' ? hit.line(knownName()) : hit.line };
   }
   function smallDue(t, quiet) {
     if (S.quiet || (S.small || []).length >= SMALL_MAX) return false;
@@ -1687,15 +1689,15 @@
     return quiet > 60000 && t - pres.smallAt > 100000 && t - lastInput < 20000 && pres.out < 6 && (talked() || !(S.small || []).length);
   }
   function smallTalk() {
-    const line = smallLine();
-    if (!line) return;
+    const q = smallLine();
+    if (!q) return;
     pres.smallAt = now();
-    if (!chatOn) { chime(line); if (pres.last) pres.last.keep = 30000; return; }
+    if (!chatOn) { chime(q.text); if (pres.last) pres.last.keep = 30000; return; }
     pres.waiting = true;
-    if (!pres.brain || !talked()) return chime(line);
+    if (!pres.brain || !talked()) return chime(q.text);
     pres.streak++;
     const on = pres.at || pres.seen;
-    ask(`(stage note: it's gone quiet for a bit. ask them one light small talk question in your own words, like "${line}". if they already told you something like that, ask a different one you haven't asked yet.${on ? ` they seem to be looking at ${on}.` : ''})`, { note: true, fallback: line });
+    ask(`(stage note: it's gone quiet for a bit. small talk, topic ${q.id}: ask about them in your own words, like "${q.text}". if they already told you about that, pick another topic you haven't asked about.${on ? ` they seem to be looking at ${on}.` : ''})`, { note: true, fallback: q.text });
   }
 
   function presence() {

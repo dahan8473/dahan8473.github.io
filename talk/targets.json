@@ -312,6 +312,6 @@
   "brain": {
     "page": "/brain/",
     "sel": "[data-t='brain']",
-    "about": "the second brain page: a graph of everything you know about David (projects, leadership, experience, education, hobbies, stories, awards, skills) and how it connects. Double clicking a node asks you about it."
+    "about": "your second brain page: a map of your projects, leadership, experience, education, hobbies, stories, awards and skills, and how they connect. Double clicking a node asks you about it."
   }
 }

@@ -786,67 +786,108 @@
   }
   function setupInbox() {
     if (inboxStop) { inboxStop(); inboxStop = null; }
-    var box = document.querySelector('.inbox');
+    var box = document.querySelector('.imsg');
     if (!box) return;
-    var list = box.querySelector('.thread'), form = box.querySelector('.compose'), status = box.querySelector('.inbox-status');
-    var area = form.querySelector('textarea'), nameIn = form.querySelector('input'), send = form.querySelector('button');
-    var visitor = visitorId(), known = [], alive = true, seen = '';
-    try { seen = localStorage.getItem('dl-inbox-seen') || ''; nameIn.value = localStorage.getItem('dl-name') || ''; } catch (e) {}
-    var when = function (at) { return new Date(at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
+    var list = box.querySelector('.imsg-thread'), form = box.querySelector('.imsg-compose');
+    var area = form.querySelector('textarea'), nameIn = form.querySelector('input'), send = form.querySelector('.imsg-send');
+    var from = form.querySelector('.imsg-from');
+    var visitor = visitorId(), known = [], alive = true, pending = null;
+    try { nameIn.value = localStorage.getItem('dl-name') || ''; } catch (e) {}
+    var HOUR = 3600000;
+    // "Today 5:29 PM", "Yesterday 5:29 PM", "Monday 5:29 PM", "Oct 2, 2026 at 5:29 PM"
+    function stamp(at) {
+      var d = new Date(at), now = new Date(), day = 86400000;
+      var time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      var label = d >= start ? 'Today' : d >= start - day ? 'Yesterday' : d >= start - 6 * day ? d.toLocaleDateString('en-US', { weekday: 'long' }) : null;
+      if (label) return '<b>' + label + '</b> ' + time;
+      return '<b>' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + '</b> at ' + time;
+    }
     function render() {
       list.replaceChildren();
-      if (!known.length) {
+      var all = pending ? known.concat([pending]) : known;
+      if (!all.length) {
         var empty = document.createElement('li');
-        empty.className = 'empty';
-        empty.textContent = 'No messages yet. Say hi.';
+        empty.className = 'imsg-empty';
+        empty.textContent = "This goes straight to my phone. Say hi, I'll reply here.";
         list.appendChild(empty);
-        return;
       }
-      known.forEach(function (m) {
-        var li = document.createElement('li'), who = document.createElement('p'), body = document.createElement('p');
-        li.className = 'msg ' + (m.sender === 'david' ? 'david' : 'you') + (m.sender === 'david' && m.at > seen ? ' fresh' : '');
-        who.className = 'who';
-        who.textContent = (m.sender === 'david' ? 'David' : 'You') + ' · ' + when(m.at);
-        body.className = 'body';
-        body.textContent = m.body;
-        li.append(who, body);
+      all.forEach(function (m, k) {
+        var prev = all[k - 1], next = all[k + 1];
+        var t = new Date(m.at).getTime();
+        if (!prev || t - new Date(prev.at).getTime() > HOUR) {
+          var sep = document.createElement('li');
+          sep.className = 'imsg-time';
+          sep.innerHTML = stamp(m.at);
+          list.appendChild(sep);
+          prev = null;
+        }
+        var mine = m.sender !== 'david';
+        var li = document.createElement('li');
+        var lastOfRun = !next || next.sender !== m.sender || new Date(next.at).getTime() - t > HOUR;
+        li.className = 'b ' + (mine ? 'you' : 'them') + (prev && prev.sender !== m.sender ? ' gap' : '') + (lastOfRun ? ' tail' : '');
+        li.textContent = m.body;
         list.appendChild(li);
       });
+      // iMessage shows how the last thing you sent went, until he answers.
+      var last = all[all.length - 1];
+      if (last && last.sender !== 'david') {
+        var st = document.createElement('li');
+        st.className = 'imsg-status' + (last.failed ? ' failed' : '');
+        st.textContent = last.failed ? 'Not Delivered' : last.sending ? 'Sending...' : 'Delivered';
+        list.appendChild(st);
+      }
+      list.scrollTop = list.scrollHeight;
+      from.hidden = known.some(function (m) { return m.sender !== 'david'; });
+      var reply = known.filter(function (m) { return m.sender === 'david'; }).pop();
       // Seen here, so the head doesn't announce these on the next page.
-      var last = known.filter(function (m) { return m.sender === 'david'; }).pop();
-      if (last) try { localStorage.setItem('dl-inbox-seen', last.at); } catch (e) {}
+      if (reply) try { localStorage.setItem('dl-inbox-seen', reply.at); } catch (e) {}
     }
     function load() {
       if (!visitor) return render();
       fetch(API + '/inbox?visitor=' + visitor).then(function (r) { return r.json(); }).then(function (d) {
         if (!alive) return;
         var next = d.messages || [];
-        if (next.length !== known.length || !known.length) { known = next; render(); }
-      }).catch(function () { if (alive && !known.length) render(); });
+        if (next.length !== known.length || !list.children.length) { known = next; render(); }
+      }).catch(function () { if (alive && !list.children.length) render(); });
+    }
+    function grow() {
+      area.style.height = 'auto';
+      area.style.height = Math.min(area.scrollHeight, 132) + 'px';
+      send.disabled = !area.value.trim();
     }
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var text = area.value.trim();
-      if (!text || !visitor || send.disabled) return;
-      send.disabled = true;
-      status.textContent = 'Sending...';
+      if (!text || !visitor || (pending && pending.sending)) return;
       var name = nameIn.value.trim();
+      pending = { sender: 'visitor', body: text, at: new Date().toISOString(), sending: true };
+      area.value = '';
+      grow();
+      render();
       fetch(API + '/inbox', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ visitor: visitor, name: name, message: text }) })
-        .then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
-        .then(function (res) {
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
           if (!alive) return;
-          if (res.d.sent) {
-            known.push(res.d.message);
-            render();
-            area.value = '';
-            status.textContent = "Sent. It's on my phone now.";
-            try { localStorage.setItem('dl-inbox', '1'); if (name) localStorage.setItem('dl-name', name); } catch (e2) {}
-          } else status.textContent = res.status === 429 ? "That's a lot of messages. Give it a bit." : "That didn't go through. Try again, or email me.";
+          if (!d.sent) throw new Error('not sent');
+          known.push(d.message);
+          pending = null;
+          render();
+          try { localStorage.setItem('dl-inbox', '1'); if (name) localStorage.setItem('dl-name', name); } catch (e2) {}
         })
-        .catch(function () { if (alive) status.textContent = "That didn't go through. Try again, or email me."; })
-        .then(function () { send.disabled = false; });
+        .catch(function () {
+          if (!alive) return;
+          pending.sending = false;
+          pending.failed = true;
+          area.value = text;
+          grow();
+          render();
+        });
     });
-    area.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) form.requestSubmit(); });
+    // Enter sends, shift+enter is a new line, like Messages on a Mac.
+    area.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } });
+    area.addEventListener('input', grow);
+    grow();
     load();
     var timer = setInterval(function () { if (!document.hidden) load(); }, 15000);
     inboxStop = function () { alive = false; clearInterval(timer); };

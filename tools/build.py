@@ -6,7 +6,7 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 20, 7, 19, 17
+V_CSS, V_TALKCSS, V_JS, V_TALK = 21, 7, 20, 17
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -515,27 +515,23 @@ write('notes/index.html', page('/notes/', 'Notes', 'Leave David Liu a note, sign
 
 # ---- Messages -----------------------------------------------------------------
 
-messages = '''      <header class="doc-head">
-        <div>
-          <h1>Messages</h1>
-          <p class="hint">Message the real me. It goes straight to my phone, and when I reply it shows up here. The head will tell you too.</p>
-        </div>
-      </header>
-
-      <section class="inbox" data-t="inbox" aria-label="Your messages with David">
-        <ol class="thread" aria-live="polite"></ol>
-        <form class="compose">
-          <label class="sr" for="inbox-text">Message</label>
-          <textarea id="inbox-text" name="message" rows="3" maxlength="1000" placeholder="Write me something" required></textarea>
-          <div class="compose-row">
-            <label class="sr" for="inbox-name">Your name</label>
-            <input id="inbox-name" name="name" maxlength="40" placeholder="Your name, or leave it blank" autocomplete="name">
-            <button type="submit">Send</button>
+messages = '''      <h1 class="sr">Messages</h1>
+      <section class="imsg" data-t="inbox" aria-label="Messages with the real David">
+        <header class="imsg-top">
+          <span class="imsg-avatar" aria-hidden="true">DL</span>
+          <p class="imsg-name">Real David <span aria-hidden="true">&#8250;</span></p>
+        </header>
+        <ol class="imsg-thread" aria-live="polite"></ol>
+        <form class="imsg-compose">
+          <p class="imsg-from"><label for="inbox-name">From:</label><input id="inbox-name" name="name" maxlength="40" placeholder="your name (optional)" autocomplete="name"></p>
+          <div class="imsg-pill">
+            <label class="sr" for="inbox-text">Message</label>
+            <textarea id="inbox-text" name="message" rows="1" maxlength="1000" placeholder="iMessage" required></textarea>
+            <button class="imsg-send" type="submit" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button>
           </div>
         </form>
-        <p class="inbox-status" role="status"></p>
-        <p class="inbox-alt">Rather email? <a class="ln" href="mailto:davidliu8473@gmail.com" aria-label="Email">davidliu8473@gmail.com</a></p>
       </section>
+      <p class="imsg-note">This goes straight to my phone. When I reply, it shows up here and the head tells you. Rather email? <a class="ln" href="mailto:davidliu8473@gmail.com" aria-label="Email">davidliu8473@gmail.com</a></p>
 '''
 write('messages/index.html', page('/messages/', 'Messages', 'Message David Liu directly. It goes to his phone, and his replies show up here.', messages, 'messages', cls='messages'))
 

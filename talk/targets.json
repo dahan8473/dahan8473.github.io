@@ -187,7 +187,7 @@
   "life": {
     "page": "/hobbies/",
     "sel": "[data-t='life']",
-    "about": "hobbies page, grouped into Life, Making things and Sports. Every hobby has its own page; the ones without much yet are the small links under each group"
+    "about": "hobbies page, grouped into Body, Mind and Soul. Every hobby has its own page; the ones without much yet are the small links under each group"
   },
   "play": {
     "page": "/hobbies/",

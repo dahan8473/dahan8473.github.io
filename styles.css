@@ -319,8 +319,11 @@ a.row:hover .m { transform: translateX(3px); }
 .brain canvas { display: block; touch-action: none; cursor: grab; }
 .brain canvas.grabbing { cursor: grabbing; }
 .brain-meta { color: var(--t3); font-variant-numeric: tabular-nums; }
-.also { margin-top: 28px; max-width: 40em; color: var(--t2); }
-.also .t1 { margin-right: 6px; }
+.hob-group + .hob-group { margin-top: 44px; }
+.hob-group > h2 { padding-bottom: 10px; color: var(--t3); }
+.hob-group .doors { margin-top: 0; }
+.hob-more { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 4px 20px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.hob-more > span:first-child { color: var(--t3); }
 .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .cats img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 12px; background: var(--fill); }
 .cats.big { margin-top: 40px; }
@@ -449,6 +452,7 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
   .row { grid-template-columns: minmax(0, 1fr) auto; }
   .row .s { grid-column: 1 / -1; grid-row: 2; }
   .doors .row { grid-template-columns: minmax(0, 1fr) auto; }
+  .hob-more { grid-template-columns: minmax(0, 1fr); }
   .projs { grid-template-columns: 1fr; gap: 48px; }
   .more-projs { padding-top: 56px; }
   .cats { gap: 8px; }

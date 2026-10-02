@@ -187,7 +187,7 @@
   "life": {
     "page": "/hobbies/",
     "sel": "[data-t='life']",
-    "about": "hobbies page: a list of hobbies, each with its own page"
+    "about": "hobbies page, grouped into Life, Making things and Sports. Every hobby has its own page; the ones without much yet are the small links under each group"
   },
   "play": {
     "page": "/hobbies/",
@@ -228,6 +228,56 @@
     "page": "/hobbies/fashion/",
     "sel": "[data-t='fashion']",
     "about": "Fashion page (Kunlun)"
+  },
+  "chess": {
+    "page": "/hobbies/chess/",
+    "sel": "[data-t='chess']",
+    "about": "Chess page: I play chess. Not written up yet, it asks visitors if they do it too"
+  },
+  "drones": {
+    "page": "/hobbies/drones/",
+    "sel": "[data-t='drones']",
+    "about": "Flying drones page: I fly drones. Not written up yet, it asks visitors if they do it too"
+  },
+  "video": {
+    "page": "/hobbies/video/",
+    "sel": "[data-t='video']",
+    "about": "Video production page: I make videos. Not written up yet, it asks visitors if they do it too"
+  },
+  "watercolor": {
+    "page": "/hobbies/watercolor/",
+    "sel": "[data-t='watercolor']",
+    "about": "Watercolor page: I paint with watercolor. Not written up yet, it asks visitors if they do it too"
+  },
+  "poetry": {
+    "page": "/hobbies/poetry/",
+    "sel": "[data-t='poetry']",
+    "about": "Poetry page: I write poetry. Not written up yet, it asks visitors if they do it too"
+  },
+  "swimming": {
+    "page": "/hobbies/swimming/",
+    "sel": "[data-t='swimming']",
+    "about": "Swimming page: I swim. Not written up yet, it asks visitors if they do it too"
+  },
+  "badminton": {
+    "page": "/hobbies/badminton/",
+    "sel": "[data-t='badminton']",
+    "about": "Badminton page: I play badminton. Not written up yet, it asks visitors if they do it too"
+  },
+  "cycling": {
+    "page": "/hobbies/cycling/",
+    "sel": "[data-t='cycling']",
+    "about": "Cycling page: I cycle. Not written up yet, it asks visitors if they do it too"
+  },
+  "hiking": {
+    "page": "/hobbies/hiking/",
+    "sel": "[data-t='hiking']",
+    "about": "Hiking page: I hike. Not written up yet, it asks visitors if they do it too"
+  },
+  "speed-skating": {
+    "page": "/hobbies/speed-skating/",
+    "sel": "[data-t='speed-skating']",
+    "about": "Speed skating page: I speed skate. Not written up yet, it asks visitors if they do it too"
   },
   "tethos-page": {
     "page": "/tethos/",

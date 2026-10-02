@@ -17,6 +17,7 @@ My personal site. A floating cutout of my head lives on it. It's an AI version o
 - **Gives tours.** "just lookin around" gets you a walk through every page.
 - **Takes notes.** Tell it you want to leave me a private note and it passes it on. Public notes go on the wall at `/notes/`.
 - **Can't be talked out of being me.** Prompt injection and trolls get caught by Jev before they reach the brain.
+- **Answers fast.** First word in under a second.
 
 It's supposed to feel like I'm there, not like a chatbot in the corner. So it doesn't push: one check-in if it gets quiet, and it only drags things to your cursor when you ask, or when you're clearly a recruiter and it's the resume.
 
@@ -41,12 +42,15 @@ It's supposed to feel like I'm there, not like a chatbot in the corner. So it do
 
 The site is hand-written HTML, CSS and JavaScript. No framework, no build step, served by GitHub Pages. Pages swap in place instead of reloading, so the head stays mid-conversation and the music keeps playing.
 
-The head talks to a few small functions on Vercel. Two models, both through OpenRouter:
+The head talks to a few small functions on Vercel. The models all go through OpenRouter:
 
 | Model | Job |
 |---|---|
 | **Jev** (`typesafe/jev-1.13`) | Fast typed decisions. Reads every message (troll or not, what you want, which thing on the site it's about, who you are, which notes to recall), picks the head's next move while you browse, and screens public notes. About 100ms, fractions of a cent. |
-| **GPT-6.1 Sol** (`openai/gpt-6.1-sol`) | Writes the replies, in my voice, at low reasoning effort. |
+| **DeepSeek V4.1 Flash** (`deepseek/deepseek-v4.1-flash`) | Writes the replies, in my voice, with reasoning off. First word in under a second, about $0.0002 a reply. |
+| **GPT-6.1 Sol** (`openai/gpt-6.1-sol`) | Backup. Takes the reply if DeepSeek errors or comes back empty. |
+
+I picked the brain by racing 11 models through the real chat function (my rules, persona and notes, Jev in front) on recruiter intros, my stories, a friends-only story asked by a recruiter, GPA, "are you an AI?", and off-topic requests. Several cheap models made up travel details. DeepSeek V4.1 Flash never did, followed every rule, and was the fastest and cheapest. Requests only go to hosts that don't train on what they're sent. `BRAIN_MODEL` and `BRAIN_REASONING` swap it without a code change.
 
 ```mermaid
 sequenceDiagram
@@ -54,7 +58,7 @@ sequenceDiagram
   participant H as Head (talk.js)
   participant C as api/chat
   participant J as Jev
-  participant G as GPT-6.1 Sol
+  participant G as DeepSeek V4.1 Flash
   V->>H: "can i see your resume?"
   H->>C: the message, and what's on the page
   C->>J: bouncer, intent, target, who
@@ -98,7 +102,7 @@ Every note is in the head's instructions (cached, so it's cheap). For each messa
 
 ### Spend
 
-Replies cost money, so there's a monthly cap in the chat function (default $20, after which the head falls back to its own lines), per-IP limits, 25 messages per visit, and a credit limit on the OpenRouter key as the backstop. The head's own lines (comments, the tour, notes, the bouncer) never touch GPT.
+Replies cost money, so there's a monthly cap in the chat function (default $20, after which the head falls back to its own lines), per-IP limits, 25 messages per visit, and a credit limit on the OpenRouter key as the backstop. The head's own lines (comments, the tour, notes, the bouncer) never touch the brain.
 
 ## Repo
 
@@ -113,7 +117,7 @@ Replies cost money, so there's a monthly cap in the chat function (default $20, 
 | `talk/targets.json` | Everything the head can point at |
 | `brain/` | The second brain page and its public map |
 | `tools/brain/sync.mjs` | Condenses my Obsidian notes into the second brain |
-| `api/chat.js` | The conversation: Jev first, then GPT, streamed |
+| `api/chat.js` | The conversation: Jev first, then the brain, streamed |
 | `api/decide.js` | Jev picks the head's next move |
 | `api/note.js`, `api/wall.js` | Notes for me, and the public wall |
 | `api/visit.js` | Page-view beacon |
@@ -139,7 +143,8 @@ npx vercel deploy --prod
 
 | Environment variable | What it's for |
 |---|---|
-| `OPENROUTER_API_KEY` | GPT-6.1 Sol and Jev |
+| `OPENROUTER_API_KEY` | Every model |
+| `BRAIN_MODEL`, `BRAIN_REASONING` | Optional. Default `deepseek/deepseek-v4.1-flash` with reasoning `off` |
 | `DAVID_BRAIN` | What the head knows about me |
 | `DAVID_CORTEX` | The second brain, from `tools/brain/sync.mjs push` |
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Visitor memory, chat logs, notes and the spend counter. Use a dedicated Supabase project and run `supabase/visitors.sql` in it once. |

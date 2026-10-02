@@ -3,8 +3,9 @@
 // Streams plain text back, with stage directions like [[point:rag]] inline.
 //
 // Two models, both through OpenRouter: Jev reads every visitor message first
-// (about 100ms) and decides whether it's a troll, what they want, and who they
-// are, so the head can act before the brain, GPT-6.1 Sol, has typed a word.
+// (about 100ms) and decides whether it's a troll, what they want, who they are
+// and which notes to recall, so the head can act before the brain has typed a
+// word. The brain is in _gpt.js.
 
 import { readFileSync } from 'node:fs';
 import { connect } from './_neuralink.js';
@@ -129,14 +130,14 @@ const WHO = {
 };
 // The notes Jev can pick to recall, by id. Shown on the page as "recalling".
 const RECALL = cortexNotes().length
-  ? Object.fromEntries([['none', 'no note fits, or it is small talk'], ...cortexNotes().map((n) => [n.id, `${n.title}: ${n.hook || n.blurb}`])])
+  ? Object.fromEntries([['none', 'no note fits: small talk, greetings, questions about the head itself or AI, or anything the notes do not cover'], ...cortexNotes().map((n) => [n.id, `${n.title}: ${n.hook || n.blurb}`])])
   : null;
 function recalled(read) {
   const p = read?.recall?.probabilities;
   if (!p) return [];
   const ranked = Object.entries(p).filter(([id]) => id !== 'none').sort((a, b) => b[1] - a[1]);
-  if (!ranked.length || ranked[0][1] < 0.35 || p.none > ranked[0][1]) return [];
-  return ranked.filter(([, v], i) => i === 0 || v >= 0.25).slice(0, 2).map(([id]) => id);
+  if (!ranked.length || ranked[0][1] < 0.5 || p.none > ranked[0][1]) return [];
+  return ranked.filter(([, v], i) => i === 0 || v >= 0.35).slice(0, 2).map(([id]) => id);
 }
 
 const PICKABLE = Object.fromEntries([['none', 'nothing specific on the site'], ...Object.entries(targets).map(([id, t]) => [id, t.about])]);

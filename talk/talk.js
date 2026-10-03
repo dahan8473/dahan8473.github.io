@@ -28,14 +28,18 @@
   // null, synthesized blips stand in.
   const VOICE = null;
 
-  // The cat. The walk is a sprite cut from video frames
-  // (`swift tools/cutout.swift frames <dir> media/cat/walk.webp`), the poses are
-  // photos (`... thing <photo> media/cat/lie.webp x,y`). Left null, an outline cat stands in.
+  // The cat. The walk is one loop of her stride, facing right, paws on the
+  // bottom edge: `stride` is how far she moves per loop (sprite px) and `ms` how
+  // long a loop takes, so her paws don't skate. The footage we have only shows
+  // her front half, so it's her head from a video frame on a body drawn to her
+  // photos. A side-on walking clip works too: `swift tools/cutout.swift frames
+  // <dir> media/cat/walk.webp` prints all of it. The poses are photos
+  // (`... thing <photo> media/cat/lie.webp x,y`). Left null, an outline cat stands in.
   const PET = {
-    walk: { src: '/media/cat/walk.webp', frames: 12, w: 292, h: 223 },
-    lie: { src: '/media/cat/lie.webp', w: 400, h: 215 },
+    walk: { src: '/media/cat/walk.webp', frames: 16, w: 440, h: 294, stride: 120, ms: 500 },
+    lie: { src: '/media/cat/lie.webp', w: 400, h: 225 },
     sleep: { src: '/media/cat/sleep.webp', w: 400, h: 395 },
-    belly: { src: '/media/cat/belly.webp', w: 400, h: 326 }
+    belly: { src: '/media/cat/belly.webp', w: 400, h: 331 }
   };
 
   const API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
@@ -1966,26 +1970,45 @@
     lie: '<svg class="lie" viewBox="0 0 64 44" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="fill" d="M8 40c0-10 8-17 21-17s21 7 21 17z"/><path d="M10 40c7 3 21 3 27 0" fill="none"/><path class="fill" d="M42 26l1-9 5 6M49 23l5-6 1 9"/><circle class="fill" cx="48" cy="31" r="8"/><path d="M45.5 31q1.5 1.5 3 0M50.5 31q1.5 1.5 3 0" fill="none"/></svg>'
   };
   let cat = null;
+  let catX = 0;
   let napTimer = 0;
   const small = () => innerWidth < 640;
 
+  // Sized so her head is the same size walking, lying, curled up and rolled over.
   function catWidth(state) {
     if (!PET) return small() ? 66 : 96;
-    if (state === 'walking') return Math.round((small() ? 62 : 88) * PET.walk.w / PET.walk.h);
-    return { lying: small() ? 124 : 172, sleeping: small() ? 88 : 120, belly: small() ? 96 : 132 }[state];
-  }
-  function catState(state) {
-    cat.className = `dl-cat${PET ? ' pet' : ''} ${state}`;
-    cat.style.width = catWidth(state) + 'px';
+    if (state === 'walking') return Math.round((small() ? 74 : 102) * PET.walk.w / PET.walk.h);
+    return { lying: small() ? 134 : 186, sleeping: small() ? 96 : 130, belly: small() ? 104 : 143 }[state];
   }
   function catAt(x) {
+    catX = x;
     cat.style.transform = `translateX(${x}px)`;
+  }
+  // Switching pose keeps her centred where she was.
+  function catState(state) {
+    const was = parseFloat(cat.style.width) || 0;
+    const w = catWidth(state);
+    cat.className = `dl-cat${PET ? ' pet' : ''} ${state}`;
+    cat.style.width = w + 'px';
+    if (was) catAt(catX + (was - w) / 2);
+  }
+  // Load every pose before she shows up, so she never walks in blank.
+  let catLoad = null;
+  function catReady() {
+    if (!catLoad) {
+      catLoad = Promise.all(['walk', 'lie', 'sleep', 'belly'].map((k) => {
+        const img = new Image();
+        img.src = PET[k].src;
+        return img.decode().catch(() => {});
+      }));
+    }
+    return Promise.race([catLoad, wait(2500)]);
   }
   function catEl() {
     const el = document.createElement('div');
     const w = PET && PET.walk;
     el.innerHTML = `<div class="dl-cat-in">${PET
-      ? `<div class="walk" style="background-image:url(${w.src});aspect-ratio:${w.w}/${w.h};background-size:${w.frames * 100}% 100%;animation-timing-function:steps(${w.frames - 1}, jump-none)"></div>` +
+      ? `<div class="walk" style="background-image:url(${w.src});aspect-ratio:${w.w}/${w.h};background-size:${w.frames * 100}% 100%;animation-duration:${w.ms}ms;animation-timing-function:steps(${w.frames}, jump-none)"></div>` +
         ['lie', 'sleep', 'belly'].map((k) => `<img class="${k}" src="${PET[k].src}" alt="" draggable="false">`).join('')
       : CAT.walk + CAT.lie}</div><span class="dl-heart" aria-hidden="true">&hearts;</span>`;
     el.setAttribute('role', 'button');
@@ -1998,35 +2021,48 @@
     clearTimeout(napTimer);
     if (PET) napTimer = setTimeout(() => { if (cat && cat.classList.contains('lying')) catState('sleeping'); }, 25000);
   }
+  let catComing = false;
   async function summonCat() {
     if (cat) { petCat(); return; }
+    if (catComing) return;
+    catComing = true;
+    if (PET) await catReady();
+    catComing = false;
+    if (cat) return;
     cat = catEl();
     catState('walking');
     const w = catWidth('walking');
     const inner = cat.firstElementChild;
+    // She walks in from the left and flops a little way in, clear of the head's corner.
+    const lieW = catWidth('lying');
+    const spot = clamp(innerWidth * (small() ? 0.1 : 0.18), small() ? 10 : 24, Math.max(10, innerWidth - lieW - 140));
+    const from = -w - 8;
+    const to = spot + lieW / 2 - w / 2;
     sound.meow();
-    const bob = reduce ? null : inner.animate([{ transform: 'rotate(-2deg) translateY(0)' }, { transform: 'rotate(2deg) translateY(-2px)' }], { duration: 400, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
-    let x;
-    if (PET) {
-      // The footage only has her from the shoulders forward, so she pokes in
-      // from the edge of the screen and the cut stays off it.
-      await play(cat, [{ transform: `translateX(${-w}px)` }, { transform: `translateX(${-w * 0.12}px)` }], { duration: 2400, easing: 'ease-out' });
-      catAt(-w * 0.12);
-      await wait(600);
-      x = small() ? 6 : 14;
+    if (reduce) {
+      catAt(to);
+      catState('lying');
     } else {
-      x = clamp(innerWidth * (small() ? 0.04 : 0.2), 12, innerWidth - w - 12);
-      await play(cat, [{ transform: `translateX(${-w - 20}px)` }, { transform: `translateX(${x}px)` }], { duration: (x + w + 20) * 9, easing: 'linear' });
+      catAt(from);
+      // Speed comes from the sprite's stride so her paws stay planted.
+      const speed = PET ? PET.walk.stride * (w / PET.walk.w) / PET.walk.ms : 0.11;
+      const bob = PET ? null : inner.animate([{ transform: 'rotate(-2deg) translateY(0)' }, { transform: 'rotate(2deg) translateY(-2px)' }], { duration: 400, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
+      await play(cat, [{ transform: `translateX(${from}px)` }, { transform: `translateX(${to}px)` }], { duration: (to - from) / speed, easing: 'linear' });
+      if (bob) bob.cancel();
+      catAt(to);
+      // Stop mid-step, then plop: sink, flop onto her side where she stood, settle.
+      const sprite = cat.querySelector('.walk');
+      if (sprite) sprite.style.animationPlayState = 'paused';
+      await wait(160);
+      await play(inner, [{ transform: 'none' }, { transform: 'scale(1.05,.86)' }], { duration: 150, easing: 'ease-in' });
+      catState('lying');
+      await play(inner, [{ transform: 'scale(1.1,.72)' }, { transform: 'scale(.97,1.05)', offset: 0.55 }, { transform: 'none' }], { duration: 380, easing: 'ease-out' });
     }
-    if (bob) bob.cancel();
-    // Plop.
-    await play(inner, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.18,.7)' }], { duration: 140, easing: 'ease-in' });
-    catState('lying');
-    catAt(x);
-    await play(inner, [{ transform: 'scale(1.18,.7)' }, { transform: 'scale(.95,1.05)' }, { transform: 'scale(1,1)' }], { duration: 320, easing: 'ease-out' });
     heart();
     napLater();
   }
+  // Meowmeow's hobby page: "Call her" brings her in, or gets a reaction if she's already here.
+  window.dlCat = summonCat;
   function heart() {
     play(cat.querySelector('.dl-heart'), [
       { transform: 'translate(-50%, 0) scale(.4)', opacity: 0 },

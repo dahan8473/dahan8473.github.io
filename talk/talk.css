@@ -449,6 +449,8 @@
   pointer-events: auto;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.14));
 }
+/* A black cat on a near-black page: a faint rim so she doesn't vanish. */
+[data-theme="dark"] .dl-cat { filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.08)); }
 .dl-cat-in { transform-origin: 50% 100%; }
 .dl-cat svg,
 .dl-cat img,

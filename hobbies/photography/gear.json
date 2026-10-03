@@ -34,7 +34,9 @@
         "constant f/2.8",
         "VC stabilization",
         "525 g"
-      ]
+      ],
+      "mount": "Sony E",
+      "on": "a7r2"
     }
   ],
   "drone": {
@@ -54,8 +56,8 @@
       "name": "DJI Mic Mini",
       "kind": "mic",
       "specs": [
-        "wireless lav mic",
-        "tiny clip-on transmitters"
+        "wireless mic, two clip-on transmitters",
+        "one receiver"
       ]
     }
   ]

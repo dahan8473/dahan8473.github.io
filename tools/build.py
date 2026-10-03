@@ -367,7 +367,7 @@ GROUPS = [
   ('Mind', [
     ('travel', 'Travel', "Beijing, New York, and a list I'm behind on.", None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
-  ], [('chess', 'Chess'), ('drones', 'Flying drones'), ('video', 'Video production')]),
+  ], [('chess', 'Chess'), ('video', 'Video production')]),
   ('Soul', [
     ('meowmeow', 'Meowmeow', 'My cat. Always chudding around.', '/media/life/meowmeow-sleep.webp'),
     ('guitar', 'Classical guitar', 'Competed nationally, played Carnegie Hall. Four recordings.', None),
@@ -456,27 +456,26 @@ hobby('climbing', 'Rock climbing', "I boulder. I can only do a V2 right now.", [
 hobby('swimming', 'Swimming', 'I swim.', [
   ('Awards', [('Coming soon', "<p>Digging them out.</p>")], None),
 ], shot=piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/swimming/photos.json'))
-hobby('badminton', 'Badminton', 'I play badminton. These are my rackets.', [
+hobby('badminton', 'Badminton', 'I play badminton. These are my four rackets, and a quick rally with the head if you want.', [
   ('You', [('Do you play?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
-], shot=piece('3d', 'racket', 'Loading the rackets...'))
+], shot=piece('3d', 'racket', 'Loading the rackets...') + piece('play', 'badminton', 'Loading the court...'))
 hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
   ('You', [('Do you ride?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "I hike. Haven't written this page up yet.", [
   ('You', [('Do you hike?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
 ])
-hobby('speed-skating', 'Speed skating', 'I speed skate. These are my trophies.', [
+hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [
   ('You', [('Do you skate?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
-], shot=piece('play', 'gallery', 'Trophy photos coming soon.', src='/hobbies/speed-skating/photos.json'))
-hobby('chess', 'Chess', 'I play chess.', [
+], shot=piece('play', 'trophycase', 'Trophy photos coming soon.', src='/hobbies/speed-skating/trophies.json'))
+hobby('chess', 'Chess', 'I play on chess.com. Play a game against the head if you want.', [
   ('You', [('Do you play?', "<p>Tell the head your rating. It'll want to know.</p>")], None),
 ], shot=piece('play', 'chess', 'Setting up the board...'))
-hobby('drones', 'Flying drones', 'I fly drones. Click it to see the footage.', [], shot=piece('3d', 'drone', 'Loading the drone...') + piece('play', 'videos', 'Footage coming soon.', src='/hobbies/drones/videos.json'))
-hobby('video', 'Video production', 'Things I made.', [], shot=piece('play', 'videos', 'Videos coming soon.', src='/hobbies/video/videos.json'))
+hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Videos coming soon.', src='/hobbies/video/videos.json'))
 hobby('watercolor', 'Watercolor and poetry', 'A painting on the front, a poem on the back. Flip it over.', [], shot=piece('play', 'flipcard', 'Loading...', src='/hobbies/watercolor/pieces.json'))
-hobby('photography', 'Photography', 'I shoot on a Fujifilm X-T200 and a Sony A7R II. Hover the cameras, click one to see what I took with it.', [
-  ('Gear', [('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Sony A7R II', '<p>Full frame.</p>')], 'gear'),
-], shot=piece('3d', 'cameras', 'Loading the cameras...', 'tall') + piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/photography/photos.json'))
+hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
+  ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),
+], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Drone footage coming soon.', src='/hobbies/photography/footage.json'))
 hobby('travel', 'Travel', "Places I've been. Spin the globe, click a place.", [
   ('Places', [('Beijing, 2023', '<p>A summer of AI research at Tsinghua University.</p>'), ('New York', '<p>Played Carnegie Hall.</p>')], 'travel'),
 ], shot=piece('3d', 'globe', 'Loading the globe...', 'tall'))

@@ -1,1 +1,5 @@
-{ "_how": "site is chess.com or lichess. Stats load live from their public API.", "site": "chess.com", "username": "" }
+{
+  "_how": "site is chess.com or lichess. Stats load live from their public API.",
+  "site": "chess.com",
+  "username": "davidl8473"
+}

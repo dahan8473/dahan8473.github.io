@@ -1,1 +1,4 @@
-{ "_how": "Racket models and strings, shown on hover.", "rackets": [] }
+{
+  "_how": "The four rackets: model, string, tension, shown on hover. The 3D viewer uses a generic racket model until there are photos.",
+  "rackets": []
+}

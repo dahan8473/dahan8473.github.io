@@ -35,10 +35,10 @@
   // while you browse. The rows on the guitar page and the "now playing" button
   // in the header are just views of it.
   var TRACKS = [
-    { src: '/media/guitar/capricho-arabe.mp3', title: 'Capricho Árabe · Tárrega', short: 'Capricho Árabe', dur: '5:28' },
-    { src: '/media/guitar/tango-en-skai.mp3', title: 'Tango en Skaï · Dyens', short: 'Tango en Skaï', dur: '2:22' },
-    { src: '/media/guitar/marieta.mp3', title: 'Marieta · Tárrega', short: 'Marieta', dur: '2:06' },
-    { src: '/media/guitar/frog-galliard.mp3', title: 'The Frog Galliard · Dowland', short: 'The Frog Galliard', dur: '1:59' }
+    { src: '/media/guitar/capricho-arabe.mp3', title: 'Capricho Árabe · Tárrega', short: 'Capricho Árabe', by: 'Francisco Tárrega', dur: '5:28' },
+    { src: '/media/guitar/tango-en-skai.mp3', title: 'Tango en Skaï · Dyens', short: 'Tango en Skaï', by: 'Roland Dyens', dur: '2:22' },
+    { src: '/media/guitar/marieta.mp3', title: 'Marieta · Tárrega', short: 'Marieta', by: 'Francisco Tárrega', dur: '2:06' },
+    { src: '/media/guitar/frog-galliard.mp3', title: 'The Frog Galliard · Dowland', short: 'The Frog Galliard', by: 'John Dowland', dur: '1:59' }
   ];
   var audio = new Audio();
   audio.preload = 'none';
@@ -60,7 +60,10 @@
       var btn = row.querySelector('button');
       btn.setAttribute('aria-pressed', String(on));
       btn.setAttribute('aria-label', (on ? 'Pause ' : 'Play ') + TRACKS[i].title);
-      if (i !== current) row.querySelector('.t-fill').style.width = '0%';
+      if (i !== current) {
+        row.querySelector('.t-fill').style.width = '0%';
+        row.querySelector('.t-dur').textContent = TRACKS[i].dur;
+      }
     });
     var now = document.querySelector('.playing-now');
     if (now) {
@@ -72,23 +75,39 @@
     }
   }
   ['play', 'pause', 'ended'].forEach(function (ev) { audio.addEventListener(ev, render); });
+  // Someone started playing the 3D guitar: the recording steps aside.
+  document.addEventListener('dl:guitar-play', function () { if (!audio.paused) audio.pause(); });
   audio.addEventListener('ended', function () { current = -1; render(); });
   audio.addEventListener('timeupdate', function () {
     var row = document.querySelectorAll('#guitar-tracks .track')[current];
-    if (row && audio.duration) row.querySelector('.t-fill').style.width = (audio.currentTime / audio.duration) * 100 + '%';
+    if (row && audio.duration) {
+      row.querySelector('.t-fill').style.width = (audio.currentTime / audio.duration) * 100 + '%';
+      row.querySelector('.t-dur').textContent = clock(audio.currentTime) + ' / ' + TRACKS[current].dur;
+    }
   });
 
+  function clock(t) { t = Math.floor(t); return Math.floor(t / 60) + ':' + ('0' + (t % 60)).slice(-2); }
   function mountTracks() {
     var mount = document.getElementById('guitar-tracks');
     if (mount && !mount.childElementCount) {
       TRACKS.forEach(function (t, i) {
         var row = document.createElement('div');
         row.className = 'track';
-        row.innerHTML = '<button type="button">' + PLAY + PAUSE + '</button><span class="t-title"></span>' + EQ +
+        row.innerHTML = '<span class="t-n">0' + (i + 1) + '</span><button type="button">' + PLAY + PAUSE + '</button>' +
+          '<span class="t-name"><span class="t-title"></span>' + EQ + '<span class="t-by"></span></span>' +
           '<span class="t-dur"></span><span class="t-bar"><span class="t-fill"></span></span>';
-        row.querySelector('.t-title').textContent = t.title;
+        row.querySelector('.t-title').textContent = t.short;
+        row.querySelector('.t-by').textContent = t.by;
         row.querySelector('.t-dur').textContent = t.dur;
         row.querySelector('button').addEventListener('click', function () { toggle(i); });
+        // Click the bar to jump around in the piece.
+        row.querySelector('.t-bar').addEventListener('click', function (e) {
+          var r = e.currentTarget.getBoundingClientRect(), at = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+          var seek = function () { if (audio.duration) audio.currentTime = at * audio.duration; };
+          if (i === current) return seek();
+          toggle(i);
+          audio.addEventListener('loadedmetadata', seek, { once: true });
+        });
         mount.appendChild(row);
       });
     }
@@ -930,6 +949,36 @@
     inboxStop = function () { alive = false; clearInterval(timer); timers.forEach(clearTimeout); };
   }
 
+  // ---- Games and 3D scenes -------------------------------------------------------
+  // A page can carry a piece: <div data-play="muaythai"> loads /play/muaythai.js,
+  // <div data-3d="globe"> loads /3d/globe.js. Each module exports mount(el) and
+  // returns a function that cleans it up; swapping pages calls it.
+  var pieces = [];
+  function setupPieces() {
+    pieces.forEach(function (stop) { try { stop(); } catch (e) {} });
+    pieces = [];
+    document.querySelectorAll('main [data-play], main [data-3d]').forEach(function (el) {
+      var play = el.getAttribute('data-play');
+      var url = (play ? '/play/' + play : '/3d/' + el.getAttribute('data-3d')) + '.js?v=' + (el.getAttribute('data-v') || '1');
+      var live = true;
+      pieces.push(function () { live = false; });
+      import(url).then(function (mod) {
+        if (!live || !document.contains(el)) return;
+        el.classList.add('piece-on');
+        var stop = mod.mount(el);
+        if (typeof stop === 'function') pieces.push(stop);
+      }).catch(function (err) {
+        el.classList.add('piece-failed');
+        if (window.console) console.warn('piece', url, err);
+      });
+    });
+  }
+  // Meowmeow's page: "call her over" asks the head to send the cat in.
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-cat-call]');
+    if (b && window.dlCat) window.dlCat();
+  });
+
   // ---- Per page --------------------------------------------------------------------
   function setup() {
     tick();
@@ -940,6 +989,7 @@
     setupWall();
     setupBrain();
     setupInbox();
+    setupPieces();
   }
 
   // ---- Router: swap pages in place ----------------------------------------------

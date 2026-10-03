@@ -4,7 +4,7 @@
 //   swift tools/cutout.swift head photo.jpg media/head.png
 //   swift tools/cutout.swift hand photo.jpg media/hands/point.png point
 //   swift tools/cutout.swift thing photo.jpg media/cat/lie.webp [x,y]
-//   swift tools/cutout.swift frames frames-dir/ media/cat/walk.webp
+//   swift tools/cutout.swift frames frames-dir/ media/cat/walk.webp [fps]
 //
 // Hand poses: point (anchor on the index tip), pinch (between thumb and index),
 // fist (the knuckles), open (middle of the hand, for palms, peace signs, waves).
@@ -12,7 +12,10 @@
 // blink, angry, sad and happy versions next to it, morphed from the landmarks.
 // Hands: plain background, whole hand in frame, wrist visible.
 // Things (the cat): the biggest subject, or the one under x,y (0-1, from the top left).
-// Frames: a folder of video frames, lifted and aligned into one sprite sheet.
+// Gets a margin so ears, paws and tails aren't cut flat at the edge.
+// Frames: a folder of video frames holding one loop of a walk, side on, still
+// camera. Lifted, the travel taken out so she walks in place, paws on the
+// bottom edge, facing right. Prints the stride and loop length talk.js needs.
 // A .webp output path needs cwebp (brew install webp).
 
 import CoreImage
@@ -60,9 +63,9 @@ func largestLabel(_ obs: VNInstanceMaskObservation) -> Int? {
 
 let args = CommandLine.arguments
 let poses = ["point", "pinch", "fist", "open"]
-guard (args.count == 4 && (args[1] == "head" || args[1] == "frames")) || ((args.count == 4 || args.count == 5) && (args[1] == "hand" || args[1] == "thing")),
-      args.count < 5 || args[1] == "thing" || poses.contains(args[4]) else {
-  fail("usage: swift tools/cutout.swift head <photo> <out>\n       swift tools/cutout.swift hand <photo> <out> [point|pinch|fist|open]\n       swift tools/cutout.swift thing <photo> <out> [x,y]\n       swift tools/cutout.swift frames <dir> <out>")
+guard (args.count == 4 && args[1] == "head") || ((args.count == 4 || args.count == 5) && (args[1] == "hand" || args[1] == "thing" || args[1] == "frames")),
+      args.count < 5 || args[1] != "hand" || poses.contains(args[4]) else {
+  fail("usage: swift tools/cutout.swift head <photo> <out>\n       swift tools/cutout.swift hand <photo> <out> [point|pinch|fist|open]\n       swift tools/cutout.swift thing <photo> <out> [x,y]\n       swift tools/cutout.swift frames <dir> <out> [fps]")
 }
 let mode = args[1]
 let pose = args.count == 5 && mode == "hand" ? args[4] : "point"
@@ -94,29 +97,54 @@ if mode == "frames" {
     c.draw(out, in: CGRect(x: 0, y: 0, width: out.width, height: out.height))
     frames.append((out.width, out.height, px))
   }
-  guard let first = frames.first else { fail("no frames with a subject") }
-  // One box that holds the subject in every frame, so nothing jitters.
-  var x0 = first.w, y0 = first.h, x1 = -1, y1 = -1
+  guard frames.count > 1 else { fail("need a loop of frames with a subject") }
+  // Per frame: the subject's box and middle (bitmap rows run top to bottom).
+  var boxes: [(x0: Int, y0: Int, x1: Int, y1: Int, cx: Double)] = []
   for f in frames {
+    var x0 = f.w, y0 = f.h, x1 = -1, y1 = -1, sx = 0.0, n = 0.0
     for y in 0..<f.h { for x in 0..<f.w where f.px[(y * f.w + x) * 4 + 3] > 24 {
-      x0 = min(x0, x); x1 = max(x1, x); y0 = min(y0, y); y1 = max(y1, y)
+      x0 = min(x0, x); x1 = max(x1, x); y0 = min(y0, y); y1 = max(y1, y); sx += Double(x); n += 1
     } }
+    boxes.append((x0, y0, x1, y1, n > 0 ? sx / n : Double(f.w) / 2))
   }
-  let bw = x1 - x0 + 1, bh = y1 - y0 + 1
-  let k = min(1, 240 / CGFloat(bh))
+  // She crosses the frame at a steady pace: fit it and take it out, so she
+  // walks in place and talk.js moves her at the same speed. The lowest paw
+  // sits on the bottom edge in every frame.
+  let cnt = Double(boxes.count)
+  let mi = (cnt - 1) / 2, mx = boxes.map(\.cx).reduce(0, +) / cnt
+  var cov = 0.0, den = 0.0
+  for (i, b) in boxes.enumerated() { cov += (Double(i) - mi) * (b.cx - mx); den += (Double(i) - mi) * (Double(i) - mi) }
+  let pace = den > 0 ? cov / den : 0  // px per frame
+  let ground = boxes.map(\.y1).max()!
+  let dx = boxes.indices.map { Int((-pace * Double($0)).rounded()) }
+  let dy = boxes.map { ground - $0.y1 }
+  var ux0 = Int.max, uy0 = Int.max, ux1 = Int.min, uy1 = Int.min
+  for (i, b) in boxes.enumerated() {
+    ux0 = min(ux0, b.x0 + dx[i]); ux1 = max(ux1, b.x1 + dx[i]); uy0 = min(uy0, b.y0 + dy[i]); uy1 = max(uy1, b.y1 + dy[i])
+  }
+  let pad = Int((Double(max(ux1 - ux0, uy1 - uy0)) * 0.03).rounded())
+  let bw = ux1 - ux0 + 1 + pad * 2, bh = uy1 - uy0 + 1 + pad
+  let k = min(1, 300 / CGFloat(bh))
   let fw = Int((CGFloat(bw) * k).rounded()), fh = Int((CGFloat(bh) * k).rounded())
+  let flip = pace < 0  // the site walks her left to right
   let sheet = CGContext(data: nil, width: fw * frames.count, height: fh, bitsPerComponent: 8, bytesPerRow: 0,
                         space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
   sheet.interpolationQuality = .high
   for (i, var f) in frames.enumerated() {
     let fc = CGContext(data: &f.px, width: f.w, height: f.h, bitsPerComponent: 8, bytesPerRow: f.w * 4,
                        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-    let crop = fc.makeImage()!.cropping(to: CGRect(x: x0, y: y0, width: bw, height: bh))!
-    sheet.draw(crop, in: CGRect(x: i * fw, y: 0, width: fw, height: fh))
+    let cell = CGContext(data: nil, width: bw, height: bh, bitsPerComponent: 8, bytesPerRow: 0,
+                         space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    if flip { cell.translateBy(x: CGFloat(bw), y: 0); cell.scaleBy(x: -1, y: 1) }
+    // Top-left (x, y) in the frame lands at (x - ux0 + pad + dx, y - uy0 + pad + dy) in the cell.
+    let ox = -ux0 + pad + dx[i], oy = -uy0 + pad + dy[i]
+    cell.draw(fc.makeImage()!, in: CGRect(x: ox, y: bh - oy - f.h, width: f.w, height: f.h))
+    sheet.draw(cell.makeImage()!, in: CGRect(x: i * fw, y: 0, width: fw, height: fh))
   }
   write(sheet.makeImage()!, to: outURL)
+  let fps = args.count == 5 ? Double(args[4]) ?? 30 : 30
   let parts = outURL.path.components(separatedBy: "/media/")
-  print("{\"frames\":\(frames.count),\"h\":\(fh),\"src\":\"/media/\(parts.count > 1 ? parts.last! : outURL.lastPathComponent)\",\"w\":\(fw)}")
+  print("{\"frames\":\(frames.count),\"h\":\(fh),\"ms\":\(Int((cnt / fps * 1000).rounded())),\"src\":\"/media/\(parts.count > 1 ? parts.last! : outURL.lastPathComponent)\",\"stride\":\(Int((abs(pace) * cnt * Double(k)).rounded())),\"w\":\(fw)}")
   exit(0)
 }
 
@@ -253,12 +281,22 @@ for y in 0..<ch {
 }
 guard maxX >= minX else { fail("subject mask is empty") }
 let tight = CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
-guard let trimmed = croppedCG.cropping(to: tight) else { fail("trim failed") }
+guard var trimmed = croppedCG.cropping(to: tight) else { fail("trim failed") }
 
 // Top-left pixel origin of the output inside the source image.
 let originX = crop.minX + tight.minX
 let topY = crop.maxY - tight.minY
-let outW = tight.width, outH = tight.height
+var outW = tight.width, outH = tight.height
+if mode == "thing" {
+  // A margin, so soft fur and tail tips aren't cut flat at the edge.
+  let pad = Int((max(outW, outH) * 0.03).rounded())
+  let pw = Int(outW) + pad * 2, ph = Int(outH) + pad * 2
+  let pctx = CGContext(data: nil, width: pw, height: ph, bitsPerComponent: 8, bytesPerRow: 0,
+                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+  pctx.draw(trimmed, in: CGRect(x: pad, y: pad, width: Int(outW), height: Int(outH)))
+  trimmed = pctx.makeImage()!
+  outW = CGFloat(pw); outH = CGFloat(ph)
+}
 func num(_ v: CGFloat) -> NSDecimalNumber { NSDecimalNumber(string: String(format: "%.3f", Double(v))) }
 func fx(_ x: CGFloat) -> NSDecimalNumber { num((x - originX) / outW) }
 func fy(_ y: CGFloat) -> NSDecimalNumber { num((topY - y) / outH) }
@@ -281,6 +319,34 @@ let dctx = CGContext(data: nil, width: dw, height: dh, bitsPerComponent: 8, byte
                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
 dctx.interpolationQuality = .high
 dctx.draw(trimmed, in: CGRect(x: 0, y: 0, width: dw, height: dh))
+if mode == "thing", let data = dctx.data {
+  // The floor bleeds into the soft fur edge as a pale ring. Give every
+  // see-through pixel the colour of the fur just inside it.
+  let p = data.assumingMemoryBound(to: UInt8.self)
+  let row = dctx.bytesPerRow
+  let src = [UInt8](UnsafeBufferPointer(start: p, count: row * dh))
+  for y in 0..<dh {
+    for x in 0..<dw {
+      let i = y * row + x * 4
+      let a = Int(src[i + 3])
+      if a == 0 || a >= 250 { continue }
+      var s = (0, 0, 0), n = 0, r = 2
+      while n == 0 && r <= 6 {
+        for yy in max(0, y - r)...min(dh - 1, y + r) {
+          for xx in max(0, x - r)...min(dw - 1, x + r) {
+            let j = yy * row + xx * 4
+            if src[j + 3] >= 250 { s.0 += Int(src[j]); s.1 += Int(src[j + 1]); s.2 += Int(src[j + 2]); n += 1 }
+          }
+        }
+        r += 2
+      }
+      if n == 0 { continue }
+      p[i] = UInt8(min(a, s.0 / n * a / 255))
+      p[i + 1] = UInt8(min(a, s.1 / n * a / 255))
+      p[i + 2] = UInt8(min(a, s.2 / n * a / 255))
+    }
+  }
+}
 guard let finalCG = dctx.makeImage() else { fail("resize failed") }
 
 write(finalCG, to: outURL)

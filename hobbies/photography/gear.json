@@ -1,0 +1,64 @@
+{
+  "_how": "The kit on the photography page. Specs show on hover. Photos are matched to a camera by its id.",
+  "bodies": [
+    {
+      "id": "a7r2",
+      "name": "Sony A7R II",
+      "kind": "camera",
+      "specs": [
+        "42.4 MP full-frame BSI sensor",
+        "5-axis in-body stabilization",
+        "4K video",
+        "625 g"
+      ]
+    },
+    {
+      "id": "xt200",
+      "name": "Fujifilm X-T200",
+      "kind": "camera",
+      "specs": [
+        "24.2 MP APS-C sensor",
+        "4K video at 30p",
+        "3.5 in vari-angle touchscreen",
+        "370 g"
+      ]
+    }
+  ],
+  "lenses": [
+    {
+      "id": "tamron-17-70",
+      "name": "Tamron 17-70mm f/2.8 Di III-A VC RXD",
+      "kind": "lens",
+      "specs": [
+        "APS-C standard zoom, 25.5-105mm equivalent",
+        "constant f/2.8",
+        "VC stabilization",
+        "525 g"
+      ],
+      "mount": "Sony E",
+      "on": "a7r2"
+    }
+  ],
+  "drone": {
+    "id": "mini4k",
+    "name": "DJI Mini 4K",
+    "kind": "drone",
+    "specs": [
+      "under 249 g",
+      "4K/30fps video",
+      "3-axis gimbal",
+      "up to 31 min flight"
+    ]
+  },
+  "audio": [
+    {
+      "id": "mic-mini",
+      "name": "DJI Mic Mini",
+      "kind": "mic",
+      "specs": [
+        "wireless mic, two clip-on transmitters",
+        "one receiver"
+      ]
+    }
+  ]
+}

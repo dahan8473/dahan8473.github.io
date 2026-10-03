@@ -75,6 +75,8 @@
     }
   }
   ['play', 'pause', 'ended'].forEach(function (ev) { audio.addEventListener(ev, render); });
+  // Someone started playing the 3D guitar: the recording steps aside.
+  document.addEventListener('dl:guitar-play', function () { if (!audio.paused) audio.pause(); });
   audio.addEventListener('ended', function () { current = -1; render(); });
   audio.addEventListener('timeupdate', function () {
     var row = document.querySelectorAll('#guitar-tracks .track')[current];

@@ -2305,6 +2305,72 @@
     setInterval(checkReplies, 60000);
   }
 
+  // ---- Lending the head to a page (play/muaythai.js) ---------------------------
+  // flyTo() flies the head to a box on screen, away() hides it while the page
+  // draws its own copy there, home() flies it back to its corner. While it's
+  // lent, dir.busy reads true, so bits, small talk, naps and resize docking
+  // all leave it alone.
+  let lent = false;
+  let lentK = 1;
+  let flight = null;
+  let busyNow = dir.busy;
+  Object.defineProperty(dir, 'busy', { get: () => busyNow || lent, set: (v) => { busyNow = v; } });
+  function lend(on) {
+    lent = on;
+    headBtn.style.pointerEvents = on ? 'none' : '';
+    talk.style.visibility = hand.style.visibility = on ? 'hidden' : '';
+  }
+  function fly(x, y, k, ms) {
+    const x0 = pos.x, y0 = pos.y, k0 = lentK;
+    if (flight) { try { flight.commitStyles(); } catch (e) {} flight.cancel(); flight = null; }
+    stopTween(actor);
+    actor.style.transformOrigin = '0 0';
+    pos.x = x; pos.y = y; lentK = k;
+    const at = (t) => {
+      const u = 1 - t;
+      const lift = Math.min(160, Math.hypot(x - x0, y - y0) * 0.35);
+      const bx = u * u * x0 + 2 * u * t * ((x0 + x) / 2) + t * t * x;
+      const by = u * u * y0 + 2 * u * t * (Math.min(y0, y) - lift) + t * t * y;
+      return `translate3d(${bx.toFixed(1)}px,${by.toFixed(1)}px,0) scale(${(k0 + (k - k0) * t).toFixed(4)})`;
+    };
+    actor.style.transform = at(1);
+    if (reduce || !ms) return Promise.resolve();
+    life.lean = clamp((x - x0) / 40, -10, 10);
+    const a = actor.animate(Array.from({ length: 9 }, (_, i) => ({ transform: at(i / 8) })), { duration: ms, easing: 'cubic-bezier(.45,.05,.3,1)' });
+    flight = a;
+    return a.finished.then(() => { if (flight === a) flight = null; life.lean = 0; }, () => {});
+  }
+  window.dlHead = {
+    rect: () => headBtn.getBoundingClientRect(),
+    // Put the visible head's top-left at (x, y), w wide.
+    flyTo(x, y, w, ms = 750) {
+      if (!lent) {
+        lend(true);
+        interrupt();
+        if (chatOn) closeChat(null);
+        hideTalk();
+        life.sleep = false;
+        emoteOff();
+      }
+      const r = headBtn.getBoundingClientRect();
+      const bx = (r.left - pos.x) / lentK, by = (r.top - pos.y) / lentK, bw = r.width / lentK;
+      const k = w / bw;
+      return fly(x - k * bx, y - k * by, k, ms);
+    },
+    away(on) { actor.style.visibility = on ? 'hidden' : ''; },
+    async home(ms = 750) {
+      if (!lent) return;
+      actor.style.visibility = '';
+      const d = dockPos();
+      await fly(d.x, d.y, 1, ms);
+      if (lentK !== 1 || pos.x !== d.x || pos.y !== d.y) return;
+      actor.style.transformOrigin = '';
+      setHead(d.x, d.y);
+      lend(false);
+      schedule(rand(15000, 25000));
+    }
+  };
+
   function boot() {
     document.body.appendChild(root);
     measure();

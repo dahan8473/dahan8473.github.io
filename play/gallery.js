@@ -391,7 +391,11 @@ export function mount(el) {
     label.append('showing ', h('b', null, camName(camera)), ' photos');
     const all = h('button', 'pgal-all', 'show all');
     all.type = 'button';
-    all.addEventListener('click', () => setCamera(null, true));
+    all.addEventListener('click', () => {
+      setCamera(null, true);
+      // Let the 3D kit drop its highlight too.
+      document.dispatchEvent(new CustomEvent('dl:camera', { detail: { id: null } }));
+    });
     chip.append(label, h('span', 'pgal-dot', '·'), all);
     bar.appendChild(chip);
   }

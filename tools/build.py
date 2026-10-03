@@ -6,7 +6,7 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 26, 7, 21, 17
+V_CSS, V_TALKCSS, V_JS, V_TALK = 27, 7, 22, 17
 V_PIECE = 5  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
@@ -443,10 +443,13 @@ hobby('meowmeow', 'Meowmeow', 'My cat. She/her, black, and always chudding aroun
         <img src="/media/life/meowmeow-stairs.webp" alt="Meowmeow stretched out on the floor by the stairs" width="750" height="1000">
       </div>
 ''', kind='The cat')
-hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegie Hall. Play it yourself, or listen to me.", [
-  ('Recordings', [('Four pieces', '<div class="tracks" id="guitar-tracks"></div>')], 'guitar'),
+hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegie Hall. These are recordings of me playing.", [
   ('Highlights', [('Carnegie Hall', '<p>Performed there.</p>'), ('NW Guitar Competition', '<p>2nd place, classical guitar.</p>')], None),
-], shot=piece('3d', 'guitar', 'Loading the guitar...', 'tall'))
+], shot='''      <section class="recordings" data-t="guitar" aria-label="Recordings">
+        <div class="tracks hero" id="guitar-tracks"></div>
+      </section>
+      <p class="strip-label">Play it yourself</p>
+''' + piece('3d', 'guitar', 'Loading the guitar...', 'strip'))
 hobby('muay-thai', 'Muay Thai', 'I train at a club, and coach the beginner class at my local gym.', [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'muaythai', 'Loading the ring...'))

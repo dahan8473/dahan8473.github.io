@@ -454,6 +454,25 @@ a.row:hover .m { transform: translateX(3px); }
 .t-dur { margin-left: auto; color: var(--t3); }
 .t-bar { position: absolute; left: 38px; right: 0; bottom: 0; height: 1px; background: var(--rule); }
 .t-fill { display: block; height: 100%; width: 0; background: var(--t2); transition: width 200ms linear; }
+/* The guitar page: the recordings are the main thing. */
+.recordings { margin-top: 48px; }
+.tracks.hero .track { display: grid; grid-template-columns: 28px 48px minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--rule); }
+.tracks.hero .track:first-child { border-top: 1px solid var(--rule); }
+.tracks.hero .t-n { color: var(--t3); font-variant-numeric: tabular-nums; }
+.tracks.hero .track button { width: 48px; height: 48px; background: var(--t1); color: var(--bg); transition: transform 160ms ease, background 160ms ease; }
+.tracks.hero .track button:hover { transform: scale(1.06); }
+.tracks.hero .track.playing button { background: #88c0d0; color: #0d111a; }
+.tracks.hero .track button svg { width: 12px; height: 14px; }
+.tracks.hero .t-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.tracks.hero .t-title { font-size: 1.15em; }
+.tracks.hero .t-by { flex-basis: 100%; color: var(--t3); }
+.tracks.hero .t-dur { font-variant-numeric: tabular-nums; }
+.tracks.hero .t-bar { left: 94px; bottom: -1px; height: 2px; background: transparent; cursor: pointer; }
+.tracks.hero .t-bar::before { content: ''; position: absolute; inset: -8px 0; }
+.tracks.hero .track.playing .t-fill { background: #88c0d0; }
+.strip-label { margin-top: 56px; color: var(--t3); }
+.stage3d.strip { aspect-ratio: 16 / 5; margin: 10px 0 0; }
+
 .eq { display: none; align-items: flex-end; gap: 2px; height: 10px; }
 .track.playing .eq { display: inline-flex; }
 .eq i { width: 2px; height: 3px; background: var(--t2); animation: eq 900ms ease-in-out infinite; }
@@ -541,6 +560,11 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
   .doors .row { grid-template-columns: minmax(0, 1fr) auto; }
   .hob-more { grid-template-columns: minmax(0, 1fr); }
   /* Short enough that the head, docked bottom right, sits below the box. */
+  /* Phones: just the playing bars in the header, no title, so the name keeps one line. */
+  .playing-now .np-title { display: none; }
+  .tracks.hero .track { grid-template-columns: 22px 44px minmax(0, 1fr) auto; gap: 12px; }
+  .tracks.hero .t-bar { left: 78px; }
+  .stage3d.strip { aspect-ratio: 16 / 8; }
   .imsg { height: calc(100svh - 300px); min-height: 420px; margin-top: 20px; border-radius: 20px; }
   .projs { grid-template-columns: 1fr; gap: 48px; }
   .more-projs { padding-top: 56px; }

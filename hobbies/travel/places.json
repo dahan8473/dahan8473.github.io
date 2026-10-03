@@ -1,7 +1,7 @@
 {
-  "_how": "One entry per place. lat/lng in degrees. videos are YouTube ids (unlisted is fine). photos are paths under /media/travel/.",
+  "_how": "One entry per place. lat/lng in degrees. for is one line on what the trip was for. videos are YouTube ids (unlisted is fine). photos are paths under /media/travel/. cover is up to 3 photo paths for the hover card (defaults to the first 3 photos).",
   "places": [
-    { "id": "beijing", "name": "Beijing", "country": "China", "lat": 39.9042, "lng": 116.4074, "date": "Summer 2023", "note": "A summer of AI research at Tsinghua University.", "videos": [], "photos": [] },
-    { "id": "new-york", "name": "New York", "country": "USA", "lat": 40.7128, "lng": -74.006, "date": "", "note": "Played Carnegie Hall.", "videos": [], "photos": [] }
+    { "id": "beijing", "name": "Beijing", "country": "China", "lat": 39.9042, "lng": 116.4074, "date": "Summer 2023", "for": "AI research at Tsinghua University", "note": "A summer of AI research at Tsinghua University.", "videos": [], "photos": [], "cover": [] },
+    { "id": "new-york", "name": "New York", "country": "USA", "lat": 40.7128, "lng": -74.006, "date": "", "for": "Played Carnegie Hall", "note": "Played Carnegie Hall.", "videos": [], "photos": [], "cover": [] }
   ]
 }

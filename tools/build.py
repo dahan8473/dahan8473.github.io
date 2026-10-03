@@ -6,8 +6,8 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 23, 7, 21, 17
-V_PIECE = 1  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 24, 7, 21, 17
+V_PIECE = 2  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -478,7 +478,7 @@ hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a 
 ], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Drone footage coming soon.', src='/hobbies/photography/footage.json'))
 hobby('travel', 'Travel', "Places I've been. Spin the globe, click a place.", [
   ('Places', [('Beijing, 2023', '<p>A summer of AI research at Tsinghua University.</p>'), ('New York', '<p>Played Carnegie Hall.</p>')], 'travel'),
-], shot=piece('3d', 'globe', 'Loading the globe...', 'tall'))
+], shot=piece('3d', 'globe', 'Loading the globe...', 'globe-full'))
 hobby('fashion', 'Fashion', "I'm building Kunlun, a clothing brand built on Chinese mythology. Traditional Chinese and English run side by side as two voices.", [
   ('Kunlun', [('The brand', '<p>Kunlun is the axis mountain of Chinese myth, and each drop is a step up it. I built the bilingual design system and the storefront. Pre-launch.</p><p class="go"><a class="ln" href="/kunlun/">Kunlun case study</a></p>')], None),
 ], shot='''      <figure class="case-shot ink">

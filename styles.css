@@ -373,6 +373,18 @@ a.row:hover .m { transform: translateX(3px); }
 .stage3d { position: relative; width: 100%; aspect-ratio: 16 / 10; margin: 40px 0 8px; }
 .stage3d.tall { aspect-ratio: 4 / 3; }
 .play { position: relative; margin: 40px 0 8px; }
+/* Travel: the globe is the page and the words float over it. Text lets drags
+   through to the globe; only links and buttons catch the pointer. */
+.stage3d.globe-full { position: fixed; inset: 0; z-index: 0; width: auto; height: auto; aspect-ratio: auto; margin: 0; }
+.page:has(.globe-full) { pointer-events: none; }
+.page:has(.globe-full) :is(a, button) { pointer-events: auto; }
+.page:has(.globe-full) .stage3d.globe-full { pointer-events: auto; }
+.page:has(.globe-full) :is(.top, .back, .header, .next) { position: relative; z-index: 1; }
+.page:has(.globe-full) .header { max-width: 22em; }
+.page:has(.globe-full) .section { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.page:has(.globe-full) .foot { display: none; }
+.page:has(.globe-full) .next { display: none; }
+.page:has(.globe-full) :is(.top, .back, .header) { text-shadow: 0 0 14px var(--bg), 0 0 4px var(--bg); }
 .piece-note { color: var(--t3); }
 .piece-on > .piece-note { display: none; }
 

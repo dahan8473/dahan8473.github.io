@@ -376,11 +376,14 @@ a.row:hover .m { transform: translateX(3px); }
 /* Travel: the globe is the page and the words float over it. Text lets drags
    through to the globe; only links and buttons catch the pointer. */
 .stage3d.globe-full { position: fixed; inset: 0; z-index: 0; width: auto; height: auto; aspect-ratio: auto; margin: 0; }
+/* A slight warm glow from behind the globe. --gx, --gy, --gr come from the globe. */
+.stage3d.globe-full { --glow: 255, 214, 150; background: radial-gradient(circle at var(--gx, 50%) var(--gy, 55%), rgba(var(--glow), 0) calc(var(--gr, 30vmin) * 0.96), rgba(var(--glow), 0.26) var(--gr, 30vmin), rgba(var(--glow), 0.1) calc(var(--gr, 30vmin) * 1.1), rgba(var(--glow), 0.03) calc(var(--gr, 30vmin) * 1.28), rgba(var(--glow), 0) calc(var(--gr, 30vmin) * 1.5)); }
+[data-theme="dark"] .stage3d.globe-full { --glow: 255, 205, 130; }
 .page:has(.globe-full) { pointer-events: none; }
 .page:has(.globe-full) :is(a, button) { pointer-events: auto; }
 .page:has(.globe-full) .stage3d.globe-full { pointer-events: auto; }
 .page:has(.globe-full) :is(.top, .back, .header, .next) { position: relative; z-index: 1; }
-.page:has(.globe-full) .header { max-width: 22em; }
+.page:has(.globe-full) main > .header { display: none; }
 .page:has(.globe-full) .section { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .page:has(.globe-full) .foot { display: none; }
 .page:has(.globe-full) .next { display: none; }

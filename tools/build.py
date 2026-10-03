@@ -234,7 +234,7 @@ resume += sec('leadership', 'Leadership', [
              '<p class="go">' + link('/tethos/', 'Case study') + ext('https://tethos.ca', 'tethos.ca') + '</p>']),
   item('wfn', [('<b>Western Founders Network</b>', '2023 – 2025'), ('VP of Education', 'London, ON')],
        note=["<p>Ran Ontario's largest hackathon education event.</p>"]),
-  item('mentoring', [('<b>Mentoring and judging</b>', ''), ('Hack Western mentor, Western AI mentor, Ignition Hacks judge, Muay Thai club beginner coach', '')], plain=True),
+  item('mentoring', [('<b>Mentoring and judging</b>', ''), ('Hack Western mentor, Western AI mentor, Ignition Hacks judge, Muay Thai beginner coach', '')], plain=True),
 ])
 resume += sec('projects', 'Projects', [
   item('tethos-platform', [('<b>Tethos Platform</b>, tethos.ca', 'May 2026 – now'), ('Next.js, TypeScript, FastAPI, Supabase, React Three Fiber', '')],
@@ -436,7 +436,7 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
   ('Recordings', [('Four pieces', '<div class="tracks" id="guitar-tracks"></div>')], 'guitar'),
   ('Highlights', [('Carnegie Hall', '<p>Performed there.</p>'), ('NW Guitar Competition', '<p>2nd place, classical guitar.</p>')], None),
 ])
-hobby('muay-thai', 'Muay Thai', 'I train at the Muay Thai club at Western, and coach its beginner class.', [
+hobby('muay-thai', 'Muay Thai', 'I train at a club, and coach the beginner class at my local gym.', [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ])
 hobby('climbing', 'Rock climbing', "I boulder. I can only do a V2 right now.", [

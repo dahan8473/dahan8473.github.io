@@ -119,6 +119,20 @@ def raycast(ob, origin, direction):
     return loc, nrm
 
 
+def project_onto(ob, target, direction, lift=0.08):
+    """Shrink-wrap a thin decal mesh onto `target` by casting each vertex along `direction`."""
+    from mathutils.bvhtree import BVHTree
+    me = target.data
+    tree = BVHTree.FromPolygons([target.matrix_world @ v.co for v in me.vertices], [tuple(p.vertices) for p in me.polygons])
+    d = Vector(direction).normalized()
+    for v in ob.data.vertices:
+        loc, nrm, idx, dist = tree.ray_cast(v.co - d * 20.0, d, 60.0)
+        if loc is not None:
+            v.co = loc - d * lift
+    ob.data.update()
+    return ob
+
+
 # ---------------------------------------------------------------- textures
 
 def save_img(name, arr, colorspace='sRGB'):
@@ -888,7 +902,7 @@ def stats(objs):
 
 # ---------------------------------------------------------------- render
 
-def studio(ground_z=0.0, size=4.0, world=0.18, floor=True):
+def studio(ground_z=0.0, size=4.0, world=0.18, floor=True, scale=1.0):
     sc = bpy.context.scene
     sc.render.engine = 'BLENDER_EEVEE'
     sc.eevee.taa_render_samples = 24
@@ -929,10 +943,11 @@ def studio(ground_z=0.0, size=4.0, world=0.18, floor=True):
         d = Vector(target) - Vector(loc)
         lo.rotation_euler = d.to_track_quat('-Z', 'Y').to_euler()
         return lo
-    area('key', (0.35, -0.45, 0.55), (0, 0, 0.03), 9, 0.5)
-    area('fill', (-0.5, -0.2, 0.25), (0, 0, 0.03), 3, 0.6)
-    area('rim', (-0.1, 0.5, 0.45), (0, 0, 0.03), 6, 0.4)
-    area('top', (0, 0, 0.8), (0, 0, 0), 4, 0.8)
+    k = scale
+    area('key', (0.35 * k, -0.45 * k, 0.55 * k), (0, 0, 0.03 * k), 9 * k * k, 0.5 * k)
+    area('fill', (-0.5 * k, -0.2 * k, 0.25 * k), (0, 0, 0.03 * k), 3 * k * k, 0.6 * k)
+    area('rim', (-0.1 * k, 0.5 * k, 0.45 * k), (0, 0, 0.03 * k), 6 * k * k, 0.4 * k)
+    area('top', (0, 0, 0.8 * k), (0, 0, 0), 4 * k * k, 0.8 * k)
     if floor:
         bpy.ops.mesh.primitive_plane_add(size=size, location=(0, 0, ground_z))
         fl = bpy.context.active_object

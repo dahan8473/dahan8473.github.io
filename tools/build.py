@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 32, 10, 28, 33
+V_CSS, V_TALKCSS, V_JS, V_TALK = 33, 10, 29, 33
 V_PIECE = 21  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {

@@ -1148,8 +1148,8 @@
     { id: 'note', name: 'Leave a note on the wall', done: 'Left a note', line: 'Stick it anywhere. Signed or not.', href: '/notes/' },
     { id: 'message', name: 'Message me', done: 'Messaged me', line: 'Goes straight to my phone. I reply here.', href: '/messages/' }
   ];
-  var CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>';
-  var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.4l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg>';
+  var CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.5 3.5 7.5-8"/></svg>';
+  var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8l2.4 5 5.5.7-4 3.8 1 5.4L12 16.1l-4.9 2.6 1-5.4-4-3.8 5.5-.7z"/></svg>';
   function escHtml(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function foundList() {
     try { var a = JSON.parse(localStorage.getItem('dl-found')); return Array.isArray(a) ? a : []; } catch (e) { return []; }
@@ -1161,10 +1161,12 @@
     var got = foundList();
     return FINDS.filter(function (f) { return got.indexOf(f.id) < 0 && !(skipHere && f.href === here()); });
   }
-  function findGo(f, cls) {
-    if (f.href) return '<a class="' + cls + '" href="' + f.href + '">' + (f.href === here() ? 'It\'s on this page' : 'Go') + ' <span aria-hidden="true">&#8594;</span></a>';
-    if (f.act) return '<button class="' + cls + '" type="button" data-find-act="' + f.act + '">Say hi <span aria-hidden="true">&#8594;</span></button>';
-    return '';
+  // One thing to do as a row: a link to its page, a button for the head, or
+  // just the words when it's something you do anywhere (feeding the head).
+  function findRow(f, cls, inner) {
+    if (f.href && f.href !== here()) return '<a class="' + cls + '" href="' + f.href + '">' + inner + '</a>';
+    if (f.act) return '<button class="' + cls + '" type="button" data-find-act="' + f.act + '">' + inner + '</button>';
+    return '<div class="' + cls + ' still">' + inner + '</div>';
   }
 
   var toastEl = null, toastTimer = 0;
@@ -1176,27 +1178,31 @@
       document.body.appendChild(toastEl);
     }
     var n = foundList().length;
-    var next = f ? '<p class="ft-next"><span>Next</span> ' + (f.href ? '<a href="' + f.href + '">' + escHtml(f.name) + '</a>' : escHtml(f.name)) + '<span class="ft-line">' + escHtml(f.line) + '</span></p>' : '';
-    toastEl.innerHTML = '<button class="ft-x" type="button" aria-label="Dismiss">&#215;</button>' +
-      '<p class="ft-head">' + head + '</p>' + next +
-      '<button class="ft-all" type="button" data-finds-open>' + n + ' of ' + FINDS.length + ' done. See them all</button>';
+    var next = f ? findRow(f, 'ft-next', '<span class="ft-k">Next</span><span class="ft-name">' + escHtml(f.name) + '</span><span class="ft-line">' + escHtml(f.line) + '</span>' + (f.href || f.act ? '<span class="ft-m" aria-hidden="true">&#8594;</span>' : '')) : '';
+    toastEl.innerHTML = '<div class="ft-top"><p class="ft-head">' + head + '</p><button class="ft-x" type="button" aria-label="Dismiss">' + X_ICON + '</button></div>' + next +
+      '<p class="ft-foot"><span>' + n + ' of ' + FINDS.length + ' done</span><button class="ln" type="button" data-finds-open>See all</button></p>';
     clearTimeout(toastTimer);
     void toastEl.offsetWidth;
     toastEl.classList.add('on');
     toastTimer = setTimeout(hideToast, 9000);
   }
   function hideToast() { clearTimeout(toastTimer); if (toastEl) toastEl.classList.remove('on'); }
+  // Hovering the toast keeps it up.
+  document.addEventListener('pointerover', function (e) { if (toastEl && toastEl.contains(e.target)) clearTimeout(toastTimer); });
+  document.addEventListener('pointerout', function (e) {
+    if (toastEl && toastEl.classList.contains('on') && toastEl.contains(e.target) && !toastEl.contains(e.relatedTarget)) toastTimer = setTimeout(hideToast, 4000);
+  });
 
   window.dlFound = function (id) {
     var f = FINDS.filter(function (x) { return x.id === id; })[0];
     if (!f || isFound(id)) return;
     var got = foundList().concat(id);
     try { localStorage.setItem('dl-found', JSON.stringify(got)); } catch (e) { return; }
-    renderPill();
+    renderPill(true);
     if (panel) renderPanel();
-    var rest = left(true);
-    var head = got.length === FINDS.length ? '<b>That\'s all twelve.</b> You did everything on here. Thank you, really.' : '<b>' + escHtml(f.done) + '.</b> ' + (FINDS.length - got.length) + ' more things to do here.';
-    toast(head, rest[0]);
+    var left_ = FINDS.length - got.length;
+    var head = left_ ? '<b>' + escHtml(f.done) + '.</b> ' + left_ + ' more to go.' : '<b>That\'s all twelve.</b> You did everything on here. Thank you, really.';
+    toast(head, left(true)[0]);
   };
   // For the head: the next thing to send them to, and a toast that says so.
   window.dlFinds = {
@@ -1215,8 +1221,8 @@
   }, true);
   addEventListener('dl:globe-pick', function () { window.dlFound('globe'); });
 
-  // The pill in the header: how many they've done, and the list.
-  function renderPill() {
+  // In the header, next to the clock: a star and how many they've done.
+  function renderPill(bump) {
     var end = document.querySelector('.top .end');
     if (!end) return;
     var pill = end.querySelector('.finds-pill');
@@ -1226,31 +1232,49 @@
       pill.className = 'finds-pill';
       pill.setAttribute('data-finds-open', '');
       pill.setAttribute('aria-haspopup', 'dialog');
+      pill.setAttribute('aria-expanded', 'false');
       end.insertBefore(pill, end.firstChild);
     }
     var n = foundList().length;
-    pill.innerHTML = STAR + '<span>' + n + '/' + FINDS.length + '</span>';
-    pill.setAttribute('aria-label', n + ' of ' + FINDS.length + ' things done. See what else there is to do');
+    pill.innerHTML = STAR + '<span>' + n + '<span class="of">/' + FINDS.length + '</span></span>';
+    pill.setAttribute('aria-label', 'Things to do: ' + n + ' of ' + FINDS.length + ' done');
+    pill.title = 'Things to do here';
+    pill.classList.toggle('some', n > 0);
     pill.classList.toggle('all', n === FINDS.length);
+    if (reduce) return;
     var fresh = false;
     try { fresh = !n && !sessionStorage.getItem('dl-pill-seen'); sessionStorage.setItem('dl-pill-seen', '1'); } catch (e) {}
-    if (fresh && !reduce) pill.classList.add('hello');
+    if (fresh) pill.classList.add('hello');
+    if (bump) { pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); }
   }
 
   var panel = null, panelFrom = null;
   function renderPanel() {
     var got = foundList();
-    var pct = Math.round(got.length / FINDS.length * 100);
-    panel.innerHTML = '<div class="fp-head"><p class="fp-title" id="fp-title">Things to do here</p><p class="fp-count">' + got.length + ' of ' + FINDS.length + '</p>' +
-      '<button class="fp-x" type="button" aria-label="Close">&#215;</button></div>' +
-      '<div class="fp-bar" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' +
-      '<ul class="fp-list">' + FINDS.map(function (f) {
+    var all = got.length === FINDS.length;
+    // Not done first, in order; done ones sink to the bottom.
+    var order = FINDS.filter(function (f) { return got.indexOf(f.id) < 0; }).concat(FINDS.filter(function (f) { return got.indexOf(f.id) >= 0; }));
+    panel.innerHTML = '<div class="fp-head"><p class="fp-title" id="fp-title">Things to do here</p><button class="fp-x" type="button" aria-label="Close">' + X_ICON + '</button></div>' +
+      '<p class="fp-sub">' + (all ? 'All twelve done. You saw everything.' : got.length ? got.length + ' of ' + FINDS.length + ' done. Keep going.' : 'Almost everything on here does something. Start anywhere.') + '</p>' +
+      '<div class="fp-bar" role="progressbar" aria-label="Done" aria-valuemin="0" aria-valuemax="' + FINDS.length + '" aria-valuenow="' + got.length + '">' +
+        FINDS.map(function (f, i) { return '<i' + (i < got.length ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' +
+      '<ul class="fp-list">' + order.map(function (f) {
         var done = got.indexOf(f.id) >= 0;
-        return '<li class="' + (done ? 'done' : '') + '"><span class="fp-tick" aria-hidden="true">' + (done ? CHECK : '') + '</span>' +
-          '<span class="fp-text"><span class="fp-name">' + escHtml(f.name) + (done ? '<span class="sr"> (done)</span>' : '') + '</span><span class="fp-line">' + escHtml(f.line) + '</span></span>' +
-          (done ? '' : findGo(f, 'fp-go')) + '</li>';
+        var inner = '<span class="fp-tick" aria-hidden="true">' + (done ? CHECK : '') + '</span>' +
+          '<span class="fp-name">' + escHtml(f.name) + (done ? '<span class="sr">, done</span>' : '') + '</span>' +
+          (done ? '' : '<span class="fp-line">' + escHtml(f.line) + (f.href === here() ? ' It\'s on this page.' : '') + '</span>') +
+          (!done && ((f.href && f.href !== here()) || f.act) ? '<span class="fp-m" aria-hidden="true">&#8594;</span>' : '');
+        return '<li' + (done ? ' class="done"' : '') + '>' + (done ? '<div class="fp-row still">' + inner + '</div>' : findRow(f, 'fp-row', inner)) + '</li>';
       }).join('') + '</ul>' +
-      (got.length === FINDS.length ? '<p class="fp-foot">You did everything. Tell me which one was best: <a href="/messages/">message me</a>.</p>' : '');
+      (all ? '<p class="fp-foot">Which one was best? <a class="ln" href="/messages/">Tell me</a></p>' : '');
+  }
+  function placePanel() {
+    if (!panel) return;
+    var pill = document.querySelector('.top .finds-pill');
+    var narrow = innerWidth <= 720;
+    var r = pill && pill.getBoundingClientRect();
+    panel.style.top = (r && r.bottom > 0 ? r.bottom + 10 : narrow ? 66 : 24) + 'px';
+    panel.style.right = narrow || !r ? '16px' : Math.max(16, innerWidth - r.right - 8) + 'px';
   }
   function openPanel() {
     if (panel) return;
@@ -1263,18 +1287,23 @@
     panel.tabIndex = -1;
     renderPanel();
     document.body.appendChild(panel);
+    placePanel();
+    document.querySelectorAll('.finds-pill').forEach(function (b) { b.setAttribute('aria-expanded', 'true'); });
     void panel.offsetWidth;
     panel.classList.add('on');
     panel.focus({ preventScroll: true });
   }
-  function closePanel() {
+  function closePanel(keepFocus) {
     if (!panel) return;
     var p = panel;
     panel = null;
     p.classList.remove('on');
-    setTimeout(function () { p.remove(); }, reduce ? 0 : 200);
-    if (panelFrom && document.contains(panelFrom)) panelFrom.focus({ preventScroll: true });
+    document.querySelectorAll('.finds-pill').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+    setTimeout(function () { p.remove(); }, reduce ? 0 : 180);
+    if (!keepFocus && panelFrom && document.contains(panelFrom)) panelFrom.focus({ preventScroll: true });
   }
+  addEventListener('resize', placePanel);
+  addEventListener('scroll', function () { if (panel && innerWidth > 720) placePanel(); }, { passive: true });
   document.addEventListener('click', function (e) {
     if (!e.target.closest) return;
     if (e.target.closest('[data-finds-open]')) { e.preventDefault(); if (panel) closePanel(); else openPanel(); return; }
@@ -1282,34 +1311,59 @@
     if (e.target.closest('.finds-toast a')) hideToast();
     var act = e.target.closest('[data-find-act]');
     if (act) {
-      closePanel();
+      closePanel(true);
       hideToast();
       if (act.getAttribute('data-find-act') === 'talk' && window.dlAsk) window.dlAsk('hi! what should i check out first?');
       return;
     }
-    if (panel && (e.target.closest('.fp-x') || e.target.closest('.finds-panel a') || !e.target.closest('.finds-panel'))) closePanel();
+    if (panel && (e.target.closest('.fp-x') || e.target.closest('.finds-panel a'))) closePanel(!e.target.closest('.fp-x'));
+    else if (panel && !e.target.closest('.finds-panel')) closePanel(true);
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && panel) closePanel(); });
+  document.addEventListener('keydown', function (e) {
+    if (!panel) return;
+    if (e.key === 'Escape') { closePanel(); return; }
+    // Keep Tab inside the list while it's open.
+    if (e.key !== 'Tab') return;
+    var f = panel.querySelectorAll('a[href], button');
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === panel)) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
 
-  // The end of most pages: what they haven't tried yet.
+  // The end of most pages: what they haven't tried yet, laid out like the rest
+  // of that page (a labelled section on case pages, a resume section on the
+  // resume, a list under a heading everywhere else).
   var NO_UPNEXT = ['/messages/', '/notes/', '/brain/'];
   function renderUpNext() {
     var main = document.getElementById('main');
     if (!main || NO_UPNEXT.indexOf(here()) >= 0 || main.querySelector('.globe-full')) return;
     var rest = left(true).slice(0, 3);
     if (!rest.length) return;
+    var rows = rest.map(function (f) {
+      return '<li>' + findRow(f, 'up-row', '<span class="up-name">' + escHtml(f.name) + '</span><span class="up-line">' + escHtml(f.line) + '</span><span class="up-m" aria-hidden="true">' + (f.href || f.act ? '&#8594;' : '') + '</span>') + '</li>';
+    }).join('');
+    var more = '<p class="up-all"><button class="ln" type="button" data-finds-open>All twelve things to do</button></p>';
     var box = document.createElement('section');
-    box.className = 'upnext';
-    box.setAttribute('aria-label', 'Things you haven\'t tried yet');
-    box.innerHTML = '<p class="label">Haven\'t tried yet</p><ul class="list">' + rest.map(function (f) {
-      var inner = '<span class="p">' + escHtml(f.name) + '</span><span class="s">' + escHtml(f.line) + '</span><span class="m">&#8594;</span>';
-      return '<li>' + (f.href ? '<a class="row" href="' + f.href + '">' + inner + '</a>' : f.act ? '<button class="row" type="button" data-find-act="' + f.act + '">' + inner + '</button>' : '<div class="row">' + inner + '</div>') + '</li>';
-    }).join('') + '</ul><p class="upnext-all"><button class="ln" type="button" data-finds-open>All twelve things to do</button></p>';
-    var nav = main.querySelector(':scope > nav.next');
-    if (nav) main.insertBefore(box, nav); else main.appendChild(box);
+    box.setAttribute('aria-labelledby', 'up-h');
+    var doc = main.querySelector(':scope > .doc');
+    if (document.body.classList.contains('case')) {
+      box.className = 'section upnext';
+      box.innerHTML = '<p class="label" id="up-h">Try next</p><div><ul class="up-list">' + rows + '</ul>' + more + '</div>';
+    } else if (doc) {
+      box.className = 'r-sec upnext';
+      box.innerHTML = '<h2 id="up-h">Try next</h2><ul class="up-list">' + rows + '</ul>' + more;
+    } else {
+      box.className = 'upnext';
+      box.innerHTML = '<h2 id="up-h">Try next</h2><ul class="up-list">' + rows + '</ul>' + more;
+    }
+    var nav = main.querySelector(':scope > nav.next, :scope > .reach');
+    if (doc) doc.appendChild(box);
+    else if (nav) main.insertBefore(box, nav);
+    else main.appendChild(box);
   }
   function setupFinds() {
-    closePanel();
+    closePanel(true);
     renderPill();
     renderUpNext();
   }

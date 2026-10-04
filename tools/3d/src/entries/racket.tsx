@@ -6,14 +6,16 @@ import { mountCanvas } from '../lib/mountCanvas';
 import { sharedCss } from '../lib/ui';
 import { css, Overlay } from '../racket/Overlay';
 import { RACKET_FILE, RacketScene } from '../racket/Scene';
-import { createRacketStore, loadRackets, RacketProvider } from '../racket/store';
+import { createRacketStore, loadRackets, modelOf, RacketProvider } from '../racket/store';
 
 export function mount(el: HTMLElement): () => void {
   const ac = new AbortController();
   const store = createRacketStore();
-  loadRackets(el.dataset.rackets || '/hobbies/badminton/rackets.json', ac.signal).then((rackets) => {
-    if (!ac.signal.aborted) store.set({ rackets });
-  });
+  loadRackets(el.dataset.rackets || '/hobbies/badminton/rackets.json', ac.signal)
+    .catch(() => [])
+    .then((rackets) => {
+      if (!ac.signal.aborted) store.set({ rackets, listed: true });
+    });
   const stop = mountCanvas(el, {
     className: 'p3d-racket',
     css: sharedCss('p3d-racket') + css,
@@ -32,6 +34,6 @@ export function mount(el: HTMLElement): () => void {
   return () => {
     ac.abort();
     stop();
-    useGLTF.clear(RACKET_FILE);
+    new Set([RACKET_FILE, ...store.get().rackets.map((_, i) => modelOf(store.get().rackets, i, RACKET_FILE))]).forEach((f) => useGLTF.clear(f));
   };
 }

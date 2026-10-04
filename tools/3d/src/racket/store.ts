@@ -7,6 +7,8 @@ export interface RacketInfo {
   color?: string;
   string?: string;
   tension?: string | number;
+  /** A traced model of this exact racket (traced from its product photo); the generic one otherwise. */
+  model?: string;
 }
 
 export const COUNT = 4;
@@ -18,10 +20,12 @@ export interface RacketState {
   hovered: number | null;
   pinned: number | null;
   ready: boolean;
+  /** rackets.json has answered (or failed), so the models to load are known. */
+  listed: boolean;
 }
 
 export function createRacketStore() {
-  const store = createStore<RacketState>({ rackets: [], hovered: null, pinned: null, ready: false });
+  const store = createStore<RacketState>({ rackets: [], hovered: null, pinned: null, ready: false, listed: false });
   return Object.assign(store, { refs: { card: null as HTMLDivElement | null, pointer: 'mouse' } });
 }
 export type RacketStore = Store<RacketState> & ReturnType<typeof createRacketStore>;
@@ -39,6 +43,11 @@ export async function loadRackets(url: string, signal: AbortSignal): Promise<Rac
 export function colorOf(rackets: RacketInfo[], i: number) {
   const c = rackets[i]?.color?.trim();
   return c && CSS.supports('color', c) ? c : DEFAULT_COLORS[i];
+}
+
+export function modelOf(rackets: RacketInfo[], i: number, generic: string) {
+  const m = rackets[i]?.model;
+  return typeof m === 'string' && m.trim() ? m.trim() : generic;
 }
 
 export function nameOf(rackets: RacketInfo[], i: number) {

@@ -66,14 +66,12 @@ function Card() {
         <>
           <p className="dl-card-kind">Racket {i + 1} of {COUNT}</p>
           <p className="dl-card-name">{nameOf(rackets, i)}</p>
-          {specs.length > 0 ? (
+          {specs.length > 0 && (
             <ul className="dl-card-specs">
               {specs.map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ul>
-          ) : (
-            <p className="dl-card-soon">Details coming soon</p>
           )}
         </>
       )}
@@ -107,4 +105,4 @@ function List() {
   );
 }
 
-export const css = `.p3d-racket .dl-card-soon { margin-top: 5px !important; color: var(--t3); }`;
+export const css = '';

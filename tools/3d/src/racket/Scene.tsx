@@ -1,4 +1,5 @@
-// Four rackets fanned like a hand of cards, each frame its own color. Hover
+// Four rackets fanned like a hand of cards: each one's own traced model when
+// rackets.json names one, else the generic racket in its own frame color. Hover
 // slides one out with an accent rim and a card; they sway a little at rest.
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
@@ -8,7 +9,7 @@ import { usePiece } from '../lib/mountCanvas';
 import { OrbitRig, type Home } from '../lib/rig';
 import { applyRim, damp, Glow, makeRim, Studio } from '../lib/studio';
 import { corners, fitCentered, MODELS, projectBox, useNear } from '../lib/view';
-import { colorOf, COUNT, useRacket, useRacketStore } from './store';
+import { colorOf, COUNT, modelOf, useRacket, useRacketStore } from './store';
 
 export const RACKET_FILE = MODELS + 'racket.glb';
 
@@ -21,20 +22,22 @@ const POLAR = 1.42;
 export function RacketScene() {
   const { dark, el } = usePiece();
   const near = useNear(el);
+  const listed = useRacket((s) => s.listed);
   return (
     <>
       <Studio dark={dark} />
       {/* A soft light on the backdrop so dark frames still read on a dark page. */}
       {dark && <Glow position={[0, 0.46, -0.3]} radius={0.58} color="#9aa4b0" opacity={0.1} />}
-      {near && <Fan />}
+      {near && listed && <Fan />}
     </>
   );
 }
 
 function Fan() {
-  const gltf = useGLTF(RACKET_FILE, false, true);
   const store = useRacketStore();
   const rackets = useRacket((s) => s.rackets);
+  const files = useMemo(() => Array.from({ length: COUNT }, (_, i) => modelOf(rackets, i, RACKET_FILE)), [rackets]);
+  const gltfs = useGLTF(files, false, true);
   const { reducedMotion } = usePiece();
   const { camera, size } = useThree();
   const fan = useRef<Group>(null);
@@ -44,13 +47,24 @@ function Fan() {
 
   const built = useMemo(
     () =>
-      Array.from({ length: COUNT }, () => {
+      gltfs.map((gltf) => {
         const object = gltf.scene.clone(true);
         const rim = makeRim();
         const mats = applyRim(object, rim);
         const frame = mats.find((m) => m.name === 'racket_frame') as MeshStandardMaterial | undefined;
         object.traverse((o) => {
-          if ((o as Mesh).isMesh) o.raycast = () => {};
+          if (!(o as Mesh).isMesh) return;
+          o.raycast = () => {};
+          // Traced string beds: blend instead of cutting out, so the strings
+          // fade into a fine mesh at a distance instead of sparkling or vanishing,
+          // and a touch of grey so white strings still read on a light page.
+          const m = (o as Mesh).material as MeshStandardMaterial;
+          if (m.alphaTest > 0) {
+            m.alphaTest = 0;
+            m.transparent = true;
+            m.depthWrite = false;
+            m.color.setScalar(0.82);
+          }
         });
         object.updateMatrixWorld(true);
         const full = new Box3().setFromObject(object);
@@ -59,7 +73,7 @@ function Fan() {
         const handle = new Box3(new Vector3(-0.018, full.min.y, -0.018), new Vector3(0.018, head.min.y, 0.018));
         return { object, rim, mats, frame, full, head, handle };
       }),
-    [gltf]
+    [gltfs]
   );
   useEffect(() => () => built.forEach((b) => b.mats.forEach((m) => m.dispose())), [built]);
   useEffect(() => {

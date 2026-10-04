@@ -111,6 +111,21 @@
     devtoolsAgain: 'inspect element again? we talked about this',
     devtoolsBye: 'thank you. that was a lot 😮‍💨',
     exit: 'wait wait where are you going, i got more to show u!!!',
+    // Leaving, with something they haven't done yet (site.js, window.dlFinds).
+    exitTo: {
+      spar: "wait!! you never sparred me. muay thai, i'll go easy",
+      rally: "wait, you haven't rallied me yet. you can even use my racket",
+      climb: "leaving already? you didn't even climb the page with me",
+      chess: 'wait, one game of chess before you go?',
+      guitar: "wait, you haven't played my guitar. i might cry",
+      globe: "before you go, spin my globe. show me where you're from",
+      cat: "wait, you didn't meet meowmeow!!",
+      feed: "wait, i'm hungry. drag something onto my face before you go",
+      talk: 'wait wait, you never even said hi 🥺',
+      brain: 'before you go, wanna see my brain? like literally',
+      note: 'leave me a note on the wall before you go?',
+      message: "before you go, text me! it goes straight to my phone"
+    },
     back: "oh you're back! i didn't move. i can't, i'm a head",
     dark: 'ooh dark mode. good choice',
     light: 'flashbang 😭 my eyes',
@@ -299,6 +314,8 @@
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const now = () => performance.now();
+  // Checks one of the things to do off the list (site.js).
+  const found = (id) => { if (window.dlFound) window.dlFound(id); };
   const strip = (s) => s.replace(/\s*\[\[[^\]]*\]\]/g, '').trim();
   const norm = (p) => p.replace(/index\.html$/, '').replace(/([^/])$/, '$1/');
   let here = norm(location.pathname);
@@ -1474,6 +1491,7 @@
       unshow();
       if (pres.waiting) { S.smallAnswered = true; save(); }
       pres.waiting = false;
+      found('talk');
       if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }
     }
     asking = true;
@@ -1561,6 +1579,7 @@
       const r = res.ok ? await res.json() : {};
       ok = Boolean(r.saved || r.mailed);
       if (ok) try { localStorage.setItem('dl-inbox', '1'); } catch (e) {}
+      if (ok) found('message');
     } catch (e) {}
     emoteOff();
     setFace(ok ? 'happy' : 'sad', 2000);
@@ -2132,6 +2151,7 @@
   // "nom nom", then it talks about whatever it was fed: the brain when it's
   // up, the canned line otherwise.
   async function eat(id) {
+    found('feed');
     interrupt();
     wake();
     for (let i = 0; i < 3; i++) { voice('o'); squish(); await wait(170); }
@@ -2317,6 +2337,7 @@
   }
   let catComing = false;
   async function summonCat() {
+    found('cat');
     if (cat) { petCat(); return; }
     if (catComing) return;
     catComing = true;
@@ -2583,7 +2604,11 @@
     });
 
     document.documentElement.addEventListener('mouseleave', (e) => {
-      if (fine && e.clientY <= 0 && now() > 8000) react('exit', LINES.exit, 2600, 'sad');
+      if (!fine || e.clientY > 0 || now() <= 8000 || S.once.includes('exit')) return;
+      // Name something they haven't done yet, and leave a link to it.
+      const next = window.dlFinds && window.dlFinds.next();
+      react('exit', (next && LINES.exitTo[next.id]) || LINES.exit, 2600, 'sad');
+      if (next) window.dlFinds.nudge('<b>Before you go</b>');
     });
     let hiddenAt = 0;
     document.addEventListener('visibilitychange', () => {

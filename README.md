@@ -16,6 +16,7 @@ My personal site. A floating cutout of my head lives on it. It's an AI version o
 - **Notices you.** Open something or stop to read it and it says something about it, once. It also reacts to inspect element, right clicks, dark mode, leaving the tab, and getting thrown across the screen.
 - **Gives tours.** "just lookin around" gets you a walk through every page.
 - **Takes notes.** `/notes/` is a wall of sticky notes. Take one off the pad in the corner, write on it, and stick it wherever you want. It stays where you put it (Jev checks it first). Tell the head you want to leave me a private note and it passes it on instead. Either way I get a ping on Telegram.
+- **Keeps you exploring.** Twelve things to do (spar it, rally it, climb the page, play the guitar, call the cat, leave a note, message me...) live behind the star in the header. Doing one checks it off and a toast says what's next, most pages end with a few you haven't tried, and if your mouse heads for the tab bar, the head names one you missed.
 - **Can't be talked out of being me.** Prompt injection and trolls get caught by Jev before they reach the brain.
 - **Answers fast.** First word in under a second.
 
@@ -113,7 +114,7 @@ Replies cost money, so there's a monthly cap in the chat function (default $20, 
 | `index.html`, `resume/`, `projects/`, `hobbies/`, `brain/`, `notes/` | The pages |
 | `tethos/`, `dashboard/`, `rag/`, `kunlun/` | Case studies |
 | `styles.css` | The whole site's styles. One typeface, hierarchy by opacity. |
-| `site.js` | Page swaps, the guitar player, resume notes, hover photos, the note wall, the brain map |
+| `site.js` | Page swaps, the guitar player, resume notes, hover photos, the note wall, the brain map, the things to do (`FINDS`) |
 | `talk/talk.js`, `talk/talk.css` | The head, the hand, the cat, and everything they do |
 | `LINES` in `talk/talk.js` | Every line the head says on its own |
 | `talk/targets.json` | Everything the head can point at |

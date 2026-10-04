@@ -75,6 +75,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 /* Links read as text until you point at them. */
 .ln { color: var(--t2); }
 .ln:hover { color: var(--t1); }
+button.ln { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+.hello .finds-open { color: var(--t1); text-decoration: underline; text-decoration-color: var(--t3); text-underline-offset: 3px; }
+.hello .finds-open:hover { text-decoration-color: currentColor; }
 .out::after { content: '\2197'; margin-left: 2px; font-size: 0.85em; color: var(--t3); }
 .skip { position: absolute; left: 12px; top: -48px; padding: 6px 10px; border-radius: 8px; background: var(--t1); color: var(--bg); }
 .skip:focus { top: 12px; }
@@ -637,6 +640,94 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
   .case .entries > .entry { grid-template-columns: 1fr; }
   .kv { grid-template-columns: 1fr; }
   .hover-photo { display: none; }
+}
+
+/* Things to do (site.js): the pill in the header, the list it opens, the
+   toast when one gets done, and "haven't tried yet" at the end of a page. */
+.finds-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 26px; padding: 0 10px 0 8px;
+  border: 1px solid var(--rule); border-radius: 999px;
+  background: none; color: var(--t2); font: inherit; font-size: 13px; cursor: pointer;
+  transition: color 150ms ease, background 150ms ease;
+}
+.finds-pill:hover { color: var(--t1); background: var(--fill); }
+.finds-pill svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+.finds-pill.all { color: var(--t1); }
+.finds-pill.all svg { fill: currentColor; }
+.finds-pill.hello { animation: finds-hello 1.6s ease 2.5s 2; }
+@keyframes finds-hello {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(136, 192, 208, 0); }
+  40% { box-shadow: 0 0 0 5px rgba(136, 192, 208, 0.35); color: var(--t1); }
+}
+
+.finds-panel {
+  position: fixed; z-index: 75; top: 72px; right: max(16px, calc((100vw - 760px) / 2 - 40px));
+  width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 96px); overflow: auto;
+  padding: 18px 18px 10px; border-radius: 16px;
+  background: var(--panel); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  box-shadow: 0 0 0 1px var(--rule), 0 24px 60px -24px rgba(0, 0, 0, 0.4);
+  opacity: 0; transform: translateY(-6px); transition: opacity 180ms ease, transform 180ms ease;
+}
+.finds-panel.on { opacity: 1; transform: none; }
+.finds-panel:focus { outline: none; }
+.fp-head { display: flex; align-items: baseline; gap: 10px; }
+.fp-title { color: var(--t1); font-weight: 500; }
+.fp-count { color: var(--t3); }
+.fp-x, .ft-x { margin-left: auto; padding: 0 4px; border: 0; background: none; color: var(--t3); font: inherit; font-size: 20px; line-height: 1; cursor: pointer; }
+.fp-x:hover, .ft-x:hover { color: var(--t1); }
+.fp-bar { height: 3px; margin: 12px 0 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+.fp-bar i { display: block; height: 100%; border-radius: 3px; background: #88c0d0; transition: width 400ms ease; }
+.fp-list li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 9px 0; border-bottom: 1px solid var(--rule); }
+.fp-list li:last-child { border-bottom: 0; }
+.fp-tick { display: grid; place-items: center; width: 18px; height: 18px; margin-top: 3px; border: 1px solid var(--t3); border-radius: 50%; }
+.fp-tick svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.fp-list li.done .fp-tick { border-color: #88c0d0; background: #88c0d0; color: #0d0d0e; }
+.fp-text { display: flex; flex-direction: column; min-width: 0; }
+.fp-name { color: var(--t1); }
+.fp-line { color: var(--t2); font-size: 14px; line-height: 1.45; }
+.fp-list li.done .fp-name { color: var(--t3); text-decoration: line-through; text-decoration-color: var(--t3); }
+.fp-list li.done .fp-line { display: none; }
+.fp-go { padding: 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: 14px; white-space: nowrap; cursor: pointer; }
+.fp-go:hover { color: var(--t1); }
+.fp-foot { padding: 10px 0 8px; color: var(--t2); font-size: 14px; }
+.fp-foot a { color: var(--t1); }
+
+.finds-toast {
+  position: fixed; z-index: 74; left: 24px; bottom: 24px;
+  width: min(340px, calc(100vw - 140px));
+  padding: 14px 16px 12px; border-radius: 14px;
+  background: var(--panel); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  box-shadow: 0 0 0 1px var(--rule), 0 20px 50px -20px rgba(0, 0, 0, 0.4);
+  font-size: 14px; line-height: 1.45;
+  opacity: 0; transform: translateY(10px); pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.finds-toast.on { opacity: 1; transform: none; pointer-events: auto; }
+.finds-toast .ft-x { position: absolute; top: 8px; right: 8px; }
+.ft-head { padding-right: 20px; color: var(--t2); }
+.ft-head b { color: var(--t1); font-weight: 500; }
+.ft-next { margin-top: 8px; color: var(--t1); }
+.ft-next > span:first-child { color: var(--t3); margin-right: 4px; }
+.ft-next a { color: var(--t1); text-decoration: underline; text-decoration-color: var(--t3); text-underline-offset: 3px; }
+.ft-next a:hover { text-decoration-color: currentColor; }
+.ft-line { display: block; color: var(--t2); }
+.ft-all { margin-top: 8px; padding: 0; border: 0; background: none; color: var(--t3); font: inherit; cursor: pointer; }
+.ft-all:hover { color: var(--t1); }
+
+.upnext { margin-top: 72px; }
+.upnext .label { margin-bottom: 12px; color: var(--t3); }
+.upnext .row { width: 100%; grid-template-columns: 200px minmax(0, 1fr) 24px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.upnext .row:hover .p, .upnext .row:hover .s { color: var(--t1); }
+.upnext .row:hover .m { color: var(--t2); transform: translateX(3px); }
+.upnext .row .m { transition: transform 200ms ease; }
+.upnext-all { margin-top: 14px; }
+.upnext + .next { margin-top: 40px; }
+@media (max-width: 720px) {
+  .finds-panel { top: 66px; right: 16px; }
+  .finds-toast { top: 66px; right: 16px; bottom: auto; left: 16px; width: auto; transform: translateY(-10px); }
+  .upnext .row { grid-template-columns: minmax(0, 1fr) auto; }
+  .upnext .row .s { grid-column: 1 / -1; grid-row: 2; }
 }
 
 @media (prefers-reduced-motion: reduce) {

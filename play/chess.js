@@ -1032,6 +1032,7 @@ export function mount(el) {
     try { m = game.move({ from, to, promotion }); } catch (e) { m = null; }
     if (!m) return false;
     selected = null; targets = [];
+    if (window.dlFound) window.dlFound('chess');
     busy = true;
     render();
     const id = turnId;

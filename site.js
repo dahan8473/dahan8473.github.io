@@ -416,10 +416,12 @@
         g.classList.remove('pending');
         if (res.posted) {
           notes.push(p.n);
+          window.dlFound('note');
           draft = { message: '', name: '' };
           status.textContent = 'Stuck. Thank you!';
         } else if (res.saved || res.mailed) {
           // Didn't pass the check: it shrinks away to the head, privately.
+          window.dlFound('note');
           draft = { message: '', name: '' };
           var from = g.getBoundingClientRect();
           var head = document.querySelector('.dl-head');
@@ -736,6 +738,7 @@
         var t = performance.now();
         if (n && lastTap && lastTap.n === n && t - lastTap.t < 380) { lastTap = null; ask(n); return; }
         lastTap = { n: n, t: t };
+        if (n) window.dlFound('brain');
         picked = n;
         dirty = true;
       }
@@ -944,6 +947,7 @@
           if (!alive) return;
           if (!d.sent) throw new Error('not sent');
           known.push(d.message);
+          window.dlFound('message');
           shown[d.message.id] = true;
           pending = null;
           render();
@@ -1111,6 +1115,7 @@
     // Swapping pages puts it away at once.
     pieces.push(function () { if (out === o) bringClose(true); });
     try { sessionStorage.setItem('dl-brought-' + name, '1'); } catch (e) {}
+    if (name === 'guitar') window.dlFound('guitar');
     return stage;
   };
   document.addEventListener('click', function (e) {
@@ -1123,6 +1128,192 @@
     if (b && window.dlCat) window.dlCat();
   });
 
+  // ---- Things to do -----------------------------------------------------------------
+  // Twelve things to do on the site. Doing one checks it off (kept in
+  // localStorage), a toast says which one's next, the pill in the header opens
+  // the whole list, and most pages end with a few they haven't tried. Anything
+  // can check one off with window.dlFound(id); clicks on the buttons that start
+  // the games are caught here so the built 3D pieces don't need to know.
+  var FINDS = [
+    { id: 'spar', name: 'Spar the head', done: 'Sparred the head', line: 'Muay Thai, three rounds, light contact.', href: '/hobbies/muay-thai/' },
+    { id: 'rally', name: 'Rally the head', done: 'Rallied the head', line: 'Badminton in first person, with one of my rackets.', href: '/hobbies/badminton/' },
+    { id: 'climb', name: 'Climb the page', done: 'Climbed the page', line: 'A V2 route straight up the page.', href: '/hobbies/climbing/' },
+    { id: 'chess', name: 'Play the head at chess', done: 'Played the head at chess', line: 'It talks while it plays.', href: '/hobbies/chess/' },
+    { id: 'guitar', name: 'Play my guitar', done: 'Played my guitar', line: 'Record a few bars. If it\'s good, the head cries.', href: '/hobbies/guitar/' },
+    { id: 'globe', name: 'Spin the globe', done: 'Spun the globe', line: 'Everywhere I\'ve been. Tap a place for photos.', href: '/hobbies/travel/' },
+    { id: 'cat', name: 'Call Meowmeow', done: 'Called Meowmeow', line: 'My cat walks onto the page and lies down.', href: '/hobbies/meowmeow/' },
+    { id: 'feed', name: 'Feed the head', done: 'Fed the head', line: 'Drag anything on the page onto its face.' },
+    { id: 'talk', name: 'Ask the head something', done: 'Talked to the head', line: 'It knows my stories, not just my resume.', act: 'talk' },
+    { id: 'brain', name: 'Poke my brain', done: 'Poked my brain', line: 'The notes the head thinks with. Click one.', href: '/brain/' },
+    { id: 'note', name: 'Leave a note on the wall', done: 'Left a note', line: 'Stick it anywhere. Signed or not.', href: '/notes/' },
+    { id: 'message', name: 'Message me', done: 'Messaged me', line: 'Goes straight to my phone. I reply here.', href: '/messages/' }
+  ];
+  var CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>';
+  var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.4l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg>';
+  function escHtml(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function foundList() {
+    try { var a = JSON.parse(localStorage.getItem('dl-found')); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function isFound(id) { return foundList().indexOf(id) >= 0; }
+  function here() { return location.pathname.replace(/index\.html$/, ''); }
+  // What's left, in order, skipping whatever lives on this page.
+  function left(skipHere) {
+    var got = foundList();
+    return FINDS.filter(function (f) { return got.indexOf(f.id) < 0 && !(skipHere && f.href === here()); });
+  }
+  function findGo(f, cls) {
+    if (f.href) return '<a class="' + cls + '" href="' + f.href + '">' + (f.href === here() ? 'It\'s on this page' : 'Go') + ' <span aria-hidden="true">&#8594;</span></a>';
+    if (f.act) return '<button class="' + cls + '" type="button" data-find-act="' + f.act + '">Say hi <span aria-hidden="true">&#8594;</span></button>';
+    return '';
+  }
+
+  var toastEl = null, toastTimer = 0;
+  function toast(head, f) {
+    if (!toastEl) {
+      toastEl = document.createElement('div');
+      toastEl.className = 'finds-toast';
+      toastEl.setAttribute('role', 'status');
+      document.body.appendChild(toastEl);
+    }
+    var n = foundList().length;
+    var next = f ? '<p class="ft-next"><span>Next</span> ' + (f.href ? '<a href="' + f.href + '">' + escHtml(f.name) + '</a>' : escHtml(f.name)) + '<span class="ft-line">' + escHtml(f.line) + '</span></p>' : '';
+    toastEl.innerHTML = '<button class="ft-x" type="button" aria-label="Dismiss">&#215;</button>' +
+      '<p class="ft-head">' + head + '</p>' + next +
+      '<button class="ft-all" type="button" data-finds-open>' + n + ' of ' + FINDS.length + ' done. See them all</button>';
+    clearTimeout(toastTimer);
+    void toastEl.offsetWidth;
+    toastEl.classList.add('on');
+    toastTimer = setTimeout(hideToast, 9000);
+  }
+  function hideToast() { clearTimeout(toastTimer); if (toastEl) toastEl.classList.remove('on'); }
+
+  window.dlFound = function (id) {
+    var f = FINDS.filter(function (x) { return x.id === id; })[0];
+    if (!f || isFound(id)) return;
+    var got = foundList().concat(id);
+    try { localStorage.setItem('dl-found', JSON.stringify(got)); } catch (e) { return; }
+    renderPill();
+    if (panel) renderPanel();
+    var rest = left(true);
+    var head = got.length === FINDS.length ? '<b>That\'s all twelve.</b> You did everything on here. Thank you, really.' : '<b>' + escHtml(f.done) + '.</b> ' + (FINDS.length - got.length) + ' more things to do here.';
+    toast(head, rest[0]);
+  };
+  // For the head: the next thing to send them to, and a toast that says so.
+  window.dlFinds = {
+    next: function () { return left(true)[0] || null; },
+    nudge: function (head) { var f = left(true)[0]; if (f) toast(head, f); }
+  };
+
+  // Starting the games counts.
+  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['.rk-rally', 'rally'], ['.climb-primary[data-go]', 'climb'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest) return;
+    FIND_CLICKS.forEach(function (c) { if (e.target.closest(c[0])) window.dlFound(c[1]); });
+  }, true);
+  document.addEventListener('pointerdown', function (e) {
+    if (e.target.closest && e.target.closest('[data-3d="globe"] canvas')) window.dlFound('globe');
+  }, true);
+  addEventListener('dl:globe-pick', function () { window.dlFound('globe'); });
+
+  // The pill in the header: how many they've done, and the list.
+  function renderPill() {
+    var end = document.querySelector('.top .end');
+    if (!end) return;
+    var pill = end.querySelector('.finds-pill');
+    if (!pill) {
+      pill = document.createElement('button');
+      pill.type = 'button';
+      pill.className = 'finds-pill';
+      pill.setAttribute('data-finds-open', '');
+      pill.setAttribute('aria-haspopup', 'dialog');
+      end.insertBefore(pill, end.firstChild);
+    }
+    var n = foundList().length;
+    pill.innerHTML = STAR + '<span>' + n + '/' + FINDS.length + '</span>';
+    pill.setAttribute('aria-label', n + ' of ' + FINDS.length + ' things done. See what else there is to do');
+    pill.classList.toggle('all', n === FINDS.length);
+    var fresh = false;
+    try { fresh = !n && !sessionStorage.getItem('dl-pill-seen'); sessionStorage.setItem('dl-pill-seen', '1'); } catch (e) {}
+    if (fresh && !reduce) pill.classList.add('hello');
+  }
+
+  var panel = null, panelFrom = null;
+  function renderPanel() {
+    var got = foundList();
+    var pct = Math.round(got.length / FINDS.length * 100);
+    panel.innerHTML = '<div class="fp-head"><p class="fp-title" id="fp-title">Things to do here</p><p class="fp-count">' + got.length + ' of ' + FINDS.length + '</p>' +
+      '<button class="fp-x" type="button" aria-label="Close">&#215;</button></div>' +
+      '<div class="fp-bar" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' +
+      '<ul class="fp-list">' + FINDS.map(function (f) {
+        var done = got.indexOf(f.id) >= 0;
+        return '<li class="' + (done ? 'done' : '') + '"><span class="fp-tick" aria-hidden="true">' + (done ? CHECK : '') + '</span>' +
+          '<span class="fp-text"><span class="fp-name">' + escHtml(f.name) + (done ? '<span class="sr"> (done)</span>' : '') + '</span><span class="fp-line">' + escHtml(f.line) + '</span></span>' +
+          (done ? '' : findGo(f, 'fp-go')) + '</li>';
+      }).join('') + '</ul>' +
+      (got.length === FINDS.length ? '<p class="fp-foot">You did everything. Tell me which one was best: <a href="/messages/">message me</a>.</p>' : '');
+  }
+  function openPanel() {
+    if (panel) return;
+    hideToast();
+    panelFrom = document.activeElement;
+    panel = document.createElement('div');
+    panel.className = 'finds-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-labelledby', 'fp-title');
+    panel.tabIndex = -1;
+    renderPanel();
+    document.body.appendChild(panel);
+    void panel.offsetWidth;
+    panel.classList.add('on');
+    panel.focus({ preventScroll: true });
+  }
+  function closePanel() {
+    if (!panel) return;
+    var p = panel;
+    panel = null;
+    p.classList.remove('on');
+    setTimeout(function () { p.remove(); }, reduce ? 0 : 200);
+    if (panelFrom && document.contains(panelFrom)) panelFrom.focus({ preventScroll: true });
+  }
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest) return;
+    if (e.target.closest('[data-finds-open]')) { e.preventDefault(); if (panel) closePanel(); else openPanel(); return; }
+    if (e.target.closest('.ft-x')) { hideToast(); return; }
+    if (e.target.closest('.finds-toast a')) hideToast();
+    var act = e.target.closest('[data-find-act]');
+    if (act) {
+      closePanel();
+      hideToast();
+      if (act.getAttribute('data-find-act') === 'talk' && window.dlAsk) window.dlAsk('hi! what should i check out first?');
+      return;
+    }
+    if (panel && (e.target.closest('.fp-x') || e.target.closest('.finds-panel a') || !e.target.closest('.finds-panel'))) closePanel();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && panel) closePanel(); });
+
+  // The end of most pages: what they haven't tried yet.
+  var NO_UPNEXT = ['/messages/', '/notes/', '/brain/'];
+  function renderUpNext() {
+    var main = document.getElementById('main');
+    if (!main || NO_UPNEXT.indexOf(here()) >= 0 || main.querySelector('.globe-full')) return;
+    var rest = left(true).slice(0, 3);
+    if (!rest.length) return;
+    var box = document.createElement('section');
+    box.className = 'upnext';
+    box.setAttribute('aria-label', 'Things you haven\'t tried yet');
+    box.innerHTML = '<p class="label">Haven\'t tried yet</p><ul class="list">' + rest.map(function (f) {
+      var inner = '<span class="p">' + escHtml(f.name) + '</span><span class="s">' + escHtml(f.line) + '</span><span class="m">&#8594;</span>';
+      return '<li>' + (f.href ? '<a class="row" href="' + f.href + '">' + inner + '</a>' : f.act ? '<button class="row" type="button" data-find-act="' + f.act + '">' + inner + '</button>' : '<div class="row">' + inner + '</div>') + '</li>';
+    }).join('') + '</ul><p class="upnext-all"><button class="ln" type="button" data-finds-open>All twelve things to do</button></p>';
+    var nav = main.querySelector(':scope > nav.next');
+    if (nav) main.insertBefore(box, nav); else main.appendChild(box);
+  }
+  function setupFinds() {
+    closePanel();
+    renderPill();
+    renderUpNext();
+  }
+
   // ---- Per page --------------------------------------------------------------------
   function setup() {
     tick();
@@ -1134,6 +1325,7 @@
     setupBrain();
     setupInbox();
     setupPieces();
+    setupFinds();
   }
 
   // ---- Router: swap pages in place ----------------------------------------------

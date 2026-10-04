@@ -6,8 +6,8 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 31, 10, 27, 32
-V_PIECE = 20  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 32, 10, 28, 33
+V_PIECE = 21  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -146,7 +146,7 @@ home = '''      <section class="hello" data-t="now">
         <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
         <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers build free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
         <p>The floating head in the corner is an AI version of me, wired into <a class="ln" href="/brain/">my second brain</a>, a condensed copy of my Obsidian notes. It knows a lot about me, so ask it anything.</p>
-        <p><em>Look around.</em> Almost everything here does something. You can spar the head, rally it with my real rackets, climb the page, play my guitar, and click into any project for the story. The more you click, the more there is.</p>
+        <p><em>Look around.</em> Almost everything here does something. You can spar the head, rally it with my real rackets, climb the page, play my guitar, and click into any project for the story. The more you click, the more there is. <button class="ln finds-open" type="button" data-finds-open>Here are twelve to start with</button>.</p>
       </section>
 
       <ul class="list doors">

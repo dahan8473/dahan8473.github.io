@@ -7,7 +7,7 @@ import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 9, 24, 22
-V_PIECE = 13  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 14  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -360,7 +360,7 @@ PROJ_MORE = {
     'points': ['The game for real-life Among Us on conference badges: role dealing, the kill, report and meeting state machine, on-badge voting, and NFC tasks with motion minigames',
                "No server, router or phones: game state syncs peer to peer over an ESP-NOW mesh, and signal strength decides if you're close enough to kill"],
     'story': '36 hours, team of three. The first prototype in Lua ran the badge out of memory, and the stock firmware rebooted whenever the radio turned on, so we flashed our own.',
-    'sim': 'amongus', 'sim_note': 'Drag your badge around. Lines are the mesh, signal strength is distance.',
+    'sim': 'amongus',
   },
   'biopilot': {
     'award': '2nd, TELUS AI at the Edge of Innovation ($5,000)',

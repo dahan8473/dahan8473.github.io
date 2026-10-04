@@ -216,7 +216,7 @@
       ['/notes/', 'wall', 'you can leave a note on the wall before you go :)']
     ],
     tourEnd: "that's it! i'm way more fun when you talk to me, so ask me anything :)",
-    wall: "if you want a private note sent to him, just text me and let me know. i won't tell anyone else, trust 🤐",
+    wall: "this wall's public. for something just for him, dm him in messages, or tell me and i'll pass it on. either way it goes straight to his phone 🤐",
     noteContact: "got it 🤐 if he replies it'll show up in messages. want an email too? drop it, or say skip",
     // The real David answered something they sent him (messages or a private note).
     replied: (text, more) => `the real me just replied!! 👀 he said: "${text}"${more ? " there's more in messages" : ''}`,

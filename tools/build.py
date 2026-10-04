@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 29, 9, 24, 25
+V_CSS, V_TALKCSS, V_JS, V_TALK = 29, 9, 24, 26
 V_PIECE = 14  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
@@ -552,7 +552,7 @@ hobby('fashion', 'Fashion', "I'm building Kunlun, a clothing brand built on Chin
 notes = '''      <header class="doc-head">
         <div>
           <h1>Notes</h1>
-          <p class="hint">Write a note, then stick it anywhere on the wall. Sign it, or don't. Want it to stay between us? Tell the head.</p>
+          <p class="hint">Write a note, then stick it anywhere on the wall. Sign it, or don't. Want it to stay between us? <a class="ln" href="/messages/">Message me</a>, or tell the head and it'll pass it on. Both go straight to my phone.</p>
         </div>
         <p class="go wall-write"><button class="write-btn" type="button">Leave a note</button></p>
       </header>

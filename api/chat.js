@@ -207,6 +207,39 @@ function readMessage(latest, messages) {
   }, { timeout: 1500 });
 }
 
+// The guitar page: the head asks if they play, and the answer decides what
+// happens next, so it's read by Jev and answered with set lines.
+const GUITAR_Q = /(play guitar yourself|ever wanted to try( guitar)?)\?\s*$/i;
+const INSTRUMENTS = ['piano', 'violin', 'viola', 'cello', 'bass', 'drums', 'ukulele', 'saxophone', 'sax', 'flute', 'trumpet', 'clarinet', 'harp', 'keyboard', 'trombone', 'erhu', 'guzheng', 'pipa', 'accordion', 'harmonica', 'oboe'];
+function guitarAsked(messages, page) {
+  const prev = messages[messages.length - 2];
+  return page === '/hobbies/guitar/' && prev?.role === 'assistant' && GUITAR_Q.test(unmark(prev.content)) ? unmark(prev.content) : '';
+}
+function readGuitar(latest, asked) {
+  return decide({ asked, latest }, {
+    answer: choice('The head asked the visitor `asked`. How does the visitor answer in `latest`?', {
+      plays_guitar: 'they play guitar, even a little',
+      wants_to_try: 'yes, they want to try guitar, or have wanted to, or ask to play it',
+      other_instrument: 'they play a different instrument, not guitar',
+      no: "no: they don't play and aren't interested, or not right now",
+      other: 'something else: unclear, a question, or changing the subject'
+    })
+  }, { timeout: 1500 });
+}
+function guitarReply(read, asked, latest) {
+  const a = read?.answer;
+  const p = a?.probabilities?.[a.choice] || 0;
+  if (!a || p < 0.6) return '';
+  if (a.choice === 'plays_guitar') return 'ooo nice!! here, play something [[bring:guitar]]';
+  if (a.choice === 'wants_to_try') return 'ok here, play something [[bring:guitar]]';
+  if (a.choice === 'other_instrument') {
+    const inst = INSTRUMENTS.find((w) => new RegExp(`\\b${w}\\b`, 'i').test(latest));
+    return `${inst ? `${inst}'s` : "that's"} pretty cool too! ever wanted to try guitar?`;
+  }
+  if (a.choice === 'no') return /try/i.test(asked) ? 'fair haha. the recordings are right there if you wanna listen' : 'ever wanted to try?';
+  return '';
+}
+
 function memoryLine(m) {
   if (!m) return '';
   const bits = [];
@@ -241,10 +274,12 @@ export default {
     const latest = messages[messages.length - 1].content;
     const note = isStageNote(latest);
 
-    const [read, usd, memory] = await Promise.all([
+    const asked = note ? '' : guitarAsked(messages, page);
+    const [read, usd, memory, gread] = await Promise.all([
       note ? null : readMessage(latest, messages),
       spent(),
-      store ? recall(body.visitor) : null
+      store ? recall(body.visitor) : null,
+      asked ? readGuitar(latest, asked) : null
     ]);
 
     // Canned answers skip the brain entirely.
@@ -260,6 +295,8 @@ export default {
     const intent = p > 0.45 ? read.intent.choice : 'other';
     if (intent === 'note' && p > 0.6) return reply(NOTE);
     if (intent === 'tour' && p > 0.6) return reply(TOUR);
+    const strum = asked ? guitarReply(gread, asked, latest) : '';
+    if (strum) return reply(strum);
 
     // Fast actions go out before the brain has started, so the hand is
     // already moving while the reply is being written.

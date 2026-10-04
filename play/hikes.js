@@ -6,9 +6,7 @@
 //   hikes.json: { "hikes": [ { id, name, where, date, trail: { distance, gain,
 //     top, time, note }, me: { first, last, high }, media: [ { src, small, w, h }
 //     | { video, poster, w, h } ], each with an optional note shown under it } ] }
-// Photos open in the gallery's lightbox; clips loop muted while on screen.
-
-import { useCss, fmtDate, lightbox } from './gallery.js';
+// Photos and clips open in the gallery's lightbox; clips loop muted while on screen.
 
 const CSS_ID = 'play-hikes-css';
 const CSS = `
@@ -26,7 +24,6 @@ const CSS = `
 .phk-item:focus-visible { border-radius: 12px; outline-offset: 3px; }
 .phk-item img, .phk-item video { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 320ms ease; }
 .phk-item .in { opacity: 1; }
-.phk-item.clip { cursor: pointer; }
 @media (hover: hover) { .phk-item:hover img.in { opacity: 0.9; } }
 .phk-card { color: var(--t2); }
 .phk-card dl { display: grid; grid-template-columns: 92px 1fr; gap: 3px 12px; margin: 0; }
@@ -89,7 +86,7 @@ function card(hike) {
 }
 
 export function mount(el) {
-  const release = useCss(CSS_ID, CSS);
+  let release = () => {};
   const ac = new AbortController();
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
   let closeLb = null;
@@ -98,9 +95,12 @@ export function mount(el) {
   const list = h('div', 'phk');
   const note = el.querySelector('.piece-note');
 
-  fetch(el.dataset.src || '/hobbies/hiking/hikes.json', { signal: ac.signal })
-    .then((r) => r.json())
-    .then((data) => {
+  // gallery.js has the lightbox; load it with the same ?v= as this file.
+  const gal = import('./gallery.js' + new URL(import.meta.url).search);
+  Promise.all([gal, fetch(el.dataset.src || '/hobbies/hiking/hikes.json', { signal: ac.signal }).then((r) => r.json())])
+    .then(([{ useCss, fmtDate, lightbox }, data]) => {
+      if (ac.signal.aborted) return;
+      release = useCss(CSS_ID, CSS);
       const hikes = Array.isArray(data && data.hikes) ? data.hikes : [];
       io = new IntersectionObserver((entries) => {
         for (const e of entries) {
@@ -117,8 +117,12 @@ export function mount(el) {
         head.append(h('h3', 'phk-name', hike.name), h('span', 'phk-where', hike.where), h('span', 'phk-date', fmtDate(hike.date)));
         const c = card(hike);
         const strip = h('div', 'phk-strip');
-        const photos = (hike.media || []).filter((m) => m.src);
-        const items = photos.map((m) => ({ src: m.src, alt: m.note || hike.name, caption: m.note || hike.name, meta: [hike.where, fmtDate(hike.date)].join(' · ') }));
+        const all = hike.media || [];
+        const meta = [hike.where, fmtDate(hike.date)].join(' · ');
+        const items = all.map((m) => (m.video
+          ? { video: m.video, poster: m.poster, alt: m.note || 'Clip from ' + hike.name, caption: m.note || hike.name, meta }
+          : { src: m.src, alt: m.note || hike.name, caption: m.note || hike.name, meta }));
+        const open = (i, b) => { if (closeLb) closeLb(false); closeLb = lightbox(items, i, b); };
 
         for (const m of hike.media || []) {
           const b = h('button', 'phk-item' + (m.video ? ' clip' : ''));
@@ -139,7 +143,8 @@ export function mount(el) {
             p.onload = () => v.classList.add('in');
             p.src = m.poster;
             b.appendChild(v);
-            b.addEventListener('click', () => { if (v.paused) v.play().catch(() => {}); else v.pause(); });
+            b.setAttribute('aria-label', 'Open clip from ' + hike.name);
+            b.addEventListener('click', () => open(all.indexOf(m), b));
             io.observe(v);
           } else {
             const img = h('img');
@@ -153,8 +158,7 @@ export function mount(el) {
             if (img.complete && img.naturalWidth) img.classList.add('in');
             b.appendChild(img);
             b.setAttribute('aria-label', 'Open photo from ' + hike.name);
-            const i = photos.indexOf(m);
-            b.addEventListener('click', () => { if (closeLb) closeLb(false); closeLb = lightbox(items, i, b); });
+            b.addEventListener('click', () => open(all.indexOf(m), b));
           }
           if (m.note) {
             const fig = h('figure', 'phk-fig');

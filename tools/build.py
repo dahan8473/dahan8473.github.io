@@ -7,7 +7,7 @@ import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 9, 24, 22
-V_PIECE = 8  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 10  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -461,9 +461,7 @@ hobby('climbing', 'Rock climbing', "I boulder. I can only do a V2 right now.", [
 hobby('swimming', 'Swimming', 'I swim.', [
   ('Awards', [('Coming soon', "<p>Digging them out.</p>")], None),
 ], shot=piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/swimming/photos.json'))
-hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. These are my four rackets, and a quick rally with the head if you want.', [
-  ('High school', [('Doubles', '<p>My high school had a very competitive team. I played doubles, at regional and provincial school competitions.</p>')], None),
-  ('Rackets', [('Yonex', '<p>Voltric Z-Force II, Duora 10, Astrox 100ZZ, ArcSaber 11 Pro.</p>')], None),
+hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. My school had a very competitive team, and I played doubles at regional and provincial school competitions. These are my four rackets, and a quick rally with the head if you want.', [
 ], shot=piece('3d', 'racket', 'Loading the rackets...') + piece('play', 'badminton', 'Loading the court...'))
 hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
 ], shot=piece('3d', 'bike', 'Loading the bike...'))

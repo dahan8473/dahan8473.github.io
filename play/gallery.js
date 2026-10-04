@@ -69,7 +69,7 @@ const LB_CSS = `
 .plb [hidden] { display: none !important; }
 .plb-top { grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: max(14px, env(safe-area-inset-top)) 16px 10px 24px; color: var(--t3); }
 .plb-stage { grid-area: stage; position: relative; min-width: 0; min-height: 0; touch-action: pan-y pinch-zoom; }
-.plb-stage img {
+.plb-stage img, .plb-stage video {
   position: absolute; inset: 0; margin: auto;
   max-width: 100%; max-height: 100%; width: auto; height: auto;
   border-radius: 12px;
@@ -89,7 +89,7 @@ const LB_CSS = `
   .plb { grid-template-columns: 60px minmax(0, 1fr) 60px; grid-template-areas: "top top top" "stage stage stage" "prev cap next"; }
   .plb-top { padding-left: 20px; padding-right: 12px; }
   .plb-stage { margin: 0 10px; }
-  .plb-stage img { border-radius: 10px; }
+  .plb-stage img, .plb-stage video { border-radius: 10px; }
   .plb-prev, .plb-next { align-self: start; margin-top: 14px; }
   .plb-cap { padding-left: 4px; padding-right: 4px; }
 }
@@ -160,7 +160,7 @@ function noteText(el, fallback) {
 
 // ---- Lightbox ---------------------------------------------------------------
 // lightbox(items, start, opener) opens a full-screen viewer appended to body.
-// items: [{ src, alt, caption, meta }]. Arrows, Escape, swipe, focus trapped,
+// items: [{ src, alt, caption, meta }], or { video, poster, ... } for a clip. Arrows, Escape, swipe, focus trapped,
 // focus goes back to opener. Returns close(restore): pass false from cleanup
 // to tear it down at once without moving focus.
 export function lightbox(items, start, opener) {
@@ -195,7 +195,14 @@ export function lightbox(items, start, opener) {
   const img = h('img');
   img.decoding = 'async';
   img.draggable = false;
-  stage.appendChild(img);
+  const vid = h('video');
+  vid.playsInline = true;
+  vid.loop = true;
+  vid.muted = true;
+  vid.controls = true;
+  vid.hidden = true;
+  stage.append(img, vid);
+  let cur = img;
   const cap = h('div', 'plb-cap');
   const c = h('p', 'c');
   const m = h('p', 'm');
@@ -212,23 +219,37 @@ export function lightbox(items, start, opener) {
     m.textContent = p.meta || '';
     m.hidden = !p.meta;
     const t = ++token;
-    img.style.transition = 'none';
-    img.style.opacity = '0';
-    img.style.transform = reduce.matches ? '' : dir ? 'translateX(' + dir * 28 + 'px)' : 'scale(0.985)';
-    img.alt = p.alt || p.caption || '';
+    cur = p.video ? vid : img;
+    img.hidden = !!p.video;
+    vid.hidden = !p.video;
+    if (!p.video) { vid.pause(); vid.removeAttribute('src'); }
+    cur.style.transition = 'none';
+    cur.style.opacity = '0';
+    cur.style.transform = reduce.matches ? '' : dir ? 'translateX(' + dir * 28 + 'px)' : 'scale(0.985)';
     const reveal = () => {
       if (t !== token || !open) return;
-      void img.offsetWidth;
-      img.style.transition = '';
-      img.style.opacity = '1';
-      img.style.transform = '';
+      void cur.offsetWidth;
+      cur.style.transition = '';
+      cur.style.opacity = '1';
+      cur.style.transform = '';
     };
-    img.onload = reveal;
-    img.onerror = reveal;
-    img.src = p.src;
-    if (img.complete && img.naturalWidth) reveal();
+    if (p.video) {
+      vid.setAttribute('aria-label', p.alt || p.caption || 'Clip');
+      vid.poster = p.poster || '';
+      vid.onloadeddata = reveal;
+      vid.onerror = reveal;
+      vid.src = p.video;
+      vid.play().catch(() => {});
+      if (p.poster) { const pi = new Image(); pi.onload = reveal; pi.src = p.poster; }
+    } else {
+      img.alt = p.alt || p.caption || '';
+      img.onload = reveal;
+      img.onerror = reveal;
+      img.src = p.src;
+      if (img.complete && img.naturalWidth) reveal();
+    }
     // Warm the neighbours so arrowing feels instant.
-    if (many) [1, -1].forEach((d) => { new Image().src = items[(at + d + items.length) % items.length].src; });
+    if (many) [1, -1].forEach((d) => { const n = items[(at + d + items.length) % items.length]; new Image().src = n.src || n.poster; });
   }
   function step(d) {
     if (!open || items.length < 2) return;
@@ -255,19 +276,19 @@ export function lightbox(items, start, opener) {
   stage.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' || !e.isPrimary || items.length < 2) return;
     pid = e.pointerId; sx = e.clientX; sy = e.clientY; dx = 0;
-    img.style.transition = 'none';
+    cur.style.transition = 'none';
   });
   stage.addEventListener('pointermove', (e) => {
     if (e.pointerId !== pid) return;
     dx = e.clientX - sx;
-    if (Math.abs(dx) > Math.abs(e.clientY - sy)) img.style.transform = 'translateX(' + dx + 'px)';
+    if (Math.abs(dx) > Math.abs(e.clientY - sy)) cur.style.transform = 'translateX(' + dx + 'px)';
   });
   const end = (e) => {
     if (e.pointerId !== pid) return;
     pid = null;
-    img.style.transition = '';
+    cur.style.transition = '';
     if (e.type === 'pointerup' && Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(e.clientY - sy)) step(dx < 0 ? 1 : -1);
-    else img.style.transform = '';
+    else cur.style.transform = '';
   };
   stage.addEventListener('pointerup', end);
   stage.addEventListener('pointercancel', end);
@@ -275,7 +296,7 @@ export function lightbox(items, start, opener) {
   x.addEventListener('click', () => close(true));
   prev.addEventListener('click', () => step(-1));
   next.addEventListener('click', () => step(1));
-  lb.addEventListener('click', (e) => { if (!e.target.closest('button') && e.target !== img) close(true); });
+  lb.addEventListener('click', (e) => { if (!e.target.closest('button') && e.target !== img && e.target !== vid) close(true); });
 
   const prevOverflow = document.documentElement.style.overflow;
   document.documentElement.style.overflow = 'hidden';
@@ -288,6 +309,8 @@ export function lightbox(items, start, opener) {
   x.focus({ preventScroll: true });
 
   function finish() {
+    vid.pause();
+    vid.removeAttribute('src');
     clearTimeout(fadeTimer);
     fadeTimer = 0;
     lb.remove();

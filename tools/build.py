@@ -470,7 +470,7 @@ hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.'
 hobby('chess', 'Chess', 'I play on chess.com. Play a game against the head if you want.', [
 ], shot=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
-hobby('horror', 'Horror', 'I like horror.', [])
+hobby('horror', 'Horror', "Any genre. It's a love-hate thing: I like getting creeped out once in a while, just not too much.", [])
 hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
   ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),

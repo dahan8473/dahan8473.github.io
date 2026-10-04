@@ -32,6 +32,9 @@ const CSS = `
 .pgal-open:focus-visible { border-radius: 14px; outline-offset: 3px; }
 .pgal-open img { width: 100%; height: auto; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; opacity: 0; transition: opacity 320ms ease; }
 .pgal-open img.in { opacity: 1; }
+.pgal-open { position: relative; }
+.pgal-play { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(0, 0, 0, 0.45); color: #fff; transform: translate(-50%, -50%); pointer-events: none; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.pgal-play svg { width: 18px; height: 18px; margin-left: 3px; fill: currentColor; }
 .pgal-open.broken { display: grid; place-items: center; aspect-ratio: 4 / 3; color: var(--t3); cursor: default; }
 .pgal-open.broken img { display: none; }
 .pgal-open.broken svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -381,14 +384,23 @@ export function mount(el) {
       btn.classList.add('broken');
       btn.appendChild(icon(ICON.photo));
     });
-    img.src = p.src;
+    img.src = p.src || p.poster;
     btn.appendChild(img);
+    // A clip: its poster on the tile with a play badge; it plays in the lightbox.
+    if (p.video) {
+      const play = h('span', 'pgal-play');
+      play.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>';
+      btn.appendChild(play);
+      btn.setAttribute('aria-label', 'Play ' + (p.alt || p.caption || 'clip ' + (i + 1)));
+    }
     btn.addEventListener('click', () => {
       const at = shown.indexOf(p);
       if (at < 0) return;
       if (closeLb) closeLb(false);
       closeLb = lightbox(shown.map((q) => ({
-        src: q.src,
+        src: q.src || q.poster,
+        video: q.video,
+        poster: q.poster,
         alt: q.alt || q.caption || '',
         caption: q.caption || '',
         meta: [q.camera && camName(q.camera, true), q.lens, fmtDate(q.date)].filter(Boolean).join(' · ')
@@ -472,7 +484,7 @@ export function mount(el) {
     .then((data) => {
       if (!alive) return;
       const list = data && Array.isArray(data.photos) ? data.photos : [];
-      photos = list.filter((p) => p && typeof p.src === 'string' && p.src);
+      photos = list.filter((p) => p && ((typeof p.src === 'string' && p.src) || (typeof p.video === 'string' && p.video)));
       loaded = true;
       render();
     });

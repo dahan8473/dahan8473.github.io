@@ -7,7 +7,7 @@ import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 30, 9, 26, 30
-V_PIECE = 16  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 18  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -442,7 +442,7 @@ GROUP_LINE = {'Body': 'What I train.', 'Mind': 'What keeps me curious.', 'Soul':
 PICS = {
   'hiking': ('/media/hikes/panorama-ridge/07-s.webp', 'photo', 'The trail up to Panorama Ridge'),
   'badminton': ('/media/tiles/rackets.webp', 'cut', 'Three of my Yonex rackets'),
-  'muay-thai': ('/media/hands/fist.webp', 'cut', 'A fist'),
+  'muay-thai': ('/media/muaythai/gloves-s.webp', 'photo', 'Me and a training partner in gloves'),
   'travel': ('/media/hikes/eze/02-s.webp', 'photo', 'Èze over the Mediterranean'),
   'fashion': ('/media/work/kunlun-liangfeng.webp', 'photo', 'The Kunlun storefront'),
   'meowmeow': ('/media/life/meowmeow-sleep.webp', 'photo', 'Meowmeow asleep in a beanbag'),
@@ -515,7 +515,7 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
 '''.replace('{V_PIECE}', str(V_PIECE)))
 hobby('muay-thai', 'Muay Thai', 'I train at a club, and coach the beginner class at my local gym.', [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
-], shot=piece('play', 'muaythai', 'Loading the ring...'))
+], shot=piece('play', 'muaythai', 'Loading the ring...') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json'))
 hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V3 right now. Climb this page with me if you want.", [
 ], shot=piece('play', 'climbing', 'Loading the wall...'))
 hobby('swimming', 'Swimming', 'I swim.', [

@@ -1,0 +1,27 @@
+{
+  "_how": "Muay Thai photos and clips. src for photos, video + poster for clips. caption optional.",
+  "photos": [
+    {
+      "src": "/media/muaythai/gloves.webp",
+      "alt": "David and a training partner in gloves, arms around each other, in Western's wrestling room"
+    },
+    {
+      "video": "/media/muaythai/spar.mp4",
+      "poster": "/media/muaythai/spar-s.webp",
+      "alt": "Sparring: a teep and a kick in the wrestling room"
+    },
+    {
+      "src": "/media/muaythai/punch.webp",
+      "alt": "David landing a jab on his training partner, both laughing it off"
+    },
+    {
+      "video": "/media/muaythai/pads.mp4",
+      "poster": "/media/muaythai/pads-s.webp",
+      "alt": "Light sparring with shin guards on"
+    },
+    {
+      "src": "/media/muaythai/gym.webp",
+      "alt": "The gym: black mats, mirrors and pads"
+    }
+  ]
+}

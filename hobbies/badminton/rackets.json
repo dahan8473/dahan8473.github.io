@@ -1,21 +1,69 @@
 {
-  "_how": "The four rackets: name, string and tension shown on hover. model is a racket traced from its product photo (tools/3d/models-src/rackets/trace.py); without one the generic racket shows in color.",
+  "_how": "The four rackets. name shows on hover; clicking one zooms in on it with its specs and a Rally me button. model is the racket traced from its product photo (tools/3d/models-src/rackets/trace.py); without one the generic racket shows in color. Optional string and tension are how mine are strung. The specs (for, weight, balance, flex, frame, shaft, length, range, made) are Yonex's official ones from the page in source (archived official pages for the two discontinued rackets); sourceNote says where a spec came from when the product page didn't list it. scale places the card's two meters, 0 to 1: balance from head light to head heavy, stiffness from flexible to stiff, read off Yonex's labels and its catalog balance charts.",
   "rackets": [
     {
       "name": "Yonex Voltric Z-Force II",
-      "model": "/3d/models/racket-zf2.glb"
+      "model": "/3d/models/racket-zf2.glb",
+      "for": "Raw smash power. Yonex's thinnest shaft at the time, with tungsten in the frame, made for advanced players who hit hard.",
+      "weight": "3U (avg. 88 g) G4, G5 / 4U (avg. 83 g) G4, G5",
+      "balance": "Head heavy",
+      "flex": "Extra stiff",
+      "frame": "HM Graphite, Sound Filter, Nanometric, Tungsten",
+      "shaft": "HM Graphite, Nanometric, EX-HMG",
+      "length": "10 mm longer",
+      "range": "3U 20-28 lbs, 4U 20-27 lbs",
+      "made": "Japan",
+      "scale": { "balance": 0.95, "stiffness": 0.95 },
+      "source": "https://web.archive.org/web/20201026100255/https://www.yonex.com/badminton/racquets/voltric/voltric-z-force-ii-vtzf2",
+      "sourceNote": "Discontinued, so this is Yonex's archived product page. Balance is from Yonex's 2015 catalog chart, where it is the most head heavy racket that year."
     },
     {
       "name": "Yonex Duora 10",
-      "model": "/3d/models/racket-duora10.glb"
+      "model": "/3d/models/racket-duora10.glb",
+      "for": "Doubles speed. A box frame on the forehand side for power and an aero frame on the backhand side for quick drives.",
+      "weight": "3U (avg. 88 g) G4, G5 / 2U (avg. 93 g) G4, G5",
+      "balance": "Head heavy",
+      "flex": "Stiff",
+      "frame": "HM Graphite, Nanometric DR, Nickel-Titanium Fiber",
+      "shaft": "HM Graphite, Nanometric",
+      "length": "10 mm longer",
+      "range": "3U 19-26 lbs, 2U 20-27 lbs",
+      "made": "Japan",
+      "scale": { "balance": 0.72, "stiffness": 0.75 },
+      "source": "https://web.archive.org/web/20230201090144/https://www.yonex.com/badminton/racquets/duora/duo10",
+      "sourceNote": "Discontinued, so this is Yonex's archived product page. Balance is from Yonex UK's 2016 brochure chart: head heavy, less so than the Z-Force II."
     },
     {
       "name": "Yonex Astrox 100ZZ",
-      "model": "/3d/models/racket-ax100zz.glb"
+      "model": "/3d/models/racket-ax100zz.glb",
+      "for": "Relentless attack. Weight spread across the grip end, frame top and joint so you can follow a smash with the next shot fast.",
+      "weight": "3U (avg. 88 g) G4, G5, G6 / 4U (avg. 83 g) G5, G6",
+      "balance": "Head heavy",
+      "flex": "Extra stiff",
+      "frame": "HM Graphite, Namd, Tungsten, Black Micro Core, Nanometric",
+      "shaft": "HM Graphite, Namd",
+      "length": "10 mm longer",
+      "range": "3U 21-29 lbs, 4U 20-28 lbs",
+      "made": "Japan",
+      "scale": { "balance": 0.86, "stiffness": 0.95 },
+      "source": "https://www.yonex.com/badminton/racquets/astrox/ax100zz",
+      "sourceNote": "The global page has no balance field. Head heavy is from Yonex USA (us.yonex.com/products/astrox-100zz) and Yonex Japan's 2026 catalog chart."
     },
     {
       "name": "Yonex ArcSaber 11 Pro",
-      "model": "/3d/models/racket-as11pro.glb"
+      "model": "/3d/models/racket-as11pro.glb",
+      "for": "Control. The Pocketing Booster frame holds the shuttle on the strings a little longer, so shots go where you aim.",
+      "weight": "3U (avg. 88 g) G4, G5, G6 / 4U (avg. 83 g) G5, G6",
+      "balance": "Even balance",
+      "flex": "Stiff",
+      "frame": "HM Graphite, Pocketing Booster",
+      "shaft": "HM Graphite, Super HMG, Ultra PE Fiber",
+      "length": "10 mm longer",
+      "range": "3U 20-28 lbs, 4U 19-27 lbs",
+      "made": "Japan",
+      "scale": { "balance": 0.55, "stiffness": 0.75 },
+      "source": "https://www.yonex.com/badminton/racquets/arcsaber/arc11-p",
+      "sourceNote": "Even balance is from Yonex USA; Yonex Japan's 2026 catalog chart puts it just toward head heavy. The play style is paraphrased from Yonex USA and Yonex Japan."
     }
   ]
 }

@@ -44,8 +44,8 @@
     (function () {
       var stored = null;
       try { stored = localStorage.getItem('theme'); } catch (e) {}
-      var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', stored || (dark ? 'dark' : 'light'));
+      // Dark unless they've picked light with the toggle.
+      document.documentElement.setAttribute('data-theme', stored || 'dark');
     })();
   </script>
 </head>
@@ -81,12 +81,13 @@
         <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
         <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers build free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
         <p>The floating head in the corner is an AI version of me, wired into <a class="ln" href="/brain/">my second brain</a>, a condensed copy of my Obsidian notes. It knows a lot about me, so ask it anything.</p>
+        <p><em>Look around.</em> Almost everything here does something. You can spar the head, rally it with my real rackets, climb the page, play my guitar, and click into any project for the story. The more you click, the more there is.</p>
       </section>
 
       <ul class="list doors">
         <li><a class="row" href="/resume/"><span class="p">Resume</span><span class="s">Everything I've done on one page. Hover anything for more.</span><span class="m">&#8594;</span></a></li>
-        <li><a class="row" href="/projects/"><span class="p">Projects</span><span class="s">What I've built, with the stack and the code.</span><span class="m">&#8594;</span></a></li>
-        <li><a class="row" href="/hobbies/"><span class="p">Hobbies</span><span class="s">Classical guitar, Muay Thai, travel, and a cat who's always chudding around.</span><span class="m">&#8594;</span></a></li>
+        <li><a class="row" href="/projects/"><span class="p">Projects</span><span class="s">What I've built. Click one for the story, and a few you can play with.</span><span class="m">&#8594;</span></a></li>
+        <li><a class="row" href="/hobbies/"><span class="p">Hobbies</span><span class="s">Spar the head, climb the page, spin the globe, call my cat. Most of it is playable.</span><span class="m">&#8594;</span></a></li>
         <li><a class="row" href="/brain/"><span class="p">Brain</span><span class="s">The notes the head thinks with, from my Obsidian vault.</span><span class="m">&#8594;</span></a></li>
         <li><a class="row" href="/notes/"><span class="p">Notes</span><span class="s">Leave me a note on the wall, signed or anonymous.</span><span class="m">&#8594;</span></a></li>
       </ul>

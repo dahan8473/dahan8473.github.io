@@ -39,10 +39,10 @@ async function rest(path, { method = 'GET', body, prefer } = {}) {
   }
 }
 
-export function trackVisit({ visitor, path, referrer, request }) {
+export async function trackVisit({ visitor, path, referrer, request, ip = null, tz = null }) {
   const h = (k) => request.headers.get(k) || null;
   const city = h('x-vercel-ip-city');
-  return rpc('track_visit', {
+  const visit = {
     p_visitor: visitor,
     p_path: path,
     p_referrer: referrer,
@@ -50,7 +50,11 @@ export function trackVisit({ visitor, path, referrer, request }) {
     p_region: h('x-vercel-ip-country-region'),
     p_city: city ? decodeURIComponent(city) : null,
     p_ua: (h('user-agent') || '').slice(0, 300)
-  });
+  };
+  // IP and timezone need supabase/2026-10-04-visitor-details.sql; until it's
+  // run, the visit still gets logged without them.
+  const done = await rpc('track_visit', { ...visit, p_ip: ip, p_tz: tz });
+  if (done === undefined && hasStore) await rpc('track_visit', visit);
 }
 
 // The head leaves [[note:key=value]] in its replies when it learns something.
@@ -117,3 +121,6 @@ export async function messageByTelegram(tg) {
   return rows && rows[0];
 }
 export const thread = (visitor) => rest(`messages?visitor_id=eq.${visitor}&select=id,sender,body,at&order=at.asc&limit=200`);
+
+// The newest visitors, for /visitors in Telegram.
+export const recentVisitors = (n = 8) => rest(`visitor_log?select=name,position,company,reason,seems_to_be,city,region,country,timezone,ip,views,last_seen,pages,chat_turns,referrer&limit=${Math.min(25, Math.max(1, n))}`);

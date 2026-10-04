@@ -299,6 +299,7 @@
   const strip = (s) => s.replace(/\s*\[\[[^\]]*\]\]/g, '').trim();
   const norm = (p) => p.replace(/index\.html$/, '').replace(/([^/])$/, '$1/');
   let here = norm(location.pathname);
+  const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } })();
   const clock = () => new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit' }).toLowerCase();
 
   const S = Object.assign(
@@ -1465,6 +1466,8 @@
           messages: S.msgs.slice(-16),
           visitor,
           convo: S.convo,
+          tz: TZ,
+          local: new Date().toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
           name: knownName()
         })
       });
@@ -2545,7 +2548,7 @@
       pres.at = '';
       pres.seen = '';
       if (giveBack) giveBack();
-      if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: '' }));
+      if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: '', tz: TZ }));
       if (here === '/notes/') setTimeout(() => react('wall', LINES.wall, 3000), 2500);
     });
 
@@ -2588,7 +2591,7 @@
   function start() {
     if (S.quiet) root.classList.add('quiet');
     if (!sound.on) root.classList.add('muted');
-    if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer }));
+    if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer, tz: TZ }));
     const met = S.met;
     if (S.open) { actor.classList.add('on'); restore(); }
     else if (!met) enter().finally(() => { pres.ready = true; });

@@ -593,6 +593,8 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
   /* Short enough that the head, docked bottom right, sits below the box. */
   /* Phones: just the playing bars in the header, no title, so the name keeps one line. */
   .playing-now .np-title { display: none; }
+  /* Phones: just the time, the difference is in the tooltip. */
+  #ahead { display: none; }
   .tracks.hero .track { grid-template-columns: 22px 44px minmax(0, 1fr) auto; gap: 12px; }
   .tracks.hero .t-bar { left: 78px; }
   .stage3d.strip { aspect-ratio: 16 / 8; }

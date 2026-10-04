@@ -6,11 +6,29 @@
   var API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '/api' : 'https://davidliu-work.vercel.app/api';
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Local time, London ON
+  // My local time, in Toronto
   var fmt = new Intl.DateTimeFormat('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Toronto' });
+  // How far Toronto is from the visitor, in hours. 0 when they're on the same time.
+  function aheadOfYou(now) {
+    try {
+      var p = {};
+      new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })
+        .formatToParts(now).forEach(function (x) { p[x.type] = x.value; });
+      var there = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute);
+      var here = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+      return Math.round((there - here) / 900000) / 4;
+    } catch (e) { return 0; }
+  }
   function tick() {
+    var now = new Date();
     var clock = document.getElementById('clock');
-    if (clock) clock.textContent = fmt.format(new Date());
+    if (clock) clock.textContent = fmt.format(now);
+    var ahead = document.getElementById('ahead');
+    if (ahead) {
+      var h = aheadOfYou(now), n = Math.abs(h);
+      ahead.textContent = h ? ' · ' + n + 'h ' + (h > 0 ? 'ahead of' : 'behind') + ' you' : '';
+      ahead.parentNode.title = h ? 'My time in Toronto, ' + n + (n === 1 ? ' hour ' : ' hours ') + (h > 0 ? 'ahead of' : 'behind') + ' you' : 'My time in Toronto, same as yours';
+    }
   }
   setInterval(tick, 30000);
 

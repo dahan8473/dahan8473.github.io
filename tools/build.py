@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 29, 9, 24, 28
+V_CSS, V_TALKCSS, V_JS, V_TALK = 30, 9, 26, 29
 V_PIECE = 15  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
@@ -38,7 +38,7 @@ TOP = '''    <header class="top">
       <a class="me" href="/">David Liu</a>
       <span class="what">Software engineer</span>
       <div class="end">
-        <span>London <span id="clock">--:--</span></span>
+        <span class="where">Toronto <span id="clock">--:--</span><span id="ahead"></span></span>
         <button class="theme-toggle" aria-label="Toggle theme" type="button">
           <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
           <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -629,6 +629,7 @@ for rel in ['tethos/index.html', 'dashboard/index.html', 'rag/index.html', 'kunl
     path = os.path.join(REPO, rel)
     html = open(path, encoding='utf-8').read()
     html = re.sub(r'  <nav class="rail" aria-label="Pages">[\s\S]*?</nav>\n', lambda m: rail(''), html, count=1)
+    html = html.replace('<span>London <span id="clock">--:--</span></span>', '<span class="where">Toronto <span id="clock">--:--</span><span id="ahead"></span></span>')
     for asset, v in [('styles.css', V_CSS), ('talk/talk.css', V_TALKCSS), ('site.js', V_JS), ('talk/talk.js', V_TALK)]:
         html = re.sub(r'(/' + re.escape(asset) + r'\?v=)\d+', lambda m: m.group(1) + str(v), html)
     open(path, 'w', encoding='utf-8').write(html)

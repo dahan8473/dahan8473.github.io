@@ -145,9 +145,9 @@
       meowmeow: "that's meowmeow! she's really fat and sleeps all day. want me to call her over?",
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',
       muaythai: 'i coach the beginner class! do you train anything?',
-      climbing: 'man i can only do a v2 :( do you climb?',
+      climbing: "i'm not very good, i can only do a v3 :( what grade do you climb?",
       badminton: 'badminton was my main sport all through high school! i played doubles. do you play?',
-      hiking: 'panorama ridge was the big one, 30k round trip. do you hike?',
+      hiking: "i'm really proud of panorama ridge. 30km round trip with my friends, i couldn't feel my legs for 2 days after",
       photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
       fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },
@@ -196,6 +196,56 @@
         meowmeow: 'you can call my cat in there',
         guitar: 'real recordings of me playing. they keep going while you browse',
         photography: 'my camera kit, in 3d'
+      }
+    },
+    // Hobby pages: what the head says on arrival, the one question it asks,
+    // and its answers to the buttons (see askPage). Typed answers go to the brain.
+    ask: {
+      hiking: {
+        say: "i'm really proud of panorama ridge. 30km round trip with my friends, i couldn't feel my legs for 2 days after",
+        ask: "do you hike? what's your favourite?",
+        yes: 'ooo where? tell me', no: 'fair. the photos are the next best thing'
+      },
+      climbing: {
+        say: "i'm not very good, i can only do a v3 :(",
+        ask: 'what grade do you climb?',
+        low: "ok we're basically the same. climb the page with me?", same: 'twins 🤝 race me up the page?',
+        high: 'show off 😭', none: "try it here first, the mat's soft"
+      },
+      badminton: {
+        say: 'badminton was my main sport all through high school',
+        ask: 'singles or doubles?',
+        singles: 'respect. rally me then 🏸', doubles: 'doubles gang 🤝 rally me then', none: "you can still rally me, it's easier than it looks"
+      },
+      muaythai: {
+        say: 'i coach the beginner class at my local gym',
+        ask: 'do you train anything?',
+        yes: 'ooo then spar me', no: "wanna try? i'll go easy 🥊"
+      },
+      travel: {
+        say: "i've been to 8 countries so far! fun fact, i've been homeless in all 8 of them 😭",
+        ask: 'where are you from? tap it on the globe',
+        type: 'or just type it, either works',
+        been: (p) => `no way, i've been to ${p.name}!` + (p.id === 'vancouver' ? " that's home!" : ''),
+        near: (p) => `oh nice, that's not far from ${p.name}. i've been there!`,
+        never: 'never been there. adding it to the list 📝'
+      },
+      lumosity: {
+        say: 'i religiously do lumosity every morning. these are my favs',
+        ask: 'think you can beat me?',
+        yes: 'we will see 😈', no: 'smart. try anyway',
+        lose: 'if you wish to defeat me, you must train for another 100 years!! 😈',
+        win: 'IMPOSSIBLE. YOU BEAT ME',
+        unset: "nice. i haven't set my score yet, so enjoy it while it lasts 😈"
+      },
+      chess: {
+        ask: "what's your rating?",
+        none: "the board's right there. i'll go easy"
+      },
+      photography: {
+        say: 'i shoot on an x-t200 and an a7r ii',
+        ask: 'do you shoot?',
+        yes: 'ooo what on? spin my kit around and compare', phone: 'phone counts honestly', no: "the kit's still fun to spin around"
       }
     },
     // The guitar page: asks if they play, and brings the guitar out if they want it.
@@ -1905,6 +1955,92 @@
     ]);
   }
 
+  // Every hobby page gets one exchange: a real line about it, one question,
+  // buttons that do something on the page. Once per visit per page, never on
+  // top of a question it just asked. Typed answers go to the brain as usual.
+  const ASK_PAGES = {
+    '/hobbies/hiking/': 'hiking', '/hobbies/climbing/': 'climbing', '/hobbies/badminton/': 'badminton',
+    '/hobbies/muay-thai/': 'muaythai', '/hobbies/travel/': 'travel', '/hobbies/lumosity/': 'lumosity',
+    '/hobbies/chess/': 'chess', '/hobbies/photography/': 'photography'
+  };
+  const pageEl = (sel) => document.querySelector('main ' + sel);
+  // Point at the thing, after the words.
+  const showOn = (sel) => { const el = pageEl(sel); if (el) setTimeout(() => point(el, { hold: 2600 }), 400); };
+  let travelPick = false;
+  let places = null;
+  async function askPage(tries = 0) {
+    const id = ASK_PAGES[here];
+    if (!id || S.quiet || S.once.includes('ask-' + id)) return;
+    const mid = chatOn && S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && /\?\s*$/.test(strip(S.msgs[S.msgs.length - 1].content)) && now() - pres.said < 20000;
+    if (!pres.ready || asking || touring || held || carried || dir.busy || sp.typing || mid || pres.waiting || document.hidden) {
+      if (tries < 12) setTimeout(() => { if (ASK_PAGES[here] === id) askPage(tries + 1); }, 3000);
+      return;
+    }
+    const L = LINES.ask[id];
+    S.once.push('ask-' + id);
+    if (!S.noticed.includes(id)) S.noticed.push(id);
+    save();
+    wake();
+    if (!chatOn) {
+      chatOn = true;
+      S.open = true;
+      save();
+      root.classList.add('chat');
+      await goHome(420);
+      showTalk();
+      showForm();
+    }
+    if (L.say) await say(L.say);
+    if (id === 'hiking') showOn('[data-t="hike-panorama-ridge"] .phk-strip');
+    await say(L.ask);
+    pres.waiting = true;
+    const go = (text, sel, mood) => async (label) => { await reply(label, text); if (mood) setFace(mood, 2400); if (sel) showOn(sel); };
+    if (id === 'hiking') options([['yeah!', go(L.yes)], ['not really', go(L.no)]]);
+    else if (id === 'climbing') options([
+      ['v0 to v2', go(L.low, '.play[data-play="climbing"]')], ['v3', go(L.same, '.play[data-play="climbing"]', 'happy')],
+      ['v4+', go(L.high, null, 'sad')], ["i don't climb", go(L.none, '.play[data-play="climbing"]')]
+    ]);
+    else if (id === 'badminton') options([
+      ['singles', go(L.singles, '.play[data-play="badminton"]')], ['doubles', go(L.doubles, '.play[data-play="badminton"]', 'happy')],
+      ["i don't play", go(L.none, '.play[data-play="badminton"]')]
+    ]);
+    else if (id === 'muaythai') options([['yeah', go(L.yes, '.play[data-play="muaythai"]')], ['not really', go(L.no, '.play[data-play="muaythai"]')]]);
+    else if (id === 'lumosity') options([['bet', go(L.yes, '.play[data-play="pinball"]', 'angry')], ['probably not', go(L.no, '.play[data-play="pinball"]')]]);
+    else if (id === 'chess') options([["i don't play", go(L.none, '.play[data-play="chess"]')]]);
+    else if (id === 'photography') options([
+      ['yeah', go(L.yes, '[data-3d="cameras"]')], ['just my phone', go(L.phone)], ['not really', go(L.no, '[data-3d="cameras"]')]
+    ]);
+    else if (id === 'travel') {
+      travelPick = true;
+      showOn('[data-3d="globe"]');
+      options([["i'll type it", async (label) => { travelPick = false; pres.waiting = true; await speak(L.type, { echo: label }); }]]);
+    }
+  }
+  // Where they're from, tapped on the globe: the closest place he's been.
+  async function globePicked({ lat, lng }) {
+    if (!travelPick || here !== '/hobbies/travel/') return;
+    travelPick = false;
+    choicesEl.hidden = true;
+    if (!places) {
+      try { places = (await (await fetch('/hobbies/travel/places.json')).json()).places || []; } catch (e) { places = []; }
+    }
+    const R = Math.PI / 180;
+    const km = (p) => 6371 * Math.acos(Math.min(1, Math.sin(lat * R) * Math.sin(p.lat * R) + Math.cos(lat * R) * Math.cos(p.lat * R) * Math.cos((lng - p.lng) * R)));
+    const best = places.map((p) => [km(p), p]).sort((a, b) => a[0] - b[0])[0];
+    const L = LINES.ask.travel;
+    const text = best && best[0] < 150 ? L.been(best[1]) : best && best[0] < 600 ? L.near(best[1]) : L.never;
+    await reply(`(tapped ${lat.toFixed(1)}, ${lng.toFixed(1)} on the globe)`, text);
+    setFace(best && best[0] < 600 ? 'happy' : 'sad', 2200);
+  }
+  // A Lumosity game ended (play/pinball.js, ebbflow.js, penguin.js send dl:lumo).
+  async function lumoDone({ score, david }) {
+    if (here !== '/hobbies/lumosity/' || asking) return;
+    const L = LINES.ask.lumosity;
+    if (david == null) { quip(L.unset, 2600, 'happy'); return; }
+    if (score > david) quip(L.win, 3000, 'angry');
+    else quip(L.lose, 3000, 'happy');
+  }
+
   // On /hobbies/ the head won't let them just browse the list: a nudge at a
   // hobby they haven't opened, then two more, a few seconds apart, then it
   // lets it go. Stops as soon as they open one or start talking.
@@ -2057,14 +2193,13 @@
   let lastInput = now();
   let lastScroll = 0;
   let lastMove = 0;
-  // Resolves once the visitor has had a few seconds and stopped scrolling
-  // and moving around, or after 12s regardless.
+  // Resolves about 2s in, once they're not mid-scroll, or at 4s regardless.
   function settled() {
     const t0 = now();
     return new Promise((done) => {
       const check = () => {
         const t = now();
-        if ((t - t0 > 3500 && t - lastScroll > 1500 && t - lastMove > 900) || t - t0 > 12000) done();
+        if ((t - t0 > 2000 && t - lastScroll > 600) || t - t0 > 4000) done();
         else setTimeout(check, 250);
       };
       check();
@@ -2397,6 +2532,8 @@
     // Page swaps (site.js): the head stays, the page under it changes.
     document.addEventListener('dl:page', () => {
       if (norm(location.pathname) === '/hobbies/guitar/') setTimeout(askGuitar, 3500);
+      travelPick = false;
+      if (ASK_PAGES[norm(location.pathname)]) setTimeout(askPage, 3500);
       clearTimeout(pickTimer);
       if (norm(location.pathname) === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 2500);
       const hob = /^\/hobbies\/([^/]+)\/$/.exec(norm(location.pathname));
@@ -2444,7 +2581,7 @@
     life.surprise = now() + 350;
     wave();
     if (is404()) return lost();
-    await wait(700);
+    await wait(350);
     if (!chatOn) intro();
   }
 
@@ -2466,6 +2603,9 @@
     schedule(met ? rand(9000, 14000) : 13000);
     if (met) pres.ready = true;
     if (here === '/hobbies/guitar/') setTimeout(askGuitar, 4000);
+    if (ASK_PAGES[here]) setTimeout(askPage, 4000);
+    addEventListener('dl:globe-pick', (e) => globePicked(e.detail || {}));
+    addEventListener('dl:lumo', (e) => lumoDone(e.detail || {}));
     if (here === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 3000);
     setInterval(presence, 1000);
     // Replies from the real David: once a few seconds in, then every minute.

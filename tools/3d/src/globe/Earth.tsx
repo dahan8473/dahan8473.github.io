@@ -1,7 +1,7 @@
 // The globe itself, ported from tsi-globe (GlobeAnimated.tsx + Scene.tsx):
 // a point cloud where land rises and falls with elevation, over a translucent
 // sphere. Dark mode adds the radial backdrop and a faint star field.
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { BufferAttribute, BufferGeometry, Color, DirectionalLight, DoubleSide, Vector2, Vector3 } from 'three';
 import {
@@ -97,6 +97,16 @@ function pointMaterial(radius: number) {
   };
 }
 
+// A click on the globe (not a drag) tells the page where: dl:globe-pick on
+// window with { lat, lng }. The head uses it to ask where visitors are from.
+function pick(e: ThreeEvent<MouseEvent>) {
+  if (e.delta > 6) return;
+  const p = e.object.worldToLocal(e.point.clone()).normalize();
+  const lat = (Math.asin(Math.max(-1, Math.min(1, p.y))) * 180) / Math.PI;
+  const lng = (Math.atan2(p.x, p.z) * 180) / Math.PI;
+  window.dispatchEvent(new CustomEvent('dl:globe-pick', { detail: { lat, lng } }));
+}
+
 export function Earth({ geometry, palette }: { geometry: BufferGeometry; palette: Palette }) {
   const { camera, scene } = useThree();
   const { reducedMotion, dark } = usePiece();
@@ -173,7 +183,7 @@ export function Earth({ geometry, palette }: { geometry: BufferGeometry; palette
       {dark && <Backdrop strength={palette.backdrop} />}
       {dark && <Stars still={reducedMotion} />}
       <points geometry={geometry} material={material} frustumCulled={false} />
-      <mesh material={sphereMat}>
+      <mesh material={sphereMat} onClick={pick}>
         <sphereGeometry args={[0.999, 96, 64]} />
       </mesh>
     </>

@@ -79,7 +79,7 @@ const SAY = {
   early: 'jumped too early lol',
   late: 'too late 😭',
   slip: 'nooo',
-  mat: ['ow', 'man only a v2 lol', 'that hold is greasy i swear', 'the mat is my friend'],
+  mat: ['ow', 'man only a v3 lol', 'that hold is greasy i swear', 'the mat is my friend'],
   again: ['ok again', 'one more go', 'from the start. ok'],
   back: ['ok back on the jug', 'jug restart. thank u'],
   match: 'match it! both hands on the top',

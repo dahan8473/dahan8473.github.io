@@ -6,8 +6,8 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 29, 9, 24, 26
-V_PIECE = 14  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 29, 9, 24, 28
+V_PIECE = 15  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -516,8 +516,7 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
 hobby('muay-thai', 'Muay Thai', 'I train at a club, and coach the beginner class at my local gym.', [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'muaythai', 'Loading the ring...'))
-hobby('climbing', 'Rock climbing', "I boulder. I can only do a V2 right now.", [
-  ('Grade', [('V2', "<p>My max, for now. If you climb, tell the head what you can do.</p>")], None),
+hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V3 right now. Climb this page with me if you want.", [
 ], shot=piece('play', 'climbing', 'Loading the wall...'))
 hobby('swimming', 'Swimming', 'I swim.', [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/swimming/photos.json'))

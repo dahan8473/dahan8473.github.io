@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 9, 24, 22
+V_CSS, V_TALKCSS, V_JS, V_TALK = 29, 9, 24, 25
 V_PIECE = 14  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
@@ -436,12 +436,26 @@ hob = '''      <header class="doc-head">
 
       <div class="hobs" data-t="life">
 '''
+# Each group: a line under its name, and a picture per hobby. 'photo' fills the
+# card, 'cut' is a cutout or render sitting on the group's tint.
+GROUP_LINE = {'Body': 'What I train.', 'Mind': 'What keeps me curious.', 'Soul': 'What I love.'}
+PICS = {
+  'hiking': ('/media/hikes/panorama-ridge/07-s.webp', 'photo', 'The trail up to Panorama Ridge'),
+  'badminton': ('/media/tiles/rackets.webp', 'cut', 'Three of my Yonex rackets'),
+  'muay-thai': ('/media/hands/fist.webp', 'cut', 'A fist'),
+  'travel': ('/media/hikes/eze/02-s.webp', 'photo', 'Èze over the Mediterranean'),
+  'fashion': ('/media/work/kunlun-liangfeng.webp', 'photo', 'The Kunlun storefront'),
+  'meowmeow': ('/media/life/meowmeow-sleep.webp', 'photo', 'Meowmeow asleep in a beanbag'),
+  'guitar': ('/media/tiles/guitar.webp', 'cut', 'A classical guitar'),
+  'photography': ('/media/tiles/cameras.webp', 'cut', 'A Fujifilm X-T200 and a Sony A7R II'),
+}
 for label, rows, more in GROUPS:
-    hob += f'        <section class="hob-group">\n          <h2>{label}</h2>\n          <ul class="list doors">\n'
+    hob += f'        <section class="hob-group {label.lower()}">\n          <header class="hob-gh"><h2>{label}</h2><p>{GROUP_LINE.get(label, "")}</p></header>\n          <div class="hob-cards">\n'
     for slug, name, line, photo in rows:
-        ph = f' data-photo="{photo}"' if photo else ''
-        hob += f'            <li data-t="{DT.get(slug, slug)}"><a class="row" href="/hobbies/{slug}/"{ph}><span class="p">{name}</span><span class="s">{line}</span><span class="m">&#8594;</span></a></li>\n'
-    hob += '          </ul>\n'
+        src, kind, alt = PICS.get(slug, (photo or '', 'photo', name))
+        pic = f'<span class="hob-pic {kind}"><img src="{src}" alt="{alt}" loading="lazy" decoding="async"></span>' if src else f'<span class="hob-pic blank"><span>{name[0]}</span></span>'
+        hob += f'            <a class="hob-card" href="/hobbies/{slug}/" data-t="{DT.get(slug, slug)}">{pic}<span class="hob-name">{name}<span class="hob-go" aria-hidden="true">&#8594;</span></span><span class="hob-line">{line}</span></a>\n'
+    hob += '          </div>\n'
     links = ''.join(f'<a class="ln" href="/hobbies/{slug}/" data-t="{slug}">{name}</a>' for slug, name in more)
     hob += f'          <p class="hob-more"><span>Also</span><span class="go">{links}</span></p>\n        </section>\n'
 hob += '      </div>\n'

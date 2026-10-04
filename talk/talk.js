@@ -182,6 +182,22 @@
       { id: 'still', line: 'if an ai was trained perfectly on you, would it still be you?' },
       { id: 'scale', line: (name) => `${name ? name + ', ' : ''}rate yourself. when it comes to tech, 1 is all profit and 10 is all ethics. where are you?`, scale: ['all profit', 'all ethics'] }
     ],
+    // The hobbies page: it won't let them just sit there. Up to three nudges,
+    // each pointing at a hobby they haven't opened yet, with what's in it.
+    pick: {
+      open: ['ok pick one', 'go on, click one', "fine, i'll pick for you"],
+      teaser: {
+        hiking: '12 hikes in there with photos. hover one for the stats',
+        badminton: 'my 4 rackets are in 3d in there, and you can rally me',
+        muaythai: 'you can spar me in there',
+        travel: "there's a globe in there. spin it",
+        fashion: 'kunlun! the clothing brand i\'m building',
+        lumosity: 'my lumosity games. try to beat my score',
+        meowmeow: 'you can call my cat in there',
+        guitar: 'real recordings of me playing. they keep going while you browse',
+        photography: 'my camera kit, in 3d'
+      }
+    },
     // The guitar page: asks if they play, and brings the guitar out if they want it.
     guitar: {
       ask: 'do you play guitar yourself?',
@@ -1540,7 +1556,7 @@
   // only happens for a visitor who reads as a recruiter.
   function bitFor(move, id) {
     const el = id && find(id);
-    if (move === 'comment' && el && LINES.notice[id] && !S.noticed.includes(id)) return { kind: 'comment', run: () => { S.noticed.push(id); save(); return chime(LINES.notice[id]); } };
+    if (move === 'comment' && el && LINES.notice[id] && !S.noticed.includes(id) && here !== '/hobbies/') return { kind: 'comment', run: () => { S.noticed.push(id); save(); return chime(LINES.notice[id]); } };
     if (move === 'comment' && el && LINES.roam[id] && inView(el)) return roamBit(el, LINES.roam[id]);
     if (move === 'point' && el && LINES.point[id]) return pointBit(el, LINES.point[id]);
     if (move === 'fetch' && el && S.who === 'recruiter' && fine && cursor.seen && LINES.yank[id]) {
@@ -1681,7 +1697,10 @@
 
   const pres = { ready: false, seen: '', seenAt: 0, said: now(), streak: 0, out: 0, brain: false, at: '', atSince: 0, last: null, smallAt: now(), waiting: false };
 
+  // On /hobbies/ the cards are doors, not things to comment on: the pick nudge
+  // (nudgeHobbies) has that page.
   function look(el) {
+    if (here === '/hobbies/') return;
     for (let t = el && el.closest('[data-t]'); t; t = t.parentElement && t.parentElement.closest('[data-t]')) {
       const id = t.dataset.t;
       if (root.contains(t) || !LINES.notice[id]) continue;
@@ -1691,6 +1710,7 @@
   }
   // Whatever sits across the middle of the screen, innermost first.
   function reading() {
+    if (here === '/hobbies/') return '';
     const mid = innerHeight * 0.45;
     let at = '';
     for (const el of document.querySelectorAll('[data-t]')) {
@@ -1883,6 +1903,33 @@
         ]);
       }]
     ]);
+  }
+
+  // On /hobbies/ the head won't let them just browse the list: a nudge at a
+  // hobby they haven't opened, then two more, a few seconds apart, then it
+  // lets it go. Stops as soon as they open one or start talking.
+  let pickTimer = 0;
+  function nudgeHobbies(step = 0, tries = 0) {
+    clearTimeout(pickTimer);
+    if (here !== '/hobbies/' || S.quiet || step >= LINES.pick.open.length) return;
+    // Not over the top of a question it just asked.
+    const mid = chatOn && S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && /\?\s*$/.test(strip(S.msgs[S.msgs.length - 1].content)) && now() - pres.said < 20000;
+    if (!pres.ready || asking || touring || held || carried || dir.busy || sp.typing || mid || pres.waiting || document.hidden) {
+      if (tries < 24) pickTimer = setTimeout(() => nudgeHobbies(step, tries + 1), 2500);
+      return;
+    }
+    const seen = S.hobbies || [];
+    const rows = [...document.querySelectorAll('main .hobs [data-t]')].filter((el) => LINES.pick.teaser[el.dataset.t]);
+    const fresh = rows.filter((el) => !seen.includes(el.dataset.t));
+    const pool = fresh.length ? fresh : rows;
+    if (!pool.length) return;
+    const el = pool[Math.floor(Math.random() * pool.length)];
+    const t = el.dataset.t;
+    S.hobbies = [...new Set([...seen, t])];
+    save();
+    wake();
+    Promise.all([quip(LINES.pick.open[step] + '. ' + LINES.pick.teaser[t], 2600), point(el, { hold: 2400 })]);
+    pickTimer = setTimeout(() => nudgeHobbies(step + 1), 9000);
   }
 
   // ---- Replies from the real David --------------------------------------------
@@ -2350,6 +2397,10 @@
     // Page swaps (site.js): the head stays, the page under it changes.
     document.addEventListener('dl:page', () => {
       if (norm(location.pathname) === '/hobbies/guitar/') setTimeout(askGuitar, 3500);
+      clearTimeout(pickTimer);
+      if (norm(location.pathname) === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 2500);
+      const hob = /^\/hobbies\/([^/]+)\/$/.exec(norm(location.pathname));
+      if (hob) { S.hobbies = [...new Set([...(S.hobbies || []), hob[1] === 'muay-thai' ? 'muaythai' : hob[1]])]; save(); }
       here = norm(location.pathname);
       pageAt = now();
       S.pages = (S.pages || 1) + 1;
@@ -2415,6 +2466,7 @@
     schedule(met ? rand(9000, 14000) : 13000);
     if (met) pres.ready = true;
     if (here === '/hobbies/guitar/') setTimeout(askGuitar, 4000);
+    if (here === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 3000);
     setInterval(presence, 1000);
     // Replies from the real David: once a few seconds in, then every minute.
     setTimeout(checkReplies, 4000);

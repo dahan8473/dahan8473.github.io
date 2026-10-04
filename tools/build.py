@@ -367,7 +367,7 @@ GROUPS = [
     ('hiking', 'Hiking', 'Panorama Ridge, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
   ], [('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),
   ('Mind', [
-    ('travel', 'Travel', "Beijing, New York, and a list I'm behind on.", None),
+    ('travel', 'Travel', 'China, Europe, Canada coast to coast, the US, Seoul.', None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
   ], [('chess', 'Chess'), ('video', 'Video production')]),
   ('Soul', [
@@ -475,8 +475,7 @@ hobby('watercolor', 'Watercolor and poetry', 'A painting on the front, a poem on
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
   ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),
 ], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/photography/footage.json'))
-hobby('travel', 'Travel', "Places I've been. Spin the globe, click a place.", [
-  ('Places', [('Beijing, 2023', '<p>A summer of AI research at Tsinghua University.</p>'), ('New York', '<p>Played Carnegie Hall.</p>')], 'travel'),
+hobby('travel', 'Travel', "Eight countries so far, and a list I'm behind on. Spin the globe, hover a place.", [
 ], shot=piece('3d', 'globe', 'Loading the globe...', 'globe-full'))
 hobby('fashion', 'Fashion', "I'm building Kunlun, a clothing brand built on Chinese mythology. Traditional Chinese and English run side by side as two voices.", [
   ('Kunlun', [('The brand', '<p>Kunlun is the axis mountain of Chinese myth, and each drop is a step up it. I built the bilingual design system and the storefront. Pre-launch.</p><p class="go"><a class="ln" href="/kunlun/">Kunlun case study</a></p>')], None),

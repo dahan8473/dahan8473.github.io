@@ -222,7 +222,7 @@
   "travel": {
     "page": "/hobbies/travel/",
     "sel": "[data-t='travel']",
-    "about": "Travel page: places I have been"
+    "about": "Travel page: a globe of 30 places I have been in eight countries: China (Beijing, Shanghai, Qingdao, Jiangxi, Shanxi, Jilin, Hong Kong), South Korea (Seoul), France and Monaco (Paris, the Riviera), Italy (Milan, Venice, Florence, Rome, Naples), Germany (Frankfurt), Canada (Vancouver, Alberta, Toronto, all four Atlantic provinces), USA (Seattle, California, Chicago, Detroit, New York, Philadelphia, Miami)"
   },
   "fashion": {
     "page": "/hobbies/fashion/",

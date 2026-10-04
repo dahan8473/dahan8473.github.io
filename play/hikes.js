@@ -1,11 +1,11 @@
 // Hikes piece: one row per hike, newest first, a strip of photos and clips
-// under each. Hover a hike for the trail's numbers and what my phone recorded
-// that day (first and last photo, highest altitude). Phones get the numbers
-// inline under the name.
+// under each, with a note under the photos that have one. Hover a hike for the
+// trail's numbers and my day (total time where I know it, first and last photo,
+// highest altitude). Phones get the numbers inline under the name.
 //   <div class="play" data-play="hikes" data-src="/hobbies/hiking/hikes.json">
 //   hikes.json: { "hikes": [ { id, name, where, date, trail: { distance, gain,
 //     top, time, note }, me: { first, last, high }, media: [ { src, small, w, h }
-//     | { video, poster, w, h } ] } ] }
+//     | { video, poster, w, h } ], each with an optional note shown under it } ] }
 // Photos open in the gallery's lightbox; clips loop muted while on screen.
 
 import { useCss, fmtDate, lightbox } from './gallery.js';
@@ -21,6 +21,8 @@ const CSS = `
 .phk-strip { display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; margin: 0 -2px; padding: 0 2px 2px; }
 .phk-strip::-webkit-scrollbar { display: none; }
 .phk-item { flex: none; height: 220px; padding: 0; border: 0; border-radius: 12px; background: var(--fill); overflow: hidden; scroll-snap-align: start; cursor: zoom-in; }
+.phk-fig { flex: none; display: flex; flex-direction: column; margin: 0; scroll-snap-align: start; }
+.phk-fig figcaption { width: 0; min-width: 100%; padding: 8px 2px 0; color: var(--t2); }
 .phk-item:focus-visible { border-radius: 12px; outline-offset: 3px; }
 .phk-item img, .phk-item video { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 320ms ease; }
 .phk-item .in { opacity: 1; }
@@ -75,7 +77,8 @@ function card(hike) {
   const me = hike.me || {};
   const c = h('div', 'phk-card');
   const trail = stats('The trail', [['Distance', t.distance], ['Gain', t.gain], ['Top', t.top], ['Usually', t.time]], t.note);
-  const day = stats('My day, from my photos', [
+  const day = stats('My day', [
+    ['Total', me.total],
     [me.first === me.last ? 'Photo' : 'First photo', me.first],
     [me.first === me.last ? '' : 'Last photo', me.first === me.last ? '' : me.last],
     ['Highest', me.high]
@@ -115,7 +118,7 @@ export function mount(el) {
         const c = card(hike);
         const strip = h('div', 'phk-strip');
         const photos = (hike.media || []).filter((m) => m.src);
-        const items = photos.map((m) => ({ src: m.src, alt: hike.name, caption: hike.name, meta: [hike.where, fmtDate(hike.date)].join(' · ') }));
+        const items = photos.map((m) => ({ src: m.src, alt: m.note || hike.name, caption: m.note || hike.name, meta: [hike.where, fmtDate(hike.date)].join(' · ') }));
 
         for (const m of hike.media || []) {
           const b = h('button', 'phk-item' + (m.video ? ' clip' : ''));
@@ -142,7 +145,7 @@ export function mount(el) {
             const img = h('img');
             img.loading = 'lazy';
             img.decoding = 'async';
-            img.alt = hike.name;
+            img.alt = m.note || hike.name;
             img.width = m.w;
             img.height = m.h;
             img.onload = () => img.classList.add('in');
@@ -153,7 +156,11 @@ export function mount(el) {
             const i = photos.indexOf(m);
             b.addEventListener('click', () => { if (closeLb) closeLb(false); closeLb = lightbox(items, i, b); });
           }
-          strip.appendChild(b);
+          if (m.note) {
+            const fig = h('figure', 'phk-fig');
+            fig.append(b, h('figcaption', '', m.note));
+            strip.appendChild(fig);
+          } else strip.appendChild(b);
         }
 
         art.append(head, c, strip);

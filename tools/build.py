@@ -464,19 +464,14 @@ hobby('swimming', 'Swimming', 'I swim.', [
 hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. These are my four rackets, and a quick rally with the head if you want.', [
   ('High school', [('Doubles', '<p>My high school had a very competitive team. I played doubles, at regional and provincial school competitions.</p>')], None),
   ('Rackets', [('Yonex', '<p>Voltric Z-Force II, Duora 10, Astrox 100ZZ, ArcSaber 11 Pro.</p>')], None),
-  ('You', [('Do you play?', "<p>Tell the head. Singles or doubles?</p>")], None),
 ], shot=piece('3d', 'racket', 'Loading the rackets...') + piece('play', 'badminton', 'Loading the court...'))
 hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
-  ('You', [('Do you ride?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
-  ('You', [('Do you hike?', "<p>Tell the head where. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [
-  ('You', [('Do you skate?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'trophycase', 'Trophy photos coming soon.', src='/hobbies/speed-skating/trophies.json'))
 hobby('chess', 'Chess', 'I play on chess.com. Play a game against the head if you want.', [
-  ('You', [('Do you play?', "<p>Tell the head your rating. It'll want to know.</p>")], None),
 ], shot=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Videos coming soon.', src='/hobbies/video/videos.json'))
 hobby('watercolor', 'Watercolor and poetry', 'A painting on the front, a poem on the back. Flip it over.', [], shot=piece('play', 'flipcard', 'Loading...', src='/hobbies/watercolor/pieces.json'))

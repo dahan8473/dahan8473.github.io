@@ -1,5 +1,5 @@
 {
- "_how": "Newest first. trail is the trail itself (distance, gain, top, time, note). me comes from my photos: first and last shot of the day, and the highest altitude my phone recorded. Media lives in /media/hikes/<id>/.",
+ "_how": "Newest first. trail is the trail itself (distance, gain, top, time, note). me is my day: total time where I know it, first and last photo, and the highest altitude my phone recorded (or the summit). Media lives in /media/hikes/<id>/.",
  "hikes": [
   {
    "id": "tunnel-bluffs",
@@ -14,7 +14,8 @@
    "me": {
     "first": "12:05 pm",
     "last": "1:42 pm",
-    "high": "681 m"
+    "high": "681 m",
+    "total": "About 4 hours"
    },
    "media": [
     {
@@ -119,7 +120,10 @@
    "where": "St. John's, NL",
    "date": "2026-06-25",
    "trail": {
-    "note": "Over the harbour and the city. The North Head Trail runs 1.7 km each way around the hill."
+    "distance": "3.4 km round trip",
+    "gain": "About 100 m",
+    "time": "About 2 hours",
+    "note": "The North Head Trail, around the hill over the harbour and the city."
    },
    "me": {
     "first": "11:53 am",
@@ -283,7 +287,11 @@
    "where": "French Riviera",
    "date": "2026-06-11",
    "trail": {
-    "note": "The village on the rock, 427 m over the Mediterranean."
+    "distance": "About 2.3 km up",
+    "gain": "400 m",
+    "top": "427 m",
+    "time": "About 1.5 hours up",
+    "note": "Up the Nietzsche Path from Èze-sur-Mer to the village on the rock over the Mediterranean."
    },
    "me": {
     "first": "10:42 am",
@@ -313,10 +321,12 @@
   },
   {
    "id": "buntzen",
-   "name": "Buntzen Lake",
-   "where": "Anmore, BC",
+   "name": "Energy Trail",
+   "where": "Buntzen Lake, Anmore, BC",
    "date": "2024-10-13",
-   "trail": {},
+   "trail": {
+    "note": "A loop through the forest to a lookout over Buntzen Lake and the power lines."
+   },
    "me": {
     "first": "9:56 am",
     "last": "10:57 am",
@@ -406,14 +416,16 @@
    "me": {
     "first": "12:50 pm",
     "last": "5:29 pm",
-    "high": "1,867 m"
+    "high": "2,133 m (top)",
+    "total": "10 h 27 min"
    },
    "media": [
     {
      "src": "/media/hikes/panorama-ridge/01.webp",
      "small": "/media/hikes/panorama-ridge/01-s.webp",
      "w": 1350,
-     "h": 1800
+     "h": 1800,
+     "note": "Me, Pri and Rachel"
     },
     {
      "src": "/media/hikes/panorama-ridge/02.webp",
@@ -489,7 +501,7 @@
    "where": "Jiangxi, China",
    "date": "2023-08-02",
    "trail": {
-    "note": "Jinxiu Valley in the morning cloud, then about 1,300 steps down to Three-Step Falls (三叠泉) and back up."
+    "note": "Cable car up into the cloud, Jinxiu Valley in the morning, then about 1,300 steps down to Three-Step Falls (三叠泉) and back up."
    },
    "me": {
     "first": "9:43 am",
@@ -554,7 +566,7 @@
    "date": "2023-07-08",
    "trail": {
     "top": "2,016 m (Tianfeng Ling)",
-    "note": "North of the Five Great Mountains (北岳恒山). Temples hanging off the cliffs on the way up."
+    "note": "The northern of the Five Great Mountains (北岳恒山). A shuttle partway, then on foot past temples hanging off the cliffs."
    },
    "me": {
     "first": "12:32 pm",

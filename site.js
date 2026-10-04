@@ -991,26 +991,132 @@
     pieces.forEach(function (stop) { try { stop(); } catch (e) {} });
     pieces = [];
     document.querySelectorAll('main [data-play], main [data-3d]').forEach(mountPiece);
-    // Pieces the head brings in (data-later) stay put for the rest of the visit.
+    // Something the head brought out once this visit leaves a link to bring it back.
     document.querySelectorAll('main [data-later]').forEach(function (el) {
       var on = false;
       try { on = sessionStorage.getItem('dl-brought-' + el.getAttribute('data-later')) === '1'; } catch (e) {}
-      if (on) window.dlBring(el.getAttribute('data-later'));
+      if (on) el.hidden = false;
     });
   }
-  // The head grabs something and plops it onto the page (the guitar, when a
-  // visitor wants to play). Returns the element, or null if there's none.
-  window.dlBring = function (name, opts) {
-    var el = document.querySelector('main [data-later="' + name + '"]');
-    if (!el || el.hasAttribute('data-3d')) return null;
-    el.hidden = false;
-    el.style.visibility = '';
-    if (opts && opts.plop && !reduce) el.classList.add('plop');
-    el.setAttribute('data-3d', name);
-    mountPiece(el);
+
+  // ---- Brought out over the page --------------------------------------------------
+  // The head grabs something (the guitar, when a visitor wants to play) and drops
+  // it into the middle of the screen: the page dims behind it and the head comes
+  // over to listen. A slot in the page says there's something to bring:
+  //   <p class="bring-again" data-later="guitar" data-v="16" hidden><button type="button" class="ln" data-bring="guitar">Play the guitar</button></p>
+  // After the first time it shows, as the way to bring it back. The piece mounts
+  // full screen (data-mode="overlay") and tells us when it's drawn (dl:ready)
+  // and when they finish a recording (dl:guitar-take), so the head can react.
+  var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  var out = null;
+  function headApi() {
+    var h = window.dlHead;
+    return h && typeof h.flyTo === 'function' ? h : null;
+  }
+  // Where the head sits to listen: beside the neck when the guitar stands up
+  // (tall screens), under the neck on the left otherwise, with room for its
+  // hands below and its bubble above.
+  function seat(o, ms) {
+    var h = headApi();
+    if (!h || out !== o) return;
+    var W = innerWidth, H = innerHeight, w = W < 640 ? 84 : 132;
+    var tall = W / H < 0.8;
+    var x = tall ? W - w - 14 : Math.max(24, W * 0.1);
+    var y = tall ? H * 0.17 : H - w * 1.75 - Math.max(24, H * 0.05);
+    o.seated = true;
+    h.flyTo(x, y, w, ms, { keep: true });
+  }
+  function bringClose(now) {
+    var o = out;
+    if (!o) return;
+    out = null;
+    o.live = false;
+    o.timers.forEach(clearTimeout);
+    document.removeEventListener('keydown', o.key);
+    removeEventListener('resize', o.resize);
+    o.inert.forEach(function (el) { el.inert = false; });
+    document.documentElement.classList.remove('bringing');
+    document.body.style.paddingRight = '';
+    o.slot.removeAttribute('data-out');
+    var h = headApi();
+    if (h) {
+      if (h.calm) h.calm();
+      if (o.seated && h.home) h.home(reduce ? 0 : 750);
+    }
+    function gone() {
+      if (typeof o.stop === 'function') { try { o.stop(); } catch (e) {} }
+      o.wrap.remove();
+    }
+    if (now || reduce) gone();
+    else {
+      o.wrap.classList.remove('on');
+      o.wrap.classList.add('off');
+      setTimeout(gone, 260);
+    }
+    if (!document.contains(o.slot)) return;
+    o.slot.hidden = false;
+    if (!now) {
+      var back = o.slot.querySelector('button') || o.back;
+      if (back && back.focus) back.focus({ preventScroll: true });
+    }
+  }
+  window.dlBring = function (name) {
+    var slot = document.querySelector('main [data-later="' + name + '"]');
+    if (!slot || out) return null;
+    var url = '/3d/' + name + '.js?v=' + (slot.getAttribute('data-v') || '1');
+    var wrap = document.createElement('div');
+    wrap.className = 'bring';
+    wrap.setAttribute('role', 'dialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.setAttribute('aria-label', 'The ' + name);
+    wrap.innerHTML = '<div class="bring-dim"></div><div class="bring-stage" data-mode="overlay"></div>' +
+      '<button type="button" class="bring-x" aria-label="Put the ' + name + ' away">' + X_ICON + '</button>';
+    var stage = wrap.querySelector('.bring-stage');
+    var o = { slot: slot, wrap: wrap, stage: stage, back: document.activeElement, stop: null, live: true, seated: false, inert: [], timers: [] };
+    out = o;
+    slot.setAttribute('data-out', '');
+    function later(fn, ms) { o.timers.push(setTimeout(fn, ms)); }
+
+    // The rest of the page goes quiet and still while it's out.
+    Array.prototype.forEach.call(document.body.children, function (el) {
+      if (el.inert || el.classList.contains('dl') || /^(SCRIPT|STYLE|LINK)$/.test(el.tagName)) return;
+      el.inert = true;
+      o.inert.push(el);
+    });
+    var bar = innerWidth - document.documentElement.clientWidth;
+    if (bar > 0) document.body.style.paddingRight = (parseFloat(getComputedStyle(document.body).paddingRight) || 0) + bar + 'px';
+    document.documentElement.classList.add('bringing');
+    document.body.appendChild(wrap);
+    void wrap.offsetWidth;
+    wrap.classList.add('on');
+
+    import(url).then(function (mod) {
+      if (!o.live) return;
+      stage.classList.add('piece-on');
+      o.stop = mod.mount(stage);
+    }).catch(function (err) {
+      stage.classList.add('piece-failed');
+      if (window.console) console.warn('piece', url, err);
+    });
+    // Once it has landed the head comes over. Without 3D it comes anyway.
+    stage.addEventListener('dl:ready', function () { later(function () { seat(o, reduce ? 0 : 850); }, reduce ? 0 : 560); });
+    later(function () { if (!o.seated) seat(o, reduce ? 0 : 850); }, 4000);
+    stage.addEventListener('dl:guitar-rec', function () { var h = headApi(); if (h && h.calm) h.calm(); });
+    stage.addEventListener('dl:guitar-take', function (e) { var h = headApi(); if (h && h.moved) h.moved(e.detail || {}); });
+    wrap.querySelector('.bring-x').addEventListener('click', function () { bringClose(); });
+    o.key = function (e) { if (e.key === 'Escape') bringClose(); };
+    document.addEventListener('keydown', o.key);
+    o.resize = function () { if (o.seated) seat(o, 0); };
+    addEventListener('resize', o.resize);
+    // Swapping pages puts it away at once.
+    pieces.push(function () { if (out === o) bringClose(true); });
     try { sessionStorage.setItem('dl-brought-' + name, '1'); } catch (e) {}
-    return el;
+    return stage;
   };
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-bring]');
+    if (b && window.dlBring) window.dlBring(b.getAttribute('data-bring'));
+  });
   // Meowmeow's page: "call her over" asks the head to send the cat in.
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-cat-call]');

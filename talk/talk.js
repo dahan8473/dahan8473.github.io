@@ -254,7 +254,10 @@
       yes: 'ooo nice!! here, play something',
       try: 'ever wanted to try?',
       sure: 'ok here, play something',
-      nah: 'fair haha. the recordings are right there if you wanna listen'
+      nah: 'fair haha. the recordings are right there if you wanna listen',
+      // They recorded something on it and stopped.
+      moved: 'that.. that was beautiful 😭',
+      short: "wait that's it? play more 😭"
     },
     // The mini tour: [page, target to point at, line]
     tour: [
@@ -571,7 +574,35 @@
       o.stop(t + 0.55);
     },
     tick() { this.tone(1500, 1300, 0.03, 0.05); },
-    thud() { this.tone(120, 55, 0.14, 0.35); }
+    thud() { this.tone(120, 55, 0.14, 0.35); },
+    // A soft clap: a short burst of filtered noise, a little different each time.
+    clap() {
+      if (!this.live()) return;
+      const ac = this.ctx;
+      const t = ac.currentTime;
+      if (!this.noise) {
+        this.noise = ac.createBuffer(1, Math.round(ac.sampleRate * 0.3), ac.sampleRate);
+        const d = this.noise.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      const src = ac.createBufferSource();
+      const bp = ac.createBiquadFilter();
+      const hp = ac.createBiquadFilter();
+      const g = ac.createGain();
+      src.buffer = this.noise;
+      src.playbackRate.value = rand(0.9, 1.1);
+      bp.type = 'bandpass';
+      bp.frequency.value = rand(1000, 1500);
+      bp.Q.value = 0.9;
+      hp.type = 'highpass';
+      hp.frequency.value = 450;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.2, t + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.06, t + 0.018);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+      src.connect(bp).connect(hp).connect(g).connect(ac.destination);
+      src.start(t, rand(0, 0.15), 0.13);
+    }
   };
 
   // ---- Life: mouth, sway, looking at the cursor, twitches -------------------
@@ -1376,7 +1407,7 @@
     form.hidden = true;
     fineEl.hidden = true;
     speak('');
-    hideTalk().then(() => { quip(line, 800, 'sad'); peace(); });
+    hideTalk().then(() => { if (line) { quip(line, 800, 'sad'); peace(); } });
     schedule(40000);
   }
   function shoo() {
@@ -1877,22 +1908,21 @@
   }
 
   // ---- Bringing things out ----------------------------------------------------
-  // The hand grabs something and plops it onto the page (site.js mounts it).
+  // The hand grabs something and drops it into the middle of the screen, over
+  // the page (site.js opens it there and says when it's drawn with dl:ready).
   async function bring(id) {
     const slot = document.querySelector(`main [data-later="${id}"]`);
-    if (!slot || slot.hasAttribute('data-3d') || !window.dlBring) return;
+    if (!slot || slot.hasAttribute('data-out') || !window.dlBring) return;
     if (reduce) { window.dlBring(id); return; }
-    // Make the room first so the hand knows where to put it.
-    slot.style.visibility = 'hidden';
-    slot.hidden = false;
     await useHand(async () => {
       pose('pinch');
       await handNearHead();
-      await ensureVisible(slot);
-      const r = slot.getBoundingClientRect();
-      await handTo(r.left + r.width * 0.55, r.top - 30, 15, { duration: 560 });
-      window.dlBring(id, { plop: true });
-      await handTo(r.left + r.width * 0.55, r.top + r.height * 0.2, 25, { duration: 260 });
+      const x = innerWidth / 2;
+      const y = innerHeight * 0.3;
+      await handTo(x, y, 15, { duration: 560 });
+      const el = window.dlBring(id, { plop: true });
+      if (el) await Promise.race([new Promise((r) => el.addEventListener('dl:ready', r, { once: true })), wait(3000)]);
+      await handTo(x, innerHeight * 0.44, 25, { duration: 380, easing: SPRING });
       sound.tick();
       setFace('happy', 1600);
       await wait(450);
@@ -1923,7 +1953,7 @@
   // knows to bring it with [[bring:guitar]].
   async function askGuitar(tries = 0) {
     if (here !== '/hobbies/guitar/' || S.quiet) return;
-    if (S.once.includes('guitar-ask') || !document.querySelector('main [data-later="guitar"]:not([data-3d])')) return;
+    if (S.once.includes('guitar-ask') || !document.querySelector('main [data-later="guitar"]:not([data-out])')) return;
     const mid = chatOn && S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && /\?\s*$/.test(strip(S.msgs[S.msgs.length - 1].content)) && now() - pres.said < 20000;
     if (!pres.ready || asking || touring || held || carried || dir.busy || sp.typing || mid || document.hidden) {
       if (tries < 12) setTimeout(() => askGuitar(tries + 1), 3000);
@@ -2004,8 +2034,8 @@
       ['v4+', go(L.high, null, 'sad')], ["i don't climb", go(L.none, '.play[data-play="climbing"]')]
     ]);
     else if (id === 'badminton') options([
-      ['singles', go(L.singles, '.play[data-play="badminton"]')], ['doubles', go(L.doubles, '.play[data-play="badminton"]', 'happy')],
-      ["i don't play", go(L.none, '.play[data-play="badminton"]')]
+      ['singles', go(L.singles, '[data-3d="racket"]')], ['doubles', go(L.doubles, '[data-3d="racket"]', 'happy')],
+      ["i don't play", go(L.none, '[data-3d="racket"]')]
     ]);
     else if (id === 'muaythai') options([['yeah', go(L.yes, '.play[data-play="muaythai"]')], ['not really', go(L.no, '.play[data-play="muaythai"]')]]);
     else if (id === 'lumosity') options([['bet', go(L.yes, '.play[data-play="pinball"]', 'angry')], ['probably not', go(L.no, '.play[data-play="pinball"]')]]);
@@ -2626,10 +2656,10 @@
   let flight = null;
   let busyNow = dir.busy;
   Object.defineProperty(dir, 'busy', { get: () => busyNow || lent, set: (v) => { busyNow = v; } });
-  function lend(on) {
+  function lend(on, keep) {
     lent = on;
     headBtn.style.pointerEvents = on ? 'none' : '';
-    talk.style.visibility = hand.style.visibility = on ? 'hidden' : '';
+    talk.style.visibility = hand.style.visibility = on && !keep ? 'hidden' : '';
   }
   function fly(x, y, k, ms) {
     const x0 = pos.x, y0 = pos.y, k0 = lentK;
@@ -2651,12 +2681,69 @@
     flight = a;
     return a.finished.then(() => { if (flight === a) flight = null; life.lean = 0; }, () => {});
   }
+  // ---- Moved to tears (the guitar over the page, site.js) ----------------------
+  // cry() puts on the sad face with tears running down, clap() brings two
+  // hands up under the chin clapping (a soft clap each time they meet),
+  // moved() is the whole reaction when someone stops recording a song for it.
+  // calm() dries it all up at once.
+  const moods = { cryTimer: 0, clapTimer: 0, clapEnd: 0, tears: null, hands: null };
+  function cry(ms = 6500) {
+    if (!moods.tears) {
+      moods.tears = document.createElement('div');
+      moods.tears.className = 'dl-tears';
+      moods.tears.innerHTML = '<span class="l"><i></i><i></i></span><span class="r"><i></i><i></i></span>';
+      skull.appendChild(moods.tears);
+    }
+    clearTimeout(moods.cryTimer);
+    root.classList.add('crying');
+    setFace('sad', ms);
+    moods.cryTimer = setTimeout(() => root.classList.remove('crying'), ms);
+  }
+  // Turned palm to palm (narrowed), the left one mirrored; they swing in from the wrist and meet in the middle.
+  const CLAP_L = [{ transform: 'translateX(-34%) rotate(-16deg) scale(-0.6, 1)' }, { transform: 'translateX(24%) rotate(3deg) scale(-0.6, 1)', offset: 0.45 }, { transform: 'translateX(-34%) rotate(-16deg) scale(-0.6, 1)' }];
+  const CLAP_R = [{ transform: 'translateX(34%) rotate(16deg) scale(0.6, 1)' }, { transform: 'translateX(-24%) rotate(-3deg) scale(0.6, 1)', offset: 0.45 }, { transform: 'translateX(34%) rotate(16deg) scale(0.6, 1)' }];
+  function clap(ms = 3000) {
+    if (!moods.hands) {
+      moods.hands = document.createElement('div');
+      moods.hands.className = 'dl-clap';
+      if (HANDS) moods.hands.innerHTML = `<img class="l" src="${HANDS.palm.src}" alt="" draggable="false"><img class="r" src="${HANDS.palm.src}" alt="" draggable="false">`;
+      actor.appendChild(moods.hands);
+    }
+    const [l, r] = moods.hands.querySelectorAll('img');
+    clearTimeout(moods.clapTimer);
+    moods.clapEnd = now() + ms;
+    root.classList.add('clapping');
+    const beat = () => {
+      if (now() >= moods.clapEnd) { clapStop(); return; }
+      const dur = rand(300, 350);
+      if (!reduce && l && r) {
+        l.animate(CLAP_L, { duration: dur, easing: 'ease-in-out' });
+        r.animate(CLAP_R, { duration: dur, easing: 'ease-in-out' });
+      }
+      moods.clapTimer = setTimeout(() => {
+        sound.clap();
+        moods.clapTimer = setTimeout(beat, dur * 0.55);
+      }, dur * 0.45);
+    };
+    beat();
+  }
+  function clapStop() {
+    clearTimeout(moods.clapTimer);
+    root.classList.remove('clapping');
+  }
+  function calm() {
+    clearTimeout(moods.cryTimer);
+    clapStop();
+    if (root.classList.contains('crying')) { root.classList.remove('crying'); setFace(restFace()); }
+  }
+
   window.dlHead = {
     rect: () => headBtn.getBoundingClientRect(),
-    // Put the visible head's top-left at (x, y), w wide.
-    flyTo(x, y, w, ms = 750) {
+    // Put the visible head's top-left at (x, y), w wide. keep: it stays itself
+    // there (bubble and hand still show) instead of standing in for a copy.
+    flyTo(x, y, w, ms = 750, { keep = false } = {}) {
       if (!lent) {
-        lend(true);
+        lend(true, keep);
         interrupt();
         if (chatOn) closeChat(null);
         hideTalk();
@@ -2669,6 +2756,23 @@
       return fly(x - k * bx, y - k * by, k, ms);
     },
     away(on) { actor.style.visibility = on ? 'hidden' : ''; },
+    cry,
+    clap,
+    calm,
+    // take: { ms, notes } from the guitar's recorder.
+    moved(take = {}) {
+      calm();
+      wake();
+      if (!(take.ms >= 3000) || !(take.notes >= 4)) {
+        emote('?');
+        quip(LINES.guitar.short, 1600, 'sad');
+        return;
+      }
+      cry(7000);
+      clearTimeout(moods.clapTimer);
+      moods.clapTimer = setTimeout(() => clap(3400), reduce ? 0 : 500);
+      quip(LINES.guitar.moved, 2600);
+    },
     async home(ms = 750) {
       if (!lent) return;
       actor.style.visibility = '';

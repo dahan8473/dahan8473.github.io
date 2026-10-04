@@ -6,8 +6,8 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 30, 9, 26, 30
-V_PIECE = 18  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 31, 10, 27, 32
+V_PIECE = 20  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -511,7 +511,7 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
 ], shot='''      <section class="recordings" data-t="guitar" aria-label="Recordings">
         <div class="tracks hero" id="guitar-tracks"></div>
       </section>
-      <div class="stage3d strip" data-later="guitar" data-v="{V_PIECE}" hidden></div>
+      <p class="bring-again" data-later="guitar" data-v="{V_PIECE}" hidden><button type="button" class="ln" data-bring="guitar">Play the guitar</button></p>
 '''.replace('{V_PIECE}', str(V_PIECE)))
 hobby('muay-thai', 'Muay Thai', 'I train at a club, and coach the beginner class at my local gym.', [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
@@ -520,8 +520,8 @@ hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do 
 ], shot=piece('play', 'climbing', 'Loading the wall...'))
 hobby('swimming', 'Swimming', 'I swim.', [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/swimming/photos.json'))
-hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. My school had a very competitive team, and I played doubles at regional and provincial school competitions. These are my four rackets, and a quick rally with the head if you want.', [
-], shot=piece('3d', 'racket', 'Loading the rackets...') + piece('play', 'badminton', 'Loading the court...'))
+hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. My school had a very competitive team, and I played doubles at regional and provincial school competitions. These are my four rackets. Click one for a closer look, and rally the head with it.', [
+], shot=piece('3d', 'racket', 'Loading the rackets...'))
 hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
 ], shot=piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [

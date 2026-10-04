@@ -513,7 +513,6 @@ a.dl-held { display: inline-block; }
   0%, 100% { transform: scaleX(1); opacity: 1; }
   50% { transform: scaleX(0.86); opacity: 0.7; }
 }
-}
 @keyframes dl-dot {
   0%, 100% { transform: translateY(0); opacity: 0.4; }
   40% { transform: translateY(-3px); opacity: 1; }
@@ -603,3 +602,92 @@ a.dl-held { display: inline-block; }
 .dl-show.out { opacity: 0; transform: rotate(-2.5deg) scale(0.94); transition: opacity 260ms ease, transform 260ms ease; }
 @keyframes dl-show-in { from { opacity: 0; transform: rotate(-8deg) scale(0.8); } }
 @media (prefers-reduced-motion: reduce) { .dl-show { animation: none; } }
+
+/* Moved to tears (dlHead.cry): the sad face, tears running down from both eyes, a little sob. */
+.dl-tears { position: absolute; inset: 0; z-index: 4; display: none; pointer-events: none; }
+.dl.crying .dl-tears { display: block; }
+.dl-tears span { position: absolute; top: 53.4%; width: 5%; height: 21%; margin-left: -2.5%; }
+.dl-tears span.l { left: 30%; }
+.dl-tears span.r { left: 68.6%; top: 52.6%; }
+.dl-tears span::before {
+  content: '';
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  top: 0;
+  bottom: 6%;
+  border-radius: 99px;
+  background: linear-gradient(rgba(222, 243, 255, 0.95), rgba(170, 220, 250, 0.6) 60%, rgba(170, 220, 250, 0));
+  transform-origin: 50% 0;
+  animation: dl-streak 700ms ease-out both;
+}
+.dl-tears i { position: absolute; inset: 0; transform-origin: 50% 0; animation: dl-tear 1.15s cubic-bezier(.55, 0, .85, .5) infinite; }
+.dl-tears i + i { animation-delay: 0.58s; }
+.dl-tears span.r i { animation-delay: 0.3s; }
+.dl-tears span.r i + i { animation-delay: 0.88s; }
+.dl-tears i::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 130%;
+  aspect-ratio: 1;
+  margin-left: -65%;
+  border-radius: 0 50% 50% 50%;
+  transform: rotate(45deg);
+  background: radial-gradient(circle at 64% 64%, #f6fcff 0 14%, #a9dcfa 38%, #4ea4df 100%);
+  box-shadow: 0 0 0 0.5px rgba(30, 90, 140, 0.35);
+}
+.dl.crying .dl-bob { animation: dl-sob 1.5s ease-in-out infinite; }
+@keyframes dl-tear {
+  0% { transform: translateY(0) scale(0.2); opacity: 0; }
+  15% { transform: translateY(2%) scale(1); opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translateY(105%); opacity: 0; }
+}
+@keyframes dl-streak { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+@keyframes dl-sob {
+  0%, 52%, 100% { transform: translateY(0); }
+  10% { transform: translateY(1.5px); }
+  20% { transform: translateY(-1px); }
+  30% { transform: translateY(1.5px); }
+  40% { transform: translateY(-0.5px); }
+}
+
+/* Clapping (dlHead.clap): two hands come up under the chin. talk.js swings them. */
+.dl-clap {
+  position: absolute;
+  left: 50%;
+  top: 86%;
+  z-index: 4;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 220ms ease, transform 320ms cubic-bezier(.34, 1.56, .64, 1);
+}
+.dl.clapping .dl-clap { opacity: 1; transform: none; }
+.dl-clap img {
+  position: absolute;
+  top: 0;
+  width: calc(var(--hw) * 0.4);
+  max-width: none;
+  height: auto;
+  transform-origin: 50% 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+.dl-clap .l { right: 0; transform: translateX(-34%) rotate(-16deg) scale(-0.6, 1); }
+.dl-clap .r { left: 0; transform: translateX(34%) rotate(16deg) scale(0.6, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-tears span::before, .dl-tears i { animation: none; }
+  .dl-tears i { transform: translateY(42%); }
+  .dl-tears i + i { display: none; }
+  .dl.crying .dl-bob { animation: none; }
+  .dl-clap { transition: none; transform: none; }
+  .dl-clap .l { transform: translateX(24%) rotate(3deg) scale(-0.6, 1); }
+  .dl-clap .r { transform: translateX(-24%) rotate(-3deg) scale(0.6, 1); }
+}

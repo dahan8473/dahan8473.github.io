@@ -9,6 +9,19 @@ export interface RacketInfo {
   tension?: string | number;
   /** A traced model of this exact racket (traced from its product photo); the generic one otherwise. */
   model?: string;
+  /** Yonex's specs: what it's for, weight and grip classes, balance, flex, materials, string tension range. */
+  for?: string;
+  weight?: string;
+  balance?: string;
+  flex?: string;
+  frame?: string;
+  shaft?: string;
+  length?: string;
+  range?: string;
+  made?: string;
+  /** 0 to 1 places on the card's meters: head light to head heavy, flexible to stiff. */
+  scale?: { balance?: number; stiffness?: number };
+  source?: string;
 }
 
 export const COUNT = 4;
@@ -19,14 +32,28 @@ export interface RacketState {
   rackets: RacketInfo[];
   hovered: number | null;
   pinned: number | null;
+  /** The racket zoomed in on, with its specs. */
+  focus: number | null;
+  /** The rally is up over the page. */
+  playing: boolean;
   ready: boolean;
   /** rackets.json has answered (or failed), so the models to load are known. */
   listed: boolean;
 }
 
 export function createRacketStore() {
-  const store = createStore<RacketState>({ rackets: [], hovered: null, pinned: null, ready: false, listed: false });
-  return Object.assign(store, { refs: { card: null as HTMLDivElement | null, pointer: 'mouse' } });
+  const store = createStore<RacketState>({ rackets: [], hovered: null, pinned: null, focus: null, playing: false, ready: false, listed: false });
+  return Object.assign(store, {
+    refs: {
+      card: null as HTMLDivElement | null,
+      stats: null as HTMLDivElement | null,
+      pointer: 'mouse',
+      /** The last input was a key (vs a pointer). */
+      kb: false,
+      /** Closes the rally (now: skip the fade, for a page swap). */
+      game: null as ((now?: boolean) => void) | null
+    }
+  });
 }
 export type RacketStore = Store<RacketState> & ReturnType<typeof createRacketStore>;
 

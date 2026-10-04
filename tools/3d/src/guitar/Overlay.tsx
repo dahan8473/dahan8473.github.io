@@ -1,7 +1,9 @@
-// DOM for the guitar: the pointer and keyboard playing, and the chord bar.
+// DOM for the guitar: the pointer and keyboard playing, the chord bar and,
+// brought out over the page, the recorder.
 import { useEffect } from 'react';
 import { usePiece } from '../lib/mountCanvas';
 import { useNarrow } from '../lib/view';
+import { playTake, startRec, stopPlay, stopRec } from './record';
 import { CHORD_NAMES, gesture, pluck, setChord, shapeOf, strum, useGuitar, useGuitarStore, whereFor, type GuitarStore, type Seg } from './store';
 
 type Pt = { x: number; y: number; t: number };
@@ -61,7 +63,7 @@ export function Overlay() {
       const r = root.getBoundingClientRect();
       return { x: e.clientX - r.left, y: e.clientY - r.top, t: e.timeStamp };
     };
-    const inBar = (e: Event) => !!(e.target as HTMLElement)?.closest?.('.gt-bar');
+    const inBar = (e: Event) => !!(e.target as HTMLElement)?.closest?.('.gt-bar, .gt-rec');
     const play = (from: Pt, to: Pt, drag: boolean) => {
       const segs = store.refs.segs;
       const hits: { s: number; t: number; u: number }[] = [];
@@ -154,8 +156,15 @@ export function Overlay() {
   // Touch: once armed, swipes on the guitar strum instead of scrolling the page.
   // A touch anywhere else on the page, or scrolling it away, disarms.
   const armed = useGuitar((s) => s.armed);
+  const full = useGuitar((s) => s.full);
   useEffect(() => {
     const canvas = root.querySelector('canvas');
+    // Over the page there's nothing to scroll: every touch plays.
+    if (full) {
+      root.style.touchAction = 'none';
+      if (canvas) canvas.style.touchAction = 'none';
+      return;
+    }
     const set = (v: string) => {
       root.style.touchAction = v;
       if (canvas) canvas.style.touchAction = v;
@@ -171,10 +180,21 @@ export function Overlay() {
     };
     document.addEventListener('pointerdown', away, true);
     return () => document.removeEventListener('pointerdown', away, true);
-  }, [armed, root, store]);
+  }, [armed, full, root, store]);
   useEffect(() => {
-    if (!visible && store.get().armed) store.set({ armed: false });
+    if (!visible && store.get().armed && !store.get().full) store.set({ armed: false });
   }, [visible, store]);
+
+  // Over the page: once it's drawn, the guitar drops in and takes the keys.
+  const ready = useGuitar((s) => s.ready);
+  useEffect(() => {
+    if (!full) return;
+    root.classList.add('gt-full');
+    if (ready) {
+      root.classList.add('gt-in');
+      root.focus({ preventScroll: true });
+    }
+  }, [full, ready, root]);
 
   // Keyboard, while the guitar (or a chord button) has focus.
   useEffect(() => {
@@ -201,7 +221,7 @@ export function Overlay() {
         setChord(store, CHORD_NAMES[next]);
         strum(store, { down: true, velocity: 0.7 });
         e.preventDefault();
-      } else if (e.key === 'Escape' && store.get().chord) {
+      } else if (e.key === 'Escape' && store.get().chord && !store.get().full) {
         setChord(store, null);
         store.refs.engine?.damp();
       }
@@ -218,8 +238,70 @@ export function Overlay() {
   return (
     <>
       <Wait />
+      {full && <Rec />}
       <Bar />
     </>
+  );
+}
+
+const clock = (s: number) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+
+// Record, Stop with the clock running, then Play it back or Record again.
+function Rec() {
+  const store = useGuitarStore();
+  const rec = useGuitar((s) => s.rec);
+  const time = useGuitar((s) => s.clock);
+  const ready = useGuitar((s) => s.ready);
+  const go = (fn: () => void) => () => {
+    gesture(store);
+    fn();
+  };
+  return (
+    <div className={'gt-rec' + (ready ? '' : ' off')} role="group" aria-label="Recorder">
+      {rec === 'idle' && (
+        <button type="button" className="gt-pill" onClick={go(() => startRec(store))}>
+          <span className="gt-dot" aria-hidden="true" />
+          Record
+        </button>
+      )}
+      {rec === 'rec' && (
+        <button type="button" className="gt-pill on" onClick={go(() => stopRec(store))} aria-label={'Stop recording, ' + clock(time)}>
+          <span className="gt-dot live" aria-hidden="true" />
+          <span className="gt-time" aria-hidden="true">
+            {clock(time)}
+          </span>
+          <span className="gt-sep" aria-hidden="true" />
+          <span className="gt-stop" aria-hidden="true" />
+          <span aria-hidden="true">Stop</span>
+        </button>
+      )}
+      {(rec === 'done' || rec === 'play') && (
+        <>
+          {rec === 'done' ? (
+            <button type="button" className="gt-pill main" onClick={go(() => playTake(store))}>
+              <span className="gt-play" aria-hidden="true" />
+              Play it back
+              <span className="gt-time quiet">{clock(time)}</span>
+            </button>
+          ) : (
+            <button type="button" className="gt-pill main" onClick={go(() => stopPlay(store))} aria-label={'Stop playing, ' + clock(time)}>
+              <span className="gt-stop" aria-hidden="true" />
+              <span aria-hidden="true">Stop</span>
+              <span className="gt-time quiet" aria-hidden="true">
+                {clock(time)}
+              </span>
+            </button>
+          )}
+          <button type="button" className="gt-pill" onClick={go(() => startRec(store))}>
+            <span className="gt-dot" aria-hidden="true" />
+            Record again
+          </button>
+        </>
+      )}
+      <p className="gt-sr" aria-live="polite">
+        {rec === 'rec' ? 'Recording' : rec === 'done' ? 'Recorded ' + clock(time) : ''}
+      </p>
+    </div>
   );
 }
 
@@ -232,6 +314,8 @@ function Wait() {
   );
 }
 
+const coarse = () => window.matchMedia('(pointer: coarse)').matches;
+
 function Bar() {
   const store = useGuitarStore();
   const chord = useGuitar((s) => s.chord);
@@ -239,9 +323,11 @@ function Bar() {
   const muted = useGuitar((s) => s.muted);
   const played = useGuitar((s) => s.played > 0);
   const ready = useGuitar((s) => s.ready);
+  const full = useGuitar((s) => s.full);
+  const swipe = full ? coarse() : armed;
   const hint = muted
     ? 'Sound is muted on this site'
-    : armed
+    : swipe
       ? 'Swipe across the strings to strum'
       : played
         ? 'Pick a chord, then strum'
@@ -303,4 +389,52 @@ export const css = `
 .p3d-guitar.narrow .gt-hint { order: 2; font-size: 11px; }
 .p3d-guitar.narrow .gt-chord { min-width: 0; height: 24px; padding: 0 7px; font-size: 12px; }
 @media (prefers-reduced-motion: reduce) { .p3d-guitar .gt-bar { transition: none; } }
+
+/* Brought out over the page (site.js): the guitar drops in once it's drawn, the recorder sits on top. */
+.p3d-guitar.gt-full > div:first-child { opacity: 0; }
+.p3d-guitar.gt-full.gt-in > div:first-child { opacity: 1; animation: gt-drop 720ms cubic-bezier(.34, 1.3, .64, 1) both; transform-origin: 50% 60%; }
+@keyframes gt-drop {
+  0% { opacity: 0; transform: translateY(-22vh) scale(.94) rotate(-3deg); }
+  50% { opacity: 1; }
+  62% { transform: translateY(1.4vh) scale(1.015, .975) rotate(.5deg); }
+  100% { opacity: 1; transform: none; }
+}
+.p3d-guitar.gt-full .gt-bar { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.p3d-guitar.gt-full .gt-hint { font-size: 13px; }
+.p3d-guitar.gt-full .gt-chord { min-width: 42px; height: 32px; padding: 0 11px; font-size: 14px; }
+.p3d-guitar.gt-full.narrow .gt-bar { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+.p3d-guitar.gt-full.narrow .gt-chord { min-width: 0; height: 34px; padding: 0 9px; font-size: 13px; }
+.p3d-guitar .gt-rec {
+  position: absolute; left: 50%; top: calc(22px + env(safe-area-inset-top, 0px)); z-index: 3;
+  display: flex; align-items: center; gap: 8px; transform: translateX(-50%);
+  transition: opacity 300ms ease;
+}
+.p3d-guitar .gt-rec.off { opacity: 0; pointer-events: none; }
+.p3d-guitar .gt-pill {
+  display: inline-flex; align-items: center; gap: 9px; height: 40px; padding: 0 18px 0 15px;
+  border: 0; border-radius: 999px; background: var(--panel); color: var(--t1);
+  box-shadow: 0 0 0 1px var(--rule), 0 12px 30px -14px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  font-size: 14px; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer;
+  transition: box-shadow 140ms ease, transform 140ms ease;
+}
+.p3d-guitar .gt-pill:hover { box-shadow: 0 0 0 1px var(--t3), 0 12px 30px -14px rgba(0, 0, 0, 0.6); }
+.p3d-guitar .gt-pill:active { transform: scale(0.97); }
+.p3d-guitar .gt-pill:focus-visible { outline: 2px solid rgba(136, 192, 208, 0.85); outline-offset: 2px; }
+.p3d-guitar .gt-pill.main { background: #88c0d0; color: #0d1417; box-shadow: 0 12px 30px -14px rgba(0, 0, 0, 0.6); }
+.p3d-guitar .gt-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: #e5534b; box-shadow: 0 0 0 3px rgba(229, 83, 75, 0.2); }
+.p3d-guitar .gt-dot.live { animation: gt-live 1.2s ease-in-out infinite; }
+@keyframes gt-live { 0%, 100% { opacity: 1; box-shadow: 0 0 0 3px rgba(229, 83, 75, 0.28); } 50% { opacity: 0.5; box-shadow: 0 0 0 7px rgba(229, 83, 75, 0); } }
+.p3d-guitar .gt-time { min-width: 2.4em; font-variant-numeric: tabular-nums; }
+.p3d-guitar .gt-time.quiet { min-width: 0; font-weight: 400; opacity: 0.6; }
+.p3d-guitar .gt-sep { width: 1px; height: 16px; background: var(--rule); }
+.p3d-guitar .gt-stop { flex: none; width: 10px; height: 10px; border-radius: 2px; background: currentColor; }
+.p3d-guitar .gt-play { flex: none; width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent currentColor; }
+.p3d-guitar .gt-sr { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.p3d-guitar.narrow .gt-rec { top: auto; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+@media (prefers-reduced-motion: reduce) {
+  .p3d-guitar.gt-full.gt-in > div:first-child { animation: none; }
+  .p3d-guitar .gt-dot.live { animation: none; }
+  .p3d-guitar .gt-rec { transition: none; }
+}
 `;

@@ -1,5 +1,6 @@
-// Badminton rackets: /3d/racket.js. Names, strings, tensions and frame colors
-// from /hobbies/badminton/rackets.json (or el.dataset.rackets).
+// Badminton rackets: /3d/racket.js. Names, specs, models and frame colors from
+// /hobbies/badminton/rackets.json (or el.dataset.rackets). Zoom into one for
+// its specs and Rally me, which lazy loads the first person rally (src/rally).
 import { useGLTF } from '@react-three/drei';
 import { NeutralToneMapping } from 'three';
 import { mountCanvas } from '../lib/mountCanvas';
@@ -27,12 +28,19 @@ export function mount(el: HTMLElement): () => void {
       onCreated: ({ gl }) => {
         gl.toneMapping = NeutralToneMapping;
       },
-      onPointerMissed: () => store.get().pinned != null && store.set({ pinned: null })
+      onPointerMissed: () => {
+        const s = store.get();
+        if (s.playing) return;
+        if (s.focus != null) store.set({ focus: null });
+        else if (s.pinned != null) store.set({ pinned: null });
+      }
     },
     fallback: 'The rackets need 3D graphics, which this browser has turned off.'
   });
   return () => {
     ac.abort();
+    // A page swap mid-rally: take the court down now (the head still flies home).
+    store.refs.game?.(true);
     stop();
     new Set([RACKET_FILE, ...store.get().rackets.map((_, i) => modelOf(store.get().rackets, i, RACKET_FILE))]).forEach((f) => useGLTF.clear(f));
   };

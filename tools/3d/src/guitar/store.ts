@@ -62,6 +62,37 @@ export interface Vib {
   flash: number;
 }
 
+/** What one take holds: every note and chord change, ms after Record was pressed. */
+export type TakeEvent =
+  | { t: number; kind: 'pluck'; string: number; fret: number | null; chord: string | null; velocity: number; where: number }
+  | { t: number; kind: 'strum'; frets: (number | null)[]; chord: string | null; velocity: number; down: boolean }
+  | { t: number; kind: 'chord'; chord: string | null };
+
+/** The synth's output, taped with MediaRecorder while recording. */
+export interface Tape {
+  rec: MediaRecorder;
+  dest: MediaStreamAudioDestinationNode;
+  /** performance.now() at the tape's first sample. */
+  at: number;
+  blob: Promise<Blob | null>;
+  stopTimer: number;
+  /** A note was dropped while recording (the site was muted), so the tape is missing it. */
+  gaps: boolean;
+}
+
+export interface Take {
+  events: TakeEvent[];
+  t0: number;
+  ms: number;
+  /** Plucks plus strums. */
+  notes: number;
+  chord0: string | null;
+  tape: Tape | null;
+  buffer: AudioBuffer | null;
+}
+
+export type RecState = 'idle' | 'rec' | 'done' | 'play';
+
 export interface GuitarState {
   chord: string | null;
   ready: boolean;
@@ -71,13 +102,27 @@ export interface GuitarState {
   muted: boolean;
   /** Bumped on every note, for the chord bar's hint. */
   played: number;
+  /** Brought out over the page (site.js's overlay): full screen, with a recorder. */
+  full: boolean;
+  rec: RecState;
+  /** Whole seconds on the recorder's clock. */
+  clock: number;
 }
 
-export function createGuitarStore() {
-  const store = createStore<GuitarState>({ chord: null, ready: false, armed: false, muted: false, played: 0 });
+export function createGuitarStore(full = false) {
+  const store = createStore<GuitarState>({ chord: null, ready: false, armed: full, muted: false, played: 0, full, rec: 'idle', clock: 0 });
   return Object.assign(store, {
     refs: {
       engine: null as Engine | null,
+      /** Our own context and output, so the recorder can tap what the synth plays. */
+      audio: null as { ctx: AudioContext; out: GainNode } | null,
+      take: null as Take | null,
+      /** Timers and the playing source of the recorder, cleared together. */
+      recTimers: [] as number[],
+      source: null as AudioBufferSourceNode | null,
+      playSeq: 0,
+      /** Tells the page (site.js) about the piece: ready, a take finished. */
+      emit: (_type: string, _detail?: object) => {},
       geom: null as Geom | null,
       segs: [] as Seg[],
       vib: Array.from({ length: 6 }, (): Vib => ({ amp: 0, delay: 0, pending: 0, damped: false, phase: Math.random() * 6, flash: 0 })),
@@ -102,7 +147,7 @@ export function shapeOf(store: GuitarStore): (number | null)[] {
   return c && CHORDS[c] ? CHORDS[c] : OPEN;
 }
 
-function isMuted() {
+export function isMuted() {
   try {
     if (localStorage.getItem('dl-sound') === '0') return true;
   } catch {
@@ -142,10 +187,36 @@ function excite(store: GuitarStore, s: number, velocity: number, delay = 0) {
   }
 }
 
-/** Pluck one string (0 = low E) with the current chord's fret. */
-export function pluck(store: GuitarStore, s: number, velocity = 0.7, where = 0.5) {
-  const f = shapeOf(store)[s];
-  const eng = canSound(store) ? store.refs.engine : null;
+type Untimed<E> = E extends unknown ? Omit<E, 't'> : never;
+
+// While recording, every note goes on the take.
+function capture(store: GuitarStore, ev: Untimed<TakeEvent>) {
+  const take = store.refs.take;
+  if (!take || store.get().rec !== 'rec') return;
+  take.events.push({ ...ev, t: performance.now() - take.t0 } as TakeEvent);
+  if (ev.kind !== 'chord') {
+    take.notes++;
+    if (take.tape && isMuted()) take.tape.gaps = true;
+  }
+}
+
+// A note played after Stop ends the tape's ring-out, so it never lands on the take.
+function cutTail(store: GuitarStore) {
+  const tape = store.refs.take?.tape;
+  if (tape && store.get().rec === 'done' && tape.rec.state === 'recording') {
+    clearTimeout(tape.stopTimer);
+    try {
+      tape.rec.stop();
+    } catch {
+      /* already stopping */
+    }
+  }
+}
+
+/** One string at a given fret (null: the fretting hand mutes it). sound false: the strings only move. */
+export function playPluck(store: GuitarStore, s: number, f: number | null, velocity: number, where: number, sound = true) {
+  if (sound) cutTail(store);
+  const eng = sound && canSound(store) ? store.refs.engine : null;
   if (f == null) {
     // A string the chord mutes just thuds.
     eng?.damp(s);
@@ -161,13 +232,10 @@ export function pluck(store: GuitarStore, s: number, velocity = 0.7, where = 0.5
   noted(store, !!eng);
 }
 
-/** Strum the current chord (or open strings). Alternates down and up when down is omitted. */
-export function strum(store: GuitarStore, opts: { down?: boolean; velocity?: number } = {}) {
-  const down = opts.down ?? store.refs.down;
-  store.refs.down = !down;
-  const velocity = opts.velocity ?? 0.8;
-  const shape = shapeOf(store);
-  const eng = canSound(store) ? store.refs.engine : null;
+/** A strum across a shape (frets low E to high E, null = muted). */
+export function playStrum(store: GuitarStore, shape: (number | null)[], down: boolean, velocity: number, sound = true) {
+  if (sound) cutTail(store);
+  const eng = sound && canSound(store) ? store.refs.engine : null;
   eng?.strum(shape, { down, velocity, spread: 16 });
   let k = 0;
   for (let i = 0; i < 6; i++) {
@@ -182,8 +250,26 @@ export function strum(store: GuitarStore, opts: { down?: boolean; velocity?: num
   noted(store, !!eng);
 }
 
+/** Pluck one string (0 = low E) with the current chord's fret. */
+export function pluck(store: GuitarStore, s: number, velocity = 0.7, where = 0.5) {
+  const f = shapeOf(store)[s] ?? null;
+  capture(store, { kind: 'pluck', string: s, fret: f, chord: store.get().chord, velocity, where });
+  playPluck(store, s, f, velocity, where);
+}
+
+/** Strum the current chord (or open strings). Alternates down and up when down is omitted. */
+export function strum(store: GuitarStore, opts: { down?: boolean; velocity?: number } = {}) {
+  const down = opts.down ?? store.refs.down;
+  store.refs.down = !down;
+  const velocity = opts.velocity ?? 0.8;
+  const shape = shapeOf(store);
+  capture(store, { kind: 'strum', frets: shape.slice(), chord: store.get().chord, velocity, down });
+  playStrum(store, shape, down, velocity);
+}
+
 /** Changing the chord stops what's ringing on the strings it mutes. */
 export function setChord(store: GuitarStore, chord: string | null) {
+  if (chord !== store.get().chord) capture(store, { kind: 'chord', chord });
   store.set({ chord });
   const shape = shapeOf(store);
   shape.forEach((f, s) => {

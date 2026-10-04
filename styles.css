@@ -497,8 +497,34 @@ a.row:hover .m { transform: translateX(3px); }
 .tracks.hero .t-bar::before { content: ''; position: absolute; inset: -8px 0; }
 .tracks.hero .track.playing .t-fill { background: #88c0d0; }
 .stage3d.strip { aspect-ratio: 16 / 5; margin: 48px 0 0; }
-.stage3d.plop { animation: plop 620ms cubic-bezier(.34, 1.4, .64, 1) both; transform-origin: 50% 100%; }
-@keyframes plop { 0% { opacity: 0; transform: translateY(-70px) scale(.94) rotate(-2.5deg); } 55% { opacity: 1; transform: translateY(6px) scale(1.01, .97) rotate(.4deg); } 100% { opacity: 1; transform: none; } }
+/* Brought out over the page (site.js): the page dims behind the guitar, the
+   head (talk.css, z-index 70) stays above it to listen. Always dark inside. */
+.bring {
+  position: fixed; inset: 0; z-index: 65;
+  --t1: rgba(255, 255, 255, 0.92); --t2: rgba(255, 255, 255, 0.64); --t3: rgba(255, 255, 255, 0.44);
+  --rule: rgba(255, 255, 255, 0.13); --fill: rgba(255, 255, 255, 0.08); --panel: rgba(32, 33, 36, 0.84);
+  color: var(--t1);
+}
+.bring-dim { position: absolute; inset: 0; background: rgba(14, 15, 18, 0.72); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); opacity: 0; transition: opacity 320ms ease; }
+[data-theme="dark"] .bring-dim { background: rgba(0, 0, 0, 0.74); }
+.bring.on .bring-dim { opacity: 1; }
+.bring.off { opacity: 0; transition: opacity 240ms ease; }
+.bring-stage { position: absolute; inset: 0; }
+.bring-stage.piece-failed::after { content: "The guitar didn't load. Try again in a bit."; position: absolute; inset: 0; display: grid; place-items: center; color: var(--t2); }
+.bring-x {
+  position: absolute; z-index: 2; top: calc(18px + env(safe-area-inset-top, 0px)); right: calc(18px + env(safe-area-inset-right, 0px));
+  display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--panel); color: var(--t2); box-shadow: 0 0 0 1px var(--rule); cursor: pointer;
+  opacity: 0; transition: opacity 320ms ease, color 150ms ease;
+}
+.bring.on .bring-x { opacity: 1; }
+.bring-x:hover { color: var(--t1); }
+.bring-x svg { width: 15px; height: 15px; }
+html.bringing { overflow: hidden; }
+.bring-again { margin-top: 18px; }
+.bring-again button { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+.bring-again button::after { content: '\2192'; margin-left: 6px; color: var(--t3); }
+@media (prefers-reduced-motion: reduce) { .bring-dim, .bring-x, .bring.off { transition: none; } }
 
 .eq { display: none; align-items: flex-end; gap: 2px; height: 10px; }
 .track.playing .eq { display: inline-flex; }

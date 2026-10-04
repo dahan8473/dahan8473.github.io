@@ -6,6 +6,7 @@ import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import {
+  Box3,
   CircleGeometry,
   Color,
   CylinderGeometry,
@@ -25,13 +26,14 @@ import {
 } from 'three';
 import { usePiece } from '../lib/mountCanvas';
 import { ACCENT, Studio } from '../lib/studio';
-import { fitCentered, MODELS, useNear } from '../lib/view';
+import { corners, fitCentered, MODELS, useNear } from '../lib/view';
 import { CHORDS, useGuitar, useGuitarStore, type Geom, type StringGeom } from './store';
 
 export const GUITAR_FILE = MODELS + 'guitar.glb';
 
 const YAW = -0.13; // the neck recedes a little
 const YAW_NARROW = -0.36; // more on phones, so the strings over the soundhole come closer
+const TILT = -0.3; // standing up (tall screens): the neck leans back, the soundhole comes closer
 const ELEV = 0.2; // camera a little above the strings, radians
 const DECAY = [1.5, 1.35, 1.2, 1.05, 0.95, 0.85]; // seconds, visual
 const WIGGLE = [19, 21, 23, 25, 27, 29]; // Hz the core string shimmers at
@@ -39,10 +41,12 @@ const Y = new Vector3(0, 1, 0);
 
 export function GuitarScene() {
   const { el, dark } = usePiece();
+  // Over the page the backdrop is always dark.
+  const full = useGuitar((s) => s.full);
   const near = useNear(el, '500px');
   return (
     <>
-      <Studio dark={dark} />
+      <Studio dark={dark || full} />
       {near && <Guitar />}
     </>
   );
@@ -155,9 +159,14 @@ function Guitar() {
   const gltf = useGLTF(GUITAR_FILE, false, true);
   const store = useGuitarStore();
   const { camera, size } = useThree();
-  const { reducedMotion, dark } = usePiece();
+  const piece = usePiece();
+  const { reducedMotion } = piece;
+  const full = useGuitar((s) => s.full);
+  const dark = piece.dark || full;
   const chord = useGuitar((s) => s.chord);
   const turned = useRef<Group>(null);
+  // Tall screens (a phone over the page) stand it up: the strings run down the screen.
+  const upright = size.width / size.height < 0.8;
 
   const built = useMemo(() => {
     const root = gltf.scene.clone(true);
@@ -173,7 +182,10 @@ function Guitar() {
       if ((o as Mesh).isMesh) o.raycast = () => {};
     });
     const strings = geom.strings.map((g) => makeString(g, g.wound ? baseWound : baseNylon, g.wound ? '#d4d4da' : '#ede6d3'));
-    return { root, geom, strings };
+    // The whole guitar, headstock to tail, for framing it over the page.
+    root.updateMatrixWorld(true);
+    const box = new Box3().setFromObject(root);
+    return { root, geom, strings, ends: corners(box.min, box.max) };
   }, [gltf]);
 
   useLayoutEffect(() => {
@@ -217,20 +229,25 @@ function Guitar() {
       pts.push(s.nut.clone().addScaledVector(d, 0.03).applyMatrix4(g.matrixWorld));
       pts.push(s.saddle.clone().addScaledVector(d, -0.035).applyMatrix4(g.matrixWorld));
     }
+    // Over the page on a wide screen the whole guitar shows, not just the strings.
+    const whole = full && !upright;
+    if (whole) for (const p of built.ends) pts.push(p.clone().applyMatrix4(g.matrixWorld));
     const center = new Vector3();
     pts.forEach((p) => center.add(p));
     center.multiplyScalar(1 / pts.length);
-    const dir = new Vector3(0, Math.sin(ELEV), Math.cos(ELEV));
+    const dir = upright ? new Vector3(0, 0, 1) : new Vector3(0, Math.sin(ELEV), Math.cos(ELEV));
     const aspect = size.width / size.height;
-    const fit = fitCentered(cam.fov, aspect, center, dir, pts, aspect > 2.6 ? 0.95 : 0.97, 0.7);
+    const fit = upright
+      ? fitCentered(cam.fov, aspect, center, dir, pts, 0.9, 0.74)
+      : fitCentered(cam.fov, aspect, center, dir, pts, whole ? 0.94 : aspect > 2.6 ? 0.95 : 0.97, whole ? 0.8 : 0.7);
     // Sit the strings a touch above center so the chord bar has the body below.
-    const target = fit.target.clone().add(new Vector3(0, -0.012, 0).multiplyScalar(fit.dist));
+    const target = fit.target.clone().add(new Vector3(0, upright ? -0.028 : -0.012, 0).multiplyScalar(fit.dist));
     cam.position.copy(target).addScaledVector(dir, fit.dist);
     cam.near = fit.dist * 0.2;
     cam.far = fit.dist * 4;
     cam.lookAt(target);
     cam.updateProjectionMatrix();
-  }, [camera, size.width, size.height, built, size.width / size.height < 2.5]);
+  }, [camera, size.width, size.height, built, size.width / size.height < 2.5, upright, full]);
 
   const tmpA = useMemo(() => new Vector3(), []);
   const tmpB = useMemo(() => new Vector3(), []);
@@ -277,10 +294,10 @@ function Guitar() {
     });
   });
 
-  const yaw = size.width / size.height < 2.5 ? YAW_NARROW : YAW;
+  const yaw = upright ? 0 : size.width / size.height < 2.5 ? YAW_NARROW : YAW;
   return (
-    <group rotation-y={yaw}>
-      <group ref={turned} rotation-z={Math.PI / 2}>
+    <group rotation-y={yaw} rotation-x={upright ? TILT : 0}>
+      <group ref={turned} rotation-z={upright ? 0 : Math.PI / 2}>
         <primitive object={built.root} />
         {built.strings.map((s, i) => (
           <group key={i}>

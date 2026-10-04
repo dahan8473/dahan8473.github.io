@@ -247,12 +247,7 @@
   "watercolor": {
     "page": "/hobbies/watercolor/",
     "sel": "[data-t='watercolor']",
-    "about": "Watercolor page: I paint with watercolor. Not written up yet, it asks visitors if they do it too"
-  },
-  "poetry": {
-    "page": "/hobbies/poetry/",
-    "sel": "[data-t='poetry']",
-    "about": "Poetry page: I write poetry. Not written up yet, it asks visitors if they do it too"
+    "about": "Watercolor page: I paint with watercolor. Photos of the paintings coming"
   },
   "swimming": {
     "page": "/hobbies/swimming/",

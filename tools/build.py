@@ -361,11 +361,10 @@ write('projects/index.html', page('/projects/', 'Projects', 'Projects by David L
 # link under their group. Every hobby has its own page either way.
 GROUPS = [
   ('Body', [
-    ('muay-thai', 'Muay Thai', 'I train, and coach the beginner class.', None),
-    ('climbing', 'Rock climbing', 'Bouldering. V2, for now.', None),
-    ('badminton', 'Badminton', 'My main sport all through high school. Doubles.', None),
     ('hiking', 'Hiking', 'Panorama Ridge, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
-  ], [('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),
+    ('badminton', 'Badminton', 'My main sport all through high school. Doubles.', None),
+    ('muay-thai', 'Muay Thai', 'I train, and coach the beginner class.', None),
+  ], [('climbing', 'Rock climbing'), ('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),
   ('Mind', [
     ('travel', 'Travel', 'China, Europe, Canada coast to coast, the US, Seoul.', None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
@@ -374,7 +373,7 @@ GROUPS = [
     ('meowmeow', 'Meowmeow', 'My cat. Always chudding around.', '/media/life/meowmeow-sleep.webp'),
     ('guitar', 'Classical guitar', 'Competed nationally, played Carnegie Hall. Four recordings.', None),
     ('photography', 'Photography', 'Fujifilm X-T200 and Sony A7R II.', None),
-  ], [('watercolor', 'Watercolor and poetry')]),
+  ], [('watercolor', 'Watercolor')]),
 ]
 # Page order, for previous and next.
 HOBBIES = [h[:2] for _, rows, more in GROUPS for h in rows + more]
@@ -471,7 +470,7 @@ hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.'
 hobby('chess', 'Chess', 'I play on chess.com. Play a game against the head if you want.', [
 ], shot=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
-hobby('watercolor', 'Watercolor and poetry', 'A painting on the front, a poem on the back. Flip it over.', [], shot=piece('play', 'flipcard', 'Loading...', src='/hobbies/watercolor/pieces.json'))
+hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
   ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),
 ], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/photography/footage.json'))

@@ -954,25 +954,45 @@
   // <div data-3d="globe"> loads /3d/globe.js. Each module exports mount(el) and
   // returns a function that cleans it up; swapping pages calls it.
   var pieces = [];
+  function mountPiece(el) {
+    var play = el.getAttribute('data-play');
+    var url = (play ? '/play/' + play : '/3d/' + el.getAttribute('data-3d')) + '.js?v=' + (el.getAttribute('data-v') || '1');
+    var live = true;
+    pieces.push(function () { live = false; });
+    import(url).then(function (mod) {
+      if (!live || !document.contains(el)) return;
+      el.classList.add('piece-on');
+      var stop = mod.mount(el);
+      if (typeof stop === 'function') pieces.push(stop);
+    }).catch(function (err) {
+      el.classList.add('piece-failed');
+      if (window.console) console.warn('piece', url, err);
+    });
+  }
   function setupPieces() {
     pieces.forEach(function (stop) { try { stop(); } catch (e) {} });
     pieces = [];
-    document.querySelectorAll('main [data-play], main [data-3d]').forEach(function (el) {
-      var play = el.getAttribute('data-play');
-      var url = (play ? '/play/' + play : '/3d/' + el.getAttribute('data-3d')) + '.js?v=' + (el.getAttribute('data-v') || '1');
-      var live = true;
-      pieces.push(function () { live = false; });
-      import(url).then(function (mod) {
-        if (!live || !document.contains(el)) return;
-        el.classList.add('piece-on');
-        var stop = mod.mount(el);
-        if (typeof stop === 'function') pieces.push(stop);
-      }).catch(function (err) {
-        el.classList.add('piece-failed');
-        if (window.console) console.warn('piece', url, err);
-      });
+    document.querySelectorAll('main [data-play], main [data-3d]').forEach(mountPiece);
+    // Pieces the head brings in (data-later) stay put for the rest of the visit.
+    document.querySelectorAll('main [data-later]').forEach(function (el) {
+      var on = false;
+      try { on = sessionStorage.getItem('dl-brought-' + el.getAttribute('data-later')) === '1'; } catch (e) {}
+      if (on) window.dlBring(el.getAttribute('data-later'));
     });
   }
+  // The head grabs something and plops it onto the page (the guitar, when a
+  // visitor wants to play). Returns the element, or null if there's none.
+  window.dlBring = function (name, opts) {
+    var el = document.querySelector('main [data-later="' + name + '"]');
+    if (!el || el.hasAttribute('data-3d')) return null;
+    el.hidden = false;
+    el.style.visibility = '';
+    if (opts && opts.plop && !reduce) el.classList.add('plop');
+    el.setAttribute('data-3d', name);
+    mountPiece(el);
+    try { sessionStorage.setItem('dl-brought-' + name, '1'); } catch (e) {}
+    return el;
+  };
   // Meowmeow's page: "call her over" asks the head to send the cat in.
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-cat-call]');

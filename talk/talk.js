@@ -179,6 +179,14 @@
       { id: 'still', line: 'if an ai was trained perfectly on you, would it still be you?' },
       { id: 'scale', line: (name) => `${name ? name + ', ' : ''}rate yourself. when it comes to tech, 1 is all profit and 10 is all ethics. where are you?`, scale: ['all profit', 'all ethics'] }
     ],
+    // The guitar page: asks if they play, and brings the guitar out if they want it.
+    guitar: {
+      ask: 'do you play guitar yourself?',
+      yes: 'ooo nice!! here, play something',
+      try: 'ever wanted to try?',
+      sure: 'ok here, play something',
+      nah: 'fair haha. the recordings are right there if you wanna listen'
+    },
     // The mini tour: [page, target to point at, line]
     tour: [
       ['/', 'now', "okay! quick tour. this is home, it's just me saying hi"],
@@ -1128,7 +1136,7 @@
             return;
           }
           const inner = buf.slice(i + 2, j).trim();
-          const m = /^(point|drag|face|summon|carry|mode|recall|show):([a-z0-9,-]+)$/.exec(inner);
+          const m = /^(point|drag|face|summon|carry|mode|recall|show|bring):([a-z0-9,-]+)$/.exec(inner);
           const n = /^note:\s*([a-z_]+)\s*=\s*(.+)$/i.exec(inner);
           if (m) onAction({ verb: m[1], id: m[2] });
           else if (n) onAction({ verb: 'note', id: n[1].toLowerCase(), value: n[2].trim() });
@@ -1151,6 +1159,7 @@
     if (a.verb === 'mode') { mode = a.id; return; }
     if (a.verb === 'recall') { recall(a.id.split(',')); return; }
     if (a.verb === 'show') { show(a.id); return; }
+    if (a.verb === 'bring') { bring(a.id); return; }
     if (a.verb === 'note') {
       if (a.id === 'name') try { localStorage.setItem('dl-name', a.value.slice(0, 40)); } catch (e) {}
       if (a.id === 'who') { S.who = a.value.slice(0, 20); save(); }
@@ -1806,6 +1815,88 @@
     if (chatOn && !talked() && quiet > 30000 && (pres.waiting || pres.streak >= 3)) closeChat(LINES.introIgnored);
   }
 
+  // ---- Bringing things out ----------------------------------------------------
+  // The hand grabs something and plops it onto the page (site.js mounts it).
+  async function bring(id) {
+    const slot = document.querySelector(`main [data-later="${id}"]`);
+    if (!slot || slot.hasAttribute('data-3d') || !window.dlBring) return;
+    if (reduce) { window.dlBring(id); return; }
+    // Make the room first so the hand knows where to put it.
+    slot.style.visibility = 'hidden';
+    slot.hidden = false;
+    await useHand(async () => {
+      pose('pinch');
+      await handNearHead();
+      await ensureVisible(slot);
+      const r = slot.getBoundingClientRect();
+      await handTo(r.left + r.width * 0.55, r.top - 30, 15, { duration: 560 });
+      window.dlBring(id, { plop: true });
+      await handTo(r.left + r.width * 0.55, r.top + r.height * 0.2, 25, { duration: 260 });
+      sound.tick();
+      setFace('happy', 1600);
+      await wait(450);
+    });
+  }
+
+  // Quick replies under the bubble, for questions the head asks on its own.
+  function options(list) {
+    choicesEl.classList.remove('scale');
+    choicesEl.replaceChildren(...list.map(([label, fn]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.addEventListener('click', () => { choicesEl.hidden = true; fn(label); });
+      return b;
+    }));
+    choicesEl.hidden = false;
+  }
+  async function reply(label, text) {
+    S.msgs.push({ role: 'user', content: label }, { role: 'assistant', content: text });
+    save();
+    pres.streak = 0;
+    pres.waiting = false;
+    await speak(text, { echo: label });
+  }
+  // On the guitar page the head asks if they play. Yes: it brings the guitar
+  // out. No: would they want to try? Typed answers go to the brain, which
+  // knows to bring it with [[bring:guitar]].
+  async function askGuitar(tries = 0) {
+    if (here !== '/hobbies/guitar/' || S.quiet) return;
+    if (S.once.includes('guitar-ask') || !document.querySelector('main [data-later="guitar"]:not([data-3d])')) return;
+    const mid = chatOn && S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && /\?\s*$/.test(strip(S.msgs[S.msgs.length - 1].content)) && now() - pres.said < 20000;
+    if (!pres.ready || asking || touring || held || carried || dir.busy || sp.typing || mid || document.hidden) {
+      if (tries < 12) setTimeout(() => askGuitar(tries + 1), 3000);
+      return;
+    }
+    S.once.push('guitar-ask');
+    if (!S.noticed.includes('guitar')) S.noticed.push('guitar');
+    S.small = [...new Set([...(S.small || []), 'music'])];
+    save();
+    wake();
+    if (!chatOn) {
+      chatOn = true;
+      S.open = true;
+      save();
+      root.classList.add('chat');
+      await goHome(420);
+      showTalk();
+      showForm();
+    }
+    await say(LINES.guitar.ask);
+    pres.waiting = true;
+    const out = async (label) => { await reply(label, LINES.guitar.yes); bring('guitar'); };
+    options([
+      ['yeah i do', out],
+      ['nah', async (label) => {
+        await reply(label, LINES.guitar.try);
+        options([
+          ['sure', async (l) => { await reply(l, LINES.guitar.sure); bring('guitar'); }],
+          ["nah i'm good", (l) => reply(l, LINES.guitar.nah)]
+        ]);
+      }]
+    ]);
+  }
+
   // ---- Replies from the real David --------------------------------------------
   // Anyone who messaged him (on /messages/ or with a private note) hears from
   // the head when he answers, on whatever page they're on.
@@ -2271,6 +2362,7 @@
 
     // Page swaps (site.js): the head stays, the page under it changes.
     document.addEventListener('dl:page', () => {
+      if (norm(location.pathname) === '/hobbies/guitar/') setTimeout(askGuitar, 3500);
       here = norm(location.pathname);
       pageAt = now();
       S.pages = (S.pages || 1) + 1;
@@ -2335,6 +2427,7 @@
     if (here === '/notes/') setTimeout(() => react('wall', LINES.wall, 3000), 3000);
     schedule(met ? rand(9000, 14000) : 13000);
     if (met) pres.ready = true;
+    if (here === '/hobbies/guitar/') setTimeout(askGuitar, 4000);
     setInterval(presence, 1000);
     // Replies from the real David: once a few seconds in, then every minute.
     setTimeout(checkReplies, 4000);

@@ -470,8 +470,9 @@ a.row:hover .m { transform: translateX(3px); }
 .tracks.hero .t-bar { left: 94px; bottom: -1px; height: 2px; background: transparent; cursor: pointer; }
 .tracks.hero .t-bar::before { content: ''; position: absolute; inset: -8px 0; }
 .tracks.hero .track.playing .t-fill { background: #88c0d0; }
-.strip-label { margin-top: 56px; color: var(--t3); }
-.stage3d.strip { aspect-ratio: 16 / 5; margin: 10px 0 0; }
+.stage3d.strip { aspect-ratio: 16 / 5; margin: 48px 0 0; }
+.stage3d.plop { animation: plop 620ms cubic-bezier(.34, 1.4, .64, 1) both; transform-origin: 50% 100%; }
+@keyframes plop { 0% { opacity: 0; transform: translateY(-70px) scale(.94) rotate(-2.5deg); } 55% { opacity: 1; transform: translateY(6px) scale(1.01, .97) rotate(.4deg); } 100% { opacity: 1; transform: none; } }
 
 .eq { display: none; align-items: flex-end; gap: 2px; height: 10px; }
 .track.playing .eq { display: inline-flex; }

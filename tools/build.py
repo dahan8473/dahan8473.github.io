@@ -6,7 +6,7 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 27, 8, 23, 19
+V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 8, 24, 20
 V_PIECE = 8  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
@@ -448,8 +448,8 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
 ], shot='''      <section class="recordings" data-t="guitar" aria-label="Recordings">
         <div class="tracks hero" id="guitar-tracks"></div>
       </section>
-      <p class="strip-label">Play it yourself</p>
-''' + piece('3d', 'guitar', 'Loading the guitar...', 'strip'))
+      <div class="stage3d strip" data-later="guitar" data-v="{V_PIECE}" hidden></div>
+'''.replace('{V_PIECE}', str(V_PIECE)))
 hobby('muay-thai', 'Muay Thai', 'I train at a club, and coach the beginner class at my local gym.', [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'muaythai', 'Loading the ring...'))

@@ -115,7 +115,7 @@
     dark: 'ooh dark mode. good choice',
     light: 'flashbang 😭 my eyes',
     rightclick: 'right click? what are you gonna do, save my face? 😳',
-    copy: 'copying my stuff? go ahead honestly',
+    copy: 'copying my stuff? go for it',
     print: "no way you're printing my website ON PAPER. you can just download my resume you know",
     squish: "i'm claustrophobic you know",
     wake: "huh? oh. i wasn't sleeping",
@@ -245,7 +245,7 @@
       photography: {
         say: 'i shoot on an x-t200 and an a7r ii',
         ask: 'do you shoot?',
-        yes: 'ooo what on? spin my kit around and compare', phone: 'phone counts honestly', no: "the kit's still fun to spin around"
+        yes: 'ooo what on? spin my kit around and compare', phone: 'phone counts!', no: "the kit's still fun to spin around"
       }
     },
     // The guitar page: asks if they play, and brings the guitar out if they want it.

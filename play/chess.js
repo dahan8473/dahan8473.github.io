@@ -34,9 +34,9 @@ const LINES = {
   promote: ['new queen huh', 'ok that pawn made it'],
   undo: ['sure, take it back', 'i didn\'t see anything', 'happens to me all the time'],
   youWin: ['ok you got me. gg', 'gg. you\'re actually good', 'gg, i\'ll be thinking about this one'],
-  headWins: ['gg. that was close honestly', 'gg, you had me for a while there', 'gg. rematch?'],
+  headWins: ['gg. that was close', 'gg, you had me for a while there', 'gg. rematch?'],
   draw: ['a draw. i\'ll take it', 'draw. fair'],
-  stalemate: ['stalemate? i\'ll take that honestly', 'stalemate. lucky me'],
+  stalemate: ['stalemate? i\'ll take that', 'stalemate. lucky me'],
   flick: ['hey', 'stop that', 'that tickles', 'my pieces!!', 'ok rude']
 };
 

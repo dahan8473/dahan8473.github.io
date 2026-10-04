@@ -73,7 +73,7 @@ const L = {
   hurt: ["ok i'm hurting", 'i see stars', 'be gentle 😭'],
   roundYou: ['ok that round was yours', 'you took that one', 'you won that round fr'],
   roundHead: ['i think i took that one 😅', 'my round i think', "that one's mine. sorry"],
-  roundEven: ['close round', 'even round honestly'],
+  roundEven: ['close round', 'even round'],
   tip: {
     hit: ['tip: glove pulls back, slip it. knee swings out, block it', 'tip: slip my punches, block my kicks'],
     checked: ["tip: don't kick when my knee's up. punch it", 'tip: knee up means punches, not kicks'],
@@ -87,7 +87,7 @@ const L = {
   ko: ['ok you got me', "i'm seeing stars 😵", 'lights out. good fight'],
   lose: ['i edged that one. run it back?', 'good spar though. again?', "ok that one's mine. again?"],
   koYou: ['oh no you ok?? 😭', 'sorry!! hands up next time', 'that one was too hard, my bad'],
-  draw: ['draw. honestly fair', 'even. run it back?'],
+  draw: ['draw. fair', 'even. run it back?'],
   paused: ['take your time', 'water break', 'shake it out']
 };
 

@@ -368,6 +368,7 @@ GROUPS = [
   ('Mind', [
     ('travel', 'Travel', 'China, Europe, Canada coast to coast, the US, Seoul.', None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
+    ('lumosity', 'Lumosity', 'Every morning, religiously. Play my three favourites and try to beat me.', None),
   ], [('chess', 'Chess'), ('video', 'Video production')]),
   ('Soul', [
     ('meowmeow', 'Meowmeow', 'My cat. Always chudding around.', '/media/life/meowmeow-sleep.webp'),
@@ -470,6 +471,8 @@ hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.'
 hobby('chess', 'Chess', 'I play on chess.com. Play a game against the head if you want.', [
 ], shot=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
+hobby('lumosity', 'Lumosity', 'I love brain teaser games, and I religiously start every morning with my daily Lumosity. These are my own versions of my three favourites. Quick tutorial, then try to beat my best.', [
+], shot=piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...'))
 hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
   ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),

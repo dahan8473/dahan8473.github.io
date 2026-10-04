@@ -19,15 +19,28 @@
    },
    "media": [
     {
-     "src": "/media/hikes/tunnel-bluffs/01.webp",
-     "small": "/media/hikes/tunnel-bluffs/01-s.webp",
-     "w": 831,
+     "src": "/media/hikes/tunnel-bluffs/06.webp",
+     "small": "/media/hikes/tunnel-bluffs/06-s.webp",
+     "w": 1350,
+     "h": 1800,
+     "note": "Maggie, Erryl and me"
+    },
+    {
+     "src": "/media/hikes/tunnel-bluffs/04.webp",
+     "small": "/media/hikes/tunnel-bluffs/04-s.webp",
+     "w": 1350,
      "h": 1800
     },
     {
-     "src": "/media/hikes/tunnel-bluffs/02.webp",
-     "small": "/media/hikes/tunnel-bluffs/02-s.webp",
+     "src": "/media/hikes/tunnel-bluffs/07.webp",
+     "small": "/media/hikes/tunnel-bluffs/07-s.webp",
      "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tunnel-bluffs/01.webp",
+     "small": "/media/hikes/tunnel-bluffs/01-s.webp",
+     "w": 831,
      "h": 1800
     },
     {
@@ -37,26 +50,14 @@
      "h": 1800
     },
     {
-     "src": "/media/hikes/tunnel-bluffs/04.webp",
-     "small": "/media/hikes/tunnel-bluffs/04-s.webp",
+     "src": "/media/hikes/tunnel-bluffs/02.webp",
+     "small": "/media/hikes/tunnel-bluffs/02-s.webp",
      "w": 1350,
      "h": 1800
     },
     {
      "src": "/media/hikes/tunnel-bluffs/05.webp",
      "small": "/media/hikes/tunnel-bluffs/05-s.webp",
-     "w": 1350,
-     "h": 1800
-    },
-    {
-     "src": "/media/hikes/tunnel-bluffs/06.webp",
-     "small": "/media/hikes/tunnel-bluffs/06-s.webp",
-     "w": 1350,
-     "h": 1800
-    },
-    {
-     "src": "/media/hikes/tunnel-bluffs/07.webp",
-     "small": "/media/hikes/tunnel-bluffs/07-s.webp",
      "w": 1350,
      "h": 1800
     }
@@ -208,22 +209,24 @@
    },
    "media": [
     {
+     "src": "/media/hikes/tablelands/02.webp",
+     "small": "/media/hikes/tablelands/02-s.webp",
+     "w": 1800,
+     "h": 1350,
+     "note": "Felt like I was on Mars"
+    },
+    {
      "src": "/media/hikes/tablelands/01.webp",
      "small": "/media/hikes/tablelands/01-s.webp",
      "w": 1350,
      "h": 1800
     },
     {
-     "src": "/media/hikes/tablelands/02.webp",
-     "small": "/media/hikes/tablelands/02-s.webp",
-     "w": 1800,
-     "h": 1350
-    },
-    {
      "src": "/media/hikes/tablelands/03.webp",
      "small": "/media/hikes/tablelands/03-s.webp",
      "w": 1350,
-     "h": 1800
+     "h": 1800,
+     "note": "Weird plant species on this mountain"
     },
     {
      "src": "/media/hikes/tablelands/04.webp",
@@ -334,6 +337,13 @@
    },
    "media": [
     {
+     "src": "/media/hikes/buntzen/04.webp",
+     "small": "/media/hikes/buntzen/04-s.webp",
+     "w": 1350,
+     "h": 1800,
+     "note": "Maggie and Erryl"
+    },
+    {
      "src": "/media/hikes/buntzen/01.webp",
      "small": "/media/hikes/buntzen/01-s.webp",
      "w": 1350,
@@ -348,12 +358,6 @@
     {
      "src": "/media/hikes/buntzen/03.webp",
      "small": "/media/hikes/buntzen/03-s.webp",
-     "w": 1350,
-     "h": 1800
-    },
-    {
-     "src": "/media/hikes/buntzen/04.webp",
-     "small": "/media/hikes/buntzen/04-s.webp",
      "w": 1350,
      "h": 1800
     }
@@ -379,7 +383,8 @@
      "src": "/media/hikes/quarry-rock/01.webp",
      "small": "/media/hikes/quarry-rock/01-s.webp",
      "w": 1350,
-     "h": 1800
+     "h": 1800,
+     "note": "Mama Bess"
     },
     {
      "src": "/media/hikes/quarry-rock/02.webp",

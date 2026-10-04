@@ -338,7 +338,7 @@ export function lightbox(items, start, opener) {
 export function mount(el) {
   const release = useCss(CSS_ID, CSS);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const emptyNote = noteText(el, 'Photos coming soon.');
+  const emptyNote = noteText(el, 'Digging out photos rn.');
   const root = h('div', 'pgal');
   const bar = h('div', 'pgal-bar');
   bar.setAttribute('role', 'status');

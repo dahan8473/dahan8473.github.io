@@ -115,7 +115,7 @@ function noteText(el, fallback) {
 
 export function mount(el) {
   const release = useCss(CSS_ID, CSS);
-  const emptyNote = noteText(el, 'Trophy photos coming soon.');
+  const emptyNote = noteText(el, 'Digging out photos rn.');
   const root = h('div', 'ptro');
   root.appendChild(h('div', 'ptro-loading'));
   el.appendChild(root);

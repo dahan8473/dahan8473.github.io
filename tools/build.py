@@ -7,7 +7,7 @@ import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 9, 24, 22
-V_PIECE = 10  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 11  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -459,8 +459,7 @@ hobby('climbing', 'Rock climbing', "I boulder. I can only do a V2 right now.", [
   ('Grade', [('V2', "<p>My max, for now. If you climb, tell the head what you can do.</p>")], None),
 ], shot=piece('play', 'climbing', 'Loading the wall...'))
 hobby('swimming', 'Swimming', 'I swim.', [
-  ('Awards', [('Coming soon', "<p>Digging them out.</p>")], None),
-], shot=piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/swimming/photos.json'))
+], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/swimming/photos.json'))
 hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. My school had a very competitive team, and I played doubles at regional and provincial school competitions. These are my four rackets, and a quick rally with the head if you want.', [
 ], shot=piece('3d', 'racket', 'Loading the rackets...') + piece('play', 'badminton', 'Loading the court...'))
 hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
@@ -468,14 +467,14 @@ hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
 hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [
-], shot=piece('play', 'trophycase', 'Trophy photos coming soon.', src='/hobbies/speed-skating/trophies.json'))
+], shot=piece('play', 'trophycase', 'Digging out photos rn.', src='/hobbies/speed-skating/trophies.json'))
 hobby('chess', 'Chess', 'I play on chess.com. Play a game against the head if you want.', [
 ], shot=piece('play', 'chess', 'Setting up the board...'))
-hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Videos coming soon.', src='/hobbies/video/videos.json'))
+hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('watercolor', 'Watercolor and poetry', 'A painting on the front, a poem on the back. Flip it over.', [], shot=piece('play', 'flipcard', 'Loading...', src='/hobbies/watercolor/pieces.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
   ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),
-], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Drone footage coming soon.', src='/hobbies/photography/footage.json'))
+], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/photography/footage.json'))
 hobby('travel', 'Travel', "Places I've been. Spin the globe, click a place.", [
   ('Places', [('Beijing, 2023', '<p>A summer of AI research at Tsinghua University.</p>'), ('New York', '<p>Played Carnegie Hall.</p>')], 'travel'),
 ], shot=piece('3d', 'globe', 'Loading the globe...', 'globe-full'))

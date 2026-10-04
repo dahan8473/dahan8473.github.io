@@ -125,7 +125,7 @@ function noteText(el, fallback) {
 export function mount(el) {
   const release = useCss(CSS_ID, CSS);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const emptyNote = noteText(el, 'Paintings and poems coming soon.');
+  const emptyNote = noteText(el, 'Digging out photos rn.');
   const root = h('div', 'pflip');
   root.appendChild(h('div', 'pflip-loading'));
   el.appendChild(root);

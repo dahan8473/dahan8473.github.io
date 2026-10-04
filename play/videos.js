@@ -156,7 +156,7 @@ function noteText(el, fallback) {
 export function mount(el) {
   const release = useCss(CSS_ID, CSS);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const emptyNote = noteText(el, 'Videos coming soon.');
+  const emptyNote = noteText(el, 'Digging out videos rn.');
   const root = h('div', 'pvid');
   root.appendChild(h('div', 'pvid-loading'));
   el.appendChild(root);

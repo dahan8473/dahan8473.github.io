@@ -2,15 +2,16 @@
   "_how": "The four rackets: model, string, tension, shown on hover. color tints the frame. The 3D viewer uses a generic racket model until there are photos.",
   "rackets": [
     {
-      "name": "Yonex Z-Force II"
+      "name": "Yonex Voltric Z-Force II",
+      "color": "#24272d"
     },
     {
       "name": "Yonex Duora 10",
       "color": "#e2742c"
     },
     {
-      "name": "Yonex Voltric Z-Force II",
-      "color": "#24272d"
+      "name": "Yonex Astrox 100ZZ",
+      "color": "#1f2a44"
     },
     {
       "name": "Yonex ArcSaber 11 Pro",

@@ -463,7 +463,7 @@ hobby('swimming', 'Swimming', 'I swim.', [
 ], shot=piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/swimming/photos.json'))
 hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. These are my four rackets, and a quick rally with the head if you want.', [
   ('High school', [('Doubles', '<p>My high school had a very competitive team. I played doubles, at regional and provincial school competitions.</p>')], None),
-  ('Rackets', [('Yonex', '<p>Z-Force II, Duora 10, Voltric Z-Force II, ArcSaber 11 Pro.</p>')], None),
+  ('Rackets', [('Yonex', '<p>Voltric Z-Force II, Duora 10, Astrox 100ZZ, ArcSaber 11 Pro.</p>')], None),
   ('You', [('Do you play?', "<p>Tell the head. Singles or doubles?</p>")], None),
 ], shot=piece('3d', 'racket', 'Loading the rackets...') + piece('play', 'badminton', 'Loading the court...'))
 hobby('cycling', 'Cycling', 'I ride. This is my bike.', [

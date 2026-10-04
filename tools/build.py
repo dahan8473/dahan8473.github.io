@@ -3,7 +3,7 @@
 # dashboard, rag, kunlun) and 404 are written by hand; this only bumps their
 # asset versions. Bump the V_ numbers when the CSS or JS changes.
 # Run: python3 tools/build.py
-import os, re, sys
+import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 9, 24, 22
@@ -283,7 +283,13 @@ write('resume/index.html', page('/resume/', 'Resume', "David Liu's resume. Softw
 
 # ---- Projects -----------------------------------------------------------------
 
+PROJ_BASE = {}
+
+
 def proj(t, name, meta, line, desc, stack, links, shot, extra_cls=''):
+    hrefs = [dict(zip(('href', 'text'), re.search(r'href="([^"]+)">([^<]+)<', l).groups())) for l in links]
+    PROJ_BASE[t] = {'name': name, 'meta': meta, 'line': line, 'desc': desc, 'stack': stack.split(' · '), 'links': hrefs,
+                    'shot': (re.search(r'src="([^"]+)"', shot).group(1) if shot else ''), 'ink': 'ink' in extra_cls}
     shot_html = f'        <div class="shot{extra_cls}">{shot}</div>\n' if shot else ''
     return f'''      <article class="proj" id="{t}" data-t="{t}">
 {shot_html}        <div class="proj-head"><h2>{name}</h2><span class="t3">{meta}</span></div>
@@ -337,6 +343,45 @@ projects += proj('snake', 'snake-and-commits', 'Open source', 'Your contribution
   img('/media/work/snake.svg', 'A contribution graph being eaten by a snake', 880, 192), ' svg')
 projects += '      </div>\n\n'
 
+# What the overlay shows when a project is clicked (play/projects.js). points
+# are what I built, story is one line of how it went, sim is a demo in
+# /play/sim-<name>.js (or 'compare' for a before and after slider).
+PROJ_MORE = {
+  'tethos-platform': {
+    'points': ['A 2.5D multiplayer world as the member portal: 875+ 3D assets, procedural terrain, a 91-species fishing system, and a dual-currency economy enforced by Postgres RPCs',
+               'Five LLM characters cloned from real execs, with per-member memory so they remember you between visits',
+               'A multi-agent dev pipeline of role-scoped Claude Code agents (build, QA, reviewer) that shipped 70+ unattended build iterations',
+               'The platform around it: 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications'],
+    'story': 'Standing on the ground used to cost 15,000 sin and floor calls a second, until I baked the terrain into a grid.',
+    'shots': [['/media/work/island-overview.webp', 'Tethos Island in daylight', 1400, 706], ['/media/work/island-clearing.webp', 'A clearing on Tethos Island', 1400, 706]],
+  },
+  'hackthenorth': {
+    'award': '1st, Best Use of Solana and Badge Hack ($2,500)',
+    'points': ['The game for real-life Among Us on conference badges: role dealing, the kill, report and meeting state machine, on-badge voting, and NFC tasks with motion minigames',
+               "No server, router or phones: game state syncs peer to peer over an ESP-NOW mesh, and signal strength decides if you're close enough to kill"],
+    'story': '36 hours, team of three. The first prototype in Lua ran the badge out of memory, and the stock firmware rebooted whenever the radio turned on, so we flashed our own.',
+    'sim': 'amongus', 'sim_note': 'Drag your badge around. Lines are the mesh, signal strength is distance.',
+  },
+  'biopilot': {
+    'award': '2nd, TELUS AI at the Edge of Innovation ($5,000)',
+    'points': ['YOLOv8 wheat-head detection on drone footage', 'Per-cell crop-health scores', 'Heatmaps you can compare run to run, on a deck.gl and MapLibre map'],
+    'sim': 'compare', 'sim_note': 'Drag to compare: drone footage in, crop-health map out.',
+    'compare': ['/media/work/biopilot-drone.webp', '/media/work/biopilot-heatmap.webp', 1200, 750],
+  },
+  'kunlun': {
+    'points': ['A bilingual design system where Traditional Chinese and English run side by side as two voices', 'The storefront: Next.js, Stripe checkout, Supabase, Resend emails'],
+    'story': 'Kunlun is the axis mountain of Chinese myth, and each drop is a step up it. Pre-launch.',
+  },
+  'dejaview': {
+    'points': ['Scrapes the media you watch and works out the furniture you would like', 'Generates it in 3D and places it in a virtual scan of your room'],
+    'story': 'Pretty dystopian, I know. Team of four.',
+  },
+  'snake': {
+    'points': ['A GitHub Action that turns your contribution graph into a game of Snake', 'BFS pathfinding with no self-collisions', 'One standard-library Python file, zero dependencies'],
+    'sim': 'snake', 'sim_note': 'The same idea, live: BFS to the nearest commit, never into itself.',
+  },
+}
+
 
 def more(t, name, line, stack, links, meta=''):
     attrs = f' data-t="{t}"' if t else ''
@@ -352,6 +397,9 @@ projects += more('ur5', 'UR5 motion library', 'Six programs for a collaborative 
 projects += more('wec', 'WEC 2024', 'Our 2024 Western Engineering Competition entry.', 'Unity · C#', [ext('https://github.com/dahan8473/WEC_24', 'GitHub')])
 projects += more('this-site', 'davidliu.work', 'This site, and the floating head that talks like me.', 'HTML · CSS · JavaScript · DeepSeek · Jev', [ext('https://github.com/dahan8473/dahan8473.github.io', 'GitHub')])
 projects += '        </ul>\n      </section>\n'
+proj_data = {t: {**PROJ_BASE[t], **PROJ_MORE.get(t, {})} for t in PROJ_BASE}
+projects += '      <script type="application/json" id="proj-data">' + json.dumps(proj_data, ensure_ascii=False).replace('</', '<\\/') + '</script>\n'
+projects += f'      <div data-play="projects" data-v="{V_PIECE}" hidden></div>\n'
 write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Platform, Among Us IRL (1st at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
 
 

@@ -6,7 +6,7 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 9, 24, 21
+V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 9, 24, 22
 V_PIECE = 8  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
@@ -364,7 +364,8 @@ GROUPS = [
     ('muay-thai', 'Muay Thai', 'I train, and coach the beginner class.', None),
     ('climbing', 'Rock climbing', 'Bouldering. V2, for now.', None),
     ('badminton', 'Badminton', 'My main sport all through high school. Doubles.', None),
-  ], [('swimming', 'Swimming'), ('cycling', 'Cycling'), ('hiking', 'Hiking'), ('speed-skating', 'Speed skating')]),
+    ('hiking', 'Hiking', 'Panorama Ridge, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
+  ], [('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),
   ('Mind', [
     ('travel', 'Travel', "Beijing, New York, and a list I'm behind on.", None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
@@ -468,9 +469,9 @@ hobby('badminton', 'Badminton', 'Badminton was my main sport all through high sc
 hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
   ('You', [('Do you ride?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('3d', 'bike', 'Loading the bike...'))
-hobby('hiking', 'Hiking', "I hike. Haven't written this page up yet.", [
-  ('You', [('Do you hike?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
-])
+hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
+  ('You', [('Do you hike?', "<p>Tell the head where. It'll want to hear about it.</p>")], None),
+], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [
   ('You', [('Do you skate?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'trophycase', 'Trophy photos coming soon.', src='/hobbies/speed-skating/trophies.json'))

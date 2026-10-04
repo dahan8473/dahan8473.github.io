@@ -1,0 +1,610 @@
+{
+ "_how": "Newest first. trail is the trail itself (distance, gain, top, time, note). me comes from my photos: first and last shot of the day, and the highest altitude my phone recorded. Media lives in /media/hikes/<id>/.",
+ "hikes": [
+  {
+   "id": "tunnel-bluffs",
+   "name": "Tunnel Bluffs",
+   "where": "Howe Sound, BC",
+   "date": "2026-07-31",
+   "trail": {
+    "distance": "11.5 km round trip",
+    "gain": "470 m",
+    "time": "About 4 hours"
+   },
+   "me": {
+    "first": "12:05 pm",
+    "last": "1:42 pm",
+    "high": "681 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/tunnel-bluffs/01.webp",
+     "small": "/media/hikes/tunnel-bluffs/01-s.webp",
+     "w": 831,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tunnel-bluffs/02.webp",
+     "small": "/media/hikes/tunnel-bluffs/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tunnel-bluffs/03.webp",
+     "small": "/media/hikes/tunnel-bluffs/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tunnel-bluffs/04.webp",
+     "small": "/media/hikes/tunnel-bluffs/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tunnel-bluffs/05.webp",
+     "small": "/media/hikes/tunnel-bluffs/05-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tunnel-bluffs/06.webp",
+     "small": "/media/hikes/tunnel-bluffs/06-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tunnel-bluffs/07.webp",
+     "small": "/media/hikes/tunnel-bluffs/07-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "cape-spear",
+   "name": "Cape Spear",
+   "where": "St. John's, NL",
+   "date": "2026-06-26",
+   "trail": {
+    "note": "The most easterly point in North America. A short coastal loop around the lighthouse, at sunset."
+   },
+   "me": {
+    "first": "8:23 pm",
+    "last": "8:40 pm",
+    "high": "51 m"
+   },
+   "media": [
+    {
+     "video": "/media/hikes/cape-spear/01.mp4",
+     "poster": "/media/hikes/cape-spear/01.webp",
+     "w": 720,
+     "h": 1280
+    },
+    {
+     "src": "/media/hikes/cape-spear/02.webp",
+     "small": "/media/hikes/cape-spear/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "video": "/media/hikes/cape-spear/03.mp4",
+     "poster": "/media/hikes/cape-spear/03.webp",
+     "w": 720,
+     "h": 1280
+    },
+    {
+     "src": "/media/hikes/cape-spear/04.webp",
+     "small": "/media/hikes/cape-spear/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "video": "/media/hikes/cape-spear/05.mp4",
+     "poster": "/media/hikes/cape-spear/05.webp",
+     "w": 720,
+     "h": 1280
+    },
+    {
+     "src": "/media/hikes/cape-spear/06.webp",
+     "small": "/media/hikes/cape-spear/06-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "signal-hill",
+   "name": "Signal Hill",
+   "where": "St. John's, NL",
+   "date": "2026-06-25",
+   "trail": {
+    "note": "Over the harbour and the city. The North Head Trail runs 1.7 km each way around the hill."
+   },
+   "me": {
+    "first": "11:53 am",
+    "last": "11:53 am",
+    "high": "149 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/signal-hill/01.webp",
+     "small": "/media/hikes/signal-hill/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/signal-hill/02.webp",
+     "small": "/media/hikes/signal-hill/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "bonavista",
+   "name": "Bonavista",
+   "where": "Bonavista Peninsula, NL",
+   "date": "2026-06-23",
+   "trail": {
+    "note": "Cape Bonavista, the Dungeon (a sea cave that collapsed into an arch), and the cliffs at Elliston. Short coastal walks."
+   },
+   "me": {
+    "first": "1:44 pm",
+    "last": "5:56 pm",
+    "high": "27 m"
+   },
+   "media": [
+    {
+     "video": "/media/hikes/bonavista/02.mp4",
+     "poster": "/media/hikes/bonavista/02.webp",
+     "w": 720,
+     "h": 1280
+    },
+    {
+     "src": "/media/hikes/bonavista/03.webp",
+     "small": "/media/hikes/bonavista/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/bonavista/04.webp",
+     "small": "/media/hikes/bonavista/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/bonavista/05.webp",
+     "small": "/media/hikes/bonavista/05-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/bonavista/06.webp",
+     "small": "/media/hikes/bonavista/06-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "tablelands",
+   "name": "Tablelands",
+   "where": "Gros Morne, NL",
+   "date": "2026-06-21",
+   "trail": {
+    "distance": "About 4 km round trip",
+    "time": "1.5 to 2 hours",
+    "note": "Bare earth mantle pushed up from under the ocean. Barely anything grows, except pitcher plants."
+   },
+   "me": {
+    "first": "4:17 pm",
+    "last": "5:28 pm",
+    "high": "234 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/tablelands/01.webp",
+     "small": "/media/hikes/tablelands/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tablelands/02.webp",
+     "small": "/media/hikes/tablelands/02-s.webp",
+     "w": 1800,
+     "h": 1350
+    },
+    {
+     "src": "/media/hikes/tablelands/03.webp",
+     "small": "/media/hikes/tablelands/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tablelands/04.webp",
+     "small": "/media/hikes/tablelands/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tablelands/05.webp",
+     "small": "/media/hikes/tablelands/05-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/tablelands/06.webp",
+     "small": "/media/hikes/tablelands/06-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "western-brook-pond",
+   "name": "Western Brook Pond",
+   "where": "Gros Morne, NL",
+   "date": "2026-06-21",
+   "trail": {
+    "distance": "6 km round trip to the boat",
+    "time": "About 1.5 hours, plus the boat",
+    "note": "A landlocked fjord. Walk in, then a boat between the cliffs."
+   },
+   "me": {
+    "first": "8:55 am",
+    "last": "10:21 am",
+    "high": "24 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/western-brook-pond/01.webp",
+     "small": "/media/hikes/western-brook-pond/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/western-brook-pond/02.webp",
+     "small": "/media/hikes/western-brook-pond/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/western-brook-pond/03.webp",
+     "small": "/media/hikes/western-brook-pond/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "eze",
+   "name": "Èze",
+   "where": "French Riviera",
+   "date": "2026-06-11",
+   "trail": {
+    "note": "The village on the rock, 427 m over the Mediterranean."
+   },
+   "me": {
+    "first": "10:42 am",
+    "last": "10:53 am",
+    "high": "432 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/eze/01.webp",
+     "small": "/media/hikes/eze/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/eze/02.webp",
+     "small": "/media/hikes/eze/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/eze/03.webp",
+     "small": "/media/hikes/eze/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "buntzen",
+   "name": "Buntzen Lake",
+   "where": "Anmore, BC",
+   "date": "2024-10-13",
+   "trail": {},
+   "me": {
+    "first": "9:56 am",
+    "last": "10:57 am",
+    "high": "373 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/buntzen/01.webp",
+     "small": "/media/hikes/buntzen/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/buntzen/02.webp",
+     "small": "/media/hikes/buntzen/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/buntzen/03.webp",
+     "small": "/media/hikes/buntzen/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/buntzen/04.webp",
+     "small": "/media/hikes/buntzen/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "quarry-rock",
+   "name": "Quarry Rock",
+   "where": "Deep Cove, North Vancouver",
+   "date": "2024-08-29",
+   "trail": {
+    "distance": "3.8 km round trip",
+    "gain": "100 m",
+    "time": "About 1.5 hours"
+   },
+   "me": {
+    "first": "1:45 pm",
+    "last": "3:07 pm",
+    "high": "102 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/quarry-rock/01.webp",
+     "small": "/media/hikes/quarry-rock/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/quarry-rock/02.webp",
+     "small": "/media/hikes/quarry-rock/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/quarry-rock/03.webp",
+     "small": "/media/hikes/quarry-rock/03-s.webp",
+     "w": 1012,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/quarry-rock/04.webp",
+     "small": "/media/hikes/quarry-rock/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "panorama-ridge",
+   "name": "Panorama Ridge",
+   "where": "Garibaldi Provincial Park, BC",
+   "date": "2024-08-23",
+   "trail": {
+    "distance": "30 km round trip",
+    "gain": "1,520 m",
+    "top": "2,133 m",
+    "time": "10 to 12 hours",
+    "note": "Up through Taylor Meadows, Black Tusk the whole way, Garibaldi Lake from the top."
+   },
+   "me": {
+    "first": "12:50 pm",
+    "last": "5:29 pm",
+    "high": "1,867 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/panorama-ridge/01.webp",
+     "small": "/media/hikes/panorama-ridge/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/02.webp",
+     "small": "/media/hikes/panorama-ridge/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/03.webp",
+     "small": "/media/hikes/panorama-ridge/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/04.webp",
+     "small": "/media/hikes/panorama-ridge/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/05.webp",
+     "small": "/media/hikes/panorama-ridge/05-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/06.webp",
+     "small": "/media/hikes/panorama-ridge/06-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/07.webp",
+     "small": "/media/hikes/panorama-ridge/07-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/08.webp",
+     "small": "/media/hikes/panorama-ridge/08-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/09.webp",
+     "small": "/media/hikes/panorama-ridge/09-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/10.webp",
+     "small": "/media/hikes/panorama-ridge/10-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/11.webp",
+     "small": "/media/hikes/panorama-ridge/11-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/panorama-ridge/12.webp",
+     "small": "/media/hikes/panorama-ridge/12-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "lushan",
+   "name": "Lushan",
+   "where": "Jiangxi, China",
+   "date": "2023-08-02",
+   "trail": {
+    "note": "Jinxiu Valley in the morning cloud, then about 1,300 steps down to Three-Step Falls (三叠泉) and back up."
+   },
+   "me": {
+    "first": "9:43 am",
+    "last": "4:19 pm",
+    "high": "1,018 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/lushan/01.webp",
+     "small": "/media/hikes/lushan/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/lushan/02.webp",
+     "small": "/media/hikes/lushan/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/lushan/03.webp",
+     "small": "/media/hikes/lushan/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/lushan/04.webp",
+     "small": "/media/hikes/lushan/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/lushan/05.webp",
+     "small": "/media/hikes/lushan/05-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/lushan/06.webp",
+     "small": "/media/hikes/lushan/06-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/lushan/07.webp",
+     "small": "/media/hikes/lushan/07-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/lushan/08.webp",
+     "small": "/media/hikes/lushan/08-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  },
+  {
+   "id": "mount-heng",
+   "name": "Mount Heng",
+   "where": "Shanxi, China",
+   "date": "2023-07-08",
+   "trail": {
+    "top": "2,016 m (Tianfeng Ling)",
+    "note": "North of the Five Great Mountains (北岳恒山). Temples hanging off the cliffs on the way up."
+   },
+   "me": {
+    "first": "12:32 pm",
+    "last": "2:24 pm",
+    "high": "2,006 m"
+   },
+   "media": [
+    {
+     "src": "/media/hikes/mount-heng/01.webp",
+     "small": "/media/hikes/mount-heng/01-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/mount-heng/02.webp",
+     "small": "/media/hikes/mount-heng/02-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/mount-heng/03.webp",
+     "small": "/media/hikes/mount-heng/03-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/mount-heng/04.webp",
+     "small": "/media/hikes/mount-heng/04-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/mount-heng/05.webp",
+     "small": "/media/hikes/mount-heng/05-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/mount-heng/06.webp",
+     "small": "/media/hikes/mount-heng/06-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/mount-heng/07.webp",
+     "small": "/media/hikes/mount-heng/07-s.webp",
+     "w": 1350,
+     "h": 1800
+    }
+   ]
+  }
+ ]
+}

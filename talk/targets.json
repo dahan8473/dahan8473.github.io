@@ -272,7 +272,7 @@
   "hiking": {
     "page": "/hobbies/hiking/",
     "sel": "[data-t='hiking']",
-    "about": "Hiking page: I hike. Not written up yet, it asks visitors if they do it too"
+    "about": "Hiking page: twelve hikes with photos and clips, newest first. Panorama Ridge, Tunnel Bluffs, Quarry Rock, Buntzen Lake, Gros Morne (Tablelands, Western Brook Pond), Bonavista, Signal Hill, Cape Spear, Èze, Mount Heng and Lushan. Hover one for the trail stats and what my phone recorded"
   },
   "speed-skating": {
     "page": "/hobbies/speed-skating/",

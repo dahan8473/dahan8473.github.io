@@ -147,6 +147,7 @@
       muaythai: 'i coach the beginner class! do you train anything?',
       climbing: 'man i can only do a v2 :( do you climb?',
       badminton: 'badminton was my main sport all through high school! i played doubles. do you play?',
+      hiking: 'panorama ridge was the big one, 30k round trip. do you hike?',
       photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
       fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },

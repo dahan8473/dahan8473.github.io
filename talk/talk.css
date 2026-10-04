@@ -299,6 +299,10 @@
   margin: 0;
   min-height: 1.5em;
   padding-right: 18px;
+  max-height: 9em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -308,20 +312,8 @@
   width: 30px;
   height: 1em;
 }
+.dl-text.clip { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 1.5em); mask-image: linear-gradient(to bottom, transparent, #000 1.5em); }
 .dl-text a { color: inherit; text-decoration-color: var(--talk-accent); }
-.dl-more {
-  position: absolute;
-  right: 20px;
-  bottom: 6px;
-  padding: 2px;
-  border: 0;
-  background: none;
-  color: var(--talk-accent);
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-  animation: dl-more 800ms ease-in-out infinite;
-}
 
 .dl-row { display: none; }
 .dl.chat .dl-row {
@@ -521,9 +513,6 @@ a.dl-held { display: inline-block; }
   0%, 100% { transform: scaleX(1); opacity: 1; }
   50% { transform: scaleX(0.86); opacity: 0.7; }
 }
-@keyframes dl-more {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(3px); }
 }
 @keyframes dl-dot {
   0%, 100% { transform: translateY(0); opacity: 0.4; }

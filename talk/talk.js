@@ -146,6 +146,7 @@
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',
       muaythai: 'i coach the beginner class! do you train anything?',
       climbing: 'man i can only do a v2 :( do you climb?',
+      badminton: 'badminton was my main sport all through high school! i played doubles. do you play?',
       photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
       fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },
@@ -162,6 +163,7 @@
       { id: 'sports', line: 'do you play any sports or train anything?', page: '/hobbies/muay-thai/', notice: 'muaythai' },
       { id: 'music', line: 'do you play any music?', page: '/hobbies/guitar/' },
       { id: 'climb', line: 'do you climb at all?', page: '/hobbies/climbing/', only: true, notice: 'climbing' },
+      { id: 'badminton', line: 'do you play badminton?', page: '/hobbies/badminton/', only: true, notice: 'badminton' },
       { id: 'travel', line: 'been anywhere good lately?', page: '/hobbies/travel/' },
       { id: 'make', line: 'do you make anything for fun? art, code, clothes, videos, anything', page: '/hobbies/fashion/' },
       { id: 'photos', line: 'do you take photos at all?', notice: 'photography' },
@@ -286,7 +288,6 @@
         <p class="dl-echo" hidden></p>
         <p class="dl-recall" hidden></p>
         <p class="dl-text" aria-live="polite"></p>
-        <button class="dl-more" type="button" aria-label="Continue" hidden>&#9660;</button>
       </div>
       <div class="dl-row">
         <div class="dl-choices" hidden></div>
@@ -312,7 +313,6 @@
   const echoEl = $('.dl-echo');
   const recallEl = $('.dl-recall');
   const textEl = $('.dl-text');
-  const moreBtn = $('.dl-more');
   const choicesEl = $('.dl-choices');
   const form = $('.dl-form');
   const input = form.querySelector('input');
@@ -654,15 +654,15 @@
 
   // Typewriter. The queue holds characters and, inline, the stage directions
   // the model wrote, so the hand moves right when the words reach it.
-  const sp = { q: [], page: '', typing: false, more: false, ended: true, fast: false, timer: 0, resolve: null, done: Promise.resolve() };
+  const sp = { q: [], page: '', typing: false, ended: true, fast: false, timer: 0, resolve: null, done: Promise.resolve() };
 
   function speak(text, { echo = '', stream = false } = {}) {
     clearTimeout(sp.timer);
     if (sp.resolve) sp.resolve();
-    Object.assign(sp, { q: [], page: '', typing: false, more: false, ended: !stream, fast: false, resolve: null });
+    Object.assign(sp, { q: [], page: '', typing: false, ended: !stream, fast: false, resolve: null });
     sp.done = new Promise((r) => { sp.resolve = r; });
     textEl.textContent = '';
-    moreBtn.hidden = true;
+    textEl.classList.remove('clip');
     recallEl.hidden = true;
     echoEl.textContent = echo;
     echoEl.hidden = !echo;
@@ -673,7 +673,7 @@
   function feed(s) { for (const ch of s) sp.q.push(ch); pump(); }
   function feedAction(a) { sp.q.push(a); pump(); }
   function endSpeech() { sp.ended = true; pump(); }
-  function pump() { if (!sp.typing && !sp.more) step(); }
+  function pump() { if (!sp.typing) step(); }
 
   function step() {
     for (;;) {
@@ -685,32 +685,19 @@
       const item = sp.q[0];
       if (typeof item !== 'string') { sp.q.shift(); act(item); continue; }
       const n = sp.page.length;
-      // Long replies page like a game: finish the sentence, show the arrow.
-      if ((item !== ' ' && n >= 150 && /[.!?]\s$/.test(sp.page)) || (item === ' ' && n >= 230)) {
-        sp.typing = false;
-        sp.more = true;
-        moreBtn.hidden = false;
-        linkify();
-        return;
-      }
       sp.q.shift();
       if (/\s/.test(item) && (!n || /\s$/.test(sp.page))) continue;
       sp.page += item;
+      // Long replies scroll inside the bubble. Follow the typing unless they scrolled up to reread.
+      const follow = textEl.scrollHeight - textEl.scrollTop - textEl.clientHeight < 24;
       textEl.textContent = sp.page;
+      if (follow) textEl.scrollTop = textEl.scrollHeight;
+      textEl.classList.toggle('clip', textEl.scrollTop > 0);
       voice(item);
       sp.typing = true;
       sp.timer = setTimeout(step, reduce ? 0 : sp.fast ? 6 : /[.!?]/.test(item) ? 300 : /[,;:]/.test(item) ? 140 : 28);
       return;
     }
-  }
-  function nextPage() {
-    if (!sp.more) return;
-    sp.more = false;
-    sp.fast = false;
-    sp.page = '';
-    textEl.textContent = '';
-    moreBtn.hidden = true;
-    pump();
   }
   function finishSpeech() {
     pres.said = now();
@@ -753,7 +740,7 @@
     if (!text) return;
     if (mood) setFace(mood, 1200 + text.length * 45);
     if (chatOn) {
-      if (!asking && !sp.typing && !sp.more) await speak(text);
+      if (!asking && !sp.typing) await speak(text);
       return;
     }
     const id = ++quipSeq;
@@ -1338,7 +1325,7 @@
     emote(pokes % 2 ? '?' : '!');
     life.surprise = now() + 200;
     if (pokes >= 2) setFace('angry', 1800);
-    if (!asking && !sp.typing && !sp.more) speak(LINES.poke[pokes++ % LINES.poke.length]);
+    if (!asking && !sp.typing) speak(LINES.poke[pokes++ % LINES.poke.length]);
   }
 
   // Talking back: the browser's speech recognition fills the box as you
@@ -1799,7 +1786,7 @@
     else if (at && t - pres.atSince > 12000 && t - lastScroll > 3000 && pres.seen !== at && !S.noticed.includes(at)) { pres.seen = at; pres.seenAt = t; }
     if (pres.seen && t - pres.seenAt > 15000) pres.seen = '';
 
-    if (document.hidden || !document.hasFocus() || asking || held || carried || touring || dir.busy || drag.on || life.shy || rec || sp.typing || sp.more || input.value || S.noting) return;
+    if (document.hidden || !document.hasFocus() || asking || held || carried || touring || dir.busy || drag.on || life.shy || rec || sp.typing || input.value || S.noting) return;
     const quiet = t - pres.said;
     // Just asked them something: give them a chance to answer first.
     const asked = chatOn && /\?\s*$/.test(strip(textEl.textContent));
@@ -2324,11 +2311,10 @@
       root.classList.toggle('muted', !sound.on);
       try { localStorage.setItem('dl-sound', sound.on ? '1' : '0'); } catch (e) {}
     });
-    moreBtn.addEventListener('click', nextPage);
+    textEl.addEventListener('scroll', () => textEl.classList.toggle('clip', textEl.scrollTop > 0), { passive: true });
     bubble.addEventListener('click', (e) => {
       if (e.target.closest('a, button')) return;
-      if (sp.more) nextPage();
-      else if (sp.typing) sp.fast = true;
+      if (sp.typing) sp.fast = true;
     });
     form.addEventListener('submit', (e) => { e.preventDefault(); ask(input.value); });
 

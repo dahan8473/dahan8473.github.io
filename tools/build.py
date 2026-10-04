@@ -6,7 +6,7 @@
 import os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 8, 24, 20
+V_CSS, V_TALKCSS, V_JS, V_TALK = 28, 9, 24, 21
 V_PIECE = 8  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
@@ -363,7 +363,8 @@ GROUPS = [
   ('Body', [
     ('muay-thai', 'Muay Thai', 'I train, and coach the beginner class.', None),
     ('climbing', 'Rock climbing', 'Bouldering. V2, for now.', None),
-  ], [('swimming', 'Swimming'), ('badminton', 'Badminton'), ('cycling', 'Cycling'), ('hiking', 'Hiking'), ('speed-skating', 'Speed skating')]),
+    ('badminton', 'Badminton', 'My main sport all through high school. Doubles.', None),
+  ], [('swimming', 'Swimming'), ('cycling', 'Cycling'), ('hiking', 'Hiking'), ('speed-skating', 'Speed skating')]),
   ('Mind', [
     ('travel', 'Travel', "Beijing, New York, and a list I'm behind on.", None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
@@ -459,8 +460,10 @@ hobby('climbing', 'Rock climbing', "I boulder. I can only do a V2 right now.", [
 hobby('swimming', 'Swimming', 'I swim.', [
   ('Awards', [('Coming soon', "<p>Digging them out.</p>")], None),
 ], shot=piece('play', 'gallery', 'Photos coming soon.', src='/hobbies/swimming/photos.json'))
-hobby('badminton', 'Badminton', 'I play badminton. These are my four rackets, and a quick rally with the head if you want.', [
-  ('You', [('Do you play?', "<p>Tell the head. It'll want to hear about it.</p>")], None),
+hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. These are my four rackets, and a quick rally with the head if you want.', [
+  ('High school', [('Doubles', '<p>My high school had a very competitive team. I played doubles, at regional and provincial school competitions.</p>')], None),
+  ('Rackets', [('Yonex', '<p>Z-Force II, Duora 10, Voltric Z-Force II, ArcSaber 11 Pro.</p>')], None),
+  ('You', [('Do you play?', "<p>Tell the head. Singles or doubles?</p>")], None),
 ], shot=piece('3d', 'racket', 'Loading the rackets...') + piece('play', 'badminton', 'Loading the court...'))
 hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
   ('You', [('Do you ride?', "<p>Tell the head. It'll want to hear about it.</p>")], None),

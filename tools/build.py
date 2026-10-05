@@ -489,7 +489,9 @@ def hobby(slug, name, tagline, sections, shot='', kind='Hobby', after=''):
         <a class="to-next" href="/hobbies/{next_h[0]}/"><span>Next</span>{next_h[1]}</a>
       </nav>
 '''
-    write(f'hobbies/{slug}/index.html', page(f'/hobbies/{slug}/', name, f'{name}, one of David Liu\'s hobbies. {tagline}', body, 'hobbies', cls='case', back=('/hobbies/', 'Hobbies')))
+    # A tagline can run to several paragraphs; the description is the first one.
+    desc = re.sub(r'<[^>]+>', '', tagline.split('</p>')[0]).replace('"', '&quot;')
+    write(f'hobbies/{slug}/index.html', page(f'/hobbies/{slug}/', name, f'{name}, one of David Liu\'s hobbies. {desc}', body, 'hobbies', cls='case', back=('/hobbies/', 'Hobbies')))
 
 
 def FIGS(items):
@@ -523,7 +525,9 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
       </section>
       <p class="bring-again" data-later="guitar" data-v="{V_PIECE}" hidden><button type="button" class="ln" data-bring="guitar">Play the guitar</button></p>
 '''.replace('{V_PIECE}', str(V_PIECE)))
-hobby('muay-thai', 'Muay Thai', 'I train at a club, and coach the beginner class at my local gym.', [
+hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, because a friend dragged me to our local gym. I was super intimidated. I was scared of fighting, and of what the people there might be like."
+      '</p>\n        <p class="tagline">But by the first week I was addicted. I think a lot of that comes from my love for chess and puzzle games: Muay Thai is like a physical version of them. My Instagram feed turned into Muay Thai highlights, and I bought a bag on Facebook Marketplace and hung it up in my backyard to train in the mornings.'
+      "</p>\n        <p class=\"tagline\">If you've never tried something like this, give it a shot. It might reveal more about yourself than you think.", [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched'))
 hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V3 right now. Climb this page with me if you want.", [

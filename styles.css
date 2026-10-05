@@ -557,6 +557,7 @@ html.bringing { overflow: hidden; }
 .case .identity .title { color: var(--t3); }
 .case .tagline { max-width: 36em; margin-top: 18px; color: var(--t2); }
 .case .tagline a { color: var(--t1); }
+.case .tagline + .tagline { margin-top: 12px; }
 .case-shot { margin-top: 40px; }
 .case-shot img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 16px; background: var(--fill); }
 .case-shot figcaption { margin-top: 10px; color: var(--t3); }

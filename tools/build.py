@@ -534,7 +534,9 @@ hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do 
 ], shot=piece('play', 'climbing', 'Loading the wall...'))
 hobby('swimming', 'Swimming', 'I swim.', [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/swimming/photos.json'))
-hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. My school had a very competitive team, and I played doubles at regional and provincial school competitions. These are my four rackets. Click one for a closer look, and rally the head with it.', [
+hobby('badminton', 'Badminton', "Badminton was my main sport all through high school!"
+      '</p>\n        <p class="tagline">My school had a very competitive team, and I played doubles at regional and provincial school competitions. Over the years I\'ve hoarded various expensive rackets. These four are my favourites.'
+      '</p>\n        <p class="tagline">Click one for a closer look, and give me a rally!', [
 ], shot=piece('3d', 'racket', 'Loading the rackets...'))
 hobby('cycling', 'Cycling', "I picked up my bike second hand at the start of September and fell in love with cycling. I ride to school and back every day, and go on long rides whenever I can.", [
 ], shot='''      <figure class="case-shot natural">

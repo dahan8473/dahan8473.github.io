@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 34, 11, 30, 34
+V_CSS, V_TALKCSS, V_JS, V_TALK = 35, 11, 30, 35
 V_PIECE = 22  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
@@ -463,7 +463,7 @@ hob += '      </div>\n'
 write('hobbies/index.html', page('/hobbies/', 'Hobbies', 'What David Liu does outside of work: his cat, travel, classical guitar, photography, fashion, Muay Thai, rock climbing and more.', hob, 'hobbies', cls='hobbies'))
 
 
-def hobby(slug, name, tagline, sections, shot='', kind='Hobby'):
+def hobby(slug, name, tagline, sections, shot='', kind='Hobby', after=''):
     i = [h[0] for h in HOBBIES].index(slug)
     prev_h, next_h = HOBBIES[i - 1], HOBBIES[(i + 1) % len(HOBBIES)]
     secs = ''
@@ -481,12 +481,18 @@ def hobby(slug, name, tagline, sections, shot='', kind='Hobby'):
         <p class="tagline">{tagline}</p>
       </header>
 {shot}
-{secs}      <nav class="next" aria-label="More hobbies">
+{secs}{after}      <nav class="next" aria-label="More hobbies">
         <a href="/hobbies/{prev_h[0]}/"><span>Previous</span>{prev_h[1]}</a>
         <a class="to-next" href="/hobbies/{next_h[0]}/"><span>Next</span>{next_h[1]}</a>
       </nav>
 '''
     write(f'hobbies/{slug}/index.html', page(f'/hobbies/{slug}/', name, f'{name}, one of David Liu\'s hobbies. {tagline}', body, 'hobbies', cls='case', back=('/hobbies/', 'Hobbies')))
+
+
+def FIGS(items):
+    # A row of numbers that matter, each with what it is.
+    cells = ''.join(f'<div><dt>{label}</dt><dd>{value}</dd></div>' for value, label in items)
+    return f'      <dl class="figs">{cells}</dl>\n'
 
 
 def piece(kind, name, note, cls='', src=''):
@@ -529,8 +535,13 @@ hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [
 ], shot=piece('play', 'trophycase', 'Digging out photos rn.', src='/hobbies/speed-skating/trophies.json'))
-hobby('chess', 'Chess', 'I play on chess.com. Play a game against the head if you want.', [
-], shot=piece('play', 'chess', 'Setting up the board...'))
+hobby('chess', 'Chess', "I played competitively all through elementary school, until guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
+  ('The story', [
+    ('Elementary', '<p>I played all through elementary school and competed at regionals. I got my rating up to 1425, playing against adults.</p>'),
+    ('Then guitar', '<p>Eventually I had to pick one to focus on, and it was <a href="/hobbies/guitar/">classical guitar</a>.</p>'),
+    ('Now', '<p>I still play online and solve puzzles. <a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">My chess.com</a>, and live stats are next to the board below.</p>'),
+  ], None),
+], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('Adults', 'Who I played against')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [

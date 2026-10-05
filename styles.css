@@ -769,3 +769,13 @@ media (prefers-reduced-motion: reduce) {
 .dl-pitch .climb-invite:is([data-state="idle"], [data-state="climbing"]) { display: none; }
 .dl-pitch [data-3d="racket"] .rk-rally, .dl-pitch [data-3d="racket"] .rk-hint { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); }
 
+/* The chess board comes after the story. */
+.case .section + .play[data-play="chess"] { margin-top: 56px; }
+
+/* A row of numbers that matter (hobby pages): the number, what it is under it. */
+.figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; margin: 32px 0 40px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.figs > div { display: flex; flex-direction: column-reverse; padding: 14px 0; }
+.figs dd { color: var(--t1); font-weight: 500; }
+.figs dt { color: var(--t3); }
+@media (max-width: 720px) { .figs { grid-template-columns: 1fr; } .figs > div + div { border-top: 1px solid var(--rule); } .figs > div { padding: 10px 0; } }
+

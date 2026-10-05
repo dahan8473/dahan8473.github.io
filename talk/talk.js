@@ -263,6 +263,7 @@
         unset: "nice. i haven't set my score yet, so enjoy it while it lasts 😈"
       },
       chess: {
+        say: 'i played all through elementary. got to 1425 before guitar took over',
         ask: "what's your rating?",
         none: "that's ok, i'll go easy"
       },

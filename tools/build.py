@@ -146,7 +146,8 @@ home = '''      <section class="hello" data-t="now">
         <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
         <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers build free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
         <p><em>But I'm a lot more than my technical skills.</em> I'm a person of whimsy, ambition and out-of-the-box ideas. The things I suggest always get people giggling, or saying out loud, “how did you even think of something like that?”</p>
-        <p><em>This site looks simple. It isn't.</em> Click around, drag things, and talk to the floating head in the corner. It's an AI version of me, wired into <a class="ln" href="/brain/">my second brain</a>, so ask it anything. You can spar it, rally it with my real rackets, climb the page and play my guitar. The more you explore, the more you'll get what I mean. <button class="ln finds-open" type="button" data-finds-open>Here are twelve things to start with</button>.</p>
+        <p><em>This site looks simple. It isn't.</em> Click around, drag things, and talk to the floating head in the corner, an AI version of me wired into <a class="ln" href="/brain/">my second brain</a>. The more you explore, the more you'll get what I mean. <button class="ln finds-open" type="button" data-finds-open>Here are twelve things to start with</button>.</p>
+        <p><em>Stay curious.</em></p>
       </section>
 
       <ul class="list doors">

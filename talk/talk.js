@@ -118,6 +118,7 @@
       chess: { line: 'play me? you get white. i talk a lot while i play', yes: "you're on", no: 'maybe later', ok: 'your move ♟️' },
       rally: { line: "rally me? first person, my racket's in your hand 🏸", named: (n) => `rally me with the ${n}? first person, it's in your hand 🏸`, yes: 'rally', no: 'just looking', ok: 'ok serve it up' },
       later: "ok ok. tap me when you're ready",
+      asked: 'say less 👀',
       again: 'changed your mind? 👀'
     },
     // Leaving, with something they haven't done yet (site.js, window.dlFinds).
@@ -1537,6 +1538,10 @@
       pres.waiting = false;
       found('talk');
       if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }
+      // Asking to play one of the games skips the brain: the head takes them
+      // to it (another page if need be) and pitches it up close.
+      const game = !S.quiet && gameAsked(q);
+      if (game) { playAsked(q, game); return; }
     }
     asking = true;
     sendBtn.disabled = true;
@@ -2298,22 +2303,30 @@
       }
     }
   }
-  // Badminton: opening a racket up close is the moment to ask, by its name.
-  let racketWatch = null;
-  function watchRackets() {
-    if (racketWatch) { racketWatch.disconnect(); racketWatch = null; }
-    const piece = here === PITCHES.rally.page && document.querySelector('main [data-3d="racket"]');
-    if (!piece) return;
-    racketWatch = new MutationObserver(() => {
-      const stats = piece.querySelector('.rk-stats.on');
-      if (!stats || pitching || S.once.includes('pitch-rally')) return;
-      const name = (stats.querySelector('.rk-name') || {}).textContent || '';
-      setTimeout(() => {
-        if (piece.querySelector('.rk-stats.on')) pitch('rally', { line: name ? LINES.pitch.rally.named(name) : '' });
-      }, 1600);
-    });
-    racketWatch.observe(piece, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  // "can I spar you?", "rally me", "let's climb", "play chess with me": the
+  // game itself, not a reply about it. Wants a verb of doing, so "do you like
+  // muay thai?" still goes to the brain.
+  const ASKED = [
+    ['spar', /\b(spar+(ing)?|fight (me|you)|box (me|you|with)|let'?s (fight|box)|throw hands)\b/i],
+    ['rally', /\b(rally|play (some )?badminton|badminton (game|match|rally))\b/i],
+    ['climb', /\b(climb (the page|with|together|it)|let'?s climb|go climbing)\b/i],
+    ['chess', /\b(play (a game of |some )?chess|chess (game|match)|(play|beat) you (at|in) chess)\b/i]
+  ];
+  const gameAsked = (q) => { const hit = ASKED.find(([, re]) => re.test(q)); return hit ? hit[0] : null; };
+  async function playAsked(q, id) {
+    const P = PITCHES[id];
+    S.msgs.push({ role: 'user', content: q }, { role: 'assistant', content: LINES.pitch.asked });
+    // The exchange that leads into it would only repeat the question.
+    const ex = Object.keys(PITCH_OF).find((k) => PITCH_OF[k] === id);
+    if (ex && !S.once.includes('ask-' + ex)) S.once.push('ask-' + ex);
+    save();
+    setFace('happy', 1600);
+    await speak(LINES.pitch.asked, { echo: q, urgent: true });
+    await wait(500);
+    if (P.page !== here) { await navigate(P.page); await wait(700); }
+    pitch(id, { force: true });
   }
+
   // The things-to-do list can ask for it again on the page it's on.
   window.dlPitch = (id) => { if (PITCHES[id] && PITCHES[id].page === here) pitch(id, { force: true }); };
   window.dlPitchable = (id) => Boolean(PITCHES[id] && PITCHES[id].page === here && !S.quiet);
@@ -2789,7 +2802,6 @@
       travelPick = false;
       if (ASK_PAGES[norm(location.pathname)]) setTimeout(askPage, ASK_LATE[norm(location.pathname)] || 3500);
       endPitch(null);
-      setTimeout(watchRackets);
       clearTimeout(pickTimer);
       if (norm(location.pathname) === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 2500);
       const hob = /^\/hobbies\/([^/]+)\/$/.exec(norm(location.pathname));
@@ -2865,7 +2877,6 @@
     if (here === '/hobbies/guitar/') setTimeout(askGuitar, 4000);
     if (ASK_PAGES[here]) setTimeout(askPage, ASK_LATE[here] || 4000);
     document.documentElement.classList.toggle('dl-pitch', !S.quiet);
-    watchRackets();
     addEventListener('dl:globe-pick', (e) => globePicked(e.detail || {}));
     addEventListener('dl:lumo', (e) => lumoDone(e.detail || {}));
     if (here === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 3000);

@@ -754,7 +754,6 @@ media (prefers-reduced-motion: reduce) {
    show when the head's been told to be quiet. */
 .dl-pitch .play.pitched { display: none; }
 .dl-pitch .climb-invite:is([data-state="idle"], [data-state="climbing"]) { display: none; }
-.dl-pitch [data-3d="racket"] .rk-rally, .dl-pitch [data-3d="racket"] .rk-hint { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); }
 
 /* Cycling: the bike, then the rides map under it. */
 .play[data-play="rides"] { margin-top: 48px; }
@@ -780,4 +779,12 @@ media (prefers-reduced-motion: reduce) {
 .lumo-games [data-lumo-card] { display: flex; flex-direction: column; height: 100%; }
 .lumo-games [data-lumo-card] > :last-child { margin-top: auto; }
 @media (max-width: 900px) { .lumo-games { grid-template-columns: 1fr; } }
+
+/* Muay Thai: my gloves hang on a peg beside the story (3d/gloves.js). Hover
+   says Spar?, a click opens the ring. Under the story on narrow screens. */
+.stage3d.gloves-hang { width: 200px; height: 300px; aspect-ratio: auto; margin: 24px auto 0; }
+@media (min-width: 1000px) {
+  .case main:has(> .gloves-hang) { position: relative; }
+  .stage3d.gloves-hang { position: absolute; top: 40px; right: 0; width: 240px; height: 360px; margin: 0; }
+}
 

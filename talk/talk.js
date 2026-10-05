@@ -111,6 +111,15 @@
     devtoolsAgain: 'inspect element again? we talked about this',
     devtoolsBye: 'thank you. that was a lot 😮‍💨',
     exit: 'wait wait where are you going, i got more to show u!!!',
+    // The pitch: up close, for starting a game (see pitch()).
+    pitch: {
+      spar: { line: "spar me? three rounds, light contact. i'll go easy 🥊", yes: "let's go", no: 'not today', ok: 'bet. gloves on' },
+      climb: { line: "climb the page with me? it's a v2, straight up", yes: "let's climb", no: 'maybe later', ok: 'ok chalk up' },
+      chess: { line: 'play me? you get white. i talk a lot while i play', yes: "you're on", no: 'maybe later', ok: 'your move ♟️' },
+      rally: { line: "rally me? first person, my racket's in your hand 🏸", named: (n) => `rally me with the ${n}? first person, it's in your hand 🏸`, yes: 'rally', no: 'just looking', ok: 'ok serve it up' },
+      later: "ok ok. tap me when you're ready",
+      again: 'changed your mind? 👀'
+    },
     // Leaving, with something they haven't done yet (site.js, window.dlFinds).
     exitTo: {
       spar: "wait!! you never sparred me. muay thai, i'll go easy",
@@ -224,18 +233,18 @@
       climbing: {
         say: "i'm not very good, i can only do a v3 :(",
         ask: 'what grade do you climb?',
-        low: "ok we're basically the same. climb the page with me?", same: 'twins 🤝 race me up the page?',
-        high: 'show off 😭', none: "try it here first, the mat's soft"
+        low: "ok we're basically the same", same: 'twins 🤝',
+        high: 'show off 😭', none: "that's ok, the mat's soft"
       },
       badminton: {
         say: 'badminton was my main sport all through high school',
         ask: 'singles or doubles?',
-        singles: 'respect. rally me then 🏸', doubles: 'doubles gang 🤝 rally me then', none: "you can still rally me, it's easier than it looks"
+        singles: 'respect 🏸', doubles: 'doubles gang 🤝', none: "that's ok, it's easier than it looks"
       },
       muaythai: {
         say: 'i coach the beginner class at my local gym',
         ask: 'do you train anything?',
-        yes: 'ooo then spar me', no: "wanna try? i'll go easy 🥊"
+        yes: 'ooo ok, then you know the drill', no: "that's ok, everyone starts somewhere"
       },
       travel: {
         say: "i've been to 8 countries so far! fun fact, i've been homeless in all 8 of them 😭",
@@ -255,7 +264,7 @@
       },
       chess: {
         ask: "what's your rating?",
-        none: "the board's right there. i'll go easy"
+        none: "that's ok, i'll go easy"
       },
       photography: {
         say: 'i shoot on an x-t200 and an a7r ii',
@@ -739,7 +748,10 @@
     const w = talk.offsetWidth;
     const cx = r.left + r.width / 2;
     let left, bottom;
-    if (chatOn) {
+    if (pitching) {
+      left = cx - w / 2;
+      bottom = innerHeight - r.top + 6;
+    } else if (chatOn) {
       left = r.right - w;
       bottom = innerHeight - r.bottom;
     } else {
@@ -1433,6 +1445,7 @@
     save();
     interrupt();
     root.classList.add('quiet');
+    document.documentElement.classList.remove('dl-pitch');
     quip(LINES.shoo, 1200, 'sad');
   }
   let pokes = 0;
@@ -2046,7 +2059,14 @@
     if (id === 'hiking') showOn('[data-t="hike-panorama-ridge"] .phk-strip');
     await say(L.ask);
     pres.waiting = true;
-    const go = (text, sel, mood) => async (label) => { await reply(label, text); if (mood) setFace(mood, 2400); if (sel) showOn(sel); };
+    // On the game pages the answer is a reaction, then the head pitches the game.
+    const game = PITCH_OF[id];
+    const go = (text, sel, mood) => async (label) => {
+      await reply(label, text);
+      if (mood) setFace(mood, 2400);
+      if (game) { await wait(1300); pitch(game); } else if (sel) showOn(sel);
+    };
+    if (game) setTimeout(() => { if (here === PITCHES[game].page) pitch(game); }, 16000);
     if (id === 'hiking') options([['yeah!', go(L.yes)], ['not really', go(L.no)]]);
     else if (id === 'climbing') options([
       ['v0 to v2', go(L.low, '.play[data-play="climbing"]')], ['v3', go(L.same, '.play[data-play="climbing"]', 'happy')],
@@ -2119,6 +2139,151 @@
     Promise.all([quip(LINES.pick.open[step] + '. ' + LINES.pick.teaser[t], 2600), point(el, { hold: 2400 })]);
     pickTimer = setTimeout(() => nudgeHobbies(step + 1), 9000);
   }
+
+  // ---- The pitch ----------------------------------------------------------------
+  // Starting a game goes through the head, never a button on the page. The page
+  // dims, the head comes right up to the screen, big, and asks, with two
+  // answers under it. Yes starts it (the head flies straight into the ring or
+  // onto the wall from there), later sends it back to its corner, and clicking
+  // the head on that page asks again. Quiet heads leave the page's own buttons.
+  const PITCHES = {
+    spar: { page: '/hobbies/muay-thai/', el: '.play[data-play="muaythai"]', fly: true },
+    climb: { page: '/hobbies/climbing/', el: '.play[data-play="climbing"]', fly: true },
+    chess: { page: '/hobbies/chess/', el: '.play[data-play="chess"]' },
+    rally: { page: '/hobbies/badminton/', el: '[data-3d="racket"]' }
+  };
+  const PITCH_OF = { muaythai: 'spar', climbing: 'climb', chess: 'chess', badminton: 'rally' };
+  // The muay thai exchange waits so the photos come first.
+  const ASK_LATE = { '/hobbies/muay-thai/': 9000 };
+  let pitching = null;
+  let pitchEnd = null;
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  async function pitch(id, { force = false, again = false, line = '', tries = 0 } = {}) {
+    const P = PITCHES[id];
+    if (!P || here !== P.page || pitching || lent || S.quiet) return;
+    if (!force && (S.once.includes('pitch-' + id) || (window.dlFinds && isDone(id)))) return;
+    const piece = document.querySelector('main ' + P.el);
+    if (!piece) return;
+    if (!force && (!pres.ready || (chatOn && pres.waiting && now() - pres.said < 10000) || asking || touring || held || carried || dir.busy || sp.typing || input.value || document.hidden || document.querySelector('.mt-over, .climb-wall, .bring'))) {
+      if (tries < 20) setTimeout(() => pitch(id, { line, tries: tries + 1 }), 2500);
+      return;
+    }
+    if (!S.once.includes('pitch-' + id)) S.once.push('pitch-' + id);
+    S.pitchLater = '';
+    save();
+    pitching = id;
+    const L = LINES.pitch[id];
+    interrupt();
+    wake();
+    emoteOff();
+    if (chatOn) { closeChat(null); clearTimeout(dir.timer); }
+    choicesEl.hidden = true;
+    await hideTalk();
+    if (pitching !== id) return;
+
+    const dim = document.createElement('div');
+    dim.className = 'dl-pitch-dim';
+    root.prepend(dim);
+    root.classList.add('pitching');
+    requestAnimationFrame(() => dim.classList.add('on'));
+    lend(true, true);
+    const sm = innerWidth < 640;
+    const k = sm ? 1.7 : 2.3;
+    const x = innerWidth / 2 - (HW * k) / 2;
+    const y = clamp(innerHeight * 0.58 - (HH * k) / 2, 150, innerHeight - HH * k - 120);
+    dim.style.setProperty('--px', innerWidth / 2 + 'px');
+    dim.style.setProperty('--py', y + (HH * k) / 2 + 'px');
+    await fly(x, y, k, reduce ? 0 : 750);
+    if (pitching !== id) return;
+    life.surprise = now() + 400;
+    squish();
+    setFace('happy', 2600);
+
+    const ask = document.createElement('div');
+    ask.className = 'dl-pitch-ask';
+    ask.hidden = true;
+    ask.innerHTML = `<button type="button" class="yes">${esc(L.yes)}</button><button type="button" class="no">${esc(L.no)}</button>`;
+    root.appendChild(ask);
+    const r = headBtn.getBoundingClientRect();
+    ask.style.left = r.left + r.width / 2 + 'px';
+    ask.style.top = r.bottom + 22 + 'px';
+    showTalk();
+    await speak(again ? LINES.pitch.again + ' ' + (line || L.line) : line || L.line);
+    if (pitching !== id) return;
+    ask.hidden = false;
+    play(ask, [{ transform: 'translate(-50%, 8px)', opacity: 0 }, { transform: 'translate(-50%, 0)', opacity: 1 }], { duration: 220, easing: 'ease-out' });
+    ask.querySelector('.yes').focus({ preventScroll: true });
+
+    const onKey = (e) => { if (e.key === 'Escape') endPitch(false); };
+    document.addEventListener('keydown', onKey);
+    ask.querySelector('.yes').addEventListener('click', () => endPitch(true));
+    ask.querySelector('.no').addEventListener('click', () => endPitch(false));
+    dim.addEventListener('click', () => endPitch(false));
+    pitchEnd = async (yes) => {
+      document.removeEventListener('keydown', onKey);
+      pitchEnd = null;
+      ask.remove();
+      if (yes == null) { dim.remove(); root.classList.remove('pitching'); pitching = null; talk.hidden = true; if (lent) window.dlHead.home(0); return; }
+      speak(yes ? L.ok : LINES.pitch.later);
+      setFace(yes ? 'happy' : 'sad', 1600);
+      await wait(reduce ? 300 : yes ? 900 : 1500);
+      dim.classList.remove('on');
+      setTimeout(() => dim.remove(), 300);
+      root.classList.remove('pitching');
+      pitching = null;
+      await hideTalk();
+      if (!yes) {
+        S.pitchLater = id;
+        save();
+        await window.dlHead.home(reduce ? 0 : 650);
+        return;
+      }
+      // The ring and the wall fly the head in from where it is; the rest send it home first.
+      if (!P.fly) await window.dlHead.home(reduce ? 0 : 600);
+      startGame(id, piece);
+      // Chess counts on the first move, the rally on its own button (site.js).
+      if (P.fly) found(id);
+    };
+  }
+  function endPitch(yes) { if (pitchEnd) pitchEnd(yes); }
+  const isDone = (id) => { try { return (JSON.parse(localStorage.getItem('dl-found')) || []).includes(id); } catch (e) { return false; } };
+  function startGame(id, piece) {
+    if (!document.contains(piece)) return;
+    if (id === 'spar' || id === 'climb') { piece.dispatchEvent(new CustomEvent('dl:start')); return; }
+    if (id === 'chess') {
+      piece.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+      setTimeout(() => { point(piece, { hold: 1800 }); quip(LINES.pitch.chess.ok, 1600, 'happy'); }, reduce ? 0 : 600);
+      return;
+    }
+    if (id === 'rally') {
+      const go = () => { const b = piece.querySelector('.rk-rally'); if (b) b.click(); };
+      if (piece.querySelector('.rk-stats.on')) go();
+      else {
+        const pickBtn = piece.querySelectorAll('.dl-sr button')[1];
+        if (pickBtn) pickBtn.click();
+        setTimeout(go, reduce ? 50 : 900);
+      }
+    }
+  }
+  // Badminton: opening a racket up close is the moment to ask, by its name.
+  let racketWatch = null;
+  function watchRackets() {
+    if (racketWatch) { racketWatch.disconnect(); racketWatch = null; }
+    const piece = here === PITCHES.rally.page && document.querySelector('main [data-3d="racket"]');
+    if (!piece) return;
+    racketWatch = new MutationObserver(() => {
+      const stats = piece.querySelector('.rk-stats.on');
+      if (!stats || pitching || S.once.includes('pitch-rally')) return;
+      const name = (stats.querySelector('.rk-name') || {}).textContent || '';
+      setTimeout(() => {
+        if (piece.querySelector('.rk-stats.on')) pitch('rally', { line: name ? LINES.pitch.rally.named(name) : '' });
+      }, 1600);
+    });
+    racketWatch.observe(piece, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  }
+  // The things-to-do list can ask for it again on the page it's on.
+  window.dlPitch = (id) => { if (PITCHES[id] && PITCHES[id].page === here) pitch(id, { force: true }); };
+  window.dlPitchable = (id) => Boolean(PITCHES[id] && PITCHES[id].page === here && !S.quiet);
 
   // ---- Replies from the real David --------------------------------------------
   // Anyone who messaged him (on /messages/ or with a private note) hears from
@@ -2534,6 +2699,8 @@
 
     headBtn.addEventListener('click', () => {
       if (drag.moved) { drag.moved = false; return; }
+      const later = S.pitchLater && PITCHES[S.pitchLater] && PITCHES[S.pitchLater].page === here;
+      if (!chatOn && later && !pitching) { pitch(S.pitchLater, { force: true, again: true }); return; }
       if (chatOn) poke();
       else openChat();
     });
@@ -2587,7 +2754,9 @@
     document.addEventListener('dl:page', () => {
       if (norm(location.pathname) === '/hobbies/guitar/') setTimeout(askGuitar, 3500);
       travelPick = false;
-      if (ASK_PAGES[norm(location.pathname)]) setTimeout(askPage, 3500);
+      if (ASK_PAGES[norm(location.pathname)]) setTimeout(askPage, ASK_LATE[norm(location.pathname)] || 3500);
+      endPitch(null);
+      setTimeout(watchRackets);
       clearTimeout(pickTimer);
       if (norm(location.pathname) === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 2500);
       const hob = /^\/hobbies\/([^/]+)\/$/.exec(norm(location.pathname));
@@ -2661,7 +2830,9 @@
     schedule(met ? rand(9000, 14000) : 13000);
     if (met) pres.ready = true;
     if (here === '/hobbies/guitar/') setTimeout(askGuitar, 4000);
-    if (ASK_PAGES[here]) setTimeout(askPage, 4000);
+    if (ASK_PAGES[here]) setTimeout(askPage, ASK_LATE[here] || 4000);
+    document.documentElement.classList.toggle('dl-pitch', !S.quiet);
+    watchRackets();
     addEventListener('dl:globe-pick', (e) => globePicked(e.detail || {}));
     addEventListener('dl:lumo', (e) => lumoDone(e.detail || {}));
     if (here === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 3000);

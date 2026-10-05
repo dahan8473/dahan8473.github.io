@@ -878,6 +878,8 @@ export function mount(el) {
   const lastHead = { x: 0, y: 0 };
   function panelClip() {
     const r = root.getBoundingClientRect();
+    // Started by the head with the card hidden: open out of the middle.
+    if (r.height < 40) return 'inset(42% 38% 42% 38% round 16px)';
     const t = clamp(r.top, 0, innerHeight);
     const b = clamp(innerHeight - r.bottom, 0, innerHeight - t);
     return `inset(${t.toFixed(0)}px ${Math.max(0, innerWidth - r.right).toFixed(0)}px ${b.toFixed(0)}px ${Math.max(0, r.left).toFixed(0)}px round 16px)`;
@@ -1434,6 +1436,8 @@ export function mount(el) {
     else if (a === 'quit') closeRing();
   });
   startBtn.addEventListener('click', openRing);
+  // The head starts it (talk/talk.js pitch) when the card is hidden.
+  el.addEventListener('dl:start', openRing);
   xBtn.addEventListener('click', closeRing);
   snd.addEventListener('click', () => {
     sound.unlock();

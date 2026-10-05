@@ -1164,13 +1164,19 @@
   // One thing to do as a row: a link to its page, a button for the head, or
   // just the words when it's something you do anywhere (feeding the head).
   function findRow(f, cls, inner) {
+    // A game on this page: the head asks about it again.
+    if (f.href === here() && window.dlPitchable && window.dlPitchable(f.id)) return '<button class="' + cls + '" type="button" data-find-act="pitch" data-find-id="' + f.id + '">' + inner + '</button>';
     if (f.href && f.href !== here()) return '<a class="' + cls + '" href="' + f.href + '">' + inner + '</a>';
     if (f.act) return '<button class="' + cls + '" type="button" data-find-act="' + f.act + '">' + inner + '</button>';
     return '<div class="' + cls + ' still">' + inner + '</div>';
   }
 
-  var toastEl = null, toastTimer = 0;
+  var toastEl = null, toastTimer = 0, toastWait = 0;
+  // Nothing pops up over a game: the toast waits until it's closed.
+  var GAME_OPEN = '.mt-over, .climb-wall, .rl, .bring';
   function toast(head, f) {
+    clearTimeout(toastWait);
+    if (document.querySelector(GAME_OPEN)) { toastWait = setTimeout(function () { toast(head, f); }, 1200); return; }
     if (!toastEl) {
       toastEl = document.createElement('div');
       toastEl.className = 'finds-toast';
@@ -1263,7 +1269,7 @@
         var inner = '<span class="fp-tick" aria-hidden="true">' + (done ? CHECK : '') + '</span>' +
           '<span class="fp-name">' + escHtml(f.name) + (done ? '<span class="sr">, done</span>' : '') + '</span>' +
           (done ? '' : '<span class="fp-line">' + escHtml(f.line) + (f.href === here() ? ' It\'s on this page.' : '') + '</span>') +
-          (!done && ((f.href && f.href !== here()) || f.act) ? '<span class="fp-m" aria-hidden="true">&#8594;</span>' : '');
+          (!done && (f.href || f.act) && (f.href !== here() || (window.dlPitchable && window.dlPitchable(f.id))) ? '<span class="fp-m" aria-hidden="true">&#8594;</span>' : '');
         return '<li' + (done ? ' class="done"' : '') + '>' + (done ? '<div class="fp-row still">' + inner + '</div>' : findRow(f, 'fp-row', inner)) + '</li>';
       }).join('') + '</ul>' +
       (all ? '<p class="fp-foot">Which one was best? <a class="ln" href="/messages/">Tell me</a></p>' : '');
@@ -1314,6 +1320,7 @@
       closePanel(true);
       hideToast();
       if (act.getAttribute('data-find-act') === 'talk' && window.dlAsk) window.dlAsk('hi! what should i check out first?');
+      if (act.getAttribute('data-find-act') === 'pitch' && window.dlPitch) window.dlPitch(act.getAttribute('data-find-id'));
       return;
     }
     if (panel && (e.target.closest('.fp-x') || e.target.closest('.finds-panel a'))) closePanel(!e.target.closest('.fp-x'));

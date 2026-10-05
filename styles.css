@@ -763,3 +763,9 @@ media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+/* Games the head starts (talk/talk.js pitch): their own start buttons only
+   show when the head's been told to be quiet. */
+.dl-pitch .play.pitched { display: none; }
+.dl-pitch .climb-invite:is([data-state="idle"], [data-state="climbing"]) { display: none; }
+.dl-pitch [data-3d="racket"] .rk-rally, .dl-pitch [data-3d="racket"] .rk-hint { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); }
+

@@ -290,6 +290,7 @@ export function mount(el) {
   // In the page: an invite, a quiet stop button while climbing, the last send after.
   function render(state, focus) {
     const had = focus || invite.contains(document.activeElement);
+    invite.dataset.state = state === 'climbing' ? 'climbing' : lastResult ? 'sent' : 'idle';
     if (state === 'climbing') {
       invite.innerHTML = "<p class=\"climb-ask\">ok we're on the wall</p><p class=\"climb-hint\">Exit or Esc gets you off.</p>" +
         '<div class="climb-actions"><button type="button" class="climb-quiet" data-go>Stop climbing</button></div>';
@@ -308,6 +309,8 @@ export function mount(el) {
     if (game) game.end(true); else game = climb();
   };
   invite.addEventListener('click', onGo);
+  // The head starts it (talk/talk.js pitch) when the invite is hidden.
+  el.addEventListener('dl:start', () => { if (!game) game = climb(); });
   render('idle');
 
   function climb() {

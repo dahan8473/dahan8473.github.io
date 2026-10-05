@@ -691,3 +691,45 @@ a.dl-held { display: inline-block; }
   .dl-clap .l { transform: translateX(24%) rotate(3deg) scale(-0.6, 1); }
   .dl-clap .r { transform: translateX(-24%) rotate(-3deg) scale(0.6, 1); }
 }
+
+/* The pitch (talk.js pitch()): the page dims around a spotlight, the head
+   comes up close to the screen and asks, two answers under it. */
+.dl-pitch-dim {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: radial-gradient(circle at var(--px, 50%) var(--py, 55%), rgba(0, 0, 0, 0.12) 0, rgba(0, 0, 0, 0.42) 34%, rgba(0, 0, 0, 0.55) 100%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+[data-theme="dark"] .dl-pitch-dim { background: radial-gradient(circle at var(--px, 50%) var(--py, 55%), rgba(0, 0, 0, 0.25) 0, rgba(0, 0, 0, 0.62) 34%, rgba(0, 0, 0, 0.72) 100%); }
+.dl-pitch-dim.on { opacity: 1; }
+.dl.pitching .dl-talk { width: min(340px, calc(100vw - 32px)); }
+.dl.pitching .dl-bubble { font-size: 19px; line-height: 1.4; text-align: center; }
+.dl.pitching .dl-tools, .dl.pitching .dl-tag { display: none; }
+.dl.pitching .dl-shadow { opacity: 0.6; }
+.dl-pitch-ask {
+  position: absolute;
+  display: flex;
+  gap: 10px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  white-space: nowrap;
+}
+.dl-pitch-ask button {
+  padding: 11px 22px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 150ms ease, filter 150ms ease;
+}
+.dl-pitch-ask button:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.dl-pitch-ask button:active { transform: scale(0.97); }
+.dl-pitch-ask button:focus-visible { outline: 2px solid var(--talk-accent); outline-offset: 3px; }
+.dl-pitch-ask .yes { background: var(--talk-accent); color: #0d1418; font-weight: 500; box-shadow: 0 10px 30px -8px rgba(136, 192, 208, 0.7); }
+.dl-pitch-ask .no { background: var(--talk-paper); color: var(--talk-ink); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
+@media (prefers-reduced-motion: reduce) { .dl-pitch-dim { transition: none; } }

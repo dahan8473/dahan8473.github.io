@@ -519,7 +519,7 @@ hobby('meowmeow', 'Meowmeow', 'My cat. She/her, black, and always chudding aroun
       </div>
 ''', kind='The cat')
 hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegie Hall. These are recordings of me playing.", [
-  ('Highlights', [('Carnegie Hall', '<p>Performed there.</p>'), ('NW Guitar Competition', '<p>2nd place, classical guitar.</p>')], None),
+  ('Highlights', [('Carnegie Hall', '<p>Performed there.</p>'), ('NW Guitar Competition', '<p>2nd place, classical guitar. <a href="https://www.seattleguitar.org/soundings603.pdf" target="_blank" rel="noopener">The results in the Seattle Classic Guitar Society\'s newsletter</a>.</p>')], None),
 ], shot='''      <section class="recordings" data-t="guitar" aria-label="Recordings">
         <div class="tracks hero" id="guitar-tracks"></div>
       </section>

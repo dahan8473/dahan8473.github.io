@@ -7,7 +7,7 @@ import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 40, 12, 32, 36
-V_PIECE = 29  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 30  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -632,6 +632,23 @@ messages = '''      <h1 class="sr">Messages</h1>
       <p class="imsg-note">This goes straight to my phone. When I reply, it shows up here and the head tells you. Rather email? <a class="ln" href="mailto:davidliu8473@gmail.com" aria-label="Email">davidliu8473@gmail.com</a></p>
 '''
 write('messages/index.html', page('/messages/', 'Messages', 'Message David Liu directly. It goes to his phone, and his replies show up here.', messages, 'messages', cls='messages'))
+
+
+# ---- Penguin lab (temporary, unlisted) -------------------------------------------
+# Where I record my seven Penguin Rally race maps: each map keeps my path and
+# timing, I can redo any of them, and the download becomes
+# hobbies/lumosity/penguin-david.json, which the races replay against visitors.
+
+lab = f'''      <header class="doc-head">
+        <div>
+          <h1>Penguin lab</h1>
+          <p class="hint">Temporary, just for recording. Seven race maps in a row. Each one records your path and how fast you walked it. Redo any map you mess up (R), keep it with Enter. At the end, download the file and send it to Claude.</p>
+        </div>
+      </header>
+      <div class="play" data-play="penguin" data-record data-v="{V_PIECE}"><p class="piece-note">Loading the lab...</p></div>
+'''
+html = page('/lab/penguin/', 'Penguin lab', 'Recording Penguin Rally race maps.', lab, '', cls='lab')
+write('lab/penguin/index.html', html.replace('  <link rel="canonical"', '  <meta name="robots" content="noindex, nofollow">\n  <link rel="canonical"', 1))
 
 
 # ---- Brain ----------------------------------------------------------------------

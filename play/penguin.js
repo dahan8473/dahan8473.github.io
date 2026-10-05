@@ -24,17 +24,26 @@ const C = 10; // cell size in board units
 const DR = [-1, 0, 1, 0]; // north, east, south, west (board frame)
 const DC = [0, 1, 0, -1];
 
-// The session. Trials are fresh mazes each time; races are fixed by seed.
-// spin: ms between mid-maze turns. Rival (no recording yet): base is ms per
-// shortest-path step, err the chance of a wrong turn at a junction.
-const PLAN = [
+// The session: two time trials (fresh mazes each time), then three races.
+// Races come from a pool of seven fixed maps, one from each size tier in
+// order, so the race gets harder each time and the session changes game to
+// game; maps I've recorded are picked first. spin: ms between mid-maze turns.
+// Rival (no recording yet): base is ms per shortest-path step, err the chance
+// of a wrong turn at a junction.
+const TRIALS = [
   { n: 5, kind: 'trial' },
-  { n: 6, kind: 'trial', turned: true },
-  { n: 7, kind: 'race', seed: 7101, spin: 7000, base: 560, err: 0.15 },
-  { n: 8, kind: 'race', seed: 8202, spin: 6000, base: 500, err: 0.1 },
-  { n: 9, kind: 'race', seed: 9303, spin: 5000, base: 450, err: 0.05 }
+  { n: 6, kind: 'trial', turned: true }
 ];
-const RACES = PLAN.filter((p) => p.kind === 'race').length;
+const POOL = [
+  { seed: 7101, n: 7, spin: 7000, base: 560, err: 0.15 },
+  { seed: 7202, n: 7, spin: 7000, base: 560, err: 0.15 },
+  { seed: 8202, n: 8, spin: 6000, base: 500, err: 0.1 },
+  { seed: 8303, n: 8, spin: 6000, base: 500, err: 0.1 },
+  { seed: 8404, n: 8, spin: 5500, base: 500, err: 0.1 },
+  { seed: 9303, n: 9, spin: 5000, base: 450, err: 0.05 },
+  { seed: 9404, n: 9, spin: 5000, base: 450, err: 0.05 }
+].map((p) => Object.assign({ kind: 'race' }, p));
+const RACES = 3;
 const GHOST_URL = '/hobbies/lumosity/penguin-david.json';
 
 // Small seeded generator (mulberry32), so a race is the same maze for everyone.
@@ -94,6 +103,7 @@ const CSS = `
 .ppg-clock.late i { background: ${ARROW}; }
 .ppg-clock.off { visibility: hidden; }
 .ppg-rec { margin: 0 0 10px; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, ${ARROW} 16%, var(--fill)); color: var(--t1); }
+.ppg-recrow { justify-content: center; margin-top: 10px; }
 .ppg-wall { fill: none; stroke: color-mix(in srgb, ${ICE} 45%, var(--t1)); stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 520px) { .ppg-panel { padding: 18px; } }
 `;
@@ -478,7 +488,7 @@ export function mount(el) {
     const mine = readBest();
     const buttons = [['ppg-btn', 'Play', () => (tutDone() ? startSession() : showTut(0))]];
     if (tutDone()) buttons.push(['ppg-link', 'How to play', () => showTut(0)]);
-    const raced = PLAN.some((p) => ghostFor(p));
+    const raced = POOL.some((p) => ghostFor(p));
     const rows = [davidLine(), line('Your best', mine ? String(mine) : 'not set yet')];
     if (recording) rows.push(line('Recording mode: your races become the ghost.', null, 'say'));
     const box = panel('Trains spatial orientation: the board turns, and Up always means toward the orange arrow. '
@@ -538,9 +548,10 @@ export function mount(el) {
   }
 
   // ---- Play ----
-  // Recording mode (#record-penguin): races run solo and my steps are kept,
-  // to download at the end as penguin-david.json.
-  const recording = /record-penguin/.test(location.hash);
+  // Recording mode (the lab page, data-record, or #record-penguin): all seven
+  // race maps in order, solo, my steps and their timing kept; after each map I
+  // can redo it or go on, and at the end download penguin-david.json.
+  const recording = el.hasAttribute('data-record') || /record-penguin/.test(location.hash);
   let ghosts = {}; // seed -> { start, time, steps: [[ms, cell], ...] }
   fetch(GHOST_URL, { signal: ac.signal, cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : {}))
@@ -550,6 +561,17 @@ export function mount(el) {
     const g = !recording && cfg.seed && ghosts[cfg.seed];
     return g && Array.isArray(g.steps) && g.steps.length && g.n === cfg.n ? g : null;
   };
+
+  // One race from each size tier, smallest first; recorded maps first.
+  function makePlan() {
+    if (recording) return POOL.slice();
+    const races = [7, 8, 9].map((n) => {
+      const tier = POOL.filter((p) => p.n === n);
+      const mine = tier.filter((p) => ghostFor(p));
+      return pick(mine.length ? mine : tier);
+    });
+    return TRIALS.concat(races);
+  }
 
   let G = null;
   function startSession() {
@@ -564,7 +586,7 @@ export function mount(el) {
     box.append(hud, clock);
     view(box, true);
     const ui = stage(box);
-    const g = G = { i: -1, total: 0, wins: 0, ui, hMaze, hScore, hTime, clock, shownT: '', rec: {} };
+    const g = G = { i: -1, total: 0, wins: 0, ui, hMaze, hScore, hTime, clock, shownT: '', rec: {}, plan: makePlan() };
     G.hScore.innerHTML = 'Score <span>0</span>';
     if (root.getBoundingClientRect().top < 0 || root.getBoundingClientRect().bottom > innerHeight) {
       root.scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
@@ -579,8 +601,8 @@ export function mount(el) {
 
   function nextMaze() {
     G.i++;
-    if (G.i >= PLAN.length) return showResults();
-    const cfg = PLAN[G.i];
+    if (G.i >= G.plan.length) return showResults();
+    const cfg = G.plan[G.i];
     const race = cfg.kind === 'race';
     // A race draws everything from its seed: maze, start corner, every turn.
     const rnd = race ? seeded(cfg.seed) : Math.random;
@@ -606,15 +628,17 @@ export function mount(el) {
     G.me = board.add(['var(--ppg-me)', ICE, race && (ghost || G.rivals.length) ? 'You' : '', 0], start);
     G.par = 3 + G.dStart * 0.55;
     if (cfg.turned || race) turnTo(board, true, rnd);
-    G.hMaze.innerHTML = `${race ? 'Race' : 'Time trial'} <span>${race ? PLAN.slice(0, G.i + 1).filter((p) => p.kind === 'race').length : G.i + 1}</span> of ${race ? RACES : PLAN.length - RACES}`;
+    const races = G.plan.filter((p) => p.kind === 'race').length;
+    G.hMaze.innerHTML = recording ? `Map <span>${G.i + 1}</span> of ${G.plan.length}`
+      : `${race ? 'Race' : 'Time trial'} <span>${race ? G.plan.slice(0, G.i + 1).filter((p) => p.kind === 'race').length : G.i + 1}</span> of ${race ? races : G.plan.length - races}`;
     G.hTime.innerHTML = '<span>0.0</span>s';
     G.clock.classList.toggle('off', race);
     G.clock.classList.remove('late');
     G.clock.firstChild.style.transform = 'scaleX(1)';
-    const kind = race ? (ghost ? 'Race against David' : recording ? 'Race (recording)' : 'Race') : 'Time trial';
+    const kind = recording ? `Map ${G.i + 1}: ${n}x${n}` : race ? (ghost ? 'Race against David' : 'Race') : 'Time trial';
     G.ui.flag(kind, 0);
     G.ui.line.textContent = race
-      ? (ghost ? 'Same maze I raced. Beat my penguin to the fish.' : recording ? 'Recording this one. Go fast.' : 'Beat the other penguin to the fish.')
+      ? (ghost ? 'Same maze I raced. Beat my penguin to the fish.' : recording ? 'Recording. Go as fast as you can.' : 'Beat the other penguin to the fish.')
       : (cfg.turned ? 'The board is turned. Up is still toward the orange arrow.' : 'Get to the fish before the bar runs out for a bonus.');
     later(() => {
       G.phase = 'go';
@@ -710,7 +734,35 @@ export function mount(el) {
     G.hScore.innerHTML = `Score <span>${G.total}</span>`;
     G.ui.line.textContent = `${line} +${pts}`;
     G.ui.flag(how === 'win' ? `+${pts}` : 'So close', 0);
+    if (recording) { recordedChoice(t); return; }
     later(nextMaze, 2400);
+  }
+
+  // Recording: keep this run, or throw it away and walk the map again.
+  function recordedChoice(t) {
+    const g = G;
+    const row = h('div', 'ppg-row ppg-recrow');
+    const next = h('button', 'ppg-btn', G.i + 1 < G.plan.length ? 'Keep it, next map' : 'Keep it, finish');
+    const redo = h('button', 'ppg-link', 'Redo this map');
+    next.type = redo.type = 'button';
+    row.append(next, redo);
+    G.ui.line.textContent = `Map ${G.i + 1}: ${t.toFixed(2)}s, ${G.steps.length} steps.`;
+    G.ui.line.after(row);
+    let used = false;
+    const go = (again) => {
+      if (G !== g || used) return;
+      used = true;
+      row.remove();
+      off();
+      if (again) { delete G.rec[G.cfg.seed]; G.i--; }
+      nextMaze();
+    };
+    const onKey = (e) => { if (e.key === 'Enter') go(false); else if (e.key.toLowerCase() === 'r') go(true); };
+    const off = () => window.removeEventListener('keydown', onKey);
+    on(next, 'click', () => go(false));
+    on(redo, 'click', () => go(true));
+    window.addEventListener('keydown', onKey);
+    next.focus({ preventScroll: true });
   }
 
   // Tab hidden mid-maze: the clock, the rivals and my recording wait.
@@ -733,7 +785,7 @@ export function mount(el) {
     const prev = readBest();
     const best = Math.max(prev, score);
     if (score > prev && !recording) store(KEY_BEST, score);
-    const vsDavid = PLAN.some((p) => ghostFor(p));
+    const vsDavid = G.plan.some((p) => ghostFor(p));
     const rows = [line('Score', String(score))];
     if (!recording) rows.push(line(vsDavid ? 'Races against David' : 'Races won', vsDavid ? `won ${G.wins} of ${RACES}` : `${G.wins} of ${RACES}`));
     rows.push(line('Your best', String(best)), davidLine());
@@ -741,19 +793,24 @@ export function mount(el) {
     else if (score > prev && prev) rows.push(line('New personal best.', null, 'say'));
     const buttons = [['ppg-btn', 'Play again', startSession]];
     if (recording) {
-      const n = Object.keys(G.rec).length;
-      rows.push(line(`Recorded ${n} of ${RACES} races.`, null, 'say'));
       const rec = G.rec;
-      buttons.push(['ppg-link', 'Download recording', () => {
-        const merged = { _how: 'My penguin in each race, by seed: start corner, finish time (s) and every step as [ms since go, cell]. Made with #record-penguin.', races: Object.assign({}, ghosts, rec) };
+      rows.length = 0;
+      G.plan.forEach((p, k) => rows.push(line(`Map ${k + 1} (${p.n}x${p.n})`, rec[p.seed] ? `${rec[p.seed].time.toFixed(2)}s, ${rec[p.seed].steps.length} steps` : 'not recorded')));
+      rows.push(line('Download the file and send it to Claude. These become the races.', null, 'say'));
+      const json = () => JSON.stringify({ _how: 'My penguin on each race map, by seed: size, start corner, finish time (s) and every step as [ms since go, cell]. Recorded on /lab/penguin/.', races: Object.assign({}, ghosts, rec) });
+      buttons.length = 0;
+      buttons.push(['ppg-btn', 'Download recording', () => {
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([JSON.stringify(merged)], { type: 'application/json' }));
+        a.href = URL.createObjectURL(new Blob([json()], { type: 'application/json' }));
         a.download = 'penguin-david.json';
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      }]);
+      }], ['ppg-link', 'Copy it instead', (e) => {
+        const b = e.currentTarget;
+        navigator.clipboard.writeText(json()).then(() => { b.textContent = 'Copied'; }, () => { b.textContent = 'Copy failed, use Download'; });
+      }], ['ppg-link', 'Record again', startSession]);
     }
-    const box = panel(`${PLAN.length - RACES} time trials and ${RACES} races done.`, rows, buttons);
+    const box = panel(recording ? 'All seven maps done.' : 'Two time trials and three races done.', rows, buttons);
     view(box, false);
     G = null;
     window.dispatchEvent(new CustomEvent('dl:lumo', { detail: { game: 'penguin', score, best, david: typeof david === 'number' ? david : null } }));

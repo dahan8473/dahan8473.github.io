@@ -373,5 +373,10 @@
     "page": "/hobbies/lumosity/",
     "sel": "[data-t='lumosity']",
     "about": "Lumosity page: my own versions of my three favourite Lumosity games (Pinball Recall, Ebb and Flow, Penguin Rally), each with a quick tutorial and my best score to beat"
+  },
+  "horror": {
+    "page": "/hobbies/horror/",
+    "sel": "[data-t='horror']",
+    "about": "Horror page: any genre, a love-hate thing. I like getting creeped out once in a while, just not too much"
   }
 }

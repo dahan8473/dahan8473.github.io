@@ -6,8 +6,8 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 36, 11, 30, 35
-V_PIECE = 23  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 37, 12, 31, 36
+V_PIECE = 24  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -418,7 +418,8 @@ GROUPS = [
   ('Mind', [
     ('travel', 'Travel', 'China, Europe, Canada coast to coast, the US, Seoul.', None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
-  ], [('chess', 'Chess'), ('video', 'Video production')]),
+    ('lumosity', 'Lumosity', 'Every morning, religiously. Play my three favourites and try to beat me.', None),
+  ], [('chess', 'Chess'), ('video', 'Video production'), ('horror', 'Horror')]),
   ('Soul', [
     ('meowmeow', 'Meowmeow', 'My cat. Always chudding around.', '/media/life/meowmeow-sleep.webp'),
     ('guitar', 'Classical guitar', 'Competed nationally, played Carnegie Hall. Four recordings.', None),
@@ -450,6 +451,7 @@ PICS = {
   'meowmeow': ('/media/life/meowmeow-sleep.webp', 'photo', 'Meowmeow asleep in a beanbag'),
   'guitar': ('/media/tiles/guitar.webp', 'cut', 'A classical guitar'),
   'photography': ('/media/tiles/cameras.webp', 'cut', 'A Fujifilm X-T200 and a Sony A7R II'),
+  'lumosity': ('/media/tiles/lumosity.svg', 'cut', 'A Pinball Recall board'),
 }
 for label, rows, more in GROUPS:
     hob += f'        <section class="hob-group {label.lower()}">\n          <header class="hob-gh"><h2>{label}</h2><p>{GROUP_LINE.get(label, "")}</p></header>\n          <div class="hob-cards">\n'
@@ -548,6 +550,9 @@ hobby('chess', 'Chess', "I played competitively all through elementary school, u
   ], None),
 ], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
+hobby('lumosity', 'Lumosity', 'I love brain teaser games, and I religiously start every morning with my daily Lumosity. These are my own versions of my three favourites. Quick tutorial, then try to beat my best.', [
+], shot=piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...'))
+hobby('horror', 'Horror', "Any genre. It's a love-hate thing: I like getting creeped out once in a while, just not too much.", [])
 hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
   ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),

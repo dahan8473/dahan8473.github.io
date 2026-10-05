@@ -1,9 +1,13 @@
 // Pinball Recall: a working-memory game for the Lumosity page. A grid of
 // diagonal bumpers shows for a few seconds, then hides, and only then does the
 // arrow show where the ball rolls in. It turns 90 degrees at every bumper; call
-// the edge it comes out of. 12 boards. Two right in a row moves you up a level,
-// a miss drops you one, and every level is a bigger grid with more bumpers.
-// From level 3 some bumpers carry a ring: they flip after the ball hits them.
+// the edge it comes out of. 12 boards. Like Lumosity's: a right answer moves
+// you up a level, one miss keeps you there, two in a row drop you one, and a
+// level is worth level squared x 10. Difficulty climbs a step at a time (one
+// more bumper per level; the grid grows only once it fills up, the way the
+// open-source clone does it), up to 22 levels. From level 9 some bumpers carry
+// a ring: they flip after the ball hits them. The next game starts two levels
+// under where the last one ended.
 //   <div class="play" data-play="pinball" data-v="N">
 // David's best comes from /hobbies/lumosity/best.json (key pinball). The
 // visitor's best lives in localStorage, and a finished run fires dl:lumo on window.
@@ -14,7 +18,8 @@ const CSS_ID = 'play-pinball-css';
 const KEY = 'dl-lumo-pinball';
 const TUT_KEY = 'dl-lumo-pinball-tut';
 const BOARDS = 12;
-const MAX_LEVEL = 10;
+const MAX_LEVEL = 22;
+const KEY_LVL = 'dl-lumo-pinball-level';
 const DR = [-1, 0, 1, 0]; // up, right, down, left
 const DC = [0, 1, 0, -1];
 const SIDES = ['top', 'right', 'bottom', 'left'];
@@ -202,17 +207,27 @@ function trace(board) {
   return { steps, exit: slotAt(n, r, c), hits, flipHits, flipBack };
 }
 
-// Level 1 is 4x4 and every level adds a row and a column, up to 12x12.
-const sizeFor = (level) => Math.min(12, 3 + level);
-const studyFor = (level) => (level === 1 ? 0 : Math.max(2400, 4500 - 200 * (level - 2)));
+// The ladder: [grid size, bumpers] per level. Four levels on each grid, a
+// bumper more each time; a bigger grid starts with one bumper fewer than the
+// last level of the smaller one, so the step up is the grid, not the count.
+const LADDER = [
+  [4, 3], [4, 4], [4, 5], [4, 6],
+  [5, 5], [5, 6], [5, 7], [5, 8],
+  [6, 7], [6, 8], [6, 9], [6, 10],
+  [7, 9], [7, 10], [7, 11], [7, 12],
+  [8, 11], [8, 12], [8, 13], [8, 14],
+  [9, 13], [9, 15]
+];
+const sizeFor = (level) => LADDER[Math.min(level, MAX_LEVEL) - 1][0];
+// Memorize time grows with the bumpers, a little less per level as you climb.
+const studyFor = (level) => 2600 + 160 * LADDER[level - 1][1] - 40 * level;
 
-// Random boards until one is worth playing: enough bounces, a flip that gets
-// hit once flips exist, and from level 5 one the ball comes back to.
+// Random boards until one is worth playing: the ball hits enough bumpers, and
+// once ring bumpers exist, at least one of them.
 function generate(level) {
-  const n = sizeFor(level);
-  const count = Math.min(Math.round(n * n * 0.4), 3 + 2 * level);
-  const flips = level < 3 ? 0 : Math.min(4, 1 + Math.floor((level - 3) / 2));
-  const need = Math.min(1 + level, 7);
+  const [n, count] = LADDER[Math.min(level, MAX_LEVEL) - 1];
+  const flips = level < 9 ? 0 : Math.min(3, 1 + Math.floor((level - 9) / 5));
+  const need = Math.min(2 + Math.floor((level - 1) / 3), 6);
   const rnd = (k) => Math.floor(Math.random() * k);
   let spare = null;
   for (let tries = 0; tries < 800; tries++) {
@@ -227,7 +242,7 @@ function generate(level) {
     if (!t || (t.exit.side === board.start.side && t.exit.i === board.start.i)) continue;
     if (!spare && t.hits) spare = board;
     if (t.hits < need || (flips && !t.flipHits)) continue;
-    if (level >= 5 && tries < 400 && !t.flipBack) continue;
+    if (level >= 14 && tries < 400 && !t.flipBack) continue;
     return board;
   }
   return spare;
@@ -476,9 +491,11 @@ export function mount(el) {
 
   // ---- Play ----------------------------------------------------------------
   function play() {
-    const g = { level: 1, streak: 0, round: 0, score: 0, bd: null, answering: false };
+    let startAt = 1;
+    try { startAt = Math.max(1, Math.min(MAX_LEVEL, (parseInt(localStorage.getItem(KEY_LVL), 10) || 1) - 2)); } catch (e) {}
+    const g = { level: startAt, miss: 0, round: 0, score: 0, bd: null, answering: false };
     const wrap = h('div');
-    wrap.innerHTML = `<div class="ppb-top"><span>Board <b class="rd">1</b> of ${BOARDS}</span><span>Level <b class="lv">1</b></span>
+    wrap.innerHTML = `<div class="ppb-top"><span>Board <b class="rd">1</b> of ${BOARDS}</span><span>Level <b class="lv">${g.level}</b></span>
       <span class="end"><span>Score <b class="sc">0</b></span><button class="ppb-x" type="button" aria-label="Stop">${X}</button></span></div>
       <div class="ppb-timer off"><i></i></div><div class="ppb-slotboard"></div><p class="ppb-msg" aria-live="polite"></p>`;
     const q = (s) => wrap.querySelector(s);
@@ -488,7 +505,7 @@ export function mount(el) {
     game = g;
 
     const round = () => {
-      if (g.round >= BOARDS) { results(g.score); return; }
+      if (g.round >= BOARDS) { try { localStorage.setItem(KEY_LVL, String(g.level)); } catch (e) {} results(g.score); return; }
       g.round++;
       q('.rd').textContent = g.round;
       q('.lv').textContent = g.level;
@@ -507,9 +524,9 @@ export function mount(el) {
       let t0 = 0;
       const ask = () => {
         bar.classList.add('off');
-        bd.hide(level > 1);
+        bd.hide(true);
         bd.study(false);
-        msg.textContent = level > 1 ? 'Where does it come out? Tap the edge.' : 'Where does the ball come out? Tap the edge.';
+        msg.textContent = 'Where does the ball come out? Tap the edge.';
         t0 = performance.now();
         g.answering = true;
         bd.arm((s) => {
@@ -524,19 +541,19 @@ export function mount(el) {
             // The board celebrates or shakes; the points float up off the exit.
             bd.el.classList.add(ok ? 'won' : 'lost');
             if (ok) {
-              const bonus = Math.round(25 * level * Math.min(1, Math.max(0, (7000 - ms) / 6000)));
-              const pts = 100 * level + bonus;
+              const pts = level * level * 10;
               g.score += pts;
               const fly = h('span', 'ppb-pts', '+' + fmt(pts));
               bd.slot(path.exit.side, path.exit.i).el.appendChild(fly);
               q('.sc').textContent = fmt(g.score);
-              g.streak++;
-              if (g.streak >= 2 && g.level < MAX_LEVEL) { g.level++; g.streak = 0; }
-              msg.innerHTML = '<b>Right.</b> +' + fmt(pts) + (bonus ? ' (speed +' + bonus + ')' : '') + (g.level > level ? '. Level up.' : '');
+              g.miss = 0;
+              if (g.level < MAX_LEVEL) g.level++;
+              msg.innerHTML = '<b>Right.</b> +' + fmt(pts) + (g.level > level ? '. Level ' + g.level + ' next.' : '');
             } else {
               s.el.classList.add('miss');
-              g.streak = 0;
-              g.level = Math.max(1, g.level - 1);
+              // One miss keeps the level; a second in a row drops it.
+              g.miss++;
+              if (g.miss >= 2) { g.level = Math.max(1, g.level - 1); g.miss = 0; }
               msg.innerHTML = 'Not this time. It comes out <b>here</b>.';
             }
             later(round, ok ? 1300 : 1900);

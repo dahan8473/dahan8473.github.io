@@ -2,9 +2,15 @@
 //   <div class="play" data-play="penguin" data-v="N">
 // Walk a penguin through a maze on an iceberg to the fish. Up always moves
 // toward the orange arrow painted on the board, and the board turns on screen,
-// so the controls have to be re-mapped on the fly. Five mazes: time trials and
-// races against penguins that follow the shortest path. Card, tutorial, play,
-// results. Scores: best.json has mine, localStorage keeps the visitor's.
+// so the controls have to be re-mapped on the fly. Like Lumosity's Penguin
+// Rally, a session is Time Trials, then Races: two trials against the clock
+// (bonus for every second under par, no hurry otherwise), then three races
+// against a recording of me on the same maze, my penguin walking it the way I
+// did, step for step. Race mazes, start corners and turns come from fixed seeds
+// so the recording always fits. Recordings: /hobbies/lumosity/penguin-david.json,
+// made by playing with #record-penguin on the page URL. Until a race has one,
+// it's a rival penguin that walks the shortest path with the odd wrong turn.
+// Card, tutorial, play, results. Scores: best.json has mine, localStorage the visitor's.
 
 import { countdown } from './countdown.js';
 
@@ -18,15 +24,30 @@ const C = 10; // cell size in board units
 const DR = [-1, 0, 1, 0]; // north, east, south, west (board frame)
 const DC = [0, 1, 0, -1];
 
-// The session. base: ms per shortest-path step a rival needs to match your
-// route; err: chance of a wrong turn at a junction; spin: ms between mid-maze turns.
+// The session. Trials are fresh mazes each time; races are fixed by seed.
+// spin: ms between mid-maze turns. Rival (no recording yet): base is ms per
+// shortest-path step, err the chance of a wrong turn at a junction.
 const PLAN = [
-  { n: 5, rivals: 0 },
-  { n: 6, rivals: 1, base: 650, err: 0.25 },
-  { n: 7, rivals: 0, spin: 6500 },
-  { n: 8, rivals: 2, base: 560, err: 0.12, spin: 6000 },
-  { n: 9, rivals: 2, base: 480, err: 0.05, spin: 5000 }
+  { n: 5, kind: 'trial' },
+  { n: 6, kind: 'trial', turned: true },
+  { n: 7, kind: 'race', seed: 7101, spin: 7000, base: 560, err: 0.15 },
+  { n: 8, kind: 'race', seed: 8202, spin: 6000, base: 500, err: 0.1 },
+  { n: 9, kind: 'race', seed: 9303, spin: 5000, base: 450, err: 0.05 }
 ];
+const RACES = PLAN.filter((p) => p.kind === 'race').length;
+const GHOST_URL = '/hobbies/lumosity/penguin-david.json';
+
+// Small seeded generator (mulberry32), so a race is the same maze for everyone.
+function seeded(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 const CSS = `
 .ppg { --ppg-me: #2e3440; max-width: 640px; }
@@ -67,6 +88,12 @@ const CSS = `
 .ppg-ice { fill: color-mix(in srgb, ${ICE} 30%, var(--bg)); }
 .ppg-floor { fill: color-mix(in srgb, ${ICE} 12%, var(--bg)); }
 .ppg-dot { fill: var(--rule); }
+.ppg-tag { font-size: 3.4px; font-weight: 600; fill: var(--t1); paint-order: stroke; stroke: var(--bg); stroke-width: 0.9px; stroke-linejoin: round; }
+.ppg-clock { height: 3px; margin: -4px 0 10px; border-radius: 2px; background: var(--rule); overflow: hidden; }
+.ppg-clock i { display: block; height: 100%; width: 100%; background: ${ICE}; transform-origin: left; transition: background 300ms ease; }
+.ppg-clock.late i { background: ${ARROW}; }
+.ppg-clock.off { visibility: hidden; }
+.ppg-rec { margin: 0 0 10px; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, ${ARROW} 16%, var(--fill)); color: var(--t1); }
 .ppg-wall { fill: none; stroke: color-mix(in srgb, ${ICE} 45%, var(--t1)); stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 520px) { .ppg-panel { padding: 18px; } }
 `;
@@ -101,7 +128,7 @@ function sv(tag, attrs, parent) {
   return n;
 }
 
-const pick = (a) => a[(Math.random() * a.length) | 0];
+const pick = (a, rnd = Math.random) => a[(rnd() * a.length) | 0];
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const touchy = () => window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
@@ -114,10 +141,10 @@ function tutDone() { try { return localStorage.getItem(KEY_TUT) === '1'; } catch
 // ---- Maze ----------------------------------------------------------------------
 // open[cell] has bit d set when you can walk from that cell in direction d.
 
-function genMaze(n) {
+function genMaze(n, rnd = Math.random) {
   const open = new Uint8Array(n * n);
   const seen = new Uint8Array(n * n);
-  const stack = [(Math.random() * n * n) | 0];
+  const stack = [(rnd() * n * n) | 0];
   seen[stack[0]] = 1;
   while (stack.length) {
     const c = stack[stack.length - 1];
@@ -128,7 +155,7 @@ function genMaze(n) {
       if (nr >= 0 && nr < n && nk >= 0 && nk < n && !seen[nr * n + nk]) opts.push(d);
     }
     if (!opts.length) { stack.pop(); continue; }
-    const d = pick(opts);
+    const d = pick(opts, rnd);
     const x = (r + DR[d]) * n + k + DC[d];
     open[c] |= 1 << d;
     open[x] |= 1 << ((d + 2) % 4);
@@ -234,12 +261,18 @@ function makeBoard() {
       }
       sv('path', { class: 'ppg-wall', d, 'stroke-width': S * 0.016 }, ground);
     },
-    // kind: 'fish', or a penguin as [body, scarf].
+    // kind: 'fish', or a penguin as [body, scarf, label, opacity]. A label
+    // rides above it, upright like the penguin.
     add(kind, cell, scale) {
       const g = sv('g', {}, top);
       const inner = sv('g', {}, g);
       const art = sv('g', { transform: `scale(${scale || 1})` }, inner);
       if (kind === 'fish') fish(art); else penguin(art, kind[0], kind[1]);
+      if (kind !== 'fish' && kind[2]) {
+        const t = sv('text', { class: 'ppg-tag', y: -6.6 * (scale || 1), 'text-anchor': 'middle' }, inner);
+        t.textContent = kind[2];
+      }
+      if (kind !== 'fish' && kind[3]) g.setAttribute('opacity', kind[3]);
       const [x, y] = center(cell);
       g.setAttribute('transform', `translate(${x} ${y})`);
       const sp = { g, inner, x, y, fx: x, fy: y, tx: x, ty: y, t0: 0, bump: -1, bt: 0 };
@@ -281,11 +314,11 @@ function makeBoard() {
 }
 
 // A new on-screen orientation (0-3 quarter turns), the short way round.
-function turnTo(board, avoidZero) {
+function turnTo(board, avoidZero, rnd = Math.random) {
   const now = (((Math.round(board.rot / 90)) % 4) + 4) % 4;
   const opts = [0, 1, 2, 3].filter((o) => o !== now && !(avoidZero && o === 0));
-  const diff = (pick(opts) - now + 4) % 4;
-  board.turn(board.rot + (diff === 3 ? -90 : diff === 2 ? pick([180, -180]) : 90));
+  const diff = (pick(opts, rnd) - now + 4) % 4;
+  board.turn(board.rot + (diff === 3 ? -90 : diff === 2 ? pick([180, -180], rnd) : 90));
 }
 
 const CHEV = ['M5 15l7-7 7 7', 'M9 5l7 7-7 7', 'M5 9l7 7 7-7', 'M15 5l-7 7 7 7'];
@@ -445,8 +478,12 @@ export function mount(el) {
     const mine = readBest();
     const buttons = [['ppg-btn', 'Play', () => (tutDone() ? startSession() : showTut(0))]];
     if (tutDone()) buttons.push(['ppg-link', 'How to play', () => showTut(0)]);
-    const box = panel('Trains spatial orientation: the board turns, and Up always means toward the orange arrow.',
-      [davidLine(), line('Your best', mine ? String(mine) : 'not set yet')], buttons);
+    const raced = PLAN.some((p) => ghostFor(p));
+    const rows = [davidLine(), line('Your best', mine ? String(mine) : 'not set yet')];
+    if (recording) rows.push(line('Recording mode: your races become the ghost.', null, 'say'));
+    const box = panel('Trains spatial orientation: the board turns, and Up always means toward the orange arrow. '
+      + (raced ? 'Two time trials, then three races against my penguin, replaying how I actually played them.' : 'Two time trials, then three races.'),
+      rows, buttons);
     // The Lumosity page lays the three cards out in a row (styles.css .lumo-games).
     box.dataset.lumoCard = '';
     view(box, false);
@@ -501,17 +538,33 @@ export function mount(el) {
   }
 
   // ---- Play ----
+  // Recording mode (#record-penguin): races run solo and my steps are kept,
+  // to download at the end as penguin-david.json.
+  const recording = /record-penguin/.test(location.hash);
+  let ghosts = {}; // seed -> { start, time, steps: [[ms, cell], ...] }
+  fetch(GHOST_URL, { signal: ac.signal, cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : {}))
+    .then((j) => { ghosts = (j && j.races) || {}; if (state === 'card') showCard(); })
+    .catch(() => {});
+  const ghostFor = (cfg) => {
+    const g = !recording && cfg.seed && ghosts[cfg.seed];
+    return g && Array.isArray(g.steps) && g.steps.length && g.n === cfg.n ? g : null;
+  };
+
   let G = null;
   function startSession() {
     state = 'play';
     const box = h('div', 'ppg-game');
+    if (recording) box.appendChild(h('p', 'ppg-rec', 'Recording: your races will be saved as the ghost.'));
     const hud = h('div', 'ppg-hud');
     const hMaze = h('span'), hScore = h('span'), hTime = h('span');
     hud.append(hMaze, hScore, hTime);
-    box.appendChild(hud);
+    const clock = h('div', 'ppg-clock off');
+    clock.appendChild(h('i'));
+    box.append(hud, clock);
     view(box, true);
     const ui = stage(box);
-    const g = G = { i: -1, total: 0, wins: 0, ui, hMaze, hScore, hTime, shownT: '' };
+    const g = G = { i: -1, total: 0, wins: 0, ui, hMaze, hScore, hTime, clock, shownT: '', rec: {} };
     G.hScore.innerHTML = 'Score <span>0</span>';
     if (root.getBoundingClientRect().top < 0 || root.getBoundingClientRect().bottom > innerHeight) {
       root.scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
@@ -528,29 +581,41 @@ export function mount(el) {
     G.i++;
     if (G.i >= PLAN.length) return showResults();
     const cfg = PLAN[G.i];
+    const race = cfg.kind === 'race';
+    // A race draws everything from its seed: maze, start corner, every turn.
+    const rnd = race ? seeded(cfg.seed) : Math.random;
     const n = cfg.n;
-    const m = genMaze(n);
+    const m = genMaze(n, rnd);
     const fishAt = (n >> 1) * n + (n >> 1);
-    const corners = [0, n - 1, n * (n - 1), n * n - 1].sort(() => Math.random() - 0.5);
+    const corners = [0, n - 1, n * (n - 1), n * n - 1];
+    const start = corners[(rnd() * 4) | 0];
     const dist = distances(m, fishAt);
-    Object.assign(G, { cfg, m, fishAt, dist, phase: 'ready', cell: corners[0], dStart: dist[corners[0]], t0: 0, hiddenAt: 0 });
+    const ghost = race ? ghostFor(cfg) : null;
+    Object.assign(G, { cfg, race, rnd, m, fishAt, dist, ghost, phase: 'ready', cell: start, start, dStart: dist[start], t0: 0, hiddenAt: 0, steps: [], gi: 0 });
     board.setMaze(m);
     board.add('fish', fishAt);
-    const tints = ['#8f9bb3', '#b48ead'];
     G.rivals = [];
-    for (let r = 0; r < cfg.rivals; r++) {
-      const c = corners[r + 1];
-      G.rivals.push({ cell: c, prev: -1, stray: 0, due: 0, sp: board.add([tints[r], null], c, 0.9), every: cfg.base * G.dStart / dist[c] });
+    if (race && ghost) {
+      // My penguin, walking the race the way I did, from the same corner.
+      G.ghostSp = board.add(['#5e81ac', '#ebcb8b', 'David', 0.8], start, 0.92);
+      G.ghostCell = start;
+    } else if (race && !recording) {
+      const other = corners.filter((c) => c !== start)[(rnd() * 3) | 0];
+      G.rivals.push({ cell: other, prev: -1, stray: 0, due: 0, sp: board.add(['#8f9bb3', null], other, 0.9), every: cfg.base * G.dStart / Math.max(1, dist[other]) });
     }
-    G.me = board.add(['var(--ppg-me)', ICE], G.cell);
-    G.cap = 20 + G.dStart * 2;
+    G.me = board.add(['var(--ppg-me)', ICE, race && (ghost || G.rivals.length) ? 'You' : '', 0], start);
     G.par = 3 + G.dStart * 0.55;
-    if (G.i > 0) turnTo(board, true);
-    G.hMaze.innerHTML = `Maze <span>${G.i + 1}</span> of 5`;
+    if (cfg.turned || race) turnTo(board, true, rnd);
+    G.hMaze.innerHTML = `${race ? 'Race' : 'Time trial'} <span>${race ? PLAN.slice(0, G.i + 1).filter((p) => p.kind === 'race').length : G.i + 1}</span> of ${race ? RACES : PLAN.length - RACES}`;
     G.hTime.innerHTML = '<span>0.0</span>s';
-    const kind = cfg.rivals ? `Race against ${cfg.rivals > 1 ? 'two penguins' : 'one penguin'}` : 'Time trial';
+    G.clock.classList.toggle('off', race);
+    G.clock.classList.remove('late');
+    G.clock.firstChild.style.transform = 'scaleX(1)';
+    const kind = race ? (ghost ? 'Race against David' : recording ? 'Race (recording)' : 'Race') : 'Time trial';
     G.ui.flag(kind, 0);
-    G.ui.line.textContent = cfg.spin && G.i === 2 ? 'This one turns while you walk.' : cfg.rivals ? 'Beat them to the fish.' : 'Get to the fish fast.';
+    G.ui.line.textContent = race
+      ? (ghost ? 'Same maze I raced. Beat my penguin to the fish.' : recording ? 'Recording this one. Go fast.' : 'Beat the other penguin to the fish.')
+      : (cfg.turned ? 'The board is turned. Up is still toward the orange arrow.' : 'Get to the fish before the bar runs out for a bonus.');
     later(() => {
       G.phase = 'go';
       G.t0 = performance.now();
@@ -565,6 +630,7 @@ export function mount(el) {
     if (!(G.m.open[G.cell] >> d & 1)) { board.bump(G.me, d); return; }
     G.cell = stepOf(G.m, G.cell, d);
     board.put(G.me, G.cell);
+    if (G.race) G.steps.push([Math.round(performance.now() - G.t0), G.cell]);
     if (G.cell === G.fishAt) finish('win');
   }
 
@@ -589,15 +655,30 @@ export function mount(el) {
 
   function tick(now) {
     if (!G || G.phase !== 'go') return;
-    const t = (now - G.t0) / 1000;
+    const ms = now - G.t0;
+    const t = ms / 1000;
     const shown = t.toFixed(1);
     if (shown !== G.shownT) { G.shownT = shown; G.hTime.firstChild.textContent = shown; }
+    if (!G.race) {
+      const left = Math.max(0, 1 - t / G.par);
+      G.clock.firstChild.style.transform = `scaleX(${left})`;
+      G.clock.classList.toggle('late', left <= 0);
+    }
+    // My recorded steps, at the times I took them.
+    if (G.ghost) {
+      const st = G.ghost.steps;
+      while (G.gi < st.length && st[G.gi][0] <= ms) {
+        G.ghostCell = st[G.gi][1];
+        board.put(G.ghostSp, G.ghostCell);
+        G.gi++;
+        if (G.ghostCell === G.fishAt) { finish('lost'); return; }
+      }
+    }
     for (const rv of G.rivals) {
       while (G.phase === 'go' && now >= rv.due) { rivalStep(rv); rv.due += rv.every; }
     }
     if (G.phase !== 'go') return;
-    if (G.cfg.spin && now >= G.spinDue) { turnTo(board, false); G.spinDue = now + G.cfg.spin; }
-    if (!G.cfg.rivals && t >= G.cap) finish('time');
+    if (G.cfg.spin && now >= G.spinDue) { turnTo(board, false, G.rnd); G.spinDue += G.cfg.spin; }
   }
 
   function finish(how) {
@@ -608,25 +689,31 @@ export function mount(el) {
     stopHold();
     let pts, line;
     if (how === 'win') {
-      pts = base + Math.round(Math.max(0, G.par - t) * 25);
-      if (cfg.rivals) {
-        pts += 100 * cfg.rivals;
-        G.wins++;
-        line = `You beat ${cfg.rivals > 1 ? 'both penguins' : 'the other penguin'} in ${t.toFixed(1)}s.`;
-      } else line = `Fish in ${t.toFixed(1)}s.`;
+      if (G.race) {
+        const theirs = G.ghost ? G.ghost.time : null;
+        const ahead = theirs != null ? Math.max(0, theirs - t) : 0;
+        pts = base + 150 + Math.round(ahead * 20);
+        if (G.ghost || G.rivals.length) G.wins++;
+        line = G.ghost ? `You beat David by ${ahead.toFixed(1)}s.` : G.rivals.length ? `You beat the other penguin in ${t.toFixed(1)}s.` : `Fish in ${t.toFixed(1)}s.`;
+        if (recording) G.rec[cfg.seed] = { n: cfg.n, start: G.start, time: Math.round(t * 100) / 100, steps: G.steps };
+      } else {
+        const spare = Math.max(0, G.par - t);
+        pts = base + Math.round(spare * 25);
+        line = spare > 0 ? `Fish in ${t.toFixed(1)}s, ${spare.toFixed(1)}s under par.` : `Fish in ${t.toFixed(1)}s.`;
+      }
     } else {
       const got = Math.max(0, 1 - G.dist[G.cell] / G.dStart);
       pts = Math.round(base * (0.15 + 0.35 * got));
-      line = how === 'time' ? 'Out of time.' : 'Another penguin got there first.';
+      line = G.ghost ? `David got there first, in ${G.ghost.time.toFixed(1)}s.` : 'The other penguin got there first.';
     }
     G.total += pts;
     G.hScore.innerHTML = `Score <span>${G.total}</span>`;
     G.ui.line.textContent = `${line} +${pts}`;
-    G.ui.flag(`+${pts}`, 0);
-    later(nextMaze, 2200);
+    G.ui.flag(how === 'win' ? `+${pts}` : 'So close', 0);
+    later(nextMaze, 2400);
   }
 
-  // Tab hidden mid-maze: the clock and the rivals wait.
+  // Tab hidden mid-maze: the clock, the rivals and my recording wait.
   on(document, 'visibilitychange', () => {
     if (!G || state !== 'play' || G.phase !== 'go') return;
     const now = performance.now();
@@ -645,12 +732,28 @@ export function mount(el) {
     const score = G.total;
     const prev = readBest();
     const best = Math.max(prev, score);
-    if (score > prev) store(KEY_BEST, score);
-    const races = PLAN.filter((p) => p.rivals).length;
-    const rows = [line('Score', String(score)), line('Races won', `${G.wins} of ${races}`), line('Your best', String(best)), davidLine()];
+    if (score > prev && !recording) store(KEY_BEST, score);
+    const vsDavid = PLAN.some((p) => ghostFor(p));
+    const rows = [line('Score', String(score))];
+    if (!recording) rows.push(line(vsDavid ? 'Races against David' : 'Races won', vsDavid ? `won ${G.wins} of ${RACES}` : `${G.wins} of ${RACES}`));
+    rows.push(line('Your best', String(best)), davidLine());
     if (typeof david === 'number' && score > david) rows.push(line('You beat David.', null, 'say'));
     else if (score > prev && prev) rows.push(line('New personal best.', null, 'say'));
-    const box = panel('Five mazes done.', rows, [['ppg-btn', 'Play again', startSession]]);
+    const buttons = [['ppg-btn', 'Play again', startSession]];
+    if (recording) {
+      const n = Object.keys(G.rec).length;
+      rows.push(line(`Recorded ${n} of ${RACES} races.`, null, 'say'));
+      const rec = G.rec;
+      buttons.push(['ppg-link', 'Download recording', () => {
+        const merged = { _how: 'My penguin in each race, by seed: start corner, finish time (s) and every step as [ms since go, cell]. Made with #record-penguin.', races: Object.assign({}, ghosts, rec) };
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(merged)], { type: 'application/json' }));
+        a.download = 'penguin-david.json';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      }]);
+    }
+    const box = panel(`${PLAN.length - RACES} time trials and ${RACES} races done.`, rows, buttons);
     view(box, false);
     G = null;
     window.dispatchEvent(new CustomEvent('dl:lumo', { detail: { game: 'penguin', score, best, david: typeof david === 'number' ? david : null } }));

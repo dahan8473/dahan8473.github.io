@@ -541,7 +541,7 @@ hobby('chess', 'Chess', "I played competitively all through elementary school, u
     ('Then guitar', '<p>Eventually I had to pick one to focus on, and it was <a href="/hobbies/guitar/">classical guitar</a>.</p>'),
     ('Now', '<p>I still play online and solve puzzles. <a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">My chess.com</a>, and live stats are next to the board below.</p>'),
   ], None),
-], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('Adults', 'Who I played against')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...'))
+], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [

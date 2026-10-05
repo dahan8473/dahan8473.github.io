@@ -368,5 +368,10 @@
     "page": "/brain/",
     "sel": "[data-t='brain']",
     "about": "your second brain page: a map of your projects, leadership, experience, education, hobbies, stories, awards and skills, and how they connect. Double clicking a node asks you about it."
+  },
+  "lumosity": {
+    "page": "/hobbies/lumosity/",
+    "sel": "[data-t='lumosity']",
+    "about": "Lumosity page: my own versions of my three favourite Lumosity games (Pinball Recall, Ebb and Flow, Penguin Rally), each with a quick tutorial and my best score to beat"
   }
 }

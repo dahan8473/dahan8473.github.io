@@ -443,8 +443,11 @@ export function mount(el) {
     const mine = readBest();
     const buttons = [['ppg-btn', 'Play', () => (tutDone() ? startSession() : showTut(0))]];
     if (tutDone()) buttons.push(['ppg-link', 'How to play', () => showTut(0)]);
-    view(panel('Trains spatial orientation: the board turns, and Up always means toward the orange arrow.',
-      [davidLine(), line('Your best', mine ? String(mine) : 'not set yet')], buttons), false);
+    const box = panel('Trains spatial orientation: the board turns, and Up always means toward the orange arrow.',
+      [davidLine(), line('Your best', mine ? String(mine) : 'not set yet')], buttons);
+    // The Lumosity page lays the three cards out in a row (styles.css .lumo-games).
+    box.dataset.lumoCard = '';
+    view(box, false);
   }
 
   // ---- Tutorial ----

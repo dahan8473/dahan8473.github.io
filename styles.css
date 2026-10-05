@@ -783,3 +783,15 @@ media (prefers-reduced-motion: reduce) {
 .figs dt { color: var(--t3); }
 @media (max-width: 720px) { .figs { grid-template-columns: 1fr; } .figs > div + div { border-top: 1px solid var(--rule); } .figs > div { padding: 10px 0; } }
 
+/* Lumosity: the three games side by side as cards. Playing one moves it to the
+   top at full width; the other two wait in a row under it. */
+.lumo-games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 56px; }
+.lumo-games > .play { margin: 0; min-width: 0; }
+.lumo-games > .play > * { max-width: none; height: 100%; }
+.lumo-games > .play.piece-on:not(:has([data-lumo-card])) { grid-column: 1 / -1; order: -1; }
+.lumo-games > .play.piece-on:not(:has([data-lumo-card])) > * { max-width: 640px; margin: 0 auto; }
+.lumo-games:has(> .play.piece-on > * > :not([data-lumo-card])) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lumo-games [data-lumo-card] { display: flex; flex-direction: column; height: 100%; }
+.lumo-games [data-lumo-card] > :last-child { margin-top: auto; }
+@media (max-width: 900px) { .lumo-games { grid-template-columns: 1fr; } }
+

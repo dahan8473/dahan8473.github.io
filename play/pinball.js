@@ -1,7 +1,8 @@
 // Pinball Recall: a working-memory game for the Lumosity page. A grid of
-// diagonal bumpers shows for a few seconds, then hides. A ball rolls in at the
-// arrow and turns 90 degrees at every bumper; call the edge it comes out of.
-// 12 boards. Two right in a row moves you up a level, a miss drops you one.
+// diagonal bumpers shows for a few seconds, then hides, and only then does the
+// arrow show where the ball rolls in. It turns 90 degrees at every bumper; call
+// the edge it comes out of. 12 boards. Two right in a row moves you up a level,
+// a miss drops you one, and every level is a bigger grid with more bumpers.
 // From level 3 some bumpers carry a ring: they flip after the ball hits them.
 //   <div class="play" data-play="pinball" data-v="N">
 // David's best comes from /hobbies/lumosity/best.json (key pinball). The
@@ -24,6 +25,7 @@ const ART = '<svg viewBox="0 0 64 64" aria-hidden="true">'
 
 const CSS = `
 .ppb { max-width: 640px; scroll-margin-top: 24px; }
+.ppb .ppb-board[style*="--n: 1"], .ppb .ppb-board[style*="--n: 9"] { --g: 3px; }
 .ppb-panel { padding: 22px; border-radius: 14px; background: var(--fill); }
 .ppb-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .ppb-name { color: var(--t1); font-weight: 500; }
@@ -57,7 +59,7 @@ const CSS = `
 
 .ppb-board {
   --e: 40px; --g: 4px;
-  display: grid; gap: var(--g); width: 100%; max-width: 440px; aspect-ratio: 1; margin: 0 auto;
+  display: grid; gap: var(--g); width: 100%; max-width: clamp(440px, calc(150px + var(--n) * 36px), 560px); aspect-ratio: 1; margin: 0 auto;
   grid-template-columns: var(--e) repeat(var(--n), minmax(0, 1fr)) var(--e);
   grid-template-rows: var(--e) repeat(var(--n), minmax(0, 1fr)) var(--e);
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation;
@@ -84,7 +86,10 @@ const CSS = `
 .ppb-slot:focus-visible { outline: 2px solid #88c0d0; outline-offset: -2px; border-radius: 10px; }
 .ppb-slot.start { color: var(--t1); }
 .ppb-slot.start::before { display: none; }
-.ppb-slot.start svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ppb-slot.start svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: opacity 160ms ease; }
+.ppb-board.study .ppb-slot.start svg { opacity: 0; }
+.ppb-board:not(.study) .ppb-slot.start svg { animation: ppb-pop 360ms cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes ppb-pop { from { opacity: 0; scale: 0.4; } }
 .ppb-slot.pick::before { transform: scale(2.2); background: none; box-shadow: inset 0 0 0 1.5px currentColor; }
 .ppb-slot.pick { color: var(--t1); }
 .ppb-slot.miss { color: #d08770; }
@@ -96,6 +101,7 @@ const CSS = `
 .ppb-ball { position: absolute; width: calc(100% / var(--n) * 0.32); aspect-ratio: 1; border-radius: 50%; background: #88c0d0; transform: translate(-50%, -50%); opacity: 0; transition: left var(--step, 130ms) linear, top var(--step, 130ms) linear, opacity 160ms ease; }
 .ppb-ball.on { opacity: 1; }
 .ppb.rm .ppb-ball, .ppb.rm .ppb-bump svg { transition: none; }
+.ppb.rm .ppb-slot.start svg { animation: none; }
 @media (max-width: 720px) { .ppb { scroll-margin-top: 72px; } }
 @media (max-width: 560px) {
   .ppb-panel { padding: 18px; }
@@ -185,17 +191,17 @@ function trace(board) {
   return { steps, exit: slotAt(n, r, c), hits, flipHits, flipBack };
 }
 
-const SIZES = [4, 4, 5, 5, 6, 7]; // with no misses, boards 11 and 12 are 7x7
-const sizeFor = (level) => SIZES[Math.min(level, SIZES.length) - 1];
-const studyFor = (level) => (level === 1 ? 0 : Math.max(1600, 4200 - 300 * (level - 2)));
+// Level 1 is 4x4 and every level adds a row and a column, up to 12x12.
+const sizeFor = (level) => Math.min(12, 3 + level);
+const studyFor = (level) => (level === 1 ? 0 : Math.max(2400, 4500 - 200 * (level - 2)));
 
 // Random boards until one is worth playing: enough bounces, a flip that gets
 // hit once flips exist, and from level 5 one the ball comes back to.
 function generate(level) {
   const n = sizeFor(level);
-  const count = Math.min(Math.round(n * n * 0.45), 2 + level);
-  const flips = level < 3 ? 0 : Math.min(3, 1 + Math.floor((level - 3) / 2));
-  const need = Math.min(level, 3);
+  const count = Math.min(Math.round(n * n * 0.4), 3 + 2 * level);
+  const flips = level < 3 ? 0 : Math.min(4, 1 + Math.floor((level - 3) / 2));
+  const need = Math.min(1 + level, 7);
   const rnd = (k) => Math.floor(Math.random() * k);
   let spare = null;
   for (let tries = 0; tries < 800; tries++) {
@@ -220,7 +226,7 @@ function generate(level) {
 const TUT = [
   { say: 'The ball rolls in at the arrow and goes straight. A bumper turns it 90 degrees. Tap the edge where it comes out.',
     board: { n: 3, cells: [null, null, null, null, { t: '/' }, null, null, null, null], start: { side: 3, i: 1 } }, study: 0 },
-  { say: 'In the game the bumpers hide after a few seconds. Remember them, then tap where the ball comes out.',
+  { say: 'In the game the bumpers hide after a few seconds, and only then does the arrow show where the ball starts. Remember them, then tap where it comes out.',
     board: { n: 3, cells: [null, null, null, { t: '/' }, null, { t: '\\' }, null, null, null], start: { side: 2, i: 0 } }, study: 3000 },
   { say: 'A bumper with a ring flips after the ball hits it. If the ball comes back to it, it bounces the other way.',
     board: { n: 3, cells: [null, { t: '/' }, null, null, null, null, null, { t: '/', f: true }, null], start: { side: 3, i: 2 } }, study: 0 }
@@ -306,6 +312,8 @@ export function mount(el) {
     return {
       el: wrap, slots,
       hide(v) { wrap.classList.toggle('hide', v); },
+      // While the bumpers are up the start arrow is hidden; it pops in when they go.
+      study(v) { wrap.classList.toggle('study', v); },
       arm(fn) { onPick = fn; wrap.classList.add('live'); slots.forEach((s) => { s.el.disabled = false; }); },
       disarm() { onPick = null; wrap.classList.remove('live'); slots.forEach((s) => { s.el.disabled = true; }); },
       slot(side, i) { return slots.find((s) => s.side === side && s.i === i); },
@@ -395,6 +403,8 @@ export function mount(el) {
     p.querySelector('.ppb-go').addEventListener('click', () => (load(TUT_KEY) ? play() : tutorial(0)), sig);
     const how = p.querySelector('.ppb-link');
     if (how) how.addEventListener('click', () => tutorial(0), sig);
+    // The Lumosity page lays the three cards out in a row (styles.css .lumo-games).
+    p.dataset.lumoCard = '';
     show(p, '.ppb-go');
   }
 
@@ -418,6 +428,7 @@ export function mount(el) {
     const ask = () => {
       p.querySelector('.ppb-timer').classList.add('off');
       bd.hide(t.study > 0);
+      bd.study(false);
       msg.textContent = 'Where does it come out?';
       bd.arm((s) => {
         bd.disarm();
@@ -444,6 +455,7 @@ export function mount(el) {
       });
     };
     bd.hide(false);
+    bd.study(t.study > 0);
     if (t.study) {
       msg.textContent = 'Remember the bumpers.';
       startTimer(p.querySelector('.ppb-timer'), t.study);
@@ -480,10 +492,12 @@ export function mount(el) {
       if (g.round === 1 && (box.top < (innerWidth <= 720 ? 64 : 0) || box.bottom > innerHeight)) root.scrollIntoView({ block: 'start', behavior: reduce.matches ? 'auto' : 'smooth' });
       bd.hide(false);
       const study = studyFor(level);
+      bd.study(study > 0);
       let t0 = 0;
       const ask = () => {
         bar.classList.add('off');
         bd.hide(level > 1);
+        bd.study(false);
         msg.textContent = level > 1 ? 'Where does it come out? Tap the edge.' : 'Where does the ball come out? Tap the edge.';
         t0 = performance.now();
         g.answering = true;

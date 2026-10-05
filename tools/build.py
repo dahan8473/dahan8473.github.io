@@ -6,8 +6,8 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 37, 12, 31, 36
-V_PIECE = 24  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 38, 12, 31, 36
+V_PIECE = 26  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -550,8 +550,13 @@ hobby('chess', 'Chess', "I played competitively all through elementary school, u
   ], None),
 ], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
-hobby('lumosity', 'Lumosity', 'I love brain teaser games, and I religiously start every morning with my daily Lumosity. These are my own versions of my three favourites. Quick tutorial, then try to beat my best.', [
-], shot=piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...'))
+hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity.", [
+  ('The habit', [
+    ('What it is', '<p>An app of short brain games. Each one trains a single skill, like memory, attention, flexibility or speed, and every day it gives you a quick workout of a few of them.</p>'),
+    ('My mornings', "<p>Every morning, before anything else. I don't skip it.</p>"),
+    ('These three', "<p>Pinball Recall, Ebb and Flow and Penguin Rally are the three I think I'm best at, so I made my own versions. Quick tutorial, then try to beat my best.</p>"),
+  ], None),
+], after='      <div class="lumo-games">\n' + piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...') + '      </div>\n')
 hobby('horror', 'Horror', "Any genre. It's a love-hate thing: I like getting creeped out once in a while, just not too much.", [])
 hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [

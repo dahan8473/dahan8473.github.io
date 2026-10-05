@@ -21,8 +21,8 @@ const LEAF = '<svg viewBox="0 0 32 32" aria-hidden="true"><path class="stem" d="
 const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg>';
 
 const CSS = `
-.peb { --peb-green: #789c62; --peb-orange: #c8693f; max-width: 640px; }
-[data-theme="dark"] .peb { --peb-green: #a3be8c; --peb-orange: #d08770; }
+.peb { --peb-green: #16a34a; --peb-orange: #f97316; max-width: 640px; }
+[data-theme="dark"] .peb { --peb-green: #4ade80; --peb-orange: #fb923c; }
 .peb-panel { padding: 22px; border-radius: 14px; background: var(--fill); }
 .peb-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .peb-name { color: var(--t1); font-weight: 500; }
@@ -56,7 +56,7 @@ const CSS = `
 .peb-quit:hover { color: var(--t1); background: var(--fill); }
 .peb-quit svg { width: 16px; height: 16px; }
 .peb-quit svg path { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
-.peb-field { position: relative; height: 280px; border-radius: 14px; background: var(--fill); overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.peb-field { position: relative; height: 280px; border-radius: 14px; background: color-mix(in srgb, var(--peb-green) 9%, var(--fill)); overflow: hidden; transition: background 200ms ease; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .peb-field.live { touch-action: none; }
 .peb-field::before, .peb-field::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 280ms ease; }
 .peb-field::before { background: rgba(136, 192, 208, 0.14); box-shadow: inset 0 0 0 2px rgba(136, 192, 208, 0.55); }
@@ -65,6 +65,7 @@ const CSS = `
 .peb-leaves.in { animation: peb-in 150ms ease; }
 @keyframes peb-in { from { opacity: 0; } }
 .peb-leaf { position: absolute; left: 0; top: 0; color: var(--peb-green); will-change: transform; }
+.peb-field.orange { background: color-mix(in srgb, var(--peb-orange) 11%, var(--fill)); }
 .peb-field.orange .peb-leaf { color: var(--peb-orange); }
 .peb-leaf svg { display: block; width: 100%; height: 100%; }
 .peb-pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 44px); gap: 6px; justify-content: center; margin-top: 12px; }
@@ -217,6 +218,8 @@ export function mount(el) {
       btns
     );
     const keep = davidLine;
+    // The Lumosity page lays the three cards out in a row (styles.css .lumo-games).
+    panel.dataset.lumoCard = '';
     show(panel);
     davidLine = keep;
   }

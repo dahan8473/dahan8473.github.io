@@ -753,12 +753,40 @@
 
   // Typewriter. The queue holds characters and, inline, the stage directions
   // the model wrote, so the hand moves right when the words reach it.
-  const sp = { q: [], page: '', typing: false, ended: true, fast: false, timer: 0, resolve: null, done: Promise.resolve() };
+  const sp = { q: [], page: '', typing: false, ended: true, fast: false, timer: 0, resolve: null, done: Promise.resolve(), readUntil: 0 };
 
-  function speak(text, { echo = '', stream = false } = {}) {
+  // One voice at a time. Anything the visitor set off (a reply, a button, the
+  // chat opening) speaks now and drops whatever was waiting. Lines the head
+  // starts on its own wait for the current one to finish and be read, and at
+  // most two wait at once. Small talk checks speaking() and stays quiet.
+  const speaking = () => sp.typing || !sp.ended || now() < sp.readUntil;
+  let speechQ = Promise.resolve();
+  let speechWaiting = 0;
+  let speechGen = 0;
+  function speak(text, opts = {}) {
+    if (opts.urgent || opts.stream || opts.echo || !text) {
+      speechGen++;
+      speechWaiting = 0;
+      return speakNow(text, opts);
+    }
+    if (!speaking() && !speechWaiting) return speakNow(text, opts);
+    if (speechWaiting >= 2) return Promise.resolve();
+    speechWaiting++;
+    const gen = speechGen;
+    const run = speechQ.then(async () => {
+      while (gen === speechGen && speaking()) await wait(200);
+      if (gen !== speechGen) return;
+      speechWaiting--;
+      return speakNow(text, opts);
+    });
+    speechQ = run.catch(() => {});
+    return run;
+  }
+
+  function speakNow(text, { echo = '', stream = false } = {}) {
     clearTimeout(sp.timer);
     if (sp.resolve) sp.resolve();
-    Object.assign(sp, { q: [], page: '', typing: false, ended: !stream, fast: false, resolve: null });
+    Object.assign(sp, { q: [], page: '', typing: false, ended: !stream, fast: false, resolve: null, readUntil: 0 });
     sp.done = new Promise((r) => { sp.resolve = r; });
     textEl.textContent = '';
     textEl.classList.remove('clip');
@@ -800,6 +828,8 @@
   }
   function finishSpeech() {
     pres.said = now();
+    // Time to read it before the head starts on something else.
+    sp.readUntil = now() + Math.min(6000, 1000 + sp.page.length * 35);
     linkify();
     const r = sp.resolve;
     sp.resolve = null;
@@ -839,7 +869,7 @@
     if (!text) return;
     if (mood) setFace(mood, 1200 + text.length * 45);
     if (chatOn) {
-      if (!asking && !sp.typing) await speak(text);
+      if (!asking) await speak(text);
       return;
     }
     const id = ++quipSeq;
@@ -1373,18 +1403,18 @@
     // Clicked right after he said something: pick up from there.
     const said = pres.last && now() - pres.last.at < (pres.last.keep || 15000) ? pres.last.text : '';
     pres.last = null;
-    if (said) { S.msgs.push({ role: 'assistant', content: said }); save(); speak(said); }
-    else if (!talked()) await greet();
-    else speak(LINES.again);
+    if (said) { S.msgs.push({ role: 'assistant', content: said }); save(); speak(said, { urgent: true }); }
+    else if (!talked()) await greet(true);
+    else speak(LINES.again, { urgent: true });
   }
 
   // The head starts the conversation: who it is, then their name.
-  async function greet() {
+  async function greet(urgent = false) {
     const name = knownName();
     const line = name ? LINES.introBack(name) : pick(LINES.intro);
     if (!S.msgs.length) { S.msgs.push({ role: 'assistant', content: line }); save(); }
     setFace('happy', 2500);
-    await speak(line);
+    await speak(line, { urgent });
     if (chatOn && !talked()) showChoices();
   }
   async function intro() {
@@ -1424,7 +1454,7 @@
     emote(pokes % 2 ? '?' : '!');
     life.surprise = now() + 200;
     if (pokes >= 2) setFace('angry', 1800);
-    if (!asking && !sp.typing) speak(LINES.poke[pokes++ % LINES.poke.length]);
+    if (!asking && !sp.typing) speak(LINES.poke[pokes++ % LINES.poke.length], { urgent: true });
   }
 
   // Talking back: the browser's speech recognition fills the box as you
@@ -1448,7 +1478,7 @@
       input.value = heard;
     };
     rec.onerror = (e) => {
-      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { setFace('sad', 2500); speak(LINES.micBlocked); }
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { setFace('sad', 2500); speak(LINES.micBlocked, { urgent: true }); }
     };
     rec.onend = () => {
       rec = null;
@@ -1835,6 +1865,8 @@
   }
   function smallDue(t, quiet) {
     if (S.quiet || (S.small || []).length >= SMALL_MAX) return false;
+    // Only to fill a gap: nothing being said or waiting, nothing on screen to talk about.
+    if (speaking() || speechWaiting || pres.seen) return false;
     if (chatOn) return !pres.waiting && quiet > 40000 && t - pres.smallAt > 60000 && pres.streak < 3;
     // Browsing with the chat tucked away: only while they're actually around,
     // and once at most for someone who never answered the hello.

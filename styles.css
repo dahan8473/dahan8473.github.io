@@ -560,6 +560,7 @@ html.bringing { overflow: hidden; }
 .case-shot { margin-top: 40px; }
 .case-shot img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 16px; background: var(--fill); }
 .case-shot figcaption { margin-top: 10px; color: var(--t3); }
+.case-shot.natural img { aspect-ratio: auto; }
 .case .section { display: grid; grid-template-columns: var(--label-col) minmax(0, 1fr); gap: 0 24px; padding-top: 56px; }
 .case .label { color: var(--t3); padding-top: 12px; }
 .case .entries > .entry { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.6fr); gap: 4px 20px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
@@ -768,6 +769,9 @@ media (prefers-reduced-motion: reduce) {
 .dl-pitch .play.pitched { display: none; }
 .dl-pitch .climb-invite:is([data-state="idle"], [data-state="climbing"]) { display: none; }
 .dl-pitch [data-3d="racket"] .rk-rally, .dl-pitch [data-3d="racket"] .rk-hint { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); }
+
+/* Cycling: the bike, then the rides map under it. */
+.play[data-play="rides"] { margin-top: 48px; }
 
 /* The chess board comes after the story. */
 .case .section + .play[data-play="chess"] { margin-top: 56px; }

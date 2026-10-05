@@ -6,8 +6,8 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 35, 11, 30, 35
-V_PIECE = 22  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 36, 11, 30, 35
+V_PIECE = 23  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -529,8 +529,12 @@ hobby('swimming', 'Swimming', 'I swim.', [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/swimming/photos.json'))
 hobby('badminton', 'Badminton', 'Badminton was my main sport all through high school. My school had a very competitive team, and I played doubles at regional and provincial school competitions. These are my four rackets. Click one for a closer look, and rally the head with it.', [
 ], shot=piece('3d', 'racket', 'Loading the rackets...'))
-hobby('cycling', 'Cycling', 'I ride. This is my bike.', [
-], shot=piece('3d', 'bike', 'Loading the bike...'))
+hobby('cycling', 'Cycling', "I picked up my bike second hand at the start of September and fell in love with cycling. I ride to school and back every day, and go on long rides whenever I can.", [
+], shot='''      <figure class="case-shot natural">
+        <img src="/media/cycling/me-and-the-bike.webp" alt="David standing with his matte black track bike at night, outside Alumni Hall at Western" width="1500" height="1265">
+        <figcaption>Outside Alumni Hall at Western</figcaption>
+      </figure>
+''' + piece('3d', 'bike', 'Loading the bike...') + piece('play', 'rides', 'Loading the rides...', src='/hobbies/cycling/rides.json'))
 hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [

@@ -7,9 +7,11 @@ from mathutils import Vector, Matrix
 HERE = os.path.dirname(os.path.abspath(__file__))
 TEX = os.path.join(HERE, 'textures')
 OUT = os.path.abspath(os.path.join(HERE, '..', '..', 'public', 'models'))
-SCRATCH = '/private/tmp/claude-501/-Users-DavidLiu/f47a44a5-4dfa-4aae-b40f-735bd11d5e6f/scratchpad/models-test'
-FONT_REG = '/System/Library/Fonts/Supplemental/Arial.ttf'
-FONT_BOLD = '/System/Library/Fonts/Supplemental/Arial Bold.ttf'
+# The defaults are the Mac these were made on; MODELS_SCRATCH, MODELS_FONT and
+# MODELS_FONT_BOLD override them elsewhere (e.g. `pip install bpy` on Linux).
+SCRATCH = os.environ.get('MODELS_SCRATCH', '/private/tmp/claude-501/-Users-DavidLiu/f47a44a5-4dfa-4aae-b40f-735bd11d5e6f/scratchpad/models-test')
+FONT_REG = os.environ.get('MODELS_FONT', '/System/Library/Fonts/Supplemental/Arial.ttf')
+FONT_BOLD = os.environ.get('MODELS_FONT_BOLD', '/System/Library/Fonts/Supplemental/Arial Bold.ttf')
 os.makedirs(TEX, exist_ok=True)
 os.makedirs(OUT, exist_ok=True)
 
@@ -904,7 +906,7 @@ def stats(objs):
 
 def studio(ground_z=0.0, size=4.0, world=0.18, floor=True, scale=1.0):
     sc = bpy.context.scene
-    sc.render.engine = 'BLENDER_EEVEE'
+    sc.render.engine = os.environ.get('MODELS_ENGINE', 'BLENDER_EEVEE')
     sc.eevee.taa_render_samples = 24
     try:
         sc.eevee.use_raytracing = True
@@ -979,6 +981,8 @@ def render_views(prefix, target, radius, views, res=(900, 680), samples=24):
     sc = bpy.context.scene
     sc.render.resolution_x, sc.render.resolution_y = res
     sc.eevee.taa_render_samples = samples
+    if sc.render.engine == 'CYCLES':
+        sc.cycles.samples = samples
     sc.render.film_transparent = False
     paths = []
     for tag, d, lens, ortho in views:

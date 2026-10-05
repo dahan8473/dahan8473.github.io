@@ -729,36 +729,21 @@ button.ft-next { width: calc(100% + 16px); border: 0; background: none; font: in
 .ft-next:hover .ft-m { transform: translateX(3px); color: var(--t2); }
 .ft-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--rule); color: var(--t3); }
 
-/* Haven't tried yet. Rows read like the home page's doors. */
-.upnext { padding-top: 72px; }
-.upnext > h2 { padding-bottom: 12px; color: var(--t3); }
-.r-sec.upnext { padding-top: 0; }
-.r-sec.upnext > h2 { padding-bottom: 8px; margin-bottom: 0; }
-.up-list > li { border-bottom: 1px solid var(--rule); }
-.up-list > li:first-child { border-top: 1px solid var(--rule); }
-.r-sec.upnext .up-list > li:first-child { border-top: 0; }
-.up-row { display: grid; grid-template-columns: 180px minmax(0, 1fr) 24px; gap: 4px 20px; align-items: baseline; width: 100%; padding: 12px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
-button.up-row { cursor: pointer; }
-.case .up-row { grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.6fr) 24px; }
-.home .up-row { grid-template-columns: 160px minmax(0, 1fr) 24px; }
-.home .upnext { padding-top: 48px; }
-.up-name { color: var(--t1); }
-.up-line { color: var(--t2); }
-.up-m { color: var(--t3); text-align: right; transition: transform 200ms ease; }
-a.up-row:hover .up-line, button.up-row:hover .up-line { color: var(--t1); }
-a.up-row:hover .up-m, button.up-row:hover .up-m { color: var(--t2); transform: translateX(3px); }
-.up-all { margin-top: 14px; }
-.upnext + .next { margin-top: 56px; }
-.upnext + .reach { margin-top: 40px; }
+/* The nudge under the star (site.js showTip). */
+.finds-tip {
+  position: fixed; z-index: 74; padding: 8px 14px; border: 0; border-radius: 12px;
+  background: var(--panel); color: var(--t1); font: inherit; cursor: pointer; white-space: nowrap;
+  box-shadow: 0 0 0 1px var(--rule), 0 14px 34px -14px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  opacity: 0; transform: translateY(-6px); transition: opacity 220ms ease, transform 220ms ease;
+}
+.finds-tip::before { content: ''; position: absolute; top: -5px; right: 22px; width: 10px; height: 10px; background: inherit; box-shadow: -1px -1px 0 0 var(--rule); transform: rotate(45deg); }
+.finds-tip.on { opacity: 1; transform: none; }
+.finds-tip:hover { color: var(--t1); background: var(--fill); }
 
 @media (max-width: 720px) {
   .finds-pill { margin-right: -4px; padding: 0 6px; }
   .finds-toast { top: 66px; bottom: auto; left: 16px; right: 16px; width: auto; transform: translateY(-8px); }
-  .upnext { padding-top: 56px; }
-  .case .upnext { padding-top: 48px; }
-  .up-row, .case .up-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .up-line { grid-column: 1 / -1; grid-row: 2; }
-  .up-m { grid-column: 2; grid-row: 1; }
 }
 
 media (prefers-reduced-motion: reduce) {
@@ -774,9 +759,6 @@ media (prefers-reduced-motion: reduce) {
 /* Cycling: the bike, then the rides map under it. */
 .play[data-play="rides"] { margin-top: 48px; }
 
-/* The chess board comes after the story. */
-.case .section + .play[data-play="chess"] { margin-top: 56px; }
-
 /* A row of numbers that matter (hobby pages): the number, what it is under it. */
 .figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; margin: 32px 0 40px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .figs > div { display: flex; flex-direction: column-reverse; padding: 14px 0; }
@@ -790,7 +772,10 @@ media (prefers-reduced-motion: reduce) {
 .lumo-games > .play { margin: 0; min-width: 0; }
 .lumo-games > .play > * { max-width: none; height: 100%; }
 .lumo-games > .play.piece-on:not(:has([data-lumo-card])) { grid-column: 1 / -1; order: -1; }
-.lumo-games > .play.piece-on:not(:has([data-lumo-card])) > * { max-width: 640px; margin: 0 auto; }
+.lumo-games > .play.piece-on:not(:has([data-lumo-card])) > * { max-width: 640px; margin: 0 auto; animation: lumo-open 420ms cubic-bezier(.2, .9, .3, 1); }
+@keyframes lumo-open { from { opacity: 0; transform: translateY(14px) scale(0.96); } }
+.lumo-games > .play.piece-on > * > [data-lumo-card] { animation: lumo-card 300ms ease; }
+@keyframes lumo-card { from { opacity: 0; transform: scale(0.97); } }
 .lumo-games:has(> .play.piece-on > * > :not([data-lumo-card])) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .lumo-games [data-lumo-card] { display: flex; flex-direction: column; height: 100%; }
 .lumo-games [data-lumo-card] > :last-child { margin-top: auto; }

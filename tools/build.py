@@ -6,8 +6,8 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 38, 12, 31, 36
-V_PIECE = 26  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 40, 12, 32, 36
+V_PIECE = 28  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -548,20 +548,14 @@ hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [
 ], shot=piece('play', 'trophycase', 'Digging out photos rn.', src='/hobbies/speed-skating/trophies.json'))
-hobby('chess', 'Chess', "I played competitively all through elementary school, until guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
-  ('The story', [
-    ('Elementary', '<p>I played all through elementary school and competed at regionals. I got my rating up to 1425, playing against adults.</p>'),
-    ('Then guitar', '<p>Eventually I had to pick one to focus on, and it was <a href="/hobbies/guitar/">classical guitar</a>.</p>'),
-    ('Now', '<p>I still play online and solve puzzles. <a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">My chess.com</a>, and live stats are next to the board below.</p>'),
-  ], None),
+hobby('chess', 'Chess', "I played chess competitively all through elementary school and competed at regionals. I got my rating up to 1425, playing against adults."
+      '</p>\n        <p class="tagline">Eventually I had to pick one thing to focus on, and it was <a href="/hobbies/guitar/">classical guitar</a>. I still play online on <a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">chess.com</a> and solve puzzles.'
+      '</p>\n        <p class="tagline">Play a game against the head if you want.', [
 ], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
-hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity.", [
-  ('The habit', [
-    ('What it is', '<p>An app of short brain games. Each one trains a single skill, like memory, attention, flexibility or speed, and every day it gives you a quick workout of a few of them.</p>'),
-    ('My mornings', "<p>Every morning, before anything else. I don't skip it.</p>"),
-    ('These three', "<p>Pinball Recall, Ebb and Flow and Penguin Rally are the three I think I'm best at, so I made my own versions. Quick tutorial, then try to beat my best.</p>"),
-  ], None),
+hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity."
+      '</p>\n        <p class="tagline">Lumosity is an app of short brain games. Each one trains a single skill, like memory, attention, flexibility or speed, and every day it gives you a quick workout of a few of them. I don\'t skip it.'
+      "</p>\n        <p class=\"tagline\">These are my own versions of the three I think I'm best at. Quick tutorial, then try to beat my best.", [
 ], after='      <div class="lumo-games">\n' + piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...') + '      </div>\n')
 hobby('horror', 'Horror', "Any genre. It's a love-hate thing: I like getting creeped out once in a while, just not too much.", [])
 hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))

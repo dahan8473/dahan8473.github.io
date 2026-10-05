@@ -8,6 +8,8 @@
 // David's best comes from /hobbies/lumosity/best.json (key pinball). The
 // visitor's best lives in localStorage, and a finished run fires dl:lumo on window.
 
+import { countdown } from './countdown.js';
+
 const CSS_ID = 'play-pinball-css';
 const KEY = 'dl-lumo-pinball';
 const TUT_KEY = 'dl-lumo-pinball-tut';
@@ -95,6 +97,15 @@ const CSS = `
 .ppb-slot.miss { color: #d08770; }
 .ppb-slot.exit { color: #88c0d0; }
 .ppb-slot.exit::before { transform: scale(2.2); background: currentColor; box-shadow: none; }
+.ppb-board.won .ppb-slot.exit::before { animation: ppb-ring 700ms ease-out; }
+@keyframes ppb-ring { 0% { box-shadow: 0 0 0 0 rgba(136, 192, 208, 0.7); } 100% { box-shadow: 0 0 0 14px rgba(136, 192, 208, 0); } }
+.ppb-board.won .ppb-cell { animation: ppb-glow 600ms ease; }
+@keyframes ppb-glow { 35% { background: color-mix(in srgb, #88c0d0 22%, var(--fill)); } }
+.ppb-board.lost { animation: ppb-shake 300ms ease; }
+@keyframes ppb-shake { 20% { transform: translateX(-7px); } 45% { transform: translateX(6px); } 70% { transform: translateX(-3px); } 90% { transform: translateX(1px); } }
+.ppb-pts { position: absolute; left: 50%; top: 50%; color: var(--t1); font-weight: 500; white-space: nowrap; pointer-events: none; animation: ppb-pts 1000ms ease-out forwards; }
+@keyframes ppb-pts { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } 25% { opacity: 1; transform: translate(-50%, -120%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -260%) scale(1); } }
+.ppb.rm .ppb-board, .ppb.rm .ppb-cell, .ppb.rm .ppb-pts, .ppb.rm .ppb-slot.exit::before { animation: none !important; }
 .ppb-layer { position: relative; margin: calc(var(--g) / -2); pointer-events: none; }
 .ppb-trail { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .ppb-trail polyline { fill: none; stroke: #88c0d0; stroke-width: 2.5px; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: 0.6; }
@@ -510,10 +521,14 @@ export function mount(el) {
           bd.run(path, () => {
             const ok = s.side === path.exit.side && s.i === path.exit.i;
             bd.slot(path.exit.side, path.exit.i).el.classList.add('exit');
+            // The board celebrates or shakes; the points float up off the exit.
+            bd.el.classList.add(ok ? 'won' : 'lost');
             if (ok) {
               const bonus = Math.round(25 * level * Math.min(1, Math.max(0, (7000 - ms) / 6000)));
               const pts = 100 * level + bonus;
               g.score += pts;
+              const fly = h('span', 'ppb-pts', '+' + fmt(pts));
+              bd.slot(path.exit.side, path.exit.i).el.appendChild(fly);
               q('.sc').textContent = fmt(g.score);
               g.streak++;
               if (g.streak >= 2 && g.level < MAX_LEVEL) { g.level++; g.streak = 0; }
@@ -534,7 +549,9 @@ export function mount(el) {
         later(ask, study);
       } else ask();
     };
-    round();
+    // 3, 2, 1, go, then the first board.
+    holder.style.minHeight = '260px';
+    countdown(holder).then((ok) => { if (ok && game === g) { holder.style.minHeight = ''; round(); } });
   }
 
   // ---- Results -------------------------------------------------------------

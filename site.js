@@ -1285,6 +1285,8 @@
   function openPanel() {
     if (panel) return;
     hideToast();
+    hideTip();
+    try { localStorage.setItem('dl-finds-opened', '1'); } catch (e) {}
     panelFrom = document.activeElement;
     panel = document.createElement('div');
     panel.className = 'finds-panel';
@@ -1338,41 +1340,49 @@
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
 
-  // The end of most pages: what they haven't tried yet, laid out like the rest
-  // of that page (a labelled section on case pages, a resume section on the
-  // resume, a list under a heading everywhere else).
-  var NO_UPNEXT = ['/messages/', '/notes/', '/brain/'];
-  function renderUpNext() {
-    var main = document.getElementById('main');
-    if (!main || NO_UPNEXT.indexOf(here()) >= 0 || main.querySelector('.globe-full')) return;
-    var rest = left(true).slice(0, 3);
-    if (!rest.length) return;
-    var rows = rest.map(function (f) {
-      return '<li>' + findRow(f, 'up-row', '<span class="up-name">' + escHtml(f.name) + '</span><span class="up-line">' + escHtml(f.line) + '</span><span class="up-m" aria-hidden="true">' + (f.href || f.act ? '&#8594;' : '') + '</span>') + '</li>';
-    }).join('');
-    var more = '<p class="up-all"><button class="ln" type="button" data-finds-open>All twelve things to do</button></p>';
-    var box = document.createElement('section');
-    box.setAttribute('aria-labelledby', 'up-h');
-    var doc = main.querySelector(':scope > .doc');
-    if (document.body.classList.contains('case')) {
-      box.className = 'section upnext';
-      box.innerHTML = '<p class="label" id="up-h">Try next</p><div><ul class="up-list">' + rows + '</ul>' + more + '</div>';
-    } else if (doc) {
-      box.className = 'r-sec upnext';
-      box.innerHTML = '<h2 id="up-h">Try next</h2><ul class="up-list">' + rows + '</ul>' + more;
-    } else {
-      box.className = 'upnext';
-      box.innerHTML = '<h2 id="up-h">Try next</h2><ul class="up-list">' + rows + '</ul>' + more;
-    }
-    var nav = main.querySelector(':scope > nav.next, :scope > .reach');
-    if (doc) doc.appendChild(box);
-    else if (nav) main.insertBefore(box, nav);
-    else main.appendChild(box);
+  // A gentle nudge toward the star: once a visit, a few seconds after they've
+  // settled in, a small note slides out under it. Never once they've opened
+  // the list, never while something's open, and it goes away by itself.
+  var tipEl = null, tipTimer = 0, tipHide = 0;
+  function tipShown() { try { return sessionStorage.getItem('dl-finds-tip') === '1'; } catch (e) { return true; } }
+  function opened() { try { return localStorage.getItem('dl-finds-opened') === '1'; } catch (e) { return false; } }
+  function hideTip() {
+    clearTimeout(tipHide);
+    if (!tipEl) return;
+    var t = tipEl;
+    tipEl = null;
+    t.classList.remove('on');
+    setTimeout(function () { t.remove(); }, reduce ? 0 : 250);
   }
+  function showTip() {
+    var pill = document.querySelector('.top .finds-pill');
+    var left = FINDS.length - foundList().length;
+    if (!pill || !left || panel || opened() || tipShown() || document.hidden || document.querySelector('.dl-pitch-dim, .mt-over, .climb-wall, .rl, .bring, .finds-toast.on')) return;
+    var r = pill.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) return;
+    try { sessionStorage.setItem('dl-finds-tip', '1'); } catch (e) {}
+    tipEl = document.createElement('button');
+    tipEl.type = 'button';
+    tipEl.className = 'finds-tip';
+    tipEl.setAttribute('data-finds-open', '');
+    tipEl.textContent = left === FINDS.length ? 'Psst. There are ' + FINDS.length + ' things to do here.' : left + (left === 1 ? ' thing' : ' things') + ' left to find.';
+    document.body.appendChild(tipEl);
+    tipEl.style.top = r.bottom + 10 + 'px';
+    tipEl.style.right = Math.max(16, innerWidth - r.right - 8) + 'px';
+    void tipEl.offsetWidth;
+    tipEl.classList.add('on');
+    pill.classList.remove('hello');
+    void pill.offsetWidth;
+    if (!reduce) pill.classList.add('hello');
+    tipHide = setTimeout(hideTip, 6500);
+  }
+  addEventListener('scroll', function () { if (tipEl) hideTip(); }, { passive: true });
   function setupFinds() {
     closePanel(true);
+    hideTip();
     renderPill();
-    renderUpNext();
+    clearTimeout(tipTimer);
+    if (!tipShown() && !opened()) tipTimer = setTimeout(showTip, 12000);
   }
 
   // ---- Per page --------------------------------------------------------------------

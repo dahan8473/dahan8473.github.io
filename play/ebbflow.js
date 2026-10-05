@@ -6,6 +6,8 @@
 // David's best comes from /hobbies/lumosity/best.json (key ebbflow). The
 // visitor's best lives in localStorage, and a finished run fires dl:lumo on window.
 
+import { countdown } from './countdown.js';
+
 const CSS_ID = 'play-ebbflow-css';
 const KEY = 'dl-lumo-ebbflow';
 const TUT_KEY = 'dl-lumo-ebbflow-tut';
@@ -62,6 +64,18 @@ const CSS = `
 .peb-field::before { background: rgba(136, 192, 208, 0.14); box-shadow: inset 0 0 0 2px rgba(136, 192, 208, 0.55); }
 .peb-field::after { background: rgba(191, 97, 106, 0.1); box-shadow: inset 0 0 0 2px rgba(191, 97, 106, 0.45); }
 .peb-field.ok::before, .peb-field.no::after { opacity: 1; transition-duration: 40ms; }
+.peb-field.shake { animation: peb-shake 260ms ease; }
+@keyframes peb-shake { 20% { transform: translateX(-6px); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } 90% { transform: translateX(1px); } }
+.peb-fx { position: absolute; left: 50%; top: 50%; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 2px; pointer-events: none; transform: translate(-50%, -50%); animation: peb-fx 620ms cubic-bezier(.2, 1.3, .4, 1) forwards; }
+.peb-fx svg { width: 44px; height: 44px; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.peb .peb-fx svg path { fill: none; }
+.peb-fx.ok svg { stroke: #88c0d0; }
+.peb-fx.no svg { stroke: #bf616a; }
+.peb-fx span { color: var(--t1); font-weight: 500; }
+@keyframes peb-fx { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); } 60% { opacity: 1; transform: translate(-50%, -58%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -78%) scale(0.96); } }
+.peb-bar b.bump { display: inline-block; animation: peb-bump 260ms ease; }
+@keyframes peb-bump { 40% { transform: scale(1.25); color: #88c0d0; } }
+@media (prefers-reduced-motion: reduce) { .peb-field.shake, .peb-fx, .peb-bar b.bump { animation: none; } .peb-fx { opacity: 0; } }
 .peb-leaves.in { animation: peb-in 150ms ease; }
 @keyframes peb-in { from { opacity: 0; } }
 .peb-leaf { position: absolute; left: 0; top: 0; color: var(--peb-green); will-change: transform; }
@@ -337,13 +351,20 @@ export function mount(el) {
     onAnswer(dir);
   }
 
-  function flash(kind) {
+  function flash(kind, pts) {
     const f = stage.field;
-    f.classList.remove('ok', 'no');
+    f.classList.remove('ok', 'no', 'shake');
     void f.offsetWidth;
     f.classList.add(kind);
+    if (kind === 'no') f.classList.add('shake');
     clearTimeout(flashT);
     flashT = setTimeout(() => f.classList.remove(kind), 170);
+    // A tick or a cross pops in the middle, with the points for a right one.
+    const fx = h('div', 'peb-fx ' + kind);
+    fx.innerHTML = kind === 'ok' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+    if (pts) fx.appendChild(h('span', '', '+' + fmt(pts)));
+    f.appendChild(fx);
+    setTimeout(() => fx.remove(), 650);
   }
 
   // ---- Tutorial: one green trial, one orange, then three mixed ----
@@ -423,6 +444,10 @@ export function mount(el) {
     top.append(tSpan, sSpan, end);
     meter.setAttribute('aria-hidden', 'true');
     buildStage(top, true);
+    // 3, 2, 1, go, then the leaves.
+    const field = root.querySelector('.peb-field');
+    countdown(field).then((ok) => { if (ok && root.contains(field)) start(); });
+    function start() {
     setTrial(nextTrial(null, 0));
 
     const draw = () => {
@@ -441,9 +466,11 @@ export function mount(el) {
       s.total++;
       if (ok) {
         s.right++;
-        s.score += 50 * s.mult;
+        const gain = 50 * s.mult;
+        s.score += gain;
         if (++s.meter >= 4) { s.meter = 0; s.mult = Math.min(10, s.mult + 1); }
-        flash('ok');
+        flash('ok', gain);
+        score.classList.remove('bump'); void score.offsetWidth; score.classList.add('bump');
       } else {
         s.meter = 0;
         s.mult = Math.max(1, s.mult - 1);
@@ -452,6 +479,7 @@ export function mount(el) {
       draw();
       setTrial(nextTrial(t, Math.min(1, s.right / 28)), ok ? 'Right' : 'Wrong');
     };
+    }
   }
 
   function finish(s) {

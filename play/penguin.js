@@ -6,6 +6,8 @@
 // races against penguins that follow the shortest path. Card, tutorial, play,
 // results. Scores: best.json has mine, localStorage keeps the visitor's.
 
+import { countdown } from './countdown.js';
+
 const CSS_ID = 'play-penguin-css';
 const KEY_BEST = 'dl-lumo-penguin';
 const KEY_TUT = 'dl-lumo-penguin-tut';
@@ -509,13 +511,17 @@ export function mount(el) {
     box.appendChild(hud);
     view(box, true);
     const ui = stage(box);
-    G = { i: -1, total: 0, wins: 0, ui, hMaze, hScore, hTime, shownT: '' };
+    const g = G = { i: -1, total: 0, wins: 0, ui, hMaze, hScore, hTime, shownT: '' };
     G.hScore.innerHTML = 'Score <span>0</span>';
-    ctl = { move: playerMove, tick };
     if (root.getBoundingClientRect().top < 0 || root.getBoundingClientRect().bottom > innerHeight) {
       root.scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
     }
-    nextMaze();
+    // 3, 2, 1, go, then the first maze.
+    countdown(box).then((ok) => {
+      if (!ok || G !== g || state !== 'play') return;
+      ctl = { move: playerMove, tick };
+      nextMaze();
+    });
   }
 
   function nextMaze() {

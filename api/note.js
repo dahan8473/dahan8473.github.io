@@ -5,6 +5,7 @@ import { corsFor, preflight, plain, json, isId, clientIp, limiter } from './_htt
 import { leaveNote, addMessage, tagMessage } from './_store.js';
 import { decide, noul } from './_jev.js';
 import { tell } from './_notify.js';
+import { hasSlur } from './_slurs.js';
 
 const limited = limiter(5, 60 * 60 * 1000);
 
@@ -37,6 +38,8 @@ export default {
       x: Number.isFinite(body.x) ? Math.min(1, Math.max(0, body.x)) : null,
       y: Number.isFinite(body.y) ? Math.min(1, Math.max(0, body.y)) : null
     };
+    // Slurs never go on the wall or to David's phone.
+    if (hasSlur(note.message) || hasSlur(note.name) || hasSlur(note.contact)) return json({ saved: false, posted: false, mailed: false, blocked: true }, headers, 400);
     // Wall notes are public, so Jev reads them first. Anything it flags (or
     // anything it can't check) stays private and only David sees it.
     let wall = body.public === true;

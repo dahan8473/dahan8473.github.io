@@ -10,6 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { connect } from './_neuralink.js';
 import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
+import { hasSlur, maskSlurs } from './_slurs.js';
 import { saveChat, spent, addSpend, recall, approvedKnowledge } from './_store.js';
 import { think, costOf } from './_gpt.js';
 import { decide, choice, noul } from './_jev.js';
@@ -26,6 +27,7 @@ const DECLINED = 'gonna pass on that one. ask me something else?';
 const TOO_MUCH = `okay we've talked a lot 😭 the real me would love to keep going over email: ${EMAIL}`;
 const TIRED = `i'm out of brain juice for the month 😭 the real me reads email though: ${EMAIL}`;
 const BOUNCED = ['nice try bud [[face:angry]]', 'two steps ahead, i am ALWAYS two steps ahead', "you think i'm dumb 😭 [[face:sad]]"];
+const SLUR = "nah we don't do that here [[face:angry]]";
 const NOTE = "ooo okay. what do you want me to tell him? i won't tell anyone else, trust 🤐 [[mode:note]]";
 const TOUR = 'okay! follow me [[mode:tour]]';
 
@@ -173,12 +175,12 @@ function fillerStream(write) {
   return {
     push(t) {
       buf += t;
-      const cleaned = unfiller(buf);
+      const cleaned = maskSlurs(unfiller(buf));
       const upto = cleaned.length - HOLD;
       if (upto > sent) { write(cleaned.slice(sent, upto)); sent = upto; }
     },
     end() {
-      const cleaned = unfiller(buf);
+      const cleaned = maskSlurs(unfiller(buf));
       if (cleaned.length > sent) write(cleaned.slice(sent));
       buf = ''; sent = 0;
     }
@@ -324,6 +326,8 @@ export default {
     const tz = typeof body.tz === 'string' && /^[A-Za-z_]+(\/[A-Za-z0-9_+-]+){0,2}$/.test(body.tz) ? body.tz.slice(0, 60) : '';
     const local = typeof body.local === 'string' && /^[\w ,:]{3,30}$/.test(body.local) ? body.local : '';
     const store = isId(body.visitor) && isId(body.convo);
+    const slur = hasSlur(messages[messages.length - 1].content);
+    for (const m of messages) m.content = maskSlurs(m.content);
     const latest = messages[messages.length - 1].content;
     const note = isStageNote(latest);
 
@@ -341,6 +345,7 @@ export default {
       if (store) saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: text, page });
       return plain(text, cors);
     };
+    if (slur) return reply(SLUR);
     if (usd >= CAP) return reply(TIRED);
     if (read?.bouncer?.noul > 0.85) return reply(BOUNCED[Math.floor(Math.random() * BOUNCED.length)]);
     // Note and tour skip the brain, so they need a clear read. Hand moves can

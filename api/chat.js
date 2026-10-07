@@ -159,6 +159,31 @@ function clean(body) {
 }
 
 const unmark = (t) => t.replace(/\s*\[\[[^\]]*\]\]/g, '').trim();
+
+// The model keeps reaching for "honestly" and "genuinely" as filler, which
+// reads like an AI, not David. Strip them on the way out. A stream wrapper
+// holds back the last few characters so a word split across chunks is caught.
+const FILLER = /(^|[.!?]\s+|\n)(?:honestly|genuinely)[,]?\s+(?=\S)|,?\s+(?:honestly|genuinely)(?=\s*(?:[.!,]|$|\s+\[\[|\s+[😭🙏💀😛]))|\b(?:honestly|genuinely)\s+(?=(?:just|so|really|pretty|kinda|the|a|i|it|that|this|my|love|think)\b)/gi;
+function unfiller(text) {
+  return text.replace(FILLER, (m, lead) => (lead !== undefined ? lead : ''));
+}
+function fillerStream(write) {
+  let buf = '', sent = 0;
+  const HOLD = 24; // a filler word plus the word after it
+  return {
+    push(t) {
+      buf += t;
+      const cleaned = unfiller(buf);
+      const upto = cleaned.length - HOLD;
+      if (upto > sent) { write(cleaned.slice(sent, upto)); sent = upto; }
+    },
+    end() {
+      const cleaned = unfiller(buf);
+      if (cleaned.length > sent) write(cleaned.slice(sent));
+      buf = ''; sent = 0;
+    }
+  };
+}
 const isStageNote = (t) => /^\(stage note/i.test(t);
 
 // Jev's read on the latest message: troll or not, what they want, which
@@ -357,8 +382,10 @@ export default {
       async start(controller) {
         let sent = false;
         let text = '';
-        const emit = (t) => { text += t; controller.enqueue(encoder.encode(t)); };
-        if (first) emit(first);
+        const raw = (t) => { text += t; controller.enqueue(encoder.encode(t)); };
+        const clean = fillerStream(raw);
+        const emit = (t) => clean.push(t);
+        if (first) raw(first);
         try {
           const { usage, refused } = await think({
             system: `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}\n\n${cortexText()}${known ? `\n\n${known}` : ''}`,
@@ -375,6 +402,7 @@ export default {
           console.error('brain', err?.status || '', err?.message || err);
           emit((sent ? ' ' : '') + OFFLINE);
         }
+        clean.end();
         // The typewriter is seconds behind the stream, so waiting on the save
         // before closing costs the visitor nothing.
         if (store) await saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: text, page });

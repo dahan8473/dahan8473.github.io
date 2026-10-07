@@ -8,7 +8,7 @@ import json, os, re, sys
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 39, 13, 32, 37
 V_TRACK = 1
-V_PIECE = 27  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 28  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -470,6 +470,9 @@ for label, rows, more in GROUPS:
     for slug, name, line, photo in rows:
         src, kind, alt = PICS.get(slug, (photo or '', 'photo', name))
         pic = f'<span class="hob-pic {kind}"><img src="{src}" alt="{alt}" loading="lazy" decoding="async"></span>' if src else f'<span class="hob-pic blank"><span>{name[0]}</span></span>'
+        # Muay Thai: my red gloves hang off the card (/3d/gloves.js); clicking them starts the spar.
+        if slug == 'muay-thai':
+            pic += f'<span class="hob-gloves" data-3d="gloves" data-v="{V_PIECE}"></span>'
         hob += f'            <a class="hob-card" href="/hobbies/{slug}/" data-t="{DT.get(slug, slug)}">{pic}<span class="hob-name">{name}<span class="hob-go" aria-hidden="true">&#8594;</span></span><span class="hob-line">{line}</span></a>\n'
     hob += '          </div>\n'
     links = ''.join(f'<a class="ln" href="/hobbies/{slug}/" data-t="{slug}">{name}</a>' for slug, name in more)

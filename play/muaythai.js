@@ -1455,6 +1455,23 @@ export function mount(el) {
   snd.classList.toggle('muted', sound.muted());
   raf = requestAnimationFrame(frame);
 
+  // Sent here by the gloves on /hobbies/ (3d/gloves.js): straight into the ring.
+  // After a full page load the floating head may not be on screen yet, so wait a moment for it.
+  // It counts as sparring (site.js), which also keeps the head from pitching the fight after.
+  let sparNow = false;
+  try { sparNow = sessionStorage.getItem('dl-spar-now') === '1'; if (sparNow) sessionStorage.removeItem('dl-spar-now'); } catch (e) {}
+  if (sparNow) {
+    const t0 = performance.now();
+    const go = () => {
+      if (dead) return;
+      const s = site();
+      if (!(s && s.rect().width > 0) && performance.now() - t0 < 2500) { setTimeout(go, 100); return; }
+      openRing();
+      if (window.dlFound) window.dlFound('spar');
+    };
+    requestAnimationFrame(go);
+  }
+
   return function stop() {
     if (dead) return;
     dead = true;

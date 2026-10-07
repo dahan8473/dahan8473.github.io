@@ -17,10 +17,23 @@
     }
   },
   "rewrites": [
-    { "source": "/admin/:slug", "destination": "/api/admin?slug=:slug" },
-    { "source": "/admin/:slug/:path*", "destination": "/api/admin?slug=:slug&path=:path*" }
+    {
+      "source": "/admin/:slug/",
+      "destination": "/api/admin?slug=:slug"
+    },
+    {
+      "source": "/admin/:slug",
+      "destination": "/api/admin?slug=:slug"
+    },
+    {
+      "source": "/admin/:slug/:path*",
+      "destination": "/api/admin?slug=:slug&path=:path*"
+    }
   ],
   "crons": [
-    { "path": "/api/learn", "schedule": "0 9 * * *" }
+    {
+      "path": "/api/learn",
+      "schedule": "0 9 * * *"
+    }
   ]
 }

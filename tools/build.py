@@ -6,8 +6,9 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 38, 12, 31, 36
-V_PIECE = 26  # bump when anything in /play/ or /3d/ changes
+V_CSS, V_TALKCSS, V_JS, V_TALK = 39, 13, 32, 37
+V_TRACK = 1
+V_PIECE = 27  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -120,6 +121,7 @@ def page(path, title, desc, body, on, cls='', wide=False, back=None, ld=False):
 
   <script src="/site.js?v={V_JS}"></script>
   <script src="/talk/talk.js?v={V_TALK}"></script>
+  <script type="module" src="/track.js?v={V_TRACK}"></script>
 </body>
 </html>
 '''
@@ -363,6 +365,16 @@ PROJ_MORE = {
                "No server, router or phones: game state syncs peer to peer over an ESP-NOW mesh, and signal strength decides if you're close enough to kill"],
     'story': '36 hours, team of three. The first prototype in Lua ran the badge out of memory, and the stock firmware rebooted whenever the radio turned on, so we flashed our own.',
     'sim': 'amongus',
+    # Photos first, then the demo on a button (play/projects.js).
+    'shots': [
+      {'src': '/media/work/amongus/team.webp', 'thumb': '/media/work/amongus/team-s.webp', 'w': 1600, 'h': 1067, 'caption': 'The team at the Hack the North letters, badges in hand'},
+      {'src': '/media/work/amongus/team-bite.webp', 'thumb': '/media/work/amongus/team-bite-s.webp', 'w': 1600, 'h': 1067, 'caption': 'Biting the badges like medals'},
+      {'src': '/media/work/amongus/selfie.webp', 'thumb': '/media/work/amongus/selfie-s.webp', 'w': 1200, 'h': 1600, 'caption': 'Us with the badges'},
+      {'src': '/media/work/amongus/3am.webp', 'thumb': '/media/work/amongus/3am-s.webp', 'w': 1200, 'h': 1600, 'caption': '3am, two teammates asleep on the table'},
+      {'video': '/media/work/amongus/range-test.mp4', 'poster': '/media/work/amongus/range-test-s.webp', 'w': 720, 'h': 1280, 'caption': 'A teammate testing how far the mesh reaches'},
+      {'src': '/media/work/htn-badges.webp', 'w': 1000, 'h': 750, 'caption': 'Two badges running the game'},
+    ],
+    'demo': 'See it work', 'demo_note': 'Six badges, one mesh, no server. Runs right here.',
   },
   'biopilot': {
     'award': '2nd, TELUS AI at the Edge of Innovation ($5,000)',
@@ -665,4 +677,6 @@ for rel in ['tethos/index.html', 'dashboard/index.html', 'rag/index.html', 'kunl
     html = html.replace('<span>London <span id="clock">--:--</span></span>', '<span class="where">Toronto <span id="clock">--:--</span><span id="ahead"></span></span>')
     for asset, v in [('styles.css', V_CSS), ('talk/talk.css', V_TALKCSS), ('site.js', V_JS), ('talk/talk.js', V_TALK)]:
         html = re.sub(r'(/' + re.escape(asset) + r'\?v=)\d+', lambda m: m.group(1) + str(v), html)
+    html = re.sub(r'\n  <script type="module" src="/track\.js\?v=\d+"></script>', '', html)
+    html = html.replace('</body>', f'  <script type="module" src="/track.js?v={V_TRACK}"></script>\n</body>', 1)
     open(path, 'w', encoding='utf-8').write(html)

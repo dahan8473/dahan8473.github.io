@@ -19,6 +19,8 @@
   font-size: 15px;
 }
 .dl [hidden] { display: none !important; }
+/* Over a project overlay (play/projects.js), so it can talk about what's open. */
+.dl.over { z-index: 101; }
 @media print { .dl { display: none; } }
 
 /* Head ------------------------------------------------------------------ */

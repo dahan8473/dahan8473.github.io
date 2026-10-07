@@ -8,6 +8,19 @@
     "api/decide.js": {
       "maxDuration": 10,
       "includeFiles": "talk/targets.json"
+    },
+    "api/learn.js": {
+      "maxDuration": 60
+    },
+    "api/admin.js": {
+      "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/admin/:slug", "destination": "/api/admin?slug=:slug" },
+    { "source": "/admin/:slug/:path*", "destination": "/api/admin?slug=:slug&path=:path*" }
+  ],
+  "crons": [
+    { "path": "/api/learn", "schedule": "0 9 * * *" }
+  ]
 }

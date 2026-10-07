@@ -175,6 +175,12 @@
       photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
       fashion: "kunlun! i'm still working on the pieces for the first drop rn"
     },
+    // The Among Us overlay: on open, one nudge if they don't try the demo, and what to try first in it.
+    amongus: {
+      open: "ahh this was my first hardware project! we were running around hack the north at 3am testing range lol. the demo's right under the photos if you wanna try it",
+      nudge: "psst, you can actually play it. hit see it work 👀",
+      demo: "drag your badge around! the lines are radio links, no server. then hit play as impostor and get someone inside your dotted circle 😈"
+    },
     // Where the 404 offers to take them.
     ways: [['home', '/'], ['resume', '/resume/'], ['projects', '/projects/'], ['hobbies', '/hobbies/'], ['brain', '/brain/'], ['notes', '/notes/'], ['messages', '/messages/']],
     // Small talk through the visit, all about them. Each topic leads to
@@ -331,6 +337,30 @@
   let here = norm(location.pathname);
   const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } })();
   const clock = () => new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit' }).toLowerCase();
+
+  // ---- Event bus ----------------------------------------------------------------
+  // Everything that should reach the head goes through window.dlBus: the page
+  // (site.js: page, bring), the project overlay (play/projects.js: overlay_open,
+  // overlay_close, demo_open, demo_close), games (game_start, game_end). The
+  // head reports what it says on it too (line, line_done, line_cut, line_drop,
+  // reply), for the logger. on('*', fn) hears everything as fn(data, type).
+  const bus = (() => {
+    if (window.dlBus && typeof window.dlBus.on === 'function' && typeof window.dlBus.emit === 'function') return window.dlBus;
+    const subs = new Map();
+    const b = {
+      on(type, fn) { if (!subs.has(type)) subs.set(type, new Set()); subs.get(type).add(fn); return b; },
+      off(type, fn) { if (subs.has(type)) subs.get(type).delete(fn); return b; },
+      emit(type, data = {}) {
+        for (const k of [type, '*']) {
+          for (const fn of [...(subs.get(k) || [])]) {
+            try { fn(data, type); } catch (e) { if (window.console) console.warn('dlBus', type, e); }
+          }
+        }
+      }
+    };
+    window.dlBus = b;
+    return b;
+  })();
 
   const S = Object.assign(
     { msgs: [], open: false, met: false, quiet: false, antics: 0, once: [], pending: null, lastKind: '', noticed: [], small: [] },
@@ -513,11 +543,12 @@
         .then((b) => this.ctx.decodeAudioData(b))
         .then((buf) => { this.voice = buf; }, () => { this.voice = null; });
     },
-    blip(ch) {
+    // gap: the shortest time between two blips, so quick lines still sound like talking.
+    blip(ch, gap = 0.05) {
       if (!this.live()) return;
       const ac = this.ctx;
       const t = ac.currentTime;
-      if (t - this.last < 0.05) return;
+      if (t - this.last < gap) return;
       this.last = t;
       const c = ch.toLowerCase().normalize('NFD')[0];
       const code = c.charCodeAt(0);
@@ -781,52 +812,202 @@
     if (seq === talkSeq) talk.hidden = true;
   }
 
-  // Typewriter. The queue holds characters and, inline, the stage directions
-  // the model wrote, so the hand moves right when the words reach it.
-  const sp = { q: [], page: '', typing: false, ended: true, fast: false, timer: 0, resolve: null, done: Promise.resolve(), readUntil: 0 };
-
-  // One voice at a time. Anything the visitor set off (a reply, a button, the
-  // chat opening) speaks now and drops whatever was waiting. Lines the head
-  // starts on its own wait for the current one to finish and be read, and at
-  // most two wait at once. Small talk checks speaking() and stays quiet.
-  const speaking = () => sp.typing || !sp.ended || now() < sp.readUntil;
-  let speechQ = Promise.resolve();
-  let speechWaiting = 0;
-  let speechGen = 0;
-  function speak(text, opts = {}) {
-    if (opts.urgent || opts.stream || opts.echo || !text) {
-      speechGen++;
-      speechWaiting = 0;
-      return speakNow(text, opts);
-    }
-    if (!speaking() && !speechWaiting) return speakNow(text, opts);
-    if (speechWaiting >= 2) return Promise.resolve();
-    speechWaiting++;
-    const gen = speechGen;
-    const run = speechQ.then(async () => {
-      while (gen === speechGen && speaking()) await wait(200);
-      if (gen !== speechGen) return;
-      speechWaiting--;
-      return speakNow(text, opts);
-    });
-    speechQ = run.catch(() => {});
-    return run;
+  // Gone at once, no animation: the line was about something they moved on from.
+  function hideNow() {
+    talkSeq++;
+    talk.getAnimations().forEach((a) => a.cancel());
+    talk.hidden = true;
   }
 
-  function speakNow(text, { echo = '', stream = false } = {}) {
+  // ---- Speech: one voice, by priority ---------------------------------------
+  // Every line is an utterance { id, pri, ctx, text, ttl }. The visitor comes
+  // first: replies to what they typed or clicked in the chat (REPLY) beat
+  // reactions to what they just opened or clicked (REACT), which beat page
+  // lines (exchanges, pitches, notices: PAGE), which beat small talk and idle
+  // bits (AMBIENT). A higher line cuts in, even through the pause after the
+  // last one; a lower one waits its turn and drops out once it's stale (ttl).
+  // ctx is the page plus whatever is open over it (a project, its demo, a
+  // game). Changing it stops the current line mid-word, drops anything
+  // waiting about the old one, takes its buttons down and bumps hear.tok, so
+  // an exchange halfway through an await stops before it speaks again. A line
+  // with ctx null (a reply) isn't about anything on screen and carries on.
+  // Unprompted lines (budget) also wait for a gap: one per BUDGET at most,
+  // never while they type or a reply streams in.
+  const PRI = { ambient: 1, page: 2, react: 3, reply: 4 };
+  const PRI_NAME = ['', 'ambient', 'page', 'react', 'reply'];
+  const TTL = [0, 3000, 10000, 6000, 60000];
+  const BUDGET = 8000;
+  const hear = { cur: null, shown: null, last: null, q: [], tok: 0, lastFree: -1e9, leaving: 0, introAt: 0, holdT: 0, hideT: 0, qT: 0 };
+  let over = ''; // over the page: 'project:<id>', 'demo:<id>', 'game:<id>', 'bring:<id>', 'leaving'
+  const ctxNow = () => here + (over ? '#' + over : '');
+  const speaking = () => Boolean(hear.cur || hear.q.length);
+  function budgetOk() {
+    const t = now();
+    return !S.quiet && !lent && !asking && !rec && !input.value && !document.hidden && t - hear.lastFree >= BUDGET && t - hear.leaving > 1500;
+  }
+
+  // Typewriter. The queue holds characters and, inline, the stage directions
+  // the model wrote, so the hand moves right when the words reach it. Lines
+  // the head comes up with itself type about 2.5x faster than the brain's.
+  const sp = { q: [], page: '', typing: false, ended: true, fast: false, timer: 0, due: 0, u: null };
+
+  // utter(text, opts) queues a line and returns it; speak() is the promise,
+  // true once it's all out, false if it never started or got cut. Options: id,
+  // pri, ctx (null: about nothing on screen), ttl, echo, stream, hold (how
+  // long a bubble outside the chat stays), stay (it doesn't go away on its
+  // own), mood, log (joins the chat log), budget (unprompted), keep (they can
+  // pick it up by clicking the head), onStart (marks it said), onCut.
+  function utter(text, o = {}) {
+    const pri = o.pri || PRI.page;
+    const u = {
+      id: o.id || 'line', pri, text: text || '', ctx: o.ctx === undefined ? ctxNow() : o.ctx, ttl: o.ttl || TTL[pri], at: now(),
+      echo: o.echo || '', stream: Boolean(o.stream), hold: o.hold, stay: Boolean(o.stay), mood: o.mood, log: Boolean(o.log),
+      budget: Boolean(o.budget), keep: o.keep || 0, onStart: o.onStart, onCut: o.onCut, phase: 'wait', buf: [], ended: false
+    };
+    u.done = new Promise((r) => { u.resolve = r; });
+    u.feed = (s) => { if (sp.u === u) feed(s); else if (u.phase === 'wait') for (const ch of s) u.buf.push(ch); };
+    u.act = (a) => { if (sp.u === u) feedAction(a); else if (u.phase === 'wait') u.buf.push(a); };
+    u.end = () => { u.ended = true; if (sp.u === u) endSpeech(); };
+    admit(u);
+    return u;
+  }
+  const speak = (text, o) => utter(text, o).done;
+
+  function admit(u) {
+    if (u.ctx && u.ctx !== ctxNow()) return discard(u, 'context');
+    if (u.budget && S.quiet) return discard(u, 'quiet');
+    if (!u.stream && (hear.q.some((x) => x.id === u.id) || (hear.cur && hear.cur.id === u.id && hear.cur.phase === 'type'))) return discard(u, 'repeat');
+    const c = hear.cur;
+    if (c && (u.pri > c.pri || (u.pri === c.pri && u.pri >= PRI.react))) { cut(c, 'preempt'); begin(u); return; }
+    hear.q.push(u);
+    if (c) pumpLater();
+    else pumpQ();
+  }
+  function discard(u, reason) {
+    u.phase = 'dropped';
+    bus.emit('line_drop', { id: u.id, reason });
+    u.resolve(false);
+  }
+  function pumpLater(ms = 250) {
+    clearTimeout(hear.qT);
+    if (hear.q.length) hear.qT = setTimeout(pumpQ, ms);
+  }
+  function pumpQ() {
+    clearTimeout(hear.qT);
+    if (hear.cur) return;
+    const t = now();
+    const c = ctxNow();
+    hear.q = hear.q.filter((u) => {
+      if (u.ctx && u.ctx !== c) { discard(u, 'context'); return false; }
+      if (t - u.at > u.ttl) { discard(u, 'expired'); return false; }
+      return true;
+    });
+    hear.q.sort((a, b) => b.pri - a.pri || a.at - b.at);
+    const free = budgetOk();
+    const u = hear.q.find((x) => !x.budget || free);
+    if (u) { hear.q.splice(hear.q.indexOf(u), 1); begin(u); }
+    else pumpLater();
+  }
+
+  function begin(u) {
+    clearTimeout(hear.hideT);
+    clearTimeout(hear.holdT);
+    hear.cur = hear.shown = hear.last = u;
+    u.phase = 'type';
+    u.chat = chatOn;
+    if (u.budget) hear.lastFree = now();
+    if (u.mood) setFace(u.mood, 1200 + u.text.length * 45);
+    if (u.onStart) { try { u.onStart(u); } catch (e) {} }
+    if (chatOn && u.log && u.text) { S.msgs.push({ role: 'assistant', content: u.text }); save(); }
+    if (!chatOn) {
+      showTalk();
+      if (u.keep) pres.last = { text: u.text, at: now(), keep: u.keep };
+    }
+    bus.emit('line', { id: u.id, kind: u.id.split(':')[0], priority: PRI_NAME[u.pri], context: u.ctx, text: u.text });
     clearTimeout(sp.timer);
-    if (sp.resolve) sp.resolve();
-    Object.assign(sp, { q: [], page: '', typing: false, ended: !stream, fast: false, resolve: null, readUntil: 0 });
-    sp.done = new Promise((r) => { sp.resolve = r; });
+    Object.assign(sp, { q: [], page: '', typing: false, ended: !u.stream || u.ended, fast: false, u });
     textEl.textContent = '';
     textEl.classList.remove('clip');
     recallEl.hidden = true;
-    echoEl.textContent = echo;
-    echoEl.hidden = !echo;
-    if (text) feed(text);
-    else pump();
-    return sp.done;
+    echoEl.textContent = u.echo;
+    echoEl.hidden = !u.echo;
+    for (const ch of u.text) sp.q.push(ch);
+    sp.q.push(...u.buf);
+    u.buf = [];
+    pump();
   }
+  // Stops a line where it is. One that already finished is just let go.
+  function cut(u, reason) {
+    if (!u || hear.cur !== u) return;
+    clearTimeout(hear.holdT);
+    hear.cur = null;
+    if (sp.u === u) {
+      clearTimeout(sp.timer);
+      Object.assign(sp, { q: [], typing: false, ended: true, u: null });
+    }
+    if (u.phase === 'type') {
+      bus.emit('line_cut', { id: u.id, reason });
+      u.resolve(false);
+    }
+    u.phase = 'cut';
+    if (u.onCut) { try { u.onCut(reason); } catch (e) {} }
+    pumpLater();
+  }
+  // The bubble shows something about what they just left: take it down now.
+  function clearStale() {
+    const s = hear.shown;
+    if (!s || !s.ctx || s.ctx === ctxNow()) return;
+    hear.shown = null;
+    clearTimeout(hear.hideT);
+    if (!chatOn) hideNow();
+    else if (S.auto) tuck();
+    else { textEl.textContent = ''; echoEl.hidden = true; recallEl.hidden = true; }
+  }
+  // A chat the head opened on its own, that they never answered: put it away quietly.
+  function tuck() {
+    chatOn = false;
+    S.open = false;
+    S.auto = false;
+    save();
+    root.classList.remove('chat');
+    choicesEl.hidden = true;
+    form.hidden = true;
+    fineEl.hidden = true;
+    pres.waiting = false;
+    hideNow();
+  }
+  // Stop talking and empty the bubble.
+  function hush(reason = 'hush') {
+    if (hear.cur) cut(hear.cur, reason);
+    hear.shown = null;
+    clearTimeout(hear.hideT);
+    textEl.textContent = '';
+    echoEl.hidden = true;
+    recallEl.hidden = true;
+  }
+  // They moved on: a page, a project, its demo, a game.
+  function setContext(next, reason) {
+    over = next;
+    hear.tok++;
+    root.classList.toggle('over', /^(project|demo):/.test(over));
+    const c = ctxNow();
+    if (hear.cur && hear.cur.ctx && hear.cur.ctx !== c) cut(hear.cur, reason);
+    hear.q = hear.q.filter((u) => { if (!u.ctx || u.ctx === c) return true; discard(u, 'context'); return false; });
+    if (choicesEl.dataset.ctx && choicesEl.dataset.ctx !== c) {
+      choicesEl.hidden = true;
+      choicesEl.replaceChildren();
+      delete choicesEl.dataset.ctx;
+      travelPick = false;
+      pres.waiting = false;
+    }
+    clearStale();
+    if (!touring && !pitching) {
+      interrupt(true);
+      if (!chatOn) schedule(rand(15000, 25000));
+    }
+    pumpQ();
+  }
+
   function feed(s) { for (const ch of s) sp.q.push(ch); pump(); }
   function feedAction(a) { sp.q.push(a); pump(); }
   function endSpeech() { sp.ended = true; pump(); }
@@ -850,27 +1031,51 @@
       textEl.textContent = sp.page;
       if (follow) textEl.scrollTop = textEl.scrollHeight;
       textEl.classList.toggle('clip', textEl.scrollTop > 0);
-      voice(item);
+      const quick = !sp.u || !sp.u.stream;
+      voice(item, quick);
+      const d = reduce ? 0 : sp.fast ? 6 : /[.!?]/.test(item) ? (quick ? 120 : 300) : /[,;:]/.test(item) ? (quick ? 56 : 140) : quick ? 11 : 28;
+      // Keep to the pace when timers fire late: the next letter is due d
+      // after the last one was, and anything overdue goes out now.
+      const t = now();
+      sp.due = sp.typing ? Math.max(sp.due + d, t - 150) : t + d;
       sp.typing = true;
-      sp.timer = setTimeout(step, reduce ? 0 : sp.fast ? 6 : /[.!?]/.test(item) ? 300 : /[,;:]/.test(item) ? 140 : 28);
+      if (sp.due <= t) continue;
+      sp.timer = setTimeout(step, sp.due - t);
       return;
     }
   }
   function finishSpeech() {
+    const u = sp.u;
     pres.said = now();
-    // Time to read it before the head starts on something else.
-    sp.readUntil = now() + Math.min(6000, 1000 + sp.page.length * 35);
     linkify();
-    const r = sp.resolve;
-    sp.resolve = null;
-    if (r) r();
     if (chatOn) showForm();
+    if (!u || hear.cur !== u || u.phase !== 'type') return;
+    u.phase = 'hold';
+    bus.emit('line_done', u.stream ? { id: u.id, text: sp.page } : { id: u.id });
+    u.resolve(true);
+    // Time to read it before the next line of the same rank or lower. A higher one doesn't wait.
+    const len = sp.page.length;
+    const read = u.stream ? Math.min(6000, 1000 + len * 35) : Math.min(3500, 700 + len * 22);
+    hear.holdT = setTimeout(() => {
+      if (hear.cur !== u) return;
+      hear.cur = null;
+      u.phase = 'done';
+      pumpQ();
+    }, read);
+    if (!u.chat && !u.stay) {
+      const linger = Math.max(read, Math.min(7000, (u.hold == null ? 1500 : u.hold) + len * 25));
+      hear.hideT = setTimeout(() => {
+        if (hear.shown !== u || chatOn) return;
+        hear.shown = null;
+        hideTalk();
+      }, linger);
+    }
   }
-  function voice(ch) {
+  function voice(ch, quick) {
     if (!/[\p{L}\p{N}]/u.test(ch)) return;
     life.kick = Math.max(life.kick, /[aeiouy]/i.test(ch) ? rand(0.75, 1) : rand(0.3, 0.6));
     life.talkT = now();
-    sound.blip(ch);
+    sound.blip(ch, quick ? 0.024 : 0.05);
   }
   function linkify() {
     const t = textEl.textContent;
@@ -893,20 +1098,11 @@
     textEl.replaceChildren(out);
   }
 
-  // Lines outside the chat: bubble pops over the head, then goes away.
-  let quipSeq = 0;
-  async function quip(text, hold = 2000, mood) {
-    if (!text) return;
-    if (mood) setFace(mood, 1200 + text.length * 45);
-    if (chatOn) {
-      if (!asking) await speak(text);
-      return;
-    }
-    const id = ++quipSeq;
-    showTalk();
-    await speak(text);
-    await wait(hold + text.length * 25);
-    if (id === quipSeq && !chatOn) hideTalk();
+  // A line outside the chat pops a bubble over the head that goes away after
+  // hold (plus reading time). In the chat it's just the next line.
+  function quip(text, hold = 2000, mood, o = {}) {
+    if (!text) return Promise.resolve(false);
+    return speak(text, Object.assign({ pri: PRI.ambient, hold, mood }, o));
   }
 
   // ---- Hand -----------------------------------------------------------------
@@ -1131,7 +1327,7 @@
         c.raf = requestAnimationFrame(loop);
       };
       c.raf = requestAnimationFrame(loop);
-      quip(pick(LINES.carry), 1400, 'happy');
+      quip(pick(LINES.carry), 1400, 'happy', { id: 'bit:carry' });
       for (let i = 0; i < 2 && ep === epoch; i++) {
         await moveHead(rand(innerWidth * 0.15, innerWidth * 0.75), rand(innerHeight * 0.2, innerHeight * 0.55), 1300);
         await wait(rand(700, 1200));
@@ -1140,11 +1336,11 @@
       await putBack();
     });
   }
-  async function putBack() {
+  async function putBack(silent) {
     const c = carried;
     if (!c) return;
     cancelAnimationFrame(c.raf);
-    quip(LINES.putBack, 900);
+    if (!silent) quip(LINES.putBack, 900, null, { id: 'bit:putback' });
     const r = c.el.getBoundingClientRect();
     handTo(r.right - 16, r.top + 12, 45, { duration: 620, easing: SPRING });
     await play(c.ghost, [{ transform: c.ghost.style.transform }, { transform: `translate(${r.left}px,${r.top}px) scale(1)` }], { duration: 620, easing: SPRING });
@@ -1171,14 +1367,14 @@
       bar.style.translate = narrow ? '0 -130%' : '-150% 0';
       await handTo(narrow ? r.left + r.width / 2 : -60, narrow ? -60 : r.top + 14, 90, { duration: 600 });
     });
-    quip(LINES.mischief.take, 2600, 'happy');
+    quip(LINES.mischief.take, 2600, 'happy', { id: 'bit:mess' });
     let back = false;
     giveBack = () => {
       if (back) return;
       back = true;
       giveBack = null;
       bar.style.translate = '';
-      quip(LINES.mischief.give, 1400);
+      quip(LINES.mischief.give, 1400, null, { id: 'bit:mess-give', ctx: null });
     };
     setTimeout(() => giveBack && giveBack(), 25000);
   }
@@ -1402,17 +1598,28 @@
     micBtn.hidden = !Recognition;
     micBtn.disabled = asking;
   }
+  // Buttons under the bubble belong to where they came up: going somewhere
+  // else takes them down (setContext).
+  function setChoices(kind, nodes) {
+    choicesEl.classList.toggle('scale', kind === 'scale');
+    choicesEl.dataset.kind = kind;
+    choicesEl.dataset.ctx = ctxNow();
+    choicesEl.replaceChildren(...nodes);
+    choicesEl.hidden = false;
+  }
   function showChoices() {
-    choicesEl.classList.remove('scale');
-    choicesEl.replaceChildren(...LINES.choices.map(([c, does]) => {
+    setChoices('intro', LINES.choices.map(([c, does]) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = c;
-      b.addEventListener('click', () => (does === 'tour' ? startTour(c) : ask(c)));
+      b.addEventListener('click', () => (does === 'tour' ? startTour(c) : ask(c, { via: 'button' })));
       return b;
     }));
-    choicesEl.hidden = false;
   }
+  // The hello is still being said, or its question is up with its buttons
+  // and it's recent: page lines wait for it.
+  const introPending = () => Boolean(hear.cur && hear.cur.id.startsWith('intro')) ||
+    (chatOn && !talked() && !choicesEl.hidden && choicesEl.dataset.kind === 'intro' && now() - hear.introAt < 10000);
 
   async function openChat() {
     interrupt();
@@ -1423,6 +1630,7 @@
     squish();
     chatOn = true;
     S.open = true;
+    S.auto = false;
     save();
     root.classList.add('chat');
     await goHome(420);
@@ -1433,41 +1641,56 @@
     // Clicked right after he said something: pick up from there.
     const said = pres.last && now() - pres.last.at < (pres.last.keep || 15000) ? pres.last.text : '';
     pres.last = null;
-    if (said) { S.msgs.push({ role: 'assistant', content: said }); save(); speak(said, { urgent: true }); }
+    if (said) { S.msgs.push({ role: 'assistant', content: said }); save(); speak(said, { id: 'pickup', pri: PRI.reply, ctx: null }); }
     else if (!talked()) await greet(true);
-    else speak(LINES.again, { urgent: true });
+    else speak(LINES.again, { id: 'again', pri: PRI.reply, ctx: null });
   }
 
-  // The head starts the conversation: who it is, then their name.
+  // The head starts the conversation: who it is, then their name. urgent:
+  // they clicked the head for it; otherwise it's the hello on a first visit.
   async function greet(urgent = false) {
+    const tok = hear.tok;
     const name = knownName();
-    const line = name ? LINES.introBack(name) : pick(LINES.intro);
-    if (!S.msgs.length) { S.msgs.push({ role: 'assistant', content: line }); save(); }
+    const text = name ? LINES.introBack(name) : pick(LINES.intro);
     setFace('happy', 2500);
-    await speak(line, { urgent });
+    const ok = await speak(text, {
+      id: name ? 'intro:back' : 'intro', pri: urgent ? PRI.reply : PRI.page, ctx: urgent ? null : undefined,
+      onStart: () => { if (!S.msgs.length) { S.msgs.push({ role: 'assistant', content: text }); save(); } }
+    });
+    if (!ok || (!urgent && tok !== hear.tok)) return;
+    hear.introAt = now();
     if (chatOn && !talked()) showChoices();
   }
-  async function intro() {
+  // Chat the head opens itself (the hello, a hobby page's question). It
+  // stays its own until they answer, so leaving tucks it away (tuck()).
+  function openFor() {
+    if (chatOn) return;
     chatOn = true;
     S.open = true;
+    S.auto = true;
     save();
     root.classList.add('chat');
+    goHome(420);
     showTalk();
     showForm();
+  }
+  async function intro() {
+    openFor();
     await greet();
   }
-  function closeChat(line = LINES.close) {
+  function closeChat(text = LINES.close, id = 'close') {
     touring = false;
     chatOn = false;
     S.open = false;
+    S.auto = false;
     save();
     interrupt();
     root.classList.remove('chat');
     choicesEl.hidden = true;
     form.hidden = true;
     fineEl.hidden = true;
-    speak('');
-    hideTalk().then(() => { if (line) { quip(line, 800, 'sad'); peace(); } });
+    hush('close');
+    hideTalk().then(() => { if (text) { quip(text, 800, 'sad', { id, pri: PRI.reply, ctx: null }); peace(); } });
     schedule(40000);
   }
   function shoo() {
@@ -1477,7 +1700,7 @@
     interrupt();
     root.classList.add('quiet');
     document.documentElement.classList.remove('dl-pitch');
-    quip(LINES.shoo, 1200, 'sad');
+    quip(LINES.shoo, 1200, 'sad', { id: 'shoo', pri: PRI.reply, ctx: null });
   }
   let pokes = 0;
   function poke() {
@@ -1485,7 +1708,7 @@
     emote(pokes % 2 ? '?' : '!');
     life.surprise = now() + 200;
     if (pokes >= 2) setFace('angry', 1800);
-    if (!asking && !sp.typing) speak(LINES.poke[pokes++ % LINES.poke.length], { urgent: true });
+    if (!asking && !sp.typing) speak(LINES.poke[pokes++ % LINES.poke.length], { id: 'poke', pri: PRI.react, ctx: null });
   }
 
   // Talking back: the browser's speech recognition fills the box as you
@@ -1509,7 +1732,7 @@
       input.value = heard;
     };
     rec.onerror = (e) => {
-      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { setFace('sad', 2500); speak(LINES.micBlocked, { urgent: true }); }
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { setFace('sad', 2500); speak(LINES.micBlocked, { id: 'mic:blocked', pri: PRI.react, ctx: null }); }
     };
     rec.onend = () => {
       rec = null;
@@ -1521,11 +1744,13 @@
   }
 
   // A note is the page asking for a line on its own (the chat went quiet),
-  // so nothing is echoed and it doesn't use up the visitor's turns.
-  async function ask(q, { note = false, fallback = '' } = {}) {
+  // so nothing is echoed and it doesn't use up the visitor's turns. Notes
+  // speak at pri (small talk is ambient) and stop, fetch and all, if they
+  // move on before it's said.
+  async function ask(q, { note = false, fallback = '', via = 'typed', pri = 0, id = '' } = {}) {
     q = q.trim().slice(0, 500);
     if (!q || asking) return;
-    if (!note && S.noting) return takeNote(q);
+    if (!note && S.noting) return takeNote(q, via);
     if (!note) {
       touring = false;
       if (giveBack) giveBack();
@@ -1535,24 +1760,33 @@
       unshow();
       if (pres.waiting) { S.smallAnswered = true; save(); }
       pres.waiting = false;
+      S.auto = false;
       found('talk');
-      if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { echo: q }); return; }
+      bus.emit('reply', { via, text: q, after: hear.last ? hear.last.id : '' });
+      if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { id: 'limit', pri: PRI.reply, ctx: null, echo: q }); return; }
     }
     asking = true;
     sendBtn.disabled = true;
     micBtn.disabled = true;
-    S.msgs.push(note ? { role: 'user', content: q, note: true } : { role: 'user', content: q });
+    const mine = note ? { role: 'user', content: q, note: true } : { role: 'user', content: q };
+    S.msgs.push(mine);
     save();
-    speak('', { echo: note ? '' : q, stream: true });
+    const ctrl = new AbortController();
+    let dead = false;
+    const u = utter('', {
+      id: id || (note ? 'server:note' : 'server'), pri: pri || (note ? PRI.ambient : PRI.reply), ctx: note ? undefined : null,
+      stream: true, echo: note ? '' : q, onCut: () => { dead = true; ctrl.abort(); }
+    });
     emote('...', { sticky: true });
     let raw = '';
     let failed = false;
-    const parser = makeParser(feed, feedAction);
+    const parser = makeParser(u.feed, u.act);
     try {
       const res = await fetch(API + '/chat', {
         method: 'POST',
         // text/plain keeps this a simple request, so no CORS preflight.
         headers: { 'content-type': 'text/plain' },
+        signal: ctrl.signal,
         body: JSON.stringify({
           page: here,
           here: Object.keys(targets).filter((id) => find(id)),
@@ -1577,16 +1811,29 @@
       }
       parser.end();
     } catch (e) {
-      failed = true;
-      if (!raw && note) { S.msgs.pop(); raw = fallback || smallLine()?.text || LINES.offline; parser.push(raw); parser.end(); }
-      else if (!raw) { raw = LINES.offline; setFace('sad', 3000); parser.push(raw); parser.end(); }
+      if (!dead) {
+        failed = true;
+        if (!raw && note) { S.msgs = S.msgs.filter((m) => m !== mine); raw = fallback || smallLine()?.text || LINES.offline; parser.push(raw); parser.end(); }
+        else if (!raw) { raw = LINES.offline; setFace('sad', 3000); parser.push(raw); parser.end(); }
+      }
+    }
+    emoteOff();
+    if (dead || u.phase === 'dropped') {
+      // Cut off because they moved on: a stage note leaves no trace, a reply keeps what came in.
+      if (note) S.msgs = S.msgs.filter((m) => m !== mine);
+      else S.msgs.push({ role: 'assistant', content: raw.trim() || '..' });
+      save();
+      asking = false;
+      if (chatOn) showForm();
+      mode = '';
+      navTo = null;
+      return;
     }
     pres.brain = !failed && !raw.includes(LINES.offline);
-    emoteOff();
     S.msgs.push({ role: 'assistant', content: raw.trim() || '..' });
     save();
-    endSpeech();
-    await sp.done;
+    u.end();
+    await u.done;
     asking = false;
     if (chatOn) showForm();
     if (mode === 'note') { S.noting = 'message'; save(); }
@@ -1597,14 +1844,16 @@
 
   // Private notes for the real David, taken in the chat. They skip the brain
   // and the chat log and go straight to him.
-  async function takeNote(q) {
+  async function takeNote(q, via = 'typed') {
     choicesEl.hidden = true;
     input.value = '';
+    S.auto = false;
+    bus.emit('reply', { via, text: q, after: hear.last ? hear.last.id : '' });
     if (S.noting === 'message') {
       S.noteMsg = q;
       S.noting = 'contact';
       save();
-      return speak(LINES.noteContact, { echo: q });
+      return speak(LINES.noteContact, { id: 'note:contact', pri: PRI.reply, ctx: null, echo: q });
     }
     const contact = /^(skip|no|nah|nope|no thanks)\b/i.test(q) ? '' : q;
     const message = S.noteMsg;
@@ -1627,8 +1876,8 @@
     } catch (e) {}
     emoteOff();
     setFace(ok ? 'happy' : 'sad', 2000);
-    await speak(ok ? LINES.noteSent : LINES.noteFailed, { echo: q });
     asking = false;
+    await speak(ok ? LINES.noteSent : LINES.noteFailed, { id: ok ? 'note:sent' : 'note:failed', pri: PRI.reply, ctx: null, echo: q });
   }
 
   function restore() {
@@ -1639,7 +1888,7 @@
     showTalk();
     showForm();
     const last = [...S.msgs].reverse().find((m) => m.role === 'assistant');
-    speak('');
+    hush('restore');
     textEl.textContent = last ? strip(last.content) : LINES.intro[0];
     linkify();
     if (S.pending) {
@@ -1657,11 +1906,11 @@
     clearTimeout(dir.timer);
     if (!reduce && !S.quiet) dir.timer = setTimeout(nextBit, ms);
   }
-  function interrupt() {
+  function interrupt(silent) {
     epoch++;
     clearTimeout(dir.timer);
     release();
-    putBack();
+    putBack(silent);
   }
 
   // What's on screen and what they're doing, for Jev to decide on.
@@ -1697,17 +1946,17 @@
     } catch (e) { return null; }
   }
 
-  const roamBit = (el, line) => ({ kind: 'roam', run: async () => { const ep = epoch; await roam(el); if (ep === epoch) await quip(line, 2200); } });
-  const pointBit = (el, line) => ({ kind: 'point', run: () => Promise.all([quip(line, 1800), point(el, { hold: 1600 })]) });
+  const roamBit = (el, line) => ({ kind: 'roam', run: async () => { const ep = epoch; await roam(el); if (ep === epoch) await quip(line, 2200, null, { id: 'bit:roam' }); } });
+  const pointBit = (el, line) => ({ kind: 'point', run: () => Promise.all([quip(line, 1800, null, { id: 'bit:point' }), point(el, { hold: 1600 })]) });
   // Jev's move, turned into something the head does. Fetching to the cursor
   // only happens for a visitor who reads as a recruiter.
   function bitFor(move, id) {
     const el = id && find(id);
-    if (move === 'comment' && el && LINES.notice[id] && !S.noticed.includes(id) && here !== '/hobbies/') return { kind: 'comment', run: () => { S.noticed.push(id); save(); return chime(LINES.notice[id]); } };
+    if (move === 'comment' && el && LINES.notice[id] && !S.noticed.includes(id) && here !== '/hobbies/') return { kind: 'comment', run: () => chime(LINES.notice[id], { id: 'notice:' + id, pri: PRI.page, budget: false, onStart: () => noticed(id) }) };
     if (move === 'comment' && el && LINES.roam[id] && inView(el)) return roamBit(el, LINES.roam[id]);
     if (move === 'point' && el && LINES.point[id]) return pointBit(el, LINES.point[id]);
     if (move === 'fetch' && el && S.who === 'recruiter' && fine && cursor.seen && LINES.yank[id]) {
-      return { kind: 'fetch', run: async () => { await Promise.all([quip(LINES.yank[id], 1500), yank(el, { hold: 5200 })]); await quip(pick(LINES.letgo), 600, 'sad'); } };
+      return { kind: 'fetch', run: async () => { await Promise.all([quip(LINES.yank[id], 1500, null, { id: 'bit:fetch' }), yank(el, { hold: 5200 })]); await quip(pick(LINES.letgo), 600, 'sad', { id: 'bit:letgo' }); } };
     }
     if (move === 'carry' && el && carryable(el)) return { kind: 'carry', run: () => carry(el) };
     if (move === 'mess' && !talked() && !S.once.includes('mischief')) return { kind: 'mess', run: mischief };
@@ -1723,13 +1972,14 @@
     const pic = [...document.querySelectorAll('main .shot img, main .cats img')].find(inView);
     if (pic && !S.once.includes('carried')) out.push({ kind: 'carry', run: () => { S.once.push('carried'); save(); return carry(pic.closest('.proj') || pic); } });
     const bonkable = ['build', 'lead', 'play'].map(find).find((el) => el && inView(el));
-    if (bonkable) out.push({ kind: 'bonk', run: async () => { const ep = epoch; await bonk(bonkable); if (ep === epoch) await quip(pick(LINES.bonk), 1200); } });
+    if (bonkable) out.push({ kind: 'bonk', run: async () => { const ep = epoch; await bonk(bonkable); if (ep === epoch) await quip(pick(LINES.bonk), 1200, null, { id: 'bit:bonk' }); } });
     if (!talked() && dir.count > 0 && !S.once.includes('knock')) {
-      out.push({ kind: 'knock', run: () => { S.once.push('knock'); save(); return Promise.all([knock(), wait(400).then(() => quip(pick(LINES.knock), 1800))]); } });
+      out.push({ kind: 'knock', run: () => { S.once.push('knock'); save(); return Promise.all([knock(), wait(400).then(() => quip(pick(LINES.knock), 1800, null, { id: 'bit:knock' }))]); } });
     }
     return out;
   }
-  const idleNow = () => chatOn || held || carried || touring || dir.busy || document.hidden || life.sleep || life.shy;
+  // Bits are unprompted too: they wait for the same gap lines do, and nothing goes on over an overlay or a game.
+  const idleNow = () => chatOn || held || carried || touring || dir.busy || document.hidden || life.sleep || life.shy || over || speaking() || !budgetOk();
   async function nextBit() {
     if (S.quiet || reduce) return;
     if (idleNow()) return schedule(9000);
@@ -1750,6 +2000,7 @@
     S.antics++;
     S.lastKind = bit.kind;
     save();
+    hear.lastFree = now();
     const ep = epoch;
     try { await bit.run(); } catch (e) {}
     dir.busy = false;
@@ -1760,11 +2011,9 @@
   // ---- Tour -------------------------------------------------------------------
 
   let touring = false;
-  function say(text) {
-    if (!chatOn) return quip(text, 1800);
-    S.msgs.push({ role: 'assistant', content: text });
-    save();
-    return speak(text);
+  // A line that joins the chat log when the chat is open.
+  function say(text, o = {}) {
+    return speak(text, Object.assign({ hold: 1800, log: true }, o));
   }
   async function tour() {
     if (touring) return;
@@ -1776,11 +2025,11 @@
         await navigate(page);
         if (!touring) return;
         const el = find(id);
-        await Promise.all([say(line), el ? point(el, { hold: 1200 }) : null]);
+        await Promise.all([say(line, { id: 'tour:' + page, pri: PRI.reply, ctx: null }), el ? point(el, { hold: 1200 }) : null]);
         if (el && el.matches('.r-item') && window.dlPin) window.dlPin(el);
         await wait(1500);
       }
-      if (touring) await say(LINES.tourEnd);
+      if (touring) await say(LINES.tourEnd, { id: 'tour:end', pri: PRI.reply, ctx: null });
     } finally {
       touring = false;
     }
@@ -1798,14 +2047,16 @@
       showTalk();
       showForm();
     }
-    ask(q);
+    ask(q, { via: 'button' });
   };
 
   async function startTour(label) {
     choicesEl.hidden = true;
+    S.auto = false;
     S.msgs.push({ role: 'user', content: label });
     save();
-    await speak(LINES.tourStart, { echo: label });
+    bus.emit('reply', { via: 'button', text: label, after: hear.last ? hear.last.id : '' });
+    await speak(LINES.tourStart, { id: 'tour:start', pri: PRI.reply, ctx: null, echo: label });
     tour();
   }
 
@@ -1813,6 +2064,7 @@
 
   const is404 = () => document.querySelector('.identity .name')?.textContent.trim() === '404';
   async function lost() {
+    const tok = hear.tok;
     chatOn = true;
     S.open = true;
     save();
@@ -1821,39 +2073,71 @@
     showTalk();
     showForm();
     setFace('sad', 2000);
-    await speak(LINES.lost);
-    choicesEl.replaceChildren(...LINES.ways.map(([label, page]) => {
+    if (!(await speak(LINES.lost, { id: 'lost', pri: PRI.page })) || tok !== hear.tok) return;
+    setChoices('ways', LINES.ways.map(([label, page]) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = label;
       b.addEventListener('click', async () => {
         choicesEl.hidden = true;
+        bus.emit('reply', { via: 'button', text: label, after: 'lost' });
         await navigate(page);
         const el = document.querySelector('main h1, main .hello, main .header');
-        speak(LINES.found);
+        speak(LINES.found, { id: 'found', pri: PRI.reply, ctx: null });
         if (el) point(el, { hold: 1600 });
       });
       return b;
     }));
-    choicesEl.hidden = false;
   }
 
   // ---- Presence: like he's actually sitting there ---------------------------
   // He sees what you open, play, hover on or stop to read, and says something
   // about it. When the chat goes quiet he makes small talk instead of idling.
 
-  const pres = { ready: false, seen: '', seenAt: 0, said: now(), streak: 0, out: 0, brain: false, at: '', atSince: 0, last: null, smallAt: now(), waiting: false };
+  const pres = { ready: false, said: now(), streak: 0, brain: false, at: '', atSince: 0, last: null, smallAt: now(), waiting: false };
+  // Marked when the line about it actually starts, not when it's queued.
+  const noticed = (id) => { if (!S.noticed.includes(id)) { S.noticed.push(id); save(); } };
+  const once = (key) => { if (!S.once.includes(key)) { S.once.push(key); save(); } };
 
-  // On /hobbies/ the cards are doors, not things to comment on: the pick nudge
+  // They opened or clicked something it has a line about: say it now. On
+  // /hobbies/ the cards are doors, not things to comment on: the pick nudge
   // (nudgeHobbies) has that page.
   function look(el) {
-    if (here === '/hobbies/') return;
+    if (here === '/hobbies/' || over || (S.quiet && !chatOn)) return;
     for (let t = el && el.closest('[data-t]'); t; t = t.parentElement && t.parentElement.closest('[data-t]')) {
       const id = t.dataset.t;
       if (root.contains(t) || !LINES.notice[id]) continue;
-      if (!S.noticed.includes(id)) { pres.seen = id; pres.seenAt = now(); }
+      if (S.noticed.includes(id)) return;
+      wake();
+      speak(LINES.notice[id], { id: 'notice:' + id, pri: PRI.react, log: true, hold: 2600, keep: 15000, onStart: () => noticed(id) });
       return;
     }
+  }
+  // A project opened over /projects/ (play/projects.js): a line about that
+  // one, right away. Among Us also points them at its demo, nudges once if
+  // they stay in the photos, and says what to try first when they open it.
+  function projectOpened(id) {
+    if (S.quiet) return;
+    if (id === 'hackthenorth') return amongus();
+    if (S.noticed.includes(id) || !LINES.notice[id]) return;
+    wake();
+    speak(LINES.notice[id], { id: 'project:' + id, pri: PRI.react, log: true, hold: 2600, keep: 15000, onStart: () => noticed(id) });
+  }
+  function amongus() {
+    const A = LINES.amongus;
+    const tok = hear.tok;
+    wake();
+    if (!S.once.includes('au-open')) speak(A.open, { id: 'project:hackthenorth', pri: PRI.react, log: true, hold: 3000, keep: 15000, onStart: () => { once('au-open'); noticed('hackthenorth'); } });
+    if (S.once.includes('au-nudge') || S.once.includes('au-demo')) return;
+    setTimeout(() => {
+      if (tok !== hear.tok || S.once.includes('au-demo')) return;
+      chime(A.nudge, { id: 'nudge:hackthenorth', pri: PRI.page, ttl: 6000, onStart: () => once('au-nudge') });
+    }, 8000);
+  }
+  function demoOpened(id) {
+    if (id !== 'hackthenorth' || S.quiet || S.once.includes('au-demo')) return;
+    wake();
+    speak(LINES.amongus.demo, { id: 'demo:hackthenorth', pri: PRI.react, log: true, hold: 4000, onStart: () => once('au-demo') });
   }
   // Whatever sits across the middle of the screen, innermost first.
   function reading() {
@@ -1868,19 +2152,12 @@
     return at;
   }
 
-  // Unprompted lines. In the chat they join the conversation, so the model
-  // knows what he just said when they answer.
-  function chime(text) {
-    pres.streak++;
-    if (!chatOn) {
-      pres.out++;
-      pres.last = { text, at: now() };
-      schedule(rand(18000, 26000));
-      return quip(text, 2600);
-    }
-    S.msgs.push({ role: 'assistant', content: text });
-    save();
-    return speak(text);
+  // Unprompted lines: they wait for a gap (budget), and in the chat they
+  // join the conversation, so the model knows what he just said when they answer.
+  function chime(text, o = {}) {
+    return speak(text, Object.assign({ pri: PRI.ambient, budget: true, log: true, hold: 2600, keep: 15000 }, o, {
+      onStart: (u) => { pres.streak++; if (o.onStart) o.onStart(u); }
+    }));
   }
   // Small talk through the visit, like a friend sitting next to you: a light
   // question now and then, never a second one before they've answered the
@@ -1892,30 +2169,24 @@
     const open = LINES.small.filter((s) => !asked.includes(s.id) && !(s.notice && S.noticed.includes(s.notice)));
     const hit = open.find((s) => s.page === here) || open.find((s) => !s.only);
     if (!hit) return null;
-    S.small = [...asked, hit.id];
-    save();
     return { id: hit.id, text: typeof hit.line === 'function' ? hit.line(knownName()) : hit.line };
   }
   function smallDue(t, quiet) {
-    if (S.quiet || (S.small || []).length >= SMALL_MAX) return false;
-    // Only to fill a gap: nothing being said or waiting, nothing on screen to talk about.
-    if (speaking() || speechWaiting || pres.seen) return false;
-    if (chatOn) return !pres.waiting && quiet > 40000 && t - pres.smallAt > 60000 && pres.streak < 3;
+    if (S.quiet || (S.small || []).length >= SMALL_MAX || speaking() || !budgetOk()) return false;
+    if (chatOn) return !pres.waiting && quiet > 40000 && t - pres.smallAt > 60000;
     // Browsing with the chat tucked away: only while they're actually around,
     // and once at most for someone who never answered the hello.
-    return quiet > 60000 && t - pres.smallAt > 100000 && t - lastInput < 20000 && pres.out < 6 && (talked() || !(S.small || []).length);
+    return quiet > 60000 && t - pres.smallAt > 100000 && t - lastInput < 20000 && (talked() || !(S.small || []).length);
   }
   // The deep one: asked word for word, since David wrote them. The scale one
   // gets 1 to 10 buttons under the bubble.
   const deepDue = () => chatOn && !S.deep && S.smallAnswered && S.who !== 'recruiter';
   async function deepTalk() {
+    const tok = hear.tok;
     const d = pick(LINES.deep);
-    S.deep = d.id;
-    save();
     pres.smallAt = now();
-    pres.waiting = true;
-    await chime(typeof d.line === 'function' ? d.line(knownName()) : d.line);
-    if (d.scale && chatOn && !asking && !input.value) showScale(d.scale);
+    const ok = await chime(typeof d.line === 'function' ? d.line(knownName()) : d.line, { id: 'deep:' + d.id, onStart: () => { S.deep = d.id; save(); pres.waiting = true; } });
+    if (ok && tok === hear.tok && d.scale && chatOn && !asking && !input.value) showScale(d.scale);
   }
   function showScale([lo, hi]) {
     const row = document.createElement('div');
@@ -1925,51 +2196,45 @@
       b.type = 'button';
       b.textContent = i;
       b.setAttribute('aria-label', `${i} out of 10`);
-      b.addEventListener('click', () => ask(`${i}/10`));
+      b.addEventListener('click', () => ask(`${i}/10`, { via: 'button' }));
       row.appendChild(b);
     }
     const ends = document.createElement('p');
     ends.className = 'dl-scale-ends';
     ends.append(Object.assign(document.createElement('span'), { textContent: lo }), Object.assign(document.createElement('span'), { textContent: hi }));
-    choicesEl.replaceChildren(row, ends);
-    choicesEl.classList.add('scale');
-    choicesEl.hidden = false;
+    setChoices('scale', [row, ends]);
   }
   function smallTalk() {
     if (deepDue()) return deepTalk();
     const q = smallLine();
     if (!q) return;
     pres.smallAt = now();
-    if (!chatOn) { chime(q.text); if (pres.last) pres.last.keep = 30000; return; }
+    const mark = () => { S.small = [...new Set([...(S.small || []), q.id])]; save(); };
+    if (!chatOn) return chime(q.text, { id: 'small:' + q.id, keep: 30000, onStart: mark });
+    if (!pres.brain || !talked()) return chime(q.text, { id: 'small:' + q.id, onStart: () => { mark(); pres.waiting = true; } });
+    mark();
     pres.waiting = true;
-    if (!pres.brain || !talked()) return chime(q.text);
     pres.streak++;
-    const on = pres.at || pres.seen;
-    ask(`(stage note: it's gone quiet for a bit. small talk, topic ${q.id}: ask about them in your own words, like "${q.text}". just the question, your side comes later. if they already told you about that, pick another topic you haven't asked about.${on ? ` they seem to be looking at ${on}.` : ''})`, { note: true, fallback: q.text });
+    hear.lastFree = now();
+    ask(`(stage note: it's gone quiet for a bit. small talk, topic ${q.id}: ask about them in your own words, like "${q.text}". just the question, your side comes later. if they already told you about that, pick another topic you haven't asked about.${pres.at ? ` they seem to be looking at ${pres.at}.` : ''})`, { note: true, fallback: q.text, id: 'small:' + q.id });
   }
 
   function presence() {
     if (!pres.ready) return;
     const t = now();
-    const at = reading();
+    const at = over ? '' : reading();
     if (at !== pres.at) { pres.at = at; pres.atSince = t; }
-    else if (at && t - pres.atSince > 12000 && t - lastScroll > 3000 && pres.seen !== at && !S.noticed.includes(at)) { pres.seen = at; pres.seenAt = t; }
-    if (pres.seen && t - pres.seenAt > 15000) pres.seen = '';
-
-    if (document.hidden || !document.hasFocus() || asking || held || carried || touring || dir.busy || drag.on || life.shy || rec || sp.typing || input.value || S.noting) return;
+    if (document.hidden || !document.hasFocus() || asking || held || carried || touring || dir.busy || drag.on || life.shy || rec || input.value || S.noting || speaking()) return;
     const quiet = t - pres.said;
-    // Just asked them something: give them a chance to answer first.
-    const asked = chatOn && /\?\s*$/.test(strip(textEl.textContent));
-    if (pres.seen && t - pres.seenAt > 1200 && quiet > (asked ? 14000 : chatOn ? 4000 : 12000) && pres.streak < 4 && (chatOn || (!S.quiet && pres.out < 4))) {
-      S.noticed.push(pres.seen);
-      save();
-      chime(LINES.notice[pres.seen]);
-      pres.seen = '';
+    // Stopped to read something it hasn't said anything about: a few seconds
+    // on it, then one line. Not on top of a question it's waiting on.
+    if (at && t - pres.atSince > 5000 && t - lastScroll > 1200 && !S.noticed.includes(at) && !(pres.waiting && quiet < 14000) && budgetOk()) {
+      chime(LINES.notice[at], { id: 'notice:' + at, pri: PRI.page, ttl: 2000, onStart: () => noticed(at) });
       return;
     }
     if (smallDue(t, quiet)) return smallTalk();
     // Nobody's answering: tuck the chat away and let them browse.
-    if (chatOn && !talked() && quiet > 30000 && (pres.waiting || pres.streak >= 3)) closeChat(LINES.introIgnored);
+    if (chatOn && !talked() && quiet > 30000 && (pres.waiting || pres.streak >= 3)) closeChat(LINES.introIgnored, 'close:ignored');
   }
 
   // ---- Bringing things out ----------------------------------------------------
@@ -1996,66 +2261,64 @@
 
   // Quick replies under the bubble, for questions the head asks on its own.
   function options(list) {
-    choicesEl.classList.remove('scale');
-    choicesEl.replaceChildren(...list.map(([label, fn]) => {
+    setChoices('ask', list.map(([label, fn]) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = label;
       b.addEventListener('click', () => { choicesEl.hidden = true; fn(label); });
       return b;
     }));
-    choicesEl.hidden = false;
   }
-  async function reply(label, text) {
-    S.msgs.push({ role: 'user', content: label }, { role: 'assistant', content: text });
+  async function reply(label, text, id = 'answer') {
+    S.msgs.push({ role: 'user', content: label });
+    S.auto = false;
     save();
     pres.streak = 0;
     pres.waiting = false;
-    await speak(text, { echo: label });
+    bus.emit('reply', { via: 'button', text: label, after: hear.last ? hear.last.id : '' });
+    return speak(text, { id, pri: PRI.reply, ctx: null, echo: label, onStart: () => { S.msgs.push({ role: 'assistant', content: text }); save(); } });
+  }
+  // Page lines (a hobby's exchange, the nudges, a pitch) wait while the
+  // visitor is busy with the head, or the hello is still waiting on them.
+  function busyForPage() {
+    return !pres.ready || asking || touring || pitching || lent || document.hidden || Boolean(input.value) || Boolean(rec) || Boolean(S.noting) ||
+      Boolean(hear.cur && hear.cur.pri >= PRI.react) || introPending();
   }
   // On the guitar page the head asks if they play. Yes: it brings the guitar
   // out. No: would they want to try? Typed answers go to the brain, which
   // knows to bring it with [[bring:guitar]].
-  async function askGuitar(tries = 0) {
-    if (here !== '/hobbies/guitar/' || S.quiet) return;
+  async function askGuitar(tok = hear.tok, tries = 0) {
+    if (here !== '/hobbies/guitar/' || S.quiet || tok !== hear.tok) return;
     if (S.once.includes('guitar-ask') || !document.querySelector('main [data-later="guitar"]:not([data-out])')) return;
-    const mid = chatOn && S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && /\?\s*$/.test(strip(S.msgs[S.msgs.length - 1].content)) && now() - pres.said < 20000;
-    if (!pres.ready || asking || touring || held || carried || dir.busy || sp.typing || mid || document.hidden) {
-      if (tries < 12) setTimeout(() => askGuitar(tries + 1), 3000);
+    if (busyForPage()) {
+      if (tries < 120) setTimeout(() => askGuitar(tok, tries + 1), 250);
       return;
     }
-    S.once.push('guitar-ask');
-    if (!S.noticed.includes('guitar')) S.noticed.push('guitar');
-    S.small = [...new Set([...(S.small || []), 'music'])];
-    save();
+    interrupt(true);
     wake();
-    if (!chatOn) {
-      chatOn = true;
-      S.open = true;
-      save();
-      root.classList.add('chat');
-      await goHome(420);
-      showTalk();
-      showForm();
-    }
-    await say(LINES.guitar.ask);
+    openFor();
+    const ok = await say(LINES.guitar.ask, {
+      id: 'ask:guitar',
+      onStart: () => { once('guitar-ask'); noticed('guitar'); S.small = [...new Set([...(S.small || []), 'music'])]; save(); }
+    });
+    if (!ok || tok !== hear.tok) return;
     pres.waiting = true;
-    const out = async (label) => { await reply(label, LINES.guitar.yes); bring('guitar'); };
+    const out = async (label) => { await reply(label, LINES.guitar.yes, 'answer:guitar'); if (tok === hear.tok) bring('guitar'); };
     options([
       ['yeah i do', out],
       ['nah', async (label) => {
-        await reply(label, LINES.guitar.try);
+        if (!(await reply(label, LINES.guitar.try, 'answer:guitar')) || tok !== hear.tok) return;
         options([
-          ['sure', async (l) => { await reply(l, LINES.guitar.sure); bring('guitar'); }],
-          ["nah i'm good", (l) => reply(l, LINES.guitar.nah)]
+          ['sure', async (l) => { await reply(l, LINES.guitar.sure, 'answer:guitar'); if (tok === hear.tok) bring('guitar'); }],
+          ["nah i'm good", (l) => reply(l, LINES.guitar.nah, 'answer:guitar')]
         ]);
       }]
     ]);
   }
 
   // Every hobby page gets one exchange: a real line about it, one question,
-  // buttons that do something on the page. Once per visit per page, never on
-  // top of a question it just asked. Typed answers go to the brain as usual.
+  // buttons that do something on the page. Once per visit per page, about a
+  // second and a half after they land. Typed answers go to the brain as usual.
   const ASK_PAGES = {
     '/hobbies/hiking/': 'hiking', '/hobbies/climbing/': 'climbing', '/hobbies/badminton/': 'badminton',
     '/hobbies/muay-thai/': 'muaythai', '/hobbies/travel/': 'travel', '/hobbies/lumosity/': 'lumosity',
@@ -2066,40 +2329,31 @@
   const showOn = (sel) => { const el = pageEl(sel); if (el) setTimeout(() => point(el, { hold: 2600 }), 400); };
   let travelPick = false;
   let places = null;
-  async function askPage(tries = 0) {
+  async function askPage(tok = hear.tok, tries = 0) {
     const id = ASK_PAGES[here];
-    if (!id || S.quiet || S.once.includes('ask-' + id)) return;
-    const mid = chatOn && S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && /\?\s*$/.test(strip(S.msgs[S.msgs.length - 1].content)) && now() - pres.said < 20000;
-    if (!pres.ready || asking || touring || held || carried || dir.busy || sp.typing || mid || pres.waiting || document.hidden) {
-      if (tries < 12) setTimeout(() => { if (ASK_PAGES[here] === id) askPage(tries + 1); }, 3000);
+    if (!id || S.quiet || S.once.includes('ask-' + id) || tok !== hear.tok) return;
+    if (busyForPage()) {
+      if (tries < 120) setTimeout(() => askPage(tok, tries + 1), 250);
       return;
     }
     const L = LINES.ask[id];
-    S.once.push('ask-' + id);
-    if (!S.noticed.includes(id)) S.noticed.push(id);
-    save();
+    const mark = () => { once('ask-' + id); noticed(id); };
+    interrupt(true);
     wake();
-    if (!chatOn) {
-      chatOn = true;
-      S.open = true;
-      save();
-      root.classList.add('chat');
-      await goHome(420);
-      showTalk();
-      showForm();
-    }
-    if (L.say) await say(L.say);
+    openFor();
+    if (L.say && (!(await say(L.say, { id: 'say:' + id, onStart: mark })) || tok !== hear.tok)) return;
     if (id === 'hiking') showOn('[data-t="hike-panorama-ridge"] .phk-strip');
-    await say(L.ask);
+    if (!(await say(L.ask, { id: 'ask:' + id, onStart: mark })) || tok !== hear.tok) return;
     pres.waiting = true;
     // On the game pages the answer is a reaction, then the head pitches the game.
     const game = PITCH_OF[id];
     const go = (text, sel, mood) => async (label) => {
-      await reply(label, text);
+      await reply(label, text, 'answer:' + id);
       if (mood) setFace(mood, 2400);
-      if (game) { await wait(1300); pitch(game); } else if (sel) showOn(sel);
+      if (tok !== hear.tok) return;
+      if (game) { await wait(1300); if (tok === hear.tok) pitch(game); } else if (sel) showOn(sel);
     };
-    if (game) setTimeout(() => { if (here === PITCHES[game].page) pitch(game); }, 16000);
+    if (game) setTimeout(() => { if (tok === hear.tok) pitch(game); }, 16000);
     if (id === 'hiking') options([['yeah!', go(L.yes)], ['not really', go(L.no)]]);
     else if (id === 'climbing') options([
       ['v0 to v2', go(L.low, '.play[data-play="climbing"]')], ['v3', go(L.same, '.play[data-play="climbing"]', 'happy')],
@@ -2118,7 +2372,13 @@
     else if (id === 'travel') {
       travelPick = true;
       showOn('[data-3d="globe"]');
-      options([["i'll type it", async (label) => { travelPick = false; pres.waiting = true; await speak(L.type, { echo: label }); }]]);
+      options([["i'll type it", async (label) => {
+        travelPick = false;
+        pres.waiting = true;
+        S.auto = false;
+        bus.emit('reply', { via: 'button', text: label, after: hear.last ? hear.last.id : '' });
+        await speak(L.type, { id: 'answer:travel', pri: PRI.reply, ctx: null, echo: label });
+      }]]);
     }
   }
   // Where they're from, tapped on the globe: the closest place he's been.
@@ -2134,29 +2394,30 @@
     const best = places.map((p) => [km(p), p]).sort((a, b) => a[0] - b[0])[0];
     const L = LINES.ask.travel;
     const text = best && best[0] < 150 ? L.been(best[1]) : best && best[0] < 600 ? L.near(best[1]) : L.never;
-    await reply(`(tapped ${lat.toFixed(1)}, ${lng.toFixed(1)} on the globe)`, text);
     setFace(best && best[0] < 600 ? 'happy' : 'sad', 2200);
+    await reply(`(tapped ${lat.toFixed(1)}, ${lng.toFixed(1)} on the globe)`, text, 'answer:travel');
   }
   // A Lumosity game ended (play/pinball.js, ebbflow.js, penguin.js send dl:lumo).
-  async function lumoDone({ score, david }) {
-    if (here !== '/hobbies/lumosity/' || asking) return;
+  function lumoDone({ game, score, david }) {
+    bus.emit('game_end', { game: game || 'lumosity', result: { score, david } });
+    if (here !== '/hobbies/lumosity/') return;
     const L = LINES.ask.lumosity;
-    if (david == null) { quip(L.unset, 2600, 'happy'); return; }
-    if (score > david) quip(L.win, 3000, 'angry');
-    else quip(L.lose, 3000, 'happy');
+    const o = { pri: PRI.react, ctx: null };
+    if (david == null) quip(L.unset, 2600, 'happy', Object.assign({ id: 'lumo:unset' }, o));
+    else if (score > david) quip(L.win, 3000, 'angry', Object.assign({ id: 'lumo:win' }, o));
+    else quip(L.lose, 3000, 'happy', Object.assign({ id: 'lumo:lose' }, o));
   }
 
   // On /hobbies/ the head won't let them just browse the list: a nudge at a
   // hobby they haven't opened, then two more, a few seconds apart, then it
   // lets it go. Stops as soon as they open one or start talking.
   let pickTimer = 0;
-  function nudgeHobbies(step = 0, tries = 0) {
+  function nudgeHobbies(step = 0, tok = hear.tok, tries = 0) {
     clearTimeout(pickTimer);
-    if (here !== '/hobbies/' || S.quiet || step >= LINES.pick.open.length) return;
+    if (here !== '/hobbies/' || S.quiet || step >= LINES.pick.open.length || tok !== hear.tok) return;
     // Not over the top of a question it just asked.
-    const mid = chatOn && S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && /\?\s*$/.test(strip(S.msgs[S.msgs.length - 1].content)) && now() - pres.said < 20000;
-    if (!pres.ready || asking || touring || held || carried || dir.busy || sp.typing || mid || pres.waiting || document.hidden) {
-      if (tries < 24) pickTimer = setTimeout(() => nudgeHobbies(step, tries + 1), 2500);
+    if (busyForPage() || (chatOn && pres.waiting) || speaking() || !budgetOk()) {
+      if (tries < 40) pickTimer = setTimeout(() => nudgeHobbies(step, tok, tries + 1), 500);
       return;
     }
     const seen = S.hobbies || [];
@@ -2166,11 +2427,12 @@
     if (!pool.length) return;
     const el = pool[Math.floor(Math.random() * pool.length)];
     const t = el.dataset.t;
-    S.hobbies = [...new Set([...seen, t])];
-    save();
     wake();
-    Promise.all([quip(LINES.pick.open[step] + '. ' + LINES.pick.teaser[t], 2600), point(el, { hold: 2400 })]);
-    pickTimer = setTimeout(() => nudgeHobbies(step + 1), 9000);
+    chime(LINES.pick.open[step] + '. ' + LINES.pick.teaser[t], {
+      id: 'nudge:hobbies', pri: PRI.page, ttl: 2000, log: false, keep: 0,
+      onStart: () => { S.hobbies = [...new Set([...(S.hobbies || []), t])]; save(); point(el, { hold: 2400 }); }
+    });
+    pickTimer = setTimeout(() => nudgeHobbies(step + 1, tok), 9000);
   }
 
   // ---- The pitch ----------------------------------------------------------------
@@ -2197,67 +2459,36 @@
     if (!force && (S.once.includes('pitch-' + id) || (window.dlFinds && isDone(id)))) return;
     const piece = document.querySelector('main ' + P.el);
     if (!piece) return;
-    if (!force && (!pres.ready || (chatOn && pres.waiting && now() - pres.said < 10000) || asking || touring || held || carried || dir.busy || sp.typing || input.value || document.hidden || document.querySelector('.mt-over, .climb-wall, .bring'))) {
+    if (!force && (busyForPage() || (chatOn && pres.waiting && now() - pres.said < 10000) || !budgetOk() || document.querySelector('.mt-over, .climb-wall, .bring'))) {
       if (tries < 20) setTimeout(() => pitch(id, { line, tries: tries + 1 }), 2500);
       return;
     }
-    if (!S.once.includes('pitch-' + id)) S.once.push('pitch-' + id);
+    once('pitch-' + id);
     S.pitchLater = '';
     save();
     pitching = id;
     const L = LINES.pitch[id];
-    interrupt();
-    wake();
-    emoteOff();
-    if (chatOn) { closeChat(null); clearTimeout(dir.timer); }
-    choicesEl.hidden = true;
-    await hideTalk();
-    if (pitching !== id) return;
-
-    const dim = document.createElement('div');
-    dim.className = 'dl-pitch-dim';
-    root.prepend(dim);
-    root.classList.add('pitching');
-    requestAnimationFrame(() => dim.classList.add('on'));
-    lend(true, true);
-    const sm = innerWidth < 640;
-    const k = sm ? 1.7 : 2.3;
-    const x = innerWidth / 2 - (HW * k) / 2;
-    const y = clamp(innerHeight * 0.58 - (HH * k) / 2, 150, innerHeight - HH * k - 120);
-    dim.style.setProperty('--px', innerWidth / 2 + 'px');
-    dim.style.setProperty('--py', y + (HH * k) / 2 + 'px');
-    await fly(x, y, k, reduce ? 0 : 750);
-    if (pitching !== id) return;
-    life.surprise = now() + 400;
-    squish();
-    setFace('happy', 2600);
-
-    const ask = document.createElement('div');
-    ask.className = 'dl-pitch-ask';
-    ask.hidden = true;
-    ask.innerHTML = `<button type="button" class="yes">${esc(L.yes)}</button><button type="button" class="no">${esc(L.no)}</button>`;
-    root.appendChild(ask);
-    const r = headBtn.getBoundingClientRect();
-    ask.style.left = r.left + r.width / 2 + 'px';
-    ask.style.top = r.bottom + 22 + 'px';
-    showTalk();
-    await speak(again ? LINES.pitch.again + ' ' + (line || L.line) : line || L.line, { urgent: true });
-    if (pitching !== id) return;
-    ask.hidden = false;
-    play(ask, [{ transform: 'translate(-50%, 8px)', opacity: 0 }, { transform: 'translate(-50%, 0)', opacity: 1 }], { duration: 220, easing: 'ease-out' });
-    ask.querySelector('.yes').focus({ preventScroll: true });
-
+    let dim = null;
+    let ask = null;
+    let asked = false;
     const onKey = (e) => { if (e.key === 'Escape') endPitch(false); };
-    document.addEventListener('keydown', onKey);
-    ask.querySelector('.yes').addEventListener('click', () => endPitch(true));
-    ask.querySelector('.no').addEventListener('click', () => endPitch(false));
-    dim.addEventListener('click', () => endPitch(false));
+    // yes null: called off (they left the page) at any point, even mid-line.
     pitchEnd = async (yes) => {
+      if (yes != null && !asked) return;
       document.removeEventListener('keydown', onKey);
       pitchEnd = null;
-      ask.remove();
-      if (yes == null) { dim.remove(); root.classList.remove('pitching'); pitching = null; talk.hidden = true; if (lent) window.dlHead.home(0); return; }
-      speak(yes ? L.ok : LINES.pitch.later, { urgent: true });
+      if (ask) ask.remove();
+      if (yes == null) {
+        if (dim) dim.remove();
+        root.classList.remove('pitching');
+        pitching = null;
+        if (hear.cur && hear.cur.id === 'pitch:' + id) cut(hear.cur, 'pitch');
+        hideNow();
+        if (lent) window.dlHead.home(0);
+        return;
+      }
+      bus.emit('reply', { via: 'button', text: yes ? L.yes : L.no, after: 'pitch:' + id });
+      speak(yes ? L.ok : LINES.pitch.later, { id: 'pitch:' + id + (yes ? ':yes' : ':no'), pri: PRI.reply, ctx: null, stay: true });
       setFace(yes ? 'happy' : 'sad', 1600);
       await wait(reduce ? 300 : yes ? 900 : 1500);
       dim.classList.remove('on');
@@ -2277,15 +2508,65 @@
       // Chess counts on the first move, the rally on its own button (site.js).
       if (P.fly) found(id);
     };
+    interrupt();
+    wake();
+    emoteOff();
+    if (chatOn) { closeChat(null); clearTimeout(dir.timer); }
+    choicesEl.hidden = true;
+    await hideTalk();
+    if (pitching !== id) return;
+
+    dim = document.createElement('div');
+    dim.className = 'dl-pitch-dim';
+    root.prepend(dim);
+    root.classList.add('pitching');
+    requestAnimationFrame(() => dim.classList.add('on'));
+    lend(true, true);
+    const sm = innerWidth < 640;
+    const k = sm ? 1.7 : 2.3;
+    const x = innerWidth / 2 - (HW * k) / 2;
+    const y = clamp(innerHeight * 0.58 - (HH * k) / 2, 150, innerHeight - HH * k - 120);
+    dim.style.setProperty('--px', innerWidth / 2 + 'px');
+    dim.style.setProperty('--py', y + (HH * k) / 2 + 'px');
+    await fly(x, y, k, reduce ? 0 : 750);
+    if (pitching !== id) return;
+    life.surprise = now() + 400;
+    squish();
+    setFace('happy', 2600);
+
+    ask = document.createElement('div');
+    ask.className = 'dl-pitch-ask';
+    ask.hidden = true;
+    ask.innerHTML = `<button type="button" class="yes">${esc(L.yes)}</button><button type="button" class="no">${esc(L.no)}</button>`;
+    root.appendChild(ask);
+    const r = headBtn.getBoundingClientRect();
+    ask.style.left = r.left + r.width / 2 + 'px';
+    ask.style.top = r.bottom + 22 + 'px';
+    const ok = await speak(again ? LINES.pitch.again + ' ' + (line || L.line) : line || L.line, {
+      id: 'pitch:' + id, pri: force ? PRI.reply : PRI.page, ctx: force ? null : undefined, stay: true,
+      onStart: () => { if (!force) hear.lastFree = now(); }
+    });
+    if (pitching !== id) return;
+    if (!ok) { endPitch(null); return; }
+    asked = true;
+    ask.hidden = false;
+    play(ask, [{ transform: 'translate(-50%, 8px)', opacity: 0 }, { transform: 'translate(-50%, 0)', opacity: 1 }], { duration: 220, easing: 'ease-out' });
+    ask.querySelector('.yes').focus({ preventScroll: true });
+    document.addEventListener('keydown', onKey);
+    ask.querySelector('.yes').addEventListener('click', () => endPitch(true));
+    ask.querySelector('.no').addEventListener('click', () => endPitch(false));
+    dim.addEventListener('click', () => endPitch(false));
   }
   function endPitch(yes) { if (pitchEnd) pitchEnd(yes); }
   const isDone = (id) => { try { return (JSON.parse(localStorage.getItem('dl-found')) || []).includes(id); } catch (e) { return false; } };
   function startGame(id, piece) {
     if (!document.contains(piece)) return;
+    // The ring and the wall borrow the head (dlHead.flyTo), which says game_start for them.
     if (id === 'spar' || id === 'climb') { piece.dispatchEvent(new CustomEvent('dl:start')); return; }
+    bus.emit('game_start', { game: id });
     if (id === 'chess') {
       piece.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
-      setTimeout(() => { point(piece, { hold: 1800 }); quip(LINES.pitch.chess.ok, 1600, 'happy'); }, reduce ? 0 : 600);
+      setTimeout(() => { point(piece, { hold: 1800 }); quip(LINES.pitch.chess.ok, 1600, 'happy', { id: 'pitch:chess:go', pri: PRI.react }); }, reduce ? 0 : 600);
       return;
     }
     if (id === 'rally') {
@@ -2332,17 +2613,9 @@
     try { localStorage.setItem('dl-inbox-seen', fresh[fresh.length - 1].at); } catch (e) {}
     interrupt();
     wake();
-    if (!chatOn) {
-      chatOn = true;
-      S.open = true;
-      save();
-      root.classList.add('chat');
-      await goHome(420);
-      showTalk();
-      showForm();
-    }
+    openFor();
     setFace('happy', 2500);
-    await say(LINES.replied(fresh[fresh.length - 1].body, fresh.length > 1));
+    await say(LINES.replied(fresh[fresh.length - 1].body, fresh.length > 1), { id: 'replied', pri: PRI.react, ctx: null, ttl: 30000 });
   }
 
   // ---- Feeding ----------------------------------------------------------------
@@ -2363,22 +2636,23 @@
       showTalk();
       showForm();
     }
+    S.auto = false;
     if (asking) return;
     const t = targets[id];
-    await say(LINES.fed[0]);
-    if (t && pres.brain) ask(`(stage note: the visitor dragged ${id} (${t.about}) onto your face and fed it to you)`, { note: true });
-    else if (LINES.notice[id]) { await wait(500); say(LINES.notice[id]); }
+    if (!(await say(LINES.fed[0], { id: 'fed', pri: PRI.react, ctx: null }))) return;
+    if (t && pres.brain) ask(`(stage note: the visitor dragged ${id} (${t.about}) onto your face and fed it to you)`, { note: true, pri: PRI.react, id: 'server:fed' });
+    else if (LINES.notice[id]) { await wait(500); say(LINES.notice[id], { id: 'notice:' + id, pri: PRI.react, ctx: null, onStart: () => noticed(id) }); }
   }
 
   // ---- Fourth wall ----------------------------------------------------------
 
-  function react(key, text, hold = 1800, mood) {
-    if (S.once.includes(key)) return;
-    S.once.push(key);
-    save();
-    if (asking || held || life.shy) return;
+  // Once a visit each, marked when it's actually said. Behind a reply that's
+  // streaming in it waits its turn instead of getting lost. ctx null: it's
+  // about them, not the page.
+  function react(key, text, hold = 1800, mood, ctx = null) {
+    if (S.once.includes(key) || held || life.shy) return;
     wake();
-    quip(text, hold, mood);
+    quip(text, hold, mood, { id: 'react:' + key, pri: PRI.react, ctx, onStart: () => once(key) });
   }
 
   // Devtools docked to the window shrink the viewport while the window and
@@ -2405,9 +2679,9 @@
     }
     const seen = S.once.includes('devtools');
     if (!seen) { S.once.push('devtools'); save(); }
-    quip(seen ? LINES.devtoolsAgain : LINES.devtools[0], 8000, seen ? 'angry' : null);
+    quip(seen ? LINES.devtoolsAgain : LINES.devtools[0], 8000, seen ? 'angry' : null, { id: 'devtools', pri: PRI.react, ctx: null });
     if (seen) return;
-    const later = (ms, line) => dt.timers.push(setTimeout(() => dt.open && quip(line, 8000), ms));
+    const later = (ms, line) => dt.timers.push(setTimeout(() => dt.open && quip(line, 8000, null, { id: 'devtools:' + ms, pri: PRI.react, ctx: null }), ms));
     later(2800, LINES.devtools[1]);
     later(8000, LINES.devtools[2]);
     later(17000, LINES.devtools[3]);
@@ -2423,7 +2697,7 @@
       dt.covering = false;
       if (--hs.users === 0) hs.homeTimer = setTimeout(handHome, 350);
     }
-    quip(LINES.devtoolsBye, 1400);
+    quip(LINES.devtoolsBye, 1400, null, { id: 'devtools:bye', pri: PRI.react, ctx: null });
     peace();
   }
 
@@ -2591,7 +2865,7 @@
     heart();
     if (PET) catState('belly');
     play(cat.firstElementChild, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.06,.92)' }, { transform: 'scale(1,1)' }], { duration: 300 });
-    quip(pick(LINES.cat), 1200, 'happy');
+    quip(pick(LINES.cat), 1200, 'happy', { id: 'cat', pri: PRI.react, ctx: null });
     setTimeout(() => {
       petting = false;
       if (PET) catState('lying');
@@ -2711,8 +2985,8 @@
       S.home = { x: pos.x / innerWidth, y: pos.y / innerHeight };
       save();
     }
-    if (spun > 540) { emote('@'); quip(pick(LINES.dizzy), 1400, 'sad'); }
-    else if (drag.weed) quip(pick(LINES.landed), 1200, 'happy');
+    if (spun > 540) { emote('@'); quip(pick(LINES.dizzy), 1400, 'sad', { id: 'dizzy', pri: PRI.react, ctx: null }); }
+    else if (drag.weed) quip(pick(LINES.landed), 1200, 'happy', { id: 'landed', pri: PRI.react, ctx: null });
   }
 
   // ---- Wiring ---------------------------------------------------------------
@@ -2759,6 +3033,16 @@
     // row that's already open is being closed.
     document.addEventListener('click', (e) => {
       if (root.contains(e.target)) return;
+      // Off to another page: whatever it was saying about this one stops now, not when the next one lands.
+      const a = e.target.closest('a[href]');
+      if (a && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && !a.target && !a.hasAttribute('download')) {
+        const u = new URL(a.href, location.href);
+        if (u.origin === location.origin && norm(u.pathname) !== here && !/\.[a-z0-9]{2,5}$/i.test(u.pathname)) {
+          hear.leaving = now();
+          setContext('leaving', 'leave');
+          return;
+        }
+      }
       const sum = e.target.closest('summary');
       if (sum && sum.parentElement.open) return;
       if (e.target.closest('summary, button, .r-item')) look(e.target);
@@ -2783,27 +3067,28 @@
       fed = '';
     });
 
-    // Page swaps (site.js): the head stays, the page under it changes.
-    document.addEventListener('dl:page', () => {
-      if (norm(location.pathname) === '/hobbies/guitar/') setTimeout(askGuitar, 3500);
-      travelPick = false;
-      if (ASK_PAGES[norm(location.pathname)]) setTimeout(askPage, ASK_LATE[norm(location.pathname)] || 3500);
-      endPitch(null);
-      setTimeout(watchRackets);
-      clearTimeout(pickTimer);
-      if (norm(location.pathname) === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 2500);
-      const hob = /^\/hobbies\/([^/]+)\/$/.exec(norm(location.pathname));
-      if (hob) { S.hobbies = [...new Set([...(S.hobbies || []), hob[1] === 'muay-thai' ? 'muaythai' : hob[1]])]; save(); }
-      here = norm(location.pathname);
-      pageAt = now();
-      S.pages = (S.pages || 1) + 1;
-      save();
-      pres.at = '';
-      pres.seen = '';
-      if (giveBack) giveBack();
-      if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: '', tz: TZ }));
-      if (here === '/notes/') setTimeout(() => react('wall', LINES.wall, 3000), 2500);
+    // Page swaps (site.js): the head stays, the page under it changes. site.js
+    // says so on the bus and with dl:page (older copies only do dl:page).
+    let busPage = -1e9;
+    bus.on('page', () => { busPage = now(); onPage(); });
+    document.addEventListener('dl:page', () => { if (now() - busPage > 100) onPage(); });
+    // What's open over the page (play/projects.js, site.js, games).
+    bus.on('overlay_open', (d) => {
+      if (d.kind !== 'project' || !d.id) return;
+      setContext('project:' + d.id, 'overlay_open');
+      projectOpened(d.id);
     });
+    bus.on('overlay_close', (d) => {
+      if (over === d.kind + ':' + d.id || (d.kind === 'project' && over === 'demo:' + d.id)) setContext('', 'overlay_close');
+    });
+    bus.on('demo_open', (d) => {
+      setContext('demo:' + d.id, 'demo_open');
+      demoOpened(d.id);
+    });
+    bus.on('demo_close', (d) => { if (over === 'demo:' + d.id) setContext('project:' + d.id, 'demo_close'); });
+    bus.on('bring', (d) => setContext('bring:' + d.id, 'bring'));
+    bus.on('game_start', (d) => setContext('game:' + (d.game || 'game'), 'game_start'));
+    bus.on('game_end', (d) => { if (over === 'game:' + d.game) setContext('', 'game_end'); });
 
     document.documentElement.addEventListener('mouseleave', (e) => {
       if (!fine || e.clientY > 0 || now() <= 8000 || S.once.includes('exit')) return;
@@ -2829,6 +3114,36 @@
     });
   }
 
+  function onPage() {
+    endPitch(null);
+    travelPick = false;
+    clearTimeout(pickTimer);
+    here = norm(location.pathname);
+    const hob = /^\/hobbies\/([^/]+)\/$/.exec(here);
+    if (hob) S.hobbies = [...new Set([...(S.hobbies || []), hob[1] === 'muay-thai' ? 'muaythai' : hob[1]])];
+    pageAt = now();
+    S.pages = (S.pages || 1) + 1;
+    save();
+    pres.at = '';
+    pres.waiting = false;
+    hear.leaving = 0;
+    setContext('', 'page');
+    if (giveBack) giveBack();
+    if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: '', tz: TZ }));
+    setTimeout(watchRackets);
+    pageLines(here === '/hobbies/' ? 2500 : 1500);
+  }
+  // What a page says on its own once they land: a hobby's exchange, the
+  // nudges on /hobbies/, the wall. Anything that changes the context first
+  // (another page, an overlay) calls it off.
+  function pageLines(after) {
+    const tok = hear.tok;
+    if (here === '/hobbies/guitar/') setTimeout(() => askGuitar(tok), after);
+    if (ASK_PAGES[here]) setTimeout(() => askPage(tok), ASK_LATE[here] || after);
+    if (here === '/hobbies/') pickTimer = setTimeout(() => nudgeHobbies(0, tok), after);
+    if (here === '/notes/') setTimeout(() => { if (tok === hear.tok) react('wall', LINES.wall, 3000, null, ctxNow()); }, after + 1000);
+  }
+
   async function enter() {
     S.met = true;
     save();
@@ -2850,6 +3165,8 @@
     if (!sound.on) root.classList.add('muted');
     if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer, tz: TZ }));
     const met = S.met;
+    // A chat the head opened that they never answered doesn't follow them to a new page.
+    if (S.open && S.auto) { S.open = false; S.auto = false; save(); }
     if (S.open) { actor.classList.add('on'); restore(); }
     else if (!met) enter().finally(() => { pres.ready = true; });
     else {
@@ -2859,16 +3176,13 @@
       play(headBtn, [{ transform: 'scale(0)' }, { transform: 'scale(1.1)', offset: 0.7 }, { transform: 'scale(1)' }], { duration: 320, easing: 'ease-out' });
       if (is404()) setTimeout(lost, 900);
     }
-    if (here === '/notes/') setTimeout(() => react('wall', LINES.wall, 3000), 3000);
     schedule(met ? rand(9000, 14000) : 13000);
     if (met) pres.ready = true;
-    if (here === '/hobbies/guitar/') setTimeout(askGuitar, 4000);
-    if (ASK_PAGES[here]) setTimeout(askPage, ASK_LATE[here] || 4000);
+    pageLines(here === '/hobbies/' ? 2500 : 1500);
     document.documentElement.classList.toggle('dl-pitch', !S.quiet);
     watchRackets();
     addEventListener('dl:globe-pick', (e) => globePicked(e.detail || {}));
     addEventListener('dl:lumo', (e) => lumoDone(e.detail || {}));
-    if (here === '/hobbies/') pickTimer = setTimeout(nudgeHobbies, 3000);
     setInterval(presence, 1000);
     // Replies from the real David: once a few seconds in, then every minute.
     setTimeout(checkReplies, 4000);
@@ -2972,6 +3286,8 @@
     // there (bubble and hand still show) instead of standing in for a copy.
     flyTo(x, y, w, ms = 750, { keep = false } = {}) {
       if (!lent) {
+        // Borrowed for a game (the ring, the wall), not to listen to the guitar.
+        if (!keep) bus.emit('game_start', { game: Object.keys(PITCHES).find((k) => PITCHES[k].page === here) || 'game' });
         lend(true, keep);
         interrupt();
         if (chatOn) closeChat(null);
@@ -2994,16 +3310,17 @@
       wake();
       if (!(take.ms >= 3000) || !(take.notes >= 4)) {
         emote('?');
-        quip(LINES.guitar.short, 1600, 'sad');
+        quip(LINES.guitar.short, 1600, 'sad', { id: 'guitar:short', pri: PRI.react });
         return;
       }
       cry(7000);
       clearTimeout(moods.clapTimer);
       moods.clapTimer = setTimeout(() => clap(3400), reduce ? 0 : 500);
-      quip(LINES.guitar.moved, 2600);
+      quip(LINES.guitar.moved, 2600, null, { id: 'guitar:moved', pri: PRI.react });
     },
     async home(ms = 750) {
       if (!lent) return;
+      if (over.startsWith('game:')) bus.emit('game_end', { game: over.slice(5) });
       actor.style.visibility = '';
       const d = dockPos();
       await fly(d.x, d.y, 1, ms);

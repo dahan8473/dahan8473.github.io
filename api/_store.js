@@ -7,36 +7,44 @@ const KEY = process.env.SUPABASE_SECRET_KEY;
 
 export const hasStore = Boolean(URL_ && KEY);
 
-// Returns the function's result, or undefined when the store is off or fails.
-async function rpc(fn, args) {
-  if (!hasStore) return;
+// One request to the REST API. Never throws: { ok, status, data, count }.
+// status 0 means the store is off or unreachable. count is filled when
+// asked for (prefer: count=exact).
+export async function call(path, { method = 'GET', body, prefer, timeout } = {}) {
+  if (!hasStore) return { ok: false, status: 0 };
   // New-style sb_secret_ keys go in apikey only; legacy service_role JWTs also as a bearer.
-  const headers = { apikey: KEY, 'content-type': 'application/json' };
-  if (!KEY.startsWith('sb_')) headers.authorization = `Bearer ${KEY}`;
-  try {
-    const res = await fetch(`${URL_}/rest/v1/rpc/${fn}`, { method: 'POST', headers, body: JSON.stringify(args) });
-    if (!res.ok) { console.error('store', fn, res.status, await res.text()); return; }
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
-  } catch (err) {
-    console.error('store', fn, err);
-  }
-}
-
-// Plain table access, for the inbox.
-async function rest(path, { method = 'GET', body, prefer } = {}) {
-  if (!hasStore) return;
   const headers = { apikey: KEY, 'content-type': 'application/json' };
   if (!KEY.startsWith('sb_')) headers.authorization = `Bearer ${KEY}`;
   if (prefer) headers.prefer = prefer;
   try {
-    const res = await fetch(`${URL_}/rest/v1/${path}`, { method, headers, body: body && JSON.stringify(body) });
-    if (!res.ok) { console.error('store', method, path.split('?')[0], res.status, await res.text()); return; }
+    const res = await fetch(`${URL_}/rest/v1/${path}`, {
+      method, headers, body: body === undefined ? undefined : JSON.stringify(body),
+      signal: timeout ? AbortSignal.timeout(timeout) : undefined
+    });
     const text = await res.text();
-    return text ? JSON.parse(text) : null;
+    if (!res.ok) {
+      console.error('store', method, path.split('?')[0], res.status, text.slice(0, 300));
+      return { ok: false, status: res.status };
+    }
+    const range = res.headers.get('content-range');
+    const count = range && /\/(\d+)$/.test(range) ? Number(range.split('/')[1]) : undefined;
+    return { ok: true, status: res.status, data: text ? JSON.parse(text) : null, count };
   } catch (err) {
-    console.error('store', path.split('?')[0], err);
+    console.error('store', path.split('?')[0], err?.name || '', err?.message || err);
+    return { ok: false, status: 0 };
   }
+}
+
+// Returns the function's result, or undefined when the store is off or fails.
+async function rpc(fn, args, opts) {
+  const r = await call(`rpc/${fn}`, { method: 'POST', body: args, ...opts });
+  return r.ok ? r.data : undefined;
+}
+
+// Plain table access, for the inbox.
+async function rest(path, opts) {
+  const r = await call(path, opts);
+  return r.ok ? r.data : undefined;
 }
 
 export async function trackVisit({ visitor, path, referrer, request, ip = null, tz = null }) {
@@ -124,3 +132,26 @@ export const thread = (visitor) => rest(`messages?visitor_id=eq.${visitor}&selec
 
 // The newest visitors, for /visitors in Telegram.
 export const recentVisitors = (n = 8) => rest(`visitor_log?select=name,position,company,reason,seems_to_be,city,region,country,timezone,ip,views,last_seen,pages,chat_turns,referrer&limit=${Math.min(25, Math.max(1, n))}`);
+
+// ---- Behavior, the learning loop, and the admin portal ------------------------
+// Tables from supabase/2026-10-07-learning-admin.sql. Until it's run these
+// return undefined and callers carry on without them.
+
+export const saveEvents = (visitor, convo, events) =>
+  rpc('track_events', { p_visitor: visitor, p_convo: convo, p_events: events });
+
+// Facts and answers David approved, for the head's prompt. Short timeout: a
+// slow store must never hold up a reply.
+export const approvedKnowledge = () =>
+  rest('knowledge?active=eq.true&select=kind,title,text&order=id.asc&limit=200', { timeout: 1500 });
+
+export const lineStats = (days = 90) =>
+  rpc('line_stats', { p_since: new Date(Date.now() - days * 864e5).toISOString() });
+
+export const lineVariants = () =>
+  rest('line_variants?active=eq.true&select=id,kind,of_line,text&order=id.asc&limit=300');
+
+// Login attempts. try() records the attempt as a failure and returns the
+// recent failure counts including it; ok() clears it once the password matched.
+export const adminTry = (ip) => call('rpc/admin_try', { method: 'POST', body: { p_ip: ip } });
+export const adminOk = (id) => rpc('admin_ok', { p_id: id });

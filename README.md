@@ -108,6 +108,16 @@ Every note is in the head's instructions (cached, so it's cheap). For each messa
 
 Replies cost money, so there's a monthly cap in the chat function (default $20, after which the head falls back to its own lines), per-IP limits, 25 messages per visit, and a credit limit on the OpenRouter key as the backstop. The head's own lines (comments, the tour, notes, the bouncer) never touch the brain.
 
+### What visitors do, and what the head learns from it
+
+`track.js` records what people do on the site: pages, clicks on anything the head knows (`data-t`), how far they scroll, how long they stay, and everything the head reports on `window.dlBus` (its own lines, replies, project overlays, demos, games). It batches them to `api/events.js` every 10 seconds and when the tab closes. With Do Not Track or Global Privacy Control on, it doesn't collect or send anything, and the server drops anything sent with those headers anyway. Bots are ignored.
+
+The head scores its own lines from that: how often a line gets a reply within 20 seconds, smoothed toward the average line, minus a bit for every visitor who leaves right after it. `api/lines.js` serves the scores (counts only, nothing about anyone) so the head can lean toward the lines that land.
+
+Every night a Vercel Cron runs `api/learn.js`. It reads the day's chats and behavior and proposes things: questions the head couldn't answer, facts it's missing, new versions of lines that land badly, and how people use the site (where they drop off, what recruiters look at). The head never changes itself. Proposals wait in my admin portal until I approve them, usually after filling in the answer myself. Approved facts and answers go into the head's prompt; approved lines join its options and get scored like the rest. I get a one-line Telegram ping when there's something to review.
+
+The admin portal is a private page on the Vercel domain at `/admin/<ADMIN_SLUG>`: visitors, every chat, behavior (the funnel from home to a demo, games, time and scroll per page), line scores, and the proposals. A wrong slug is a 404. Behind it is a password (`ADMIN_PASSWORD`), a lockout after 5 wrong tries per IP or 20 overall in 15 minutes (counted in Supabase, so cold starts don't reset it), and a signed, HttpOnly, SameSite=Strict session cookie that lasts 7 days. Changing the password logs every session out. The page runs under a strict CSP, isn't cached or indexed, and puts everything visitors typed on the page as text, never as HTML.
+
 ## Repo
 
 | Path | What's in it |
@@ -126,7 +136,11 @@ Replies cost money, so there's a monthly cap in the chat function (default $20, 
 | `api/decide.js` | Jev picks the head's next move |
 | `api/note.js`, `api/wall.js` | Notes for me (sent to my Telegram), and the public wall |
 | `api/visit.js` | Page-view beacon |
-| `supabase/visitors.sql` | Visitors, chats, notes, and the spend counter |
+| `track.js`, `api/events.js` | What visitors do on the site, batched into the `events` table |
+| `api/lines.js` | How each of the head's lines lands, plus the new lines I approved |
+| `api/learn.js`, `api/_learn.js` | The nightly learn job |
+| `api/admin.js`, `api/_auth.js`, `api/_admin_data.js`, `api/_admin_page.js` | The admin portal |
+| `supabase/visitors.sql` | Visitors, chats, notes, the spend counter, events, proposals and what the head learned. Changes since the first run are also in dated files (`supabase/2026-10-07-learning-admin.sql` is the latest) |
 | `tools/cutout.swift` | Cuts my head, hands and cat out of photos with Apple's Vision framework |
 | `tools/voice.html` | Records letters for the head's voice |
 
@@ -155,6 +169,11 @@ npx vercel deploy --prod
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Visitor memory, chat logs, notes and the spend counter. Use a dedicated Supabase project and run `supabase/visitors.sql` in it once. |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Messages me on Telegram when someone leaves a note |
 | `MONTHLY_CAP_USD` | Optional, defaults to 20 |
+| `ADMIN_SLUG` | The secret segment in the admin portal's URL. At least 8 characters; make it long and random |
+| `ADMIN_SECRET` | Signs admin sessions. Long and random |
+| `ADMIN_PASSWORD` | The admin password. Until it's set, nobody can log in |
+| `CRON_SECRET` | Vercel sends it with the nightly cron call; without it the learn job can't run |
+| `LEARN_MODEL`, `LEARN_REASONING` | Optional. Default `deepseek/deepseek-v4.1-flash` with reasoning `low` |
 
 If the project URL changes, update `API` at the top of `talk/talk.js` and `site.js`.
 

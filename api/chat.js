@@ -10,7 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { connect } from './_neuralink.js';
 import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
-import { saveChat, spent, addSpend, recall } from './_store.js';
+import { saveChat, spent, addSpend, recall, approvedKnowledge } from './_store.js';
 import { think, costOf } from './_gpt.js';
 import { decide, choice, noul } from './_jev.js';
 import { cortexNotes, cortexText } from './_cortex.js';
@@ -245,6 +245,27 @@ function guitarReply(read, asked, latest) {
   return '';
 }
 
+// What David approved in the admin portal from the nightly learn job
+// (api/_learn.js): facts and answers to questions visitors kept asking.
+// Re-read every few minutes per instance (one read at a time, 1.5s at most);
+// a failed read keeps the last copy.
+const LEARNED_TTL = 5 * 60 * 1000;
+const learned = { text: '', at: 0, reading: null };
+export function learnedText(rows) {
+  const lines = (rows || []).filter((k) => k && k.text).map((k) =>
+    k.kind === 'faq' ? `- Asked: ${k.title}\n  Answer: ${k.text}` : `- ${k.title}: ${k.text}`);
+  if (!lines.length) return '';
+  return `# Things David approved from what visitors asked\n\nVisitors asked about these and David wrote or checked every answer himself. They're facts like the ones above; use them the same way, in your own words.\n\n${lines.join('\n')}`;
+}
+async function approved() {
+  if (Date.now() - learned.at < LEARNED_TTL) return learned.text;
+  learned.reading ??= approvedKnowledge()
+    .then((rows) => { if (rows) learned.text = learnedText(rows); })
+    .finally(() => { learned.at = Date.now(); learned.reading = null; });
+  await learned.reading;
+  return learned.text;
+}
+
 function memoryLine(m) {
   if (!m) return '';
   const bits = [];
@@ -282,11 +303,12 @@ export default {
     const note = isStageNote(latest);
 
     const asked = note ? '' : guitarAsked(messages, page);
-    const [read, usd, memory, gread] = await Promise.all([
+    const [read, usd, memory, gread, known] = await Promise.all([
       note ? null : readMessage(latest, messages),
       spent(),
       store ? recall(body.visitor) : null,
-      asked ? readGuitar(latest, asked) : null
+      asked ? readGuitar(latest, asked) : null,
+      approved()
     ]);
 
     // Canned answers skip the brain entirely.
@@ -339,7 +361,7 @@ export default {
         if (first) emit(first);
         try {
           const { usage, refused } = await think({
-            system: `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}\n\n${cortexText()}`,
+            system: `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}\n\n${cortexText()}${known ? `\n\n${known}` : ''}`,
             context,
             messages,
             onText: (t) => { emit(t); sent = true; },

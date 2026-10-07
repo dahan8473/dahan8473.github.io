@@ -1011,6 +1011,10 @@
   // After the first time it shows, as the way to bring it back. The piece mounts
   // full screen (data-mode="overlay") and tells us when it's drawn (dl:ready)
   // and when they finish a recording (dl:guitar-take), so the head can react.
+  // window.dlBus is the floating head's event bus (talk/talk.js). It may not be there.
+  function emit(type, data) {
+    try { if (window.dlBus && window.dlBus.emit) window.dlBus.emit(type, data); } catch (e) {}
+  }
   var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   var out = null;
   function headApi() {
@@ -1057,6 +1061,7 @@
       o.wrap.classList.add('off');
       setTimeout(gone, 260);
     }
+    emit('overlay_close', { kind: 'bring', id: o.name });
     if (!document.contains(o.slot)) return;
     o.slot.hidden = false;
     if (!now) {
@@ -1076,8 +1081,9 @@
     wrap.innerHTML = '<div class="bring-dim"></div><div class="bring-stage" data-mode="overlay"></div>' +
       '<button type="button" class="bring-x" aria-label="Put the ' + name + ' away">' + X_ICON + '</button>';
     var stage = wrap.querySelector('.bring-stage');
-    var o = { slot: slot, wrap: wrap, stage: stage, back: document.activeElement, stop: null, live: true, seated: false, inert: [], timers: [] };
+    var o = { name: name, slot: slot, wrap: wrap, stage: stage, back: document.activeElement, stop: null, live: true, seated: false, inert: [], timers: [] };
     out = o;
+    emit('bring', { id: name });
     slot.setAttribute('data-out', '');
     function later(fn, ms) { o.timers.push(setTimeout(fn, ms)); }
 
@@ -1435,6 +1441,8 @@
       var main = document.getElementById('main');
       if (main) { main.setAttribute('tabindex', '-1'); main.focus({ preventScroll: true }); }
       setup();
+      // The head hears about it on its bus; dl:page stays for everything else.
+      emit('page', { path: location.pathname });
       document.dispatchEvent(new CustomEvent('dl:page', { detail: { path: location.pathname } }));
     }).catch(function () { location.href = url.href; });
   }

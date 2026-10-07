@@ -1460,6 +1460,10 @@ export function mount(el) {
   // It counts as sparring (site.js), which also keeps the head from pitching the fight after.
   let sparNow = false;
   try { sparNow = sessionStorage.getItem('dl-spar-now') === '1'; if (sparNow) sessionStorage.removeItem('dl-spar-now'); } catch (e) {}
+  // The glove button on the side of the page (site.js) asks for a spar.
+  const onSpar = () => { if (!dead) openRing(); };
+  document.addEventListener('dl:spar', onSpar);
+  window.dlSparReady = true;
   if (sparNow) {
     const t0 = performance.now();
     const go = () => {
@@ -1480,6 +1484,8 @@ export function mount(el) {
     removeEventListener('keyup', onKeyUp);
     removeEventListener('blur', onBlur);
     document.removeEventListener('visibilitychange', onVis);
+    document.removeEventListener('dl:spar', onSpar);
+    window.dlSparReady = false;
     ro.disconnect();
     timers = [];
     sound.close();

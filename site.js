@@ -1128,6 +1128,14 @@
     var b = e.target.closest && e.target.closest('[data-bring]');
     if (b && window.dlBring) window.dlBring(b.getAttribute('data-bring'));
   });
+  // Muay Thai: the gloves on the side start a spar, whatever the head is doing.
+  document.addEventListener('click', function (e) {
+    var g = e.target.closest && e.target.closest('[data-spar]');
+    if (!g) return;
+    e.preventDefault();
+    if (window.dlSparReady) { document.dispatchEvent(new CustomEvent('dl:spar')); return; }
+    try { sessionStorage.setItem('dl-spar-now', '1'); } catch (err) {}
+  });
   // Meowmeow's page: "call her over" asks the head to send the cat in.
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-cat-call]');

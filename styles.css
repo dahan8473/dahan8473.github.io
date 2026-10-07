@@ -769,7 +769,6 @@ media (prefers-reduced-motion: reduce) {
    show when the head's been told to be quiet. */
 .dl-pitch .play.pitched { display: none; }
 .dl-pitch .climb-invite:is([data-state="idle"], [data-state="climbing"]) { display: none; }
-.dl-pitch [data-3d="racket"] .rk-rally, .dl-pitch [data-3d="racket"] .rk-hint { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); }
 
 /* Cycling: the bike, then the rides map under it. */
 .play[data-play="rides"] { margin-top: 48px; }
@@ -796,3 +795,14 @@ media (prefers-reduced-motion: reduce) {
 .lumo-games [data-lumo-card] > :last-child { margin-top: auto; }
 @media (max-width: 900px) { .lumo-games { grid-template-columns: 1fr; } }
 
+/* Muay Thai: the gloves hang on the side of the page and start a spar. */
+.spar-glove { position: fixed; z-index: 60; right: max(24px, calc(50vw - 640px)); top: 38%; display: grid; justify-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: 13px; cursor: pointer; transform-origin: 50% 0; animation: glove-sway 4.5s ease-in-out infinite; }
+.spar-glove img { width: 112px; height: auto; filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.28)); transition: transform 260ms cubic-bezier(.34, 1.56, .64, 1); }
+.spar-glove span { padding: 4px 12px; border-radius: 999px; background: var(--t1); color: var(--bg); font-weight: 500; letter-spacing: 0.01em; }
+.spar-glove:hover img { transform: rotate(-8deg) translateY(2px); }
+.spar-glove:hover span { background: #88c0d0; color: #0d111a; }
+.spar-glove:focus-visible { outline: 2px solid #88c0d0; outline-offset: 6px; border-radius: 12px; }
+@keyframes glove-sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+body:has(.mt-over) .spar-glove { visibility: hidden; }
+@media (max-width: 720px) { .spar-glove { top: auto; right: auto; left: 14px; bottom: 18px; } .spar-glove img { width: 76px; } }
+@media (prefers-reduced-motion: reduce) { .spar-glove { animation: none; } .spar-glove img { transition: none; } }

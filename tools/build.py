@@ -6,9 +6,9 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 39, 14, 32, 38
+V_CSS, V_TALKCSS, V_JS, V_TALK = 40, 14, 33, 38
 V_TRACK = 1
-V_PIECE = 28  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 29  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -544,7 +544,7 @@ hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, bec
       '</p>\n        <p class="tagline">But by the first week I was addicted. I think a lot of that comes from my love for chess and puzzle games: Muay Thai is like a physical version of them. My Instagram feed turned into Muay Thai highlights, and I bought a bag on Facebook Marketplace and hung it up in my backyard to train in the mornings.'
       "</p>\n        <p class=\"tagline\">If you've never tried something like this, give it a shot. It might reveal more about yourself than you think!", [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
-], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched'))
+], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched') + '      <button class="spar-glove" type="button" data-spar aria-label="Spar with the head"><img src="/media/muaythai/gloves-btn.webp" alt="" width="112" height="120"><span>Spar</span></button>\n')
 hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V3 right now. Climb this page with me if you want.", [
 ], shot=piece('play', 'climbing', 'Loading the wall...'))
 hobby('swimming', 'Swimming', 'I swim.', [

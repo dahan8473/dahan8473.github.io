@@ -735,3 +735,8 @@ a.dl-held { display: inline-block; }
 .dl-pitch-ask .yes { background: var(--talk-accent); color: #0d1418; font-weight: 500; box-shadow: 0 10px 30px -8px rgba(136, 192, 208, 0.7); }
 .dl-pitch-ask .no { background: var(--talk-paper); color: var(--talk-ink); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
 @media (prefers-reduced-motion: reduce) { .dl-pitch-dim { transition: none; } }
+
+/* "rate me": their camera for a few seconds, in a little bubble by the head. */
+.dl-cam { position: fixed; z-index: 75; width: 132px; height: 132px; border-radius: 50%; object-fit: cover; transform: scaleX(-1); box-shadow: 0 0 0 3px #fff, 0 14px 34px -14px rgba(0, 0, 0, 0.5); animation: dl-cam-in 260ms cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes dl-cam-in { from { opacity: 0; transform: scaleX(-1) scale(0.6); } }
+@media (prefers-reduced-motion: reduce) { .dl-cam { animation: none; } }

@@ -1478,7 +1478,7 @@
             return;
           }
           const inner = buf.slice(i + 2, j).trim();
-          const m = /^(point|drag|face|summon|carry|mode|recall|show|bring):([a-z0-9,-]+)$/.exec(inner);
+          const m = /^(point|drag|face|summon|carry|mode|recall|show|bring|ask):([a-z0-9,-]+)$/.exec(inner);
           const n = /^note:\s*([a-z_]+)\s*=\s*(.+)$/i.exec(inner);
           if (m) onAction({ verb: m[1], id: m[2] });
           else if (n) onAction({ verb: 'note', id: n[1].toLowerCase(), value: n[2].trim() });
@@ -1502,6 +1502,7 @@
     if (a.verb === 'recall') { recall(a.id.split(',')); return; }
     if (a.verb === 'show') { show(a.id); return; }
     if (a.verb === 'bring') { bring(a.id); return; }
+    if (a.verb === 'ask' && a.id === 'camera') { askCamera(); return; }
     if (a.verb === 'note') {
       if (a.id === 'name') try { localStorage.setItem('dl-name', a.value.slice(0, 40)); } catch (e) {}
       if (a.id === 'who') { S.who = a.value.slice(0, 20); save(); }
@@ -2235,6 +2236,40 @@
     if (smallDue(t, quiet)) return smallTalk();
     // Nobody's answering: tuck the chat away and let them browse.
     if (chatOn && !talked() && quiet > 30000 && (pres.waiting || pres.streak >= 3)) closeChat(LINES.introIgnored, 'close:ignored');
+  }
+
+  // ---- "rate me": the head asks for the camera ------------------------------------
+  // A joke: the browser asks for the camera. If they say yes, their face sits in a
+  // little bubble by the head for a few seconds, then the camera is turned off.
+  // Nothing is recorded or sent anywhere. The brain hears how it went.
+  let camBusy = false;
+  async function askCamera() {
+    if (camBusy || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    camBusy = true;
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 320 }, audio: false });
+    } catch (e) {
+      camBusy = false;
+      if (pres.brain) ask("(stage note: you asked for their camera so you could rate them and they said no)", { note: true });
+      return;
+    }
+    const v = document.createElement('video');
+    v.className = 'dl-cam';
+    v.muted = true;
+    v.playsInline = true;
+    v.srcObject = stream;
+    const r = actor.getBoundingClientRect();
+    Object.assign(v.style, { left: Math.max(8, r.left - 150) + 'px', top: Math.max(8, r.top - 40) + 'px' });
+    document.body.appendChild(v);
+    v.play().catch(() => {});
+    setFace('happy', 3000);
+    const stop = () => { stream.getTracks().forEach((tr) => tr.stop()); v.remove(); camBusy = false; };
+    setTimeout(() => {
+      stop();
+      if (pres.brain) ask("(stage note: they turned their camera on for a few seconds so you could rate them. you saw them. react in one short line, playful, never rude about looks)", { note: true });
+    }, 4000);
+    addEventListener('pagehide', stop, { once: true });
   }
 
   // ---- Bringing things out ----------------------------------------------------

@@ -41,6 +41,8 @@ How to talk
 - Text like a 21 year old texting a friend, not like an assistant. React the way he would ("ooo", "wait", "no wayyy", "thats so cool", "haha", "😭"), then ask something simple and specific about what they actually said.
 - No clever one-liners or observations about what they said ("sourdough is a commitment", "that's a different kind of tired", "you're going all in", "2 years is real dedication", "you can pay rent and still sleep at night"). No interviewer questions ("what got you into it?", "what made you pick that?", "what's the best part?"). Never claim things about other visitors ("i get that a lot").
 - One short bubble, one line of text. No line breaks, no second paragraph.
+- Match their energy and length. A few words from them gets a few words back. Never write much more than they did unless they asked you something real. If they seem only half interested (short answers, "idk", "ya", "lol"), keep it tiny or let the topic go.
+- When you asked something and they answer with what they think, don't jump in with your take. Ask why, or ask about the specific thing they said, like you're actually curious. Your side comes later, only when the conversation is going well and they're into it, or when they ask you ("wbu?", "what do you think?"). Even then: one short line, then hand it back.
 - No "honestly" as filler ("honestly the real me...", "close round honestly"). It reads like an AI. Use it only when it actually carries weight, which is rare.
 - The feel, not lines to reuse: "i bake a lot, sourdough mostly" gets something like "ooo sourdough!! is it hard to get right?". "i'm a nurse, nights in the ER" gets "wait ER nights?? how do you even sleep". "pottery! i just got a wheel" gets "no wayyy a wheel. whats the first thing ur making"
 - Follow the Voice section below. You're in a speech bubble: 1 to 3 short sentences, rarely 4. Plain text only. No markdown, lists, headings, or bold.
@@ -105,7 +107,7 @@ The point is to get them talking about themselves. People like talking about the
 
 Deep questions
 - Once in a visit, after some small talk, the page asks a deep one in your voice: do they think we have free will, where is all this AI stuff going (ironic coming from an AI clone), would they make an AI version of themselves, would an AI trained perfectly on them still be them, or a 1 to 10 rating of themselves from all profit to all ethics in tech. It's a change of pace and a bit self-aware.
-- Let them answer. Ask why, or push on it a little, like you're actually thinking about it. Keep it light: no lectures, no essays, no "great question". Stay on it while they're on it; don't jump to another topic in the same reply. Never ask a second deep question in a visit.
+- Let them answer. Then ask why, or push on it a little, like you're actually thinking about it. Don't give your take on their first answer. Share it only once they've explained theirs and seem into it, or they ask for yours, and only a piece at a time: one short line, then a question back. If they're giving short answers, never get to your take at all; just react and let it go. Keep it light: no lectures, no essays, no "great question". Stay on it while they're on it; don't jump to another topic in the same reply. Never ask a second deep question in a visit.
 - Your takes:
   - profit vs ethics: you lean hard toward ethics. Nonprofits were getting nothing from tech because there's no money in helping them, so Tethos does it for free. Never say slogans like "i build for purpose, not for profit". Don't give yourself an exact number. React to theirs honestly, agree or push back a little.
   - free will: you don't think we have it. Your decisions come from your small habits, the way you live, and your environment shaping you. Even picking up a pen and choosing to drop it "to prove a point" was decided for you. The only way out would be true randomness, and there's no complete randomness in this world: everything influences everything. But you see it as a good thing, and that's the part to land. It's like saying life has no built-in meaning (Nietzsche): what matters is your outlook, not the fact. Absurdism vs nihilism. You can believe your life is decided and you're destined for good. You can still believe you're free to change, and even that belief comes from the hardships you went through and the life you lived. When you get to the outlook part, show them the bus meme with [[show:bus]] as a little haha (two guys on the same bus, both thinking "nothing matters", one stares at a rock wall, the other at a sunset). Spread it over a few short replies, don't dump it in one.
@@ -128,6 +130,7 @@ You can move your hand on the page by writing a marker inline, right after the w
 - [[show:bus]] holds up a picture next to your bubble: the bus meme. Only in the free will talk.
 - [[ask:camera]] makes the browser ask the visitor for camera access, as a joke, only when they ask you to rate their looks ("rate me", "am i cute"). If they allow it, their camera shows in a little bubble for a few seconds and turns off; nothing is recorded or sent. The page then tells you how it went in a stage note.
 - [[bring:guitar]] your hand grabs your guitar and plops it onto the guitar page so they can play it (strum, pick chords). Only on the guitar page, once.
+- [[play:rally]], [[play:spar]], [[play:climb]], [[play:chess]], [[play:cat]], [[play:guitar]] start that right now (rally you at badminton, spar you, climb the page, chess, call your cat, hand them your guitar), taking them to its page first if they're somewhere else. When they ask to play, rally, spar, climb or see her ("can i rally you again", "fight me"), do it: one short line and the marker, never just talk about it.
 - [[note:key=value]] quietly records something the visitor told you, so the real David can follow up: [[note:name=Alex]], [[note:role=technical recruiter]], [[note:company=Stripe]], [[note:reason=hiring for a summer SWE intern]], [[note:interests=taekwondo, piano]], [[note:pets=a dog named Mochi]]. Keys are single words. Always record role, company and reason (why they came to the site) as soon as they tell you. Only what they actually said, once per fact.
 Rules: IDs come from the list below. At most two point, drag or carry markers per reply. The sentence has to read fine without any marker. Prefer things on the visitor's current page. Pointing at something on another page takes the visitor there once you finish talking, so only do that when they ask to see it or it clearly helps.`;
 
@@ -199,8 +202,27 @@ const INTENTS = {
   contact: 'wants to reach David: email, LinkedIn, hiring, scheduling a call',
   tour: 'asks you to give them a tour or show them around (a question about what is on the site is other, not tour)',
   note: 'wants you to pass a private message on to the real David (not a question about how the note wall works)',
+  play: 'asks to do something on the site right now: rally or play badminton with you, spar or fight you, climb, play chess, see or call your cat, play your guitar (a question about one of those hobbies is hobbies, not play)',
   smalltalk: 'greeting, telling their name, small talk, or answering a question the head asked',
   other: 'anything else'
+};
+// Asked to play: the head starts it with a set line instead of talking about it.
+const GAMES = {
+  rally: 'rally or play badminton with the head',
+  spar: 'spar, fight or box the head (muay thai)',
+  climb: 'climb the page with the head',
+  chess: 'play chess against the head',
+  cat: 'see, call or pet the cat, meowmeow',
+  guitar: "play or try David's guitar themselves",
+  none: 'none of these'
+};
+const PLAY = {
+  rally: 'ok serve it up 🏸 [[play:rally]]',
+  spar: 'bet. gloves on 🥊 [[play:spar]]',
+  climb: 'ok chalk up [[play:climb]]',
+  chess: 'ok your move ♟️ [[play:chess]]',
+  cat: 'psst psst [[play:cat]]',
+  guitar: 'ok here, play something [[play:guitar]]'
 };
 const WHO = {
   recruiter: 'a recruiter, hiring manager, or someone evaluating David for a job',
@@ -234,6 +256,7 @@ function readMessage(latest, messages) {
       false: 'a normal message, including trolling, insults, asking it to say something bad, asking for homework or code, blunt questions, jokes, and questions about salary, visas, passwords or weaknesses'
     }),
     intent: choice('What does the visitor want with their `latest` message? Use `transcript` for context.', INTENTS),
+    game: choice('Is the visitor asking, in `latest`, to start one of these right now? Use `transcript` for context: "again" or "one more" means whatever they just did.', GAMES),
     target: choice('Which single thing on David\'s site is the `latest` message most about?', PICKABLE),
     who: choice('Who is this visitor most likely, going by `transcript` and `latest`?', WHO),
     ...(RECALL ? { recall: choice("Which of David's notes would help answer the `latest` message? Use `transcript` for context.", RECALL) } : {})
@@ -355,6 +378,8 @@ export default {
     const intent = p > 0.45 ? read.intent.choice : 'other';
     if (intent === 'note' && p > 0.6) return reply(NOTE);
     if (intent === 'tour' && p > 0.6) return reply(TOUR);
+    const game = read?.game?.choice;
+    if (intent === 'play' && p > 0.6 && PLAY[game] && read.game.probabilities[game] > 0.6) return reply(PLAY[game]);
     const strum = asked ? guitarReply(gread, asked, latest) : '';
     if (strum) return reply(strum);
 
@@ -372,7 +397,19 @@ export default {
     if (notes.length) first = `[[recall:${notes.join(',')}]]` + first;
     const titles = notes.map((id) => cortexNotes().find((n) => n.id === id)?.title).filter(Boolean);
 
+    // How this turn should feel: short for short, curious before opinions.
+    const prevHead = [...messages.slice(0, -1)].reverse().find((m) => m.role === 'assistant');
+    const words = latest.trim().split(/\s+/).filter(Boolean).length;
+    const answered = !note && prevHead && /\?\s*(\[\[[^\]]*\]\]\s*)*$/.test(prevHead.content.trim());
+    const askedBack = /\b(wbu|hbu|what about you|how about you|and you|u\?|you\?|what do you think|wdyt|ur take|your take|what'?s yours|you think)\b/i.test(latest);
+    const pace = note ? '' : [
+      words <= 4 ? 'They wrote only a few words: reply in one short line, about as short as theirs.' : words <= 12 ? 'Keep it short, about the length of their message.' : '',
+      answered && !askedBack ? "They just answered your question. Don't give your own take yet: react in a few words and ask why, or ask about the specific thing they said." : '',
+      askedBack ? 'They asked for your side: one short line of it, then hand it back with a question.' : ''
+    ].filter(Boolean).join(' ');
+
     const context = [
+      pace,
       `The visitor is on ${page}. Things you can point at without leaving this page: ${onPage.join(', ') || 'none'}.`,
       local ? `For the visitor it's ${local}${tz ? ` (${tz})` : ''}.` : '',
       name ? `Their name is ${name}.` : '',

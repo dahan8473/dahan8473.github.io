@@ -460,6 +460,8 @@ a.row:hover .m { transform: translateX(3px); }
   transition: opacity 180ms ease;
 }
 .hover-photo.on { opacity: 1; }
+.has-photo { text-decoration: underline dotted var(--t3); text-underline-offset: 3px; cursor: default; }
+.has-photo:hover { color: var(--t1); }
 
 /* Guitar recordings (site.js builds the rows) */
 .track { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 0; }
@@ -768,7 +770,6 @@ media (prefers-reduced-motion: reduce) {
 /* Games the head starts (talk/talk.js pitch): their own start buttons only
    show when the head's been told to be quiet. */
 .dl-pitch .play.pitched { display: none; }
-.dl-pitch .climb-invite:is([data-state="idle"], [data-state="climbing"]) { display: none; }
 
 /* Cycling: the bike, then the rides map under it. */
 .play[data-play="rides"] { margin-top: 48px; }
@@ -796,7 +797,7 @@ media (prefers-reduced-motion: reduce) {
 @media (max-width: 900px) { .lumo-games { grid-template-columns: 1fr; } }
 
 /* Muay Thai: the gloves hang on the side of the page and start a spar. */
-.spar-glove { position: fixed; z-index: 60; right: max(24px, calc(50vw - 640px)); top: 38%; display: grid; justify-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: 13px; cursor: pointer; transform-origin: 50% 0; animation: glove-sway 4.5s ease-in-out infinite; }
+.spar-glove { position: fixed; z-index: 75; right: max(24px, calc(50vw - 640px)); top: 38%; display: grid; justify-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: 13px; cursor: pointer; transform-origin: 50% 0; animation: glove-sway 4.5s ease-in-out infinite; }
 .spar-glove img { width: 112px; height: auto; filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.28)); transition: transform 260ms cubic-bezier(.34, 1.56, .64, 1); }
 .spar-glove span { padding: 4px 12px; border-radius: 999px; background: var(--t1); color: var(--bg); font-weight: 500; letter-spacing: 0.01em; }
 .spar-glove:hover img { transform: rotate(-8deg) translateY(2px); }
@@ -804,5 +805,20 @@ media (prefers-reduced-motion: reduce) {
 .spar-glove:focus-visible { outline: 2px solid #88c0d0; outline-offset: 6px; border-radius: 12px; }
 @keyframes glove-sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
 body:has(.mt-over) .spar-glove { visibility: hidden; }
-@media (max-width: 720px) { .spar-glove { top: auto; right: auto; left: 14px; bottom: 18px; } .spar-glove img { width: 76px; } }
-@media (prefers-reduced-motion: reduce) { .spar-glove { animation: none; } .spar-glove img { transition: none; } }
+.play-now { position: fixed; z-index: 75; right: max(24px, calc(50vw - 640px)); top: 40%; display: grid; justify-items: center; gap: 8px; padding: 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: 13px; cursor: pointer; animation: play-bob 3.6s ease-in-out infinite; }
+.play-now i { display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; background: var(--bg); border: 1px solid var(--rule); box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18); font-style: normal; font-size: 34px; line-height: 1; transition: transform 260ms cubic-bezier(.34, 1.56, .64, 1); }
+.play-now span { padding: 4px 12px; border-radius: 999px; background: var(--t1); color: var(--bg); font-weight: 500; letter-spacing: 0.01em; white-space: nowrap; }
+.play-now:hover i { transform: rotate(-10deg) scale(1.06); }
+.play-now:hover span { background: #88c0d0; color: #0d111a; }
+.play-now:focus-visible { outline: 2px solid #88c0d0; outline-offset: 6px; border-radius: 12px; }
+@keyframes play-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+body:has(.rl, .mt-over, .climb-wall, .bring) .play-now { visibility: hidden; }
+@media (max-width: 1340px) { .spar-glove, .play-now { top: auto; right: auto; left: 14px; bottom: 18px; } }
+@media (max-width: 1340px) { .spar-glove img { width: 84px; } .play-now i { width: 56px; height: 56px; font-size: 28px; } }
+@media (max-width: 720px) {
+  .spar-glove, .play-now { top: calc(var(--nav-h, 64px) + 12px); bottom: auto; left: auto; right: 12px; grid-auto-flow: column; align-items: center; gap: 6px; padding: 4px 14px 4px 4px; border-radius: 999px; background: var(--t1); color: var(--bg); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); animation: none; }
+  .spar-glove img { width: 34px; filter: none; }
+  .play-now i { width: 34px; height: 34px; font-size: 20px; border: 0; box-shadow: none; }
+  .spar-glove span, .play-now span { padding: 0; background: none; color: inherit; }
+}
+@media (prefers-reduced-motion: reduce) { .spar-glove, .play-now { animation: none; } .spar-glove img, .play-now i { transition: none; } }

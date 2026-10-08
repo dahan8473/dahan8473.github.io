@@ -1136,6 +1136,28 @@
     if (window.dlSparReady) { document.dispatchEvent(new CustomEvent('dl:spar')); return; }
     try { sessionStorage.setItem('dl-spar-now', '1'); } catch (err) {}
   });
+  // Game pages: a Play button that's always there. The head starts it when it's
+  // around (closing whatever it was saying); without it the page does.
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-play-now]');
+    if (!b) return;
+    e.preventDefault();
+    var id = b.getAttribute('data-play-now');
+    if (window.dlPlayNow) { window.dlPlayNow(id); return; }
+    if (id === 'cat' && window.dlCat) return window.dlCat();
+    if (id === 'guitar' && window.dlBring) return window.dlBring('guitar');
+    if (id === 'climb') { var w = document.querySelector('main [data-play="climbing"]'); if (w) w.dispatchEvent(new CustomEvent('dl:start')); return; }
+    if (id === 'chess') { var c = document.querySelector('main [data-play="chess"]'); if (c) c.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+    if (id === 'rally') {
+      var r = document.querySelector('main [data-3d="racket"]');
+      if (!r) return;
+      var go = function () { var x = r.querySelector('.rk-rally'); if (x) x.click(); };
+      if (r.querySelector('.rk-stats.on')) return go();
+      var pick = r.querySelectorAll('.dl-sr button')[1];
+      if (pick) pick.click();
+      setTimeout(go, 900);
+    }
+  });
   // Meowmeow's page: "call her over" asks the head to send the cat in.
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-cat-call]');

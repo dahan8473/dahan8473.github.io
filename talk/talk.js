@@ -120,6 +120,16 @@
       later: "ok ok. tap me when you're ready",
       again: 'changed your mind? 👀'
     },
+    // Asked to play something ("can i rally you again"): this, then it starts.
+    play: { rally: 'ok serve it up 🏸', spar: 'bet. gloves on 🥊', climb: 'ok chalk up', chess: 'ok your move ♟️', cat: 'psst psst', guitar: 'ok here, play something', go: 'ok come with me' },
+    // Meowmeow's page, every time they land on it.
+    cat: {
+      hi: 'aww u wanna see meowmeow? let me call her over',
+      psst: 'psst psst',
+      here: "she's right there 🥹",
+      ask: 'do you have any pets?',
+      yes: 'ooo what kind?? tell me about them', no: 'meowmeow can be your pet for today then'
+    },
     // Leaving, with something they haven't done yet (site.js, window.dlFinds).
     exitTo: {
       spar: "wait!! you never sparred me. muay thai, i'll go easy",
@@ -293,7 +303,7 @@
     // The mini tour: [page, target to point at, line]
     tour: [
       ['/', 'now', "okay! quick tour. this is home, it's just me saying hi"],
-      ['/resume/', 'jdpower', 'this is my resume. hover anything and more pops up on the side'],
+      ['/resume/', 'jdpower', 'this is my resume. hover over a line and the story behind it shows up on the side'],
       ['/projects/', 'hackthenorth', "stuff i've built. this one was my first hardware project"],
       ['/hobbies/', 'life', 'and the stuff i do for fun'],
       ['/brain/', 'brain', "this is my second brain. everything i know about me, as a map you can drag around"],
@@ -1478,7 +1488,7 @@
             return;
           }
           const inner = buf.slice(i + 2, j).trim();
-          const m = /^(point|drag|face|summon|carry|mode|recall|show|bring|ask):([a-z0-9,-]+)$/.exec(inner);
+          const m = /^(point|drag|face|summon|carry|mode|recall|show|bring|ask|play):([a-z0-9,-]+)$/.exec(inner);
           const n = /^note:\s*([a-z_]+)\s*=\s*(.+)$/i.exec(inner);
           if (m) onAction({ verb: m[1], id: m[2] });
           else if (n) onAction({ verb: 'note', id: n[1].toLowerCase(), value: n[2].trim() });
@@ -1503,6 +1513,7 @@
     if (a.verb === 'show') { show(a.id); return; }
     if (a.verb === 'bring') { bring(a.id); return; }
     if (a.verb === 'ask' && a.id === 'camera') { askCamera(); return; }
+    if (a.verb === 'play') { playNow(a.id); return; }
     if (a.verb === 'note') {
       if (a.id === 'name') try { localStorage.setItem('dl-name', a.value.slice(0, 40)); } catch (e) {}
       if (a.id === 'who') { S.who = a.value.slice(0, 20); save(); }
@@ -1759,12 +1770,14 @@
       input.value = '';
       pres.streak = 0;
       unshow();
-      if (pres.waiting) { S.smallAnswered = true; save(); }
+      if (pres.waiting) { S.smallAnswered = true; if (hear.last && hear.last.id === 'ask:pets') S.pets = true; save(); }
       pres.waiting = false;
       S.auto = false;
       found('talk');
       bus.emit('reply', { via, text: q, after: hear.last ? hear.last.id : '' });
       if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { id: 'limit', pri: PRI.reply, ctx: null, echo: q }); return; }
+      const want = wants(q);
+      if (want) return playAsked(q, want);
     }
     asking = true;
     sendBtn.disabled = true;
@@ -2279,12 +2292,16 @@
     const slot = document.querySelector(`main [data-later="${id}"]`);
     if (!slot || slot.hasAttribute('data-out') || !window.dlBring) return;
     if (reduce) { window.dlBring(id); return; }
+    // The hand grabs it, but it comes out even if the hand gets stuck on the way.
+    const late = setTimeout(() => { if (!slot.hasAttribute('data-out')) window.dlBring(id); }, 2500);
     await useHand(async () => {
       pose('pinch');
       await handNearHead();
       const x = innerWidth / 2;
       const y = innerHeight * 0.3;
       await handTo(x, y, 15, { duration: 560 });
+      clearTimeout(late);
+      if (slot.hasAttribute('data-out')) return;
       const el = window.dlBring(id, { plop: true });
       if (el) await Promise.race([new Promise((r) => el.addEventListener('dl:ready', r, { once: true })), wait(3000)]);
       await handTo(x, innerHeight * 0.44, 25, { duration: 380, easing: SPRING });
@@ -2317,34 +2334,40 @@
   // visitor is busy with the head, or the hello is still waiting on them.
   function busyForPage() {
     return !pres.ready || asking || touring || pitching || lent || document.hidden || Boolean(input.value) || Boolean(rec) || Boolean(S.noting) ||
+      Boolean(over) || Boolean(document.querySelector('.rl, .mt-over, .climb-wall, .bring')) ||
       Boolean(hear.cur && hear.cur.pri >= PRI.react) || introPending();
   }
+  // Page events fire on every landing and wait out whatever the visitor is
+  // busy with for as long as they stay on the page. pageTok changes only when
+  // the page does; pageDone says which ones already went this landing.
+  let pageTok = 0;
+  const pageDone = {};
   // On the guitar page the head asks if they play. Yes: it brings the guitar
   // out. No: would they want to try? Typed answers go to the brain, which
   // knows to bring it with [[bring:guitar]].
-  async function askGuitar(tok = hear.tok, tries = 0) {
-    if (here !== '/hobbies/guitar/' || S.quiet || tok !== hear.tok) return;
-    if (S.once.includes('guitar-ask') || !document.querySelector('main [data-later="guitar"]:not([data-out])')) return;
-    if (busyForPage()) {
-      if (tries < 120) setTimeout(() => askGuitar(tok, tries + 1), 250);
-      return;
-    }
+  async function askGuitar(tok = pageTok, tries = 0) {
+    if (here !== '/hobbies/guitar/' || S.quiet || tok !== pageTok || pageDone.guitar === tok) return;
+    if (!document.querySelector('main [data-later="guitar"]:not([data-out])')) return;
+    if (busyForPage()) { setTimeout(() => askGuitar(tok, tries), 250); return; }
     interrupt(true);
     wake();
     openFor();
     const ok = await say(LINES.guitar.ask, {
       id: 'ask:guitar',
-      onStart: () => { once('guitar-ask'); noticed('guitar'); S.small = [...new Set([...(S.small || []), 'music'])]; save(); }
+      onStart: () => { noticed('guitar'); S.small = [...new Set([...(S.small || []), 'music'])]; save(); }
     });
-    if (!ok || tok !== hear.tok) return;
+    if (tok !== pageTok) return;
+    // Cut off before it was out: ask again once they're free.
+    if (!ok) { if (tries < 5) setTimeout(() => askGuitar(tok, tries + 1), 600); return; }
+    pageDone.guitar = tok;
     pres.waiting = true;
-    const out = async (label) => { await reply(label, LINES.guitar.yes, 'answer:guitar'); if (tok === hear.tok) bring('guitar'); };
+    const out = async (label) => { await reply(label, LINES.guitar.yes, 'answer:guitar'); if (tok === pageTok) bring('guitar'); };
     options([
       ['yeah i do', out],
       ['nah', async (label) => {
-        if (!(await reply(label, LINES.guitar.try, 'answer:guitar')) || tok !== hear.tok) return;
+        if (!(await reply(label, LINES.guitar.try, 'answer:guitar')) || tok !== pageTok) return;
         options([
-          ['sure', async (l) => { await reply(l, LINES.guitar.sure, 'answer:guitar'); if (tok === hear.tok) bring('guitar'); }],
+          ['sure', async (l) => { await reply(l, LINES.guitar.sure, 'answer:guitar'); if (tok === pageTok) bring('guitar'); }],
           ["nah i'm good", (l) => reply(l, LINES.guitar.nah, 'answer:guitar')]
         ]);
       }]
@@ -2364,31 +2387,33 @@
   const showOn = (sel) => { const el = pageEl(sel); if (el) setTimeout(() => point(el, { hold: 2600 }), 400); };
   let travelPick = false;
   let places = null;
-  async function askPage(tok = hear.tok, tries = 0) {
+  async function askPage(tok = pageTok, tries = 0) {
     const id = ASK_PAGES[here];
-    if (!id || S.quiet || S.once.includes('ask-' + id) || tok !== hear.tok) return;
-    if (busyForPage()) {
-      if (tries < 120) setTimeout(() => askPage(tok, tries + 1), 250);
-      return;
-    }
+    if (!id || S.quiet || tok !== pageTok || pageDone[id] === tok) return;
+    if (busyForPage()) { setTimeout(() => askPage(tok, tries), 250); return; }
     const L = LINES.ask[id];
-    const mark = () => { once('ask-' + id); noticed(id); };
+    const mark = () => noticed(id);
+    // Cut off before the question was out: go again once they're free.
+    const again = () => { if (tok === pageTok && tries < 5) setTimeout(() => askPage(tok, tries + 1), 600); };
     interrupt(true);
     wake();
     openFor();
-    if (L.say && (!(await say(L.say, { id: 'say:' + id, onStart: mark })) || tok !== hear.tok)) return;
+    if (L.say && !(await say(L.say, { id: 'say:' + id, onStart: mark }))) return again();
+    if (tok !== pageTok) return;
     if (id === 'hiking') showOn('[data-t="hike-panorama-ridge"] .phk-strip');
-    if (!(await say(L.ask, { id: 'ask:' + id, onStart: mark })) || tok !== hear.tok) return;
+    if (!(await say(L.ask, { id: 'ask:' + id, onStart: mark }))) return again();
+    if (tok !== pageTok) return;
+    pageDone[id] = tok;
     pres.waiting = true;
     // On the game pages the answer is a reaction, then the head pitches the game.
     const game = PITCH_OF[id];
     const go = (text, sel, mood) => async (label) => {
       await reply(label, text, 'answer:' + id);
       if (mood) setFace(mood, 2400);
-      if (tok !== hear.tok) return;
-      if (game) { await wait(1300); if (tok === hear.tok) pitch(game); } else if (sel) showOn(sel);
+      if (tok !== pageTok) return;
+      if (game) { await wait(1300); if (tok === pageTok) pitch(game); } else if (sel) showOn(sel);
     };
-    if (game) setTimeout(() => { if (tok === hear.tok) pitch(game); }, 16000);
+    if (game) setTimeout(() => { if (tok === pageTok) pitch(game); }, 6000);
     if (id === 'hiking') options([['yeah!', go(L.yes)], ['not really', go(L.no)]]);
     else if (id === 'climbing') options([
       ['v0 to v2', go(L.low, '.play[data-play="climbing"]')], ['v3', go(L.same, '.play[data-play="climbing"]', 'happy')],
@@ -2447,12 +2472,12 @@
   // hobby they haven't opened, then two more, a few seconds apart, then it
   // lets it go. Stops as soon as they open one or start talking.
   let pickTimer = 0;
-  function nudgeHobbies(step = 0, tok = hear.tok, tries = 0) {
+  async function nudgeHobbies(step = 0, tok = pageTok) {
     clearTimeout(pickTimer);
-    if (here !== '/hobbies/' || S.quiet || step >= LINES.pick.open.length || tok !== hear.tok) return;
+    if (here !== '/hobbies/' || S.quiet || step >= LINES.pick.open.length || tok !== pageTok) return;
     // Not over the top of a question it just asked.
-    if (busyForPage() || (chatOn && pres.waiting) || speaking() || !budgetOk()) {
-      if (tries < 40) pickTimer = setTimeout(() => nudgeHobbies(step, tok, tries + 1), 500);
+    if (busyForPage() || speaking() || (chatOn && pres.waiting && now() - pres.said < 8000)) {
+      pickTimer = setTimeout(() => nudgeHobbies(step, tok), 500);
       return;
     }
     const seen = S.hobbies || [];
@@ -2463,11 +2488,12 @@
     const el = pool[Math.floor(Math.random() * pool.length)];
     const t = el.dataset.t;
     wake();
-    chime(LINES.pick.open[step] + '. ' + LINES.pick.teaser[t], {
-      id: 'nudge:hobbies', pri: PRI.page, ttl: 2000, log: false, keep: 0,
+    const ok = await speak(LINES.pick.open[step] + '. ' + LINES.pick.teaser[t], {
+      id: 'nudge:hobbies', pri: PRI.page, hold: 2600, keep: 0,
       onStart: () => { S.hobbies = [...new Set([...(S.hobbies || []), t])]; save(); point(el, { hold: 2400 }); }
     });
-    pickTimer = setTimeout(() => nudgeHobbies(step + 1, tok), 9000);
+    if (tok !== pageTok) return;
+    pickTimer = setTimeout(() => nudgeHobbies(ok ? step + 1 : step, tok), ok ? 8000 : 600);
   }
 
   // ---- The pitch ----------------------------------------------------------------
@@ -2483,22 +2509,23 @@
     rally: { page: '/hobbies/badminton/', el: '[data-3d="racket"]' }
   };
   const PITCH_OF = { muaythai: 'spar', climbing: 'climb', chess: 'chess', badminton: 'rally' };
-  // The muay thai exchange waits so the photos come first.
-  const ASK_LATE = { '/hobbies/muay-thai/': 9000 };
+  // Which game was pitched (or played) on which landing.
+  const pitched = {};
   let pitching = null;
   let pitchEnd = null;
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   async function pitch(id, { force = false, again = false, line = '', tries = 0 } = {}) {
     const P = PITCHES[id];
     if (!P || here !== P.page || pitching || lent || S.quiet) return;
-    if (!force && (S.once.includes('pitch-' + id) || (window.dlFinds && isDone(id)))) return;
+    if (!force && pitched[id] === pageTok) return;
     const piece = document.querySelector('main ' + P.el);
     if (!piece) return;
-    if (!force && (busyForPage() || (chatOn && pres.waiting && now() - pres.said < 10000) || !budgetOk() || document.querySelector('.mt-over, .climb-wall, .bring'))) {
-      if (tries < 20) setTimeout(() => pitch(id, { line, tries: tries + 1 }), 2500);
+    if (!force && (busyForPage() || (chatOn && pres.waiting && now() - pres.said < 6000))) {
+      const tok = pageTok;
+      setTimeout(() => { if (tok === pageTok) pitch(id, { line, tries: tries + 1 }); }, 1000);
       return;
     }
-    once('pitch-' + id);
+    pitched[id] = pageTok;
     S.pitchLater = '';
     save();
     pitching = id;
@@ -2593,7 +2620,6 @@
     dim.addEventListener('click', () => endPitch(false));
   }
   function endPitch(yes) { if (pitchEnd) pitchEnd(yes); }
-  const isDone = (id) => { try { return (JSON.parse(localStorage.getItem('dl-found')) || []).includes(id); } catch (e) { return false; } };
   function startGame(id, piece) {
     if (!document.contains(piece)) return;
     // The ring and the wall borrow the head (dlHead.flyTo), which says game_start for them.
@@ -2622,7 +2648,7 @@
     if (!piece) return;
     racketWatch = new MutationObserver(() => {
       const stats = piece.querySelector('.rk-stats.on');
-      if (!stats || pitching || S.once.includes('pitch-rally')) return;
+      if (!stats || pitching || pitched.rally === pageTok) return;
       const name = (stats.querySelector('.rk-name') || {}).textContent || '';
       setTimeout(() => {
         if (piece.querySelector('.rk-stats.on')) pitch('rally', { line: name ? LINES.pitch.rally.named(name) : '' });
@@ -2630,6 +2656,105 @@
     });
     racketWatch.observe(piece, { subtree: true, attributes: true, attributeFilter: ['class'] });
   }
+  // ---- Asked to play ------------------------------------------------------------
+  // "can i rally you again", "wanna spar", "call meowmeow": the head does it
+  // instead of talking about it. Typed asks it's sure about are caught here
+  // (wants), the rest come back from the server as [[play:id]].
+  const PLAY_AT = { rally: '/hobbies/badminton/', spar: '/hobbies/muay-thai/', climb: '/hobbies/climbing/', chess: '/hobbies/chess/', guitar: '/hobbies/guitar/' };
+  const GAME_ON = Object.fromEntries(Object.entries(PLAY_AT).map(([k, v]) => [v, k]));
+  const WANTS = [
+    ['rally', /\b(rally|play badminton|badminton (game|match))\b/],
+    ['spar', /\b(spar|fight|box|kick you|punch you)\b/],
+    ['climb', /\b(climb|race you up)\b/],
+    ['chess', /\b(play chess|chess (game|match))\b/],
+    ['cat', /\b(cat|meow ?meow|kitty)\b/]
+  ];
+  const ASKS_TO = /\b(let'?s|lets|can (i|we|u|you)|could (i|we|u|you)|may i|wanna|want to|i want|gimme|give me|start|again|another|one more|rematch|bring it|call|see|show me|summon|try|ready)\b|^(rally|spar|fight|climb|call)\b/;
+  const AGAIN = /\b(again|rematch|one more|another (one|round|game|rally|match))\b/;
+  const NOT_NOW = /\b(don'?t|dont|not|never|no more|nah|later|stop|how|why|when|what|who|where|which|ever|often|usually)\b/;
+  function wants(q) {
+    const t = q.toLowerCase();
+    if (NOT_NOW.test(t)) return '';
+    if (/\b(can i|could i|may i|let me|lemme|i wanna|i want to)\b.*\b(play|try|strum)\b.*\bguitar\b/.test(t)) return 'guitar';
+    if (!ASKS_TO.test(t)) return '';
+    const hit = WANTS.filter(([, re]) => re.test(t));
+    if (hit.length === 1) return hit[0][0];
+    if (!hit.length && AGAIN.test(t)) return GAME_ON[here] && GAME_ON[here] !== 'guitar' ? GAME_ON[here] : (S.lastGame || '');
+    return '';
+  }
+  async function playAsked(q, id) {
+    S.msgs.push({ role: 'user', content: q });
+    save();
+    const text = PLAY_AT[id] && PLAY_AT[id] !== here ? LINES.play.go : LINES.play[id];
+    await speak(text, { id: 'play:' + id, pri: PRI.reply, ctx: null, echo: q, onStart: () => { S.msgs.push({ role: 'assistant', content: text }); save(); } });
+    await wait(reduce ? 0 : 600);
+    playNow(id);
+  }
+  // Somewhere else: go there first, and pageLines starts it on arrival.
+  async function playNow(id) {
+    if (id === 'cat') { window.dlCat(); return; }
+    const page = PLAY_AT[id];
+    if (!page) return;
+    if (page !== here) { S.playNext = id; save(); await navigate(page); return; }
+    startWhenReady(id, pageTok);
+  }
+  function startWhenReady(id, tok, tries = 0) {
+    if (tok !== pageTok) return;
+    if (id === 'guitar') { bring('guitar'); return; }
+    const P = PITCHES[id];
+    const piece = P && document.querySelector('main ' + P.el);
+    const ready = piece && (id === 'spar' ? window.dlSparReady : id === 'rally' ? piece.querySelector('.dl-sr button, .rk-rally') : id === 'climb' ? piece.classList.contains('piece-on') : true);
+    if (!ready || document.querySelector('.rl, .mt-over, .climb-wall')) {
+      if (tries < 80) setTimeout(() => startWhenReady(id, tok, tries + 1), 250);
+      return;
+    }
+    pitched[id] = tok;
+    if (pitching) endPitch(null);
+    const go = () => { if (tok === pageTok) { startGame(id, piece); if (P.fly) found(id); } };
+    if (id === 'chess') return go();
+    if (chatOn) closeChat(null);
+    hideTalk().then(go);
+  }
+
+  window.dlPlayNow = (id) => {
+    if (id === 'guitar' && here === PLAY_AT.guitar) { if (pitching) endPitch(null); window.dlBring('guitar'); return true; }
+    playNow(id);
+    return true;
+  };
+
+  // Meowmeow's page, every time they land on it: the head calls her over (or
+  // says she's already here), then asks if they have pets until they answer.
+  async function catPage(tok) {
+    if (here !== '/hobbies/meowmeow/' || S.quiet || tok !== pageTok || pageDone.cat === tok) return;
+    if (busyForPage()) { setTimeout(() => catPage(tok), 250); return; }
+    pageDone.cat = tok;
+    const C = LINES.cat;
+    interrupt(true);
+    wake();
+    noticed('meowmeow');
+    if (cat) {
+      petCat();
+      await say(C.here, { id: 'cat:here', mood: 'happy' });
+    } else {
+      await say(C.hi, { id: 'cat:hi', hold: 900 });
+      if (tok !== pageTok) return;
+      say(C.psst, { id: 'cat:psst', hold: 1400 });
+      await summonCat();
+    }
+    if (tok === pageTok && !S.pets) setTimeout(() => petsAsk(tok), 700);
+  }
+  async function petsAsk(tok, tries = 0) {
+    if (tok !== pageTok || S.quiet || S.pets) return;
+    if (busyForPage()) { setTimeout(() => petsAsk(tok, tries), 250); return; }
+    openFor();
+    const ok = await say(LINES.cat.ask, { id: 'ask:pets', onStart: () => { S.small = [...new Set([...(S.small || []), 'pets'])]; save(); } });
+    if (tok !== pageTok) return;
+    if (!ok) { if (tries < 5) setTimeout(() => petsAsk(tok, tries + 1), 600); return; }
+    pres.waiting = true;
+    const answer = (text) => (label) => { S.pets = true; save(); reply(label, text, 'answer:pets'); };
+    options([['yeah!', answer(LINES.cat.yes)], ['nope', answer(LINES.cat.no)]]);
+  }
+
   // The things-to-do list can ask for it again on the page it's on.
   window.dlPitch = (id) => { if (PITCHES[id] && PITCHES[id].page === here) pitch(id, { force: true }); };
   window.dlPitchable = (id) => Boolean(PITCHES[id] && PITCHES[id].page === here && !S.quiet);
@@ -2884,7 +3009,10 @@
     napLater();
   }
   // Meowmeow's hobby page: "Call her" brings her in, or gets a reaction if she's already here.
-  window.dlCat = summonCat;
+  window.dlCat = () => {
+    if (!cat && !S.quiet) { wake(); quip(LINES.cat.psst, 1400, 'happy', { id: 'cat:psst', pri: PRI.react, ctx: null }); }
+    summonCat();
+  };
   function heart() {
     play(cat.querySelector('.dl-heart'), [
       { transform: 'translate(-50%, 0) scale(.4)', opacity: 0 },
@@ -3122,7 +3250,11 @@
     });
     bus.on('demo_close', (d) => { if (over === 'demo:' + d.id) setContext('project:' + d.id, 'demo_close'); });
     bus.on('bring', (d) => setContext('bring:' + d.id, 'bring'));
-    bus.on('game_start', (d) => setContext('game:' + (d.game || 'game'), 'game_start'));
+    bus.on('game_start', (d) => {
+      for (const k in PITCHES) if (PITCHES[k].page === here) pitched[k] = pageTok;
+      if (GAME_ON[here]) { S.lastGame = GAME_ON[here]; save(); }
+      setContext('game:' + (d.game || 'game'), 'game_start');
+    });
     bus.on('game_end', (d) => { if (over === 'game:' + d.game) setContext('', 'game_end'); });
 
     document.documentElement.addEventListener('mouseleave', (e) => {
@@ -3150,6 +3282,7 @@
   }
 
   function onPage() {
+    pageTok++;
     endPitch(null);
     travelPick = false;
     clearTimeout(pickTimer);
@@ -3166,16 +3299,22 @@
     if (giveBack) giveBack();
     if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: '', tz: TZ }));
     setTimeout(watchRackets);
-    pageLines(here === '/hobbies/' ? 2500 : 1500);
+    pageLines(here === '/hobbies/' ? 1200 : /^\/hobbies\/./.test(here) ? 500 : 1500);
   }
   // What a page says on its own once they land: a hobby's exchange, the
   // nudges on /hobbies/, the wall. Anything that changes the context first
   // (another page, an overlay) calls it off.
   function pageLines(after) {
     const tok = hear.tok;
-    if (here === '/hobbies/guitar/') setTimeout(() => askGuitar(tok), after);
-    if (ASK_PAGES[here]) setTimeout(() => askPage(tok), ASK_LATE[here] || after);
-    if (here === '/hobbies/') pickTimer = setTimeout(() => nudgeHobbies(0, tok), after);
+    const pt = pageTok;
+    // They asked to play this from another page: straight into it.
+    const next = S.playNext;
+    if (next) { S.playNext = ''; save(); }
+    if (next && PLAY_AT[next] === here) { setTimeout(() => startWhenReady(next, pt), 300); return; }
+    if (here === '/hobbies/meowmeow/') setTimeout(() => catPage(pt), Math.min(after, 400));
+    if (here === '/hobbies/guitar/') setTimeout(() => askGuitar(pt), after);
+    if (ASK_PAGES[here]) setTimeout(() => askPage(pt), after);
+    if (here === '/hobbies/') pickTimer = setTimeout(() => nudgeHobbies(0, pt), after);
     if (here === '/notes/') setTimeout(() => { if (tok === hear.tok) react('wall', LINES.wall, 3000, null, ctxNow()); }, after + 1000);
   }
 
@@ -3213,7 +3352,7 @@
     }
     schedule(met ? rand(9000, 14000) : 13000);
     if (met) pres.ready = true;
-    pageLines(here === '/hobbies/' ? 2500 : 1500);
+    pageLines(here === '/hobbies/' ? 1200 : /^\/hobbies\/./.test(here) ? 500 : 1500);
     document.documentElement.classList.toggle('dl-pitch', !S.quiet);
     watchRackets();
     addEventListener('dl:globe-pick', (e) => globePicked(e.detail || {}));

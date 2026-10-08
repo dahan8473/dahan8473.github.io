@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 40, 14, 33, 38
+V_CSS, V_TALKCSS, V_JS, V_TALK = 43, 14, 34, 41
 V_TRACK = 1
 V_PIECE = 29  # bump when anything in /play/ or /3d/ changes
 
@@ -153,7 +153,7 @@ home = '''      <section class="hello" data-t="now">
       </section>
 
       <ul class="list doors">
-        <li><a class="row" href="/resume/"><span class="p">Resume</span><span class="s">Everything I've done on one page. Hover anything for more.</span><span class="m">&#8594;</span></a></li>
+        <li><a class="row" href="/resume/"><span class="p">Resume</span><span class="s">Everything I've done on one page, with the story behind each line.</span><span class="m">&#8594;</span></a></li>
         <li><a class="row" href="/projects/"><span class="p">Projects</span><span class="s">What I've built. Click one for the story, and a few you can play with.</span><span class="m">&#8594;</span></a></li>
         <li><a class="row" href="/hobbies/"><span class="p">Hobbies</span><span class="s">Spar the head, climb the page, spin the globe, call my cat. Most of it is playable.</span><span class="m">&#8594;</span></a></li>
         <li><a class="row" href="/brain/"><span class="p">Brain</span><span class="s">The notes the head thinks with, from my Obsidian vault.</span><span class="m">&#8594;</span></a></li>
@@ -190,6 +190,20 @@ def item(t, lines, bullets=None, note=None, plain=False):
     return f'        <div class="{kind}"{attrs}{tab}>\n' + '\n'.join(rows) + bl + nt + '\n        </div>\n'
 
 
+# Mentoring and judging: hover each one for a photo. A photo shows up once
+# it's in media/mentoring/<id>.webp.
+def mentor(mid, text):
+    src = f'/media/mentoring/{mid}.webp'
+    if not os.path.exists(os.path.join(REPO, src.lstrip('/'))):
+        return text
+    return f'<span class="has-photo" data-photo="{src}">{text}</span>'
+
+
+MENTORING = ', '.join(mentor(m, t) for m, t in [
+    ('hack-western', 'Hack Western mentor'), ('western-ai', 'Western AI mentor'),
+    ('ignition-hacks', 'Ignition Hacks judge'), ('muaythai-coach', 'Muay Thai beginner coach')])
+
+
 def sec(sid, name, items):
     return f'      <section class="r-sec" id="{sid}" data-t="{sid}" aria-labelledby="{sid}-h">\n        <h2 id="{sid}-h">{name}</h2>\n' + ''.join(items) + '      </section>\n\n'
 
@@ -201,7 +215,7 @@ def img(src, alt, w, h):
 resume = '''      <header class="doc-head">
         <div>
           <h1>Resume</h1>
-          <p class="hint"><span class="mouse">Hover anything for more. Click to keep it open.</span><span class="touch">Tap anything for more.</span></p>
+          <p class="hint"><span class="mouse">Hover over a line to see the story behind it. Click it to keep it open while you read.</span><span class="touch">Tap a line to see the story behind it.</span></p>
         </div>
         <p class="go"><a class="ln" href="/resume-swe.pdf">PDF</a><a class="ln" href="/resume-pm.pdf">Product version</a></p>
       </header>
@@ -239,7 +253,7 @@ resume += sec('leadership', 'Leadership', [
              '<p class="go">' + link('/tethos/', 'Case study') + ext('https://tethos.ca', 'tethos.ca') + '</p>']),
   item('wfn', [('<b>Western Founders Network</b>', '2023 – 2025'), ('VP of Education', 'London, ON')],
        note=["<p>Ran Ontario's largest hackathon education event.</p>"]),
-  item('mentoring', [('<b>Mentoring and judging</b>', ''), ('Hack Western mentor, Western AI mentor, Ignition Hacks judge, Muay Thai beginner coach', '')], plain=True),
+  item('mentoring', [('<b>Mentoring and judging</b>', ''), (MENTORING, '')], plain=True),
 ])
 resume += sec('projects', 'Projects', [
   item('tethos-platform', [('<b>Tethos Platform</b>, tethos.ca', 'May 2026 – now'), ('Next.js, TypeScript, FastAPI, Supabase, React Three Fiber', '')],
@@ -282,7 +296,7 @@ resume += sec('skills', 'Skills', [
        note=['<p>Kubernetes at J.D. Power. Docker on Cloud Run for the RAG service. snake-and-commits is a GitHub Action. ESP32 and PlatformIO for the badges.</p>']),
 ])
 resume += '      </div>\n'
-write('resume/index.html', page('/resume/', 'Resume', "David Liu's resume. Software engineering at Western, 16 months at J.D. Power, founder of Tethos. Hover anything for more.", resume, 'resume', cls='resume', ))
+write('resume/index.html', page('/resume/', 'Resume', "David Liu's resume. Software engineering at Western, 16 months at J.D. Power, founder of Tethos. Every line has the story behind it.", resume, 'resume', cls='resume', ))
 
 
 # ---- Projects -----------------------------------------------------------------
@@ -515,6 +529,11 @@ def FIGS(items):
     return f'      <dl class="figs">{cells}</dl>\n'
 
 
+# A Play button that's always on a game page, floating on the side (site.js).
+def PLAY_NOW(id, icon, label):
+  return f'      <button class="play-now" type="button" data-play-now="{id}"><i aria-hidden="true">{icon}</i><span>{label}</span></button>\n'
+
+
 def piece(kind, name, note, cls='', src=''):
     # A container site.js fills with /play/<name>.js or /3d/<name>.js. The note
     # shows until it loads (and if it can't).
@@ -532,27 +551,27 @@ hobby('meowmeow', 'Meowmeow', 'My cat. She/her, black, and always chudding aroun
         <img src="/media/life/meowmeow-belly.webp" alt="Meowmeow on her back with her paws in the air" width="750" height="1000">
         <img src="/media/life/meowmeow-stairs.webp" alt="Meowmeow stretched out on the floor by the stairs" width="750" height="1000">
       </div>
-''', kind='The cat')
+''' + PLAY_NOW('cat', '🐈‍⬛', 'Call her'), kind='The cat')
 hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegie Hall. These are recordings of me playing.", [
   ('Highlights', [('Carnegie Hall', '<p>Performed there.</p>'), ('NW Guitar Competition', '<p>2nd place, classical guitar. <a href="https://www.seattleguitar.org/soundings603.pdf" target="_blank" rel="noopener">The results in the Seattle Classic Guitar Society\'s newsletter</a>.</p>')], None),
 ], shot='''      <section class="recordings" data-t="guitar" aria-label="Recordings">
         <div class="tracks hero" id="guitar-tracks"></div>
       </section>
       <p class="bring-again" data-later="guitar" data-v="{V_PIECE}" hidden><button type="button" class="ln" data-bring="guitar">Play the guitar</button></p>
-'''.replace('{V_PIECE}', str(V_PIECE)))
+'''.replace('{V_PIECE}', str(V_PIECE)) + PLAY_NOW('guitar', '🎸', 'Play it'))
 hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, because a friend dragged me to our local gym. I was super intimidated. I was scared of fighting, and of what the people there might be like."
       '</p>\n        <p class="tagline">But by the first week I was addicted. I think a lot of that comes from my love for chess and puzzle games: Muay Thai is like a physical version of them. My Instagram feed turned into Muay Thai highlights, and I bought a bag on Facebook Marketplace and hung it up in my backyard to train in the mornings.'
       "</p>\n        <p class=\"tagline\">If you've never tried something like this, give it a shot. It might reveal more about yourself than you think!", [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched') + '      <button class="spar-glove" type="button" data-spar aria-label="Spar with the head"><img src="/media/muaythai/gloves-btn.webp" alt="" width="112" height="120"><span>Spar</span></button>\n')
 hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V3 right now. Climb this page with me if you want.", [
-], shot=piece('play', 'climbing', 'Loading the wall...'))
+], shot=piece('play', 'climbing', 'Loading the wall...') + PLAY_NOW('climb', '🧗', 'Climb'))
 hobby('swimming', 'Swimming', 'I swim.', [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/swimming/photos.json'))
 hobby('badminton', 'Badminton', "Badminton was my main sport all through high school!"
       '</p>\n        <p class="tagline">My school had a very competitive team, and I played doubles at regional and provincial school competitions. Over the years I\'ve hoarded various expensive rackets. These four are my favourites.'
       '</p>\n        <p class="tagline">Click one for a closer look, and give me a rally!', [
-], shot=piece('3d', 'racket', 'Loading the rackets...'))
+], shot=piece('3d', 'racket', 'Loading the rackets...') + PLAY_NOW('rally', '🏸', 'Rally me'))
 hobby('cycling', 'Cycling', "I picked up my bike second hand at the start of September and fell in love with cycling. I ride to school and back every day, and go on long rides whenever I can.", [
 ], shot='''      <figure class="case-shot natural">
         <img src="/media/cycling/me-and-the-bike.webp" alt="David standing with his matte black track bike at night, outside Alumni Hall at Western" width="1500" height="1265">
@@ -569,7 +588,7 @@ hobby('chess', 'Chess', "I played competitively all through elementary school, u
     ('Then guitar', '<p>Eventually I had to pick one to focus on, and it was <a href="/hobbies/guitar/">classical guitar</a>.</p>'),
     ('Now', '<p>I still play online and solve puzzles. <a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">My chess.com</a>, and live stats are next to the board below.</p>'),
   ], None),
-], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...'))
+], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', '♟️', 'Play me'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity.", [
   ('The habit', [

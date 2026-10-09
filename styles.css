@@ -816,7 +816,7 @@ body:has(.rl, .mt-over, .climb-wall, .bring) .play-now { visibility: hidden; }
 @media (max-width: 1340px) { .spar-glove, .play-now { top: auto; right: auto; left: 14px; bottom: 18px; } }
 @media (max-width: 1340px) { .spar-glove img { width: 84px; } .play-now i { width: 56px; height: 56px; font-size: 28px; } }
 @media (max-width: 720px) {
-  .spar-glove, .play-now { top: calc(var(--nav-h, 64px) + 12px); bottom: auto; left: auto; right: 12px; grid-auto-flow: column; align-items: center; gap: 6px; padding: 4px 14px 4px 4px; border-radius: 999px; background: var(--t1); color: var(--bg); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); animation: none; }
+  .spar-glove, .play-now { top: 150px; bottom: auto; left: auto; right: 12px; grid-auto-flow: column; align-items: center; gap: 6px; padding: 4px 14px 4px 4px; border-radius: 999px; background: var(--t1); color: var(--bg); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); animation: none; }
   .spar-glove img { width: 34px; filter: none; }
   .play-now i { width: 34px; height: 34px; font-size: 20px; border: 0; box-shadow: none; }
   .spar-glove span, .play-now span { padding: 0; background: none; color: inherit; }

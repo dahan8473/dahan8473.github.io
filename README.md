@@ -16,7 +16,7 @@ My personal site. A floating cutout of my head lives on it. It's an AI version o
 - **Notices you.** Open something or stop to read it and it says something about it, once. It also reacts to inspect element, right clicks, dark mode, leaving the tab, and getting thrown across the screen.
 - **Gives tours.** "just lookin around" gets you a walk through every page.
 - **Takes notes.** `/notes/` is a wall of sticky notes. Take one off the pad in the corner, write on it, and stick it wherever you want. It stays where you put it (Jev checks it first). Tell the head you want to leave me a private note and it passes it on instead. Either way I get a ping on Telegram.
-- **Pitches the games.** Nothing on a hobby page has a start button. You see the photos first, then the head dims the page, comes right up to the screen and asks: spar me? climb with me? rally me with the Astrox 88D? Say yes and it flies straight into the ring or onto the wall. Say later and clicking it on that page asks again. Tell it to go away and the pages get their own buttons back.
+- **Pitches the games.** On a game page the head asks its question first, then dims the page, comes right up to the screen and asks: spar me? climb with me? rally me with the racket you just picked? Say yes and it flies straight into the ring or onto the wall. Every game also has a Play button on the side, and typing "can i rally you again" anywhere starts it instead of talking about it.
 - **Keeps you exploring.** Twelve things to do (spar it, rally it, climb the page, play the guitar, call the cat, leave a note, message me...) live behind the star in the header. Doing one checks it off and a toast says what's next, most pages end with a few you haven't tried, and if your mouse heads for the tab bar, the head names one you missed.
 - **Can't be talked out of being me.** Prompt injection and trolls get caught by Jev before they reach the brain.
 - **Answers fast.** First word in under a second.
@@ -81,10 +81,85 @@ Replies stream as plain text with stage directions inline. The page acts them ou
 | `[[summon:cat]]` | My cat walks in from the edge of the screen and lies down. |
 | `[[note:key=value]]` | Remembers something you told it. Never shown. |
 | `[[mode:note]]` | Takes a private note for me. `[[mode:tour]]` starts the tour. |
+| `[[play:ID]]` | Starts a game (`rally`, `spar`, `climb`, `chess`, `guitar`) or calls the cat, walking to its page first. |
+| `[[bring:guitar]]` | Brings the guitar out over the page. |
+| `[[show:bus]]` | Holds up a picture next to the bubble. |
+| `[[recall:IDS]]` | Shows what it's remembering and lights those notes up on `/brain/`. |
+| `[[ask:camera]]` | "rate me": asks for the camera for a few seconds. Nothing is recorded or sent. |
 
 IDs come from `talk/targets.json`, hooked into the pages with `data-t`.
 
 What the head knows about me isn't in this repo. It gets loaded when the function starts.
+
+### How the head decides what to do
+
+Everything the head says goes through one queue, `utter()` in `talk/talk.js`. Each line has a priority and belongs to whatever is on screen when it was queued:
+
+| Priority | What | Example |
+|---|---|---|
+| reply | Answers to what you typed or clicked in the chat | the brain's replies |
+| react | Something you just opened or clicked | "that's meowmeow..." |
+| page | Things a page says when you land on it | the climbing question, game pitches, the hobby nudge |
+| ambient | Small talk and idle bits | "how'd you find the site?" |
+
+A higher line cuts a lower one off mid-word. A lower one waits its turn and drops out if it waits too long. Leaving the page (or opening a project, a demo or a game over it) stops the current line and drops everything queued about the old screen. Lines the head starts on its own also wait for a gap: one every 8 seconds at most, never while you're typing or a reply is streaming.
+
+**Landing on a page.** `site.js` swaps the page and says so on `window.dlBus`. The head bumps a page counter that every pending exchange checks, so nothing from the last page leaks onto this one, then `pageLines()` picks what this page does:
+
+```mermaid
+flowchart TD
+  L[Page swap] --> T["New page token, close any pitch, log the visit"]
+  T --> N{"Asked to play this game from another page?"}
+  N -- yes --> G[Start the game as soon as it's ready]
+  N -- no --> P{Which page?}
+  P -- "/hobbies/" --> H[Nudge them to pick a hobby, again 8s later]
+  P -- Meowmeow --> C["aww u wanna see meowmeow? psst psst"] --> CW[Cat walks in] --> CP[Asks about their pets, once]
+  P -- Guitar --> GQ["do you play?"] --> GB[Yes brings the guitar out]
+  P -- "Hiking, climbing, badminton, muay thai, travel, lumosity, chess, photography" --> Q[That page's question, with answer buttons]
+  Q --> GP{Game page?}
+  GP -- yes --> PI[Pitch: dim the page, yes or later]
+  P -- "/notes/" --> W[A line about the wall]
+```
+
+Page events fire on every landing, not once a visit. If the head is busy (a game or the guitar is open, or it's waiting on your answer) they wait instead of giving up, and if a line gets cut they try again.
+
+**Starting a game.** There are three ways in, and they all end in the same place:
+
+```mermaid
+flowchart TD
+  A[Pitch: yes] --> S
+  B[Play button on the side] --> S
+  C["Typed: can i rally you again"] --> K{Matches in the browser?}
+  K -- yes --> S
+  K -- no --> J["Jev on the server: intent play, which game"] --> M["[[play:rally]]"] --> S
+  S[playNow] --> O{On that game's page?}
+  O -- no --> GO[Remember it, walk there] --> R
+  O -- yes --> R[Wait until the game has loaded] --> X[Close the chat, start it]
+  X --> F[Spar and climb: the head flies in as the opponent]
+```
+
+**A message you type.** The browser handles what it can without the server, then the server handles what it can without the brain:
+
+```mermaid
+flowchart TD
+  U[You hit enter] --> L1{25 messages this visit?}
+  L1 -- yes --> E[Points you at email]
+  L1 -- no --> L2{Asking to play something?}
+  L2 -- yes --> PL[Set line, game starts]
+  L2 -- no --> API["POST /api/chat: page, what's on it, last 16 messages, local time, name"]
+  API --> CK["Rate limit, slur filter, monthly spend cap"]
+  CK --> J["Jev, about 100ms: troll? intent, game, target, who, which notes"]
+  J --> SET{Set line?}
+  SET -- "troll, slur, note for David, tour, play, guitar answer" --> OUT[Reply without the brain]
+  SET -- no --> HAND["Hand moves first: drag the resume, point at the project"]
+  HAND --> PACE["Pace hint: short for short, ask why before giving a take"]
+  PACE --> BR[DeepSeek streams the reply]
+  BR --> TW[Typewriter acts out markers as it reaches them]
+```
+
+The pace hint is worked out per message from how many words you wrote, whether you're answering a question the head just asked, and whether you asked for its side ("wbu?"). It keeps the head from answering "lol idk" with a paragraph, and from giving its take before asking why you think what you think.
+
+**When nobody's talking.** Every second the head checks what's in the middle of your screen. Stop on something it hasn't mentioned for about 5 seconds and it says one line about it. If the chat goes quiet it asks a light question about you (six a visit at most, never a second one before you've answered), and once a visit, after some small talk, a deeper one. Between those, Jev picks its next move from what you're doing: wait, comment, point, carry a photo, nap, or for a recruiter, bring the resume over. Nothing happens while a game or overlay is open or the chat is mid-conversation.
 
 ### The second brain
 

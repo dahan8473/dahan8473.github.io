@@ -2,7 +2,8 @@
    mount(el) builds the board inside el and returns a cleanup function.
 
    Rules come from chess.js (BSD-2-Clause, via esm.sh). The head's engine is
-   below, a small alpha-beta that runs in a Web Worker made from a Blob.
+   below, a small alpha-beta that runs in a Web Worker made from a Blob. It
+   plays loose on purpose, about 1425 (see LEVEL).
    The board is physical: pieces lift when you pick them up, land with a little
    bounce and a clack, and captured pieces get knocked into the tray under the
    board, where they tumble around with simple 2D physics. Grab them and throw
@@ -15,7 +16,10 @@ import { Chess } from 'https://esm.sh/chess.js@1.4.0';
 
 const CONFIG = '/hobbies/chess/chess.json';
 const FACES = { neutral: '/media/head.webp', happy: '/media/head-happy.webp', sad: '/media/head-sad.webp' };
-const DEPTH = 3;
+// How the head plays: about 1425, David's rating as a kid. It looks 3 half-moves
+// ahead and picks loosely between moves that are close, but on 2 moves in 5 it
+// only looks one ahead, so now and then it misses a tactic. See think().
+const LEVEL = { depth: 3, slack: 25, temp: 8, miss: 0.4 };
 const STATS_TTL = 10 * 60 * 1000;
 
 // What the head says. A pool per moment; it won't say the same line twice in a row.
@@ -334,19 +338,26 @@ function makeEngine() {
   }
 
   function evaluate() {
-    let s = 0, npm = 0, wk = 0, bk = 0;
+    let s = 0, npm = 0, wk = 0, bk = 0, wm = 0, bm = 0;
     for (let sq = 0; sq < 120; sq++) {
       if (sq & 0x88) { sq += 7; continue; }
       const p = board[sq];
       if (!p) continue;
       if (p === 6) wk = sq;
       else if (p === -6) bk = sq;
-      else if (p > 0) { s += W[p][sq]; if (p > 1) npm += VAL[p]; }
-      else { s -= Bk[-p][sq]; if (p < -1) npm += VAL[-p]; }
+      else if (p > 0) { s += W[p][sq]; wm += VAL[p]; if (p > 1) npm += VAL[p]; }
+      else { s -= Bk[-p][sq]; bm += VAL[-p]; if (p < -1) npm += VAL[-p]; }
     }
-    // Kings walk out as the pieces come off.
+    // Kings walk out as the pieces come off. Until then, keeping the right to
+    // castle is worth something, so it doesn't wander off with Ke2.
     const ph = Math.min(npm, 6400);
-    s += ((W[6][wk] - Bk[6][bk]) * ph + (WK_END[wk] - BK_END[bk]) * (6400 - ph)) / 6400 | 0;
+    s += ((W[6][wk] - Bk[6][bk] + ((castle & 3 ? 30 : 0) - (castle & 12 ? 30 : 0))) * ph + (WK_END[wk] - BK_END[bk]) * (6400 - ph)) / 6400 | 0;
+    // Against a bare king: herd it to the edge and walk the king over, or it never mates.
+    if ((!bm && wm >= 500) || (!wm && bm >= 500)) {
+      const w = bm ? -1 : 1, lone = w > 0 ? bk : wk, f = lone & 7, r = lone >> 4;
+      const near = 14 - Math.abs((wk & 7) - (bk & 7)) - Math.abs((wk >> 4) - (bk >> 4));
+      s += w * ((Math.max(3 - f, f - 4) + Math.max(3 - r, r - 4)) * 30 + near * 12);
+    }
     return s * side;
   }
 
@@ -369,7 +380,8 @@ function makeEngine() {
   }
 
   function quiesce(alpha, beta, qd) {
-    nodes++;
+    if ((++nodes & 2047) === 0 && Date.now() > deadline) stopped = true;
+    if (stopped) return alpha;
     const stand = evaluate();
     if (stand >= beta) return beta;
     if (stand > alpha) alpha = stand;
@@ -428,33 +440,53 @@ function makeEngine() {
     return s + ' ' + (side > 0 ? 'w' : 'b') + ' ' + (c || '-');
   }
 
+  // Picks from moves sorted best first: anything within slack centipawns of the
+  // best, weighted e^(-loss / temp) so small slips are common and big ones rare.
+  // temp 0 picks evenly. A forced mate always wins.
+  function choose(list, slack, temp) {
+    const top = list[0].v;
+    const near = top > MATE - 100 ? list.filter((it) => it.v === top) : list.filter((it) => it.v >= top - slack);
+    if (!temp) return near[Math.floor(Math.random() * near.length)];
+    let sum = 0;
+    const w = near.map((it) => (sum += Math.exp((it.v - top) / temp)));
+    const r = Math.random() * sum;
+    return near[w.findIndex((x) => x >= r)] || near[0];
+  }
+
   // seen: earlier positions as "board side castling", so it won't walk into a
-  // repetition while it's ahead. spread: how many centipawns of slack it gives
-  // itself to pick between near-equal moves, so games don't repeat.
+  // repetition while it's ahead. slack and temp: see choose(). miss: the chance
+  // it only looks one move ahead this turn, like a person who didn't look
+  // deeper. It still sees what's hanging, but not forks, pins or quiet mate
+  // threats, theirs or its own. score is what it thought the move was worth.
   function think(fen, opts) {
-    const depth = (opts && opts.depth) || 3, seen = new Set((opts && opts.seen) || []);
-    const spread = opts && opts.spread != null ? opts.spread : 12;
+    opts = opts || {};
+    const depth = opts.depth || 3, seen = new Set(opts.seen || []);
+    const slack = opts.slack != null ? opts.slack : 12, temp = opts.temp || 0, miss = opts.miss || 0;
     load(fen);
     nodes = 0; stopped = false;
-    deadline = Date.now() + ((opts && opts.ms) || 2500);
-    let root = gen([], true).filter((m) => { if (!make(m)) return false; unmake(); return true; });
+    deadline = Date.now() + (opts.ms || 2500);
+    const root = gen([], true).filter((m) => { if (!make(m)) return false; unmake(); return true; });
     if (!root.length) return null;
-    let best = { m: root[0], v: -INF }, list = root.map((m) => ({ m, v: 0 }));
+    const list = root.map((m) => ({ m, v: 0 }));
+    let deep = [{ m: root[0], v: 0 }], shallow = null;
     for (let d = 1; d <= depth; d++) {
       let top = -INF;
       for (const it of list) {
         make(it.m);
         if (seen.has(key())) it.v = 0;
-        else it.v = -search(d - 1, -INF, -(top - spread - 1), 1);
+        else it.v = -search(d - 1, -INF, -(top - slack - 1), 1);
         unmake();
         if (stopped) break;
         if (it.v > top) top = it.v;
       }
       if (stopped) break;
       list.sort((a, b) => b.v - a.v);
-      const near = top > MATE - 100 ? list.filter((it) => it.v === top) : list.filter((it) => it.v >= top - spread);
-      best = near[Math.floor(Math.random() * near.length)];
+      deep = list.map((it) => ({ m: it.m, v: it.v }));
+      if (d === 1) shallow = deep;
     }
+    // Against a bare king there's nothing to miss, and drifting would let it slip to the 50-move rule.
+    const bare = !fen.split(' ')[0].replace(side > 0 ? /[^pnbrq]/g : /[^PNBRQ]/g, '');
+    const best = choose(shallow && shallow !== deep && !bare && Math.random() < miss ? shallow : deep, slack, temp);
     const m = best.m, promo = (m >> 14) & 7;
     return { from: sqName(m & 127), to: sqName((m >> 7) & 127), promotion: promo ? ' pnbrqk'[promo] : undefined, score: best.v, nodes };
   }
@@ -645,6 +677,7 @@ export function mount(el) {
     if (l !== s.l) { s.el.style.setProperty('--lift', l); s.l = l; }
   }
   function kill(s) {
+    letGo(s);
     s.mode = 'gone';
     if (reduce) { s.el.remove(); sprites.delete(s); return; }
     s.el.classList.add('out');
@@ -653,6 +686,7 @@ export function mount(el) {
 
   // Lift it, carry it over, set it down. land() runs on touchdown.
   function glide(s, x, y, ms, land) {
+    letGo(s);
     s.el.classList.add('up');
     if (reduce) { s.x = s.tx = x; s.y = s.ty = y; s.a = 0; s.s = 1; s.lift = 0; s.mode = 'rest'; s.el.classList.remove('up', 'fly'); draw(s); if (land) land(); return; }
     Object.assign(s, { mode: 'glide', x0: s.x, y0: s.y, a0: s.a, s0: s.s, tx: x, ty: y, t0: performance.now(), dur: ms, land });
@@ -671,6 +705,7 @@ export function mount(el) {
   const STEP = 1 / 120;
   const E_WALL = 0.38, E_PAIR = 0.42;
   function knockOff(s, dx, dy) {
+    letGo(s);
     tray.push(s);
     trayNote.classList.add('off');
     s.el.classList.remove('up');
@@ -783,7 +818,7 @@ export function mount(el) {
   function wake() { if (!raf && alive) { last = performance.now(); raf = requestAnimationFrame(frame); } }
   function frame(now) {
     raf = 0;
-    const dt = Math.min(0.05, (now - last) / 1000);
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     let busy = false;
     for (const s of sprites) {
@@ -802,10 +837,13 @@ export function mount(el) {
         }
       } else if (s.mode === 'spring') {
         busy = true;
-        const k = 420, c = 26;
-        s.vx += (-(s.x - s.tx) * k - s.vx * c) * dt; s.vy += (-(s.y - s.ty) * k - s.vy * c) * dt;
-        s.x += s.vx * dt; s.y += s.vy * dt;
-        s.vs += (-(s.s - 1) * 900 - s.vs * 22) * dt; s.s += s.vs * dt;
+        // Stiff springs blow up in one big step (past ~47ms), so a long frame takes a few small ones.
+        const k = 420, c = 26, n = Math.ceil(dt / STEP), h = n ? dt / n : 0;
+        for (let i = 0; i < n; i++) {
+          s.vx += (-(s.x - s.tx) * k - s.vx * c) * h; s.vy += (-(s.y - s.ty) * k - s.vy * c) * h;
+          s.x += s.vx * h; s.y += s.vy * h;
+          s.vs += (-(s.s - 1) * 900 - s.vs * 22) * h; s.s += s.vs * h;
+        }
         s.a += (0 - s.a) * Math.min(1, dt * 14);
         s.lift += (0 - s.lift) * Math.min(1, dt * 12);
         if (Math.abs(s.x - s.tx) < 0.2 && Math.abs(s.y - s.ty) < 0.2 && Math.hypot(s.vx, s.vy) < 4 && Math.abs(s.s - 1) < 0.003 && Math.abs(s.vs) < 0.05) {
@@ -898,6 +936,18 @@ export function mount(el) {
   const limbo = new Set(); // captured, but the capturing piece hasn't landed yet
 
   const mine = () => game.turn() === you && !busy && !over;
+
+  // The head hears about games on window.dlBus (talk/talk.js), which may not be
+  // there: game_start on your first move, game_end once when that game is over
+  // or you leave it. outcome is yours; moves is how many you made.
+  let begun = false;
+  function tell(type, data) { try { if (window.dlBus && window.dlBus.emit) window.dlBus.emit(type, data); } catch (e) {} }
+  function begin() { if (!begun) { begun = true; tell('game_start', { game: 'chess' }); } }
+  function end(outcome) {
+    if (!begun) return;
+    begun = false;
+    tell('game_end', { game: 'chess', result: { outcome, moves: game.history({ verbose: true }).filter((m) => m.color === you).length } });
+  }
   const victimSquare = (m) => (m.isEnPassant() ? m.to[0] + m.from[1] : m.captured ? m.to : null);
 
   function render() {
@@ -1033,6 +1083,7 @@ export function mount(el) {
     if (!m) return false;
     selected = null; targets = [];
     if (window.dlFound) window.dlFound('chess');
+    begin();
     busy = true;
     render();
     const id = turnId;
@@ -1042,16 +1093,18 @@ export function mount(el) {
 
   function afterYours(m) {
     if (!alive) return;
-    if (gameOver('you')) return;
+    if (gameOver()) return;
     headTurn(m);
   }
 
-  function gameOver(who) {
+  function gameOver() {
     if (!game.isGameOver()) return false;
     over = true; busy = false;
-    if (game.isCheckmate()) say(who === 'you' ? LINES.youWin : LINES.headWins, who === 'you' ? 'sad' : 'happy');
+    const mate = game.isCheckmate(), won = mate && game.turn() !== you;
+    if (mate) say(won ? LINES.youWin : LINES.headWins, won ? 'sad' : 'happy');
     else if (game.isStalemate()) say(LINES.stalemate);
     else say(LINES.draw);
+    end(mate ? (won ? 'win' : 'loss') : 'draw');
     render();
     return true;
   }
@@ -1064,19 +1117,19 @@ export function mount(el) {
     say(LINES.think, 'neutral', true);
     const started = performance.now();
     const seen = game.history({ verbose: true }).map((h) => h.after.split(' ').slice(0, 3).join(' '));
-    think(game.fen(), { depth: DEPTH, seen }).then((r) => {
+    think(game.fen(), Object.assign({ seen }, LEVEL)).then((r) => {
       if (!alive || id !== turnId) return;
       const wait = Math.max(0, 420 + Math.random() * 380 - (performance.now() - started));
       later(() => {
         if (!alive || id !== turnId) return;
         let m = null;
         if (r) { try { m = game.move({ from: r.from, to: r.to, promotion: r.promotion }); } catch (e) { m = null; } }
-        if (!m) { const all = game.moves({ verbose: true }); if (!all.length) { busy = false; gameOver('head'); return; } m = game.move(all[Math.floor(Math.random() * all.length)]); }
+        if (!m) { const all = game.moves({ verbose: true }); if (!all.length) { busy = false; gameOver(); return; } m = game.move(all[Math.floor(Math.random() * all.length)]); }
         render();
         animate(m, 'glide', () => {
           if (!alive || id !== turnId) return;
           busy = false;
-          if (gameOver('head')) return;
+          if (gameOver()) return;
           comment(yourMove, m, r ? r.score : 0);
           expect = r ? r.score : null;
           render();
@@ -1093,13 +1146,14 @@ export function mount(el) {
     if (yours && yours.san.includes('+')) return say(LINES.checked);
     if (score < -500 && !said.losing) { said.losing = true; return say(LINES.losing, 'sad'); }
     if (score > 700 && !said.winning) { said.winning = true; return say(LINES.winning); }
-    if (yours && yours.promotion) return say(LINES.promote, 'sad');
+    if (yours && yours.promotion) return say(LINES.promote.filter((l) => yours.promotion === 'q' || !l.includes('queen')), 'sad');
     if (yours && yours.captured && Math.random() < 0.5) return say(LINES.lostPiece, 'sad');
     if (head.captured && Math.random() < 0.5) return say(LINES.tookPiece);
     say(['your move', 'ok your turn', 'your turn', 'go ahead']);
   }
 
   function newGame(color) {
+    end('abandoned');
     turnId++;
     for (const f of waiting.values()) f(null);
     waiting.clear();
@@ -1162,6 +1216,13 @@ export function mount(el) {
   // Your piece on your turn: drag it, or tap it then tap a square.
   // Anything else on the board: flick it, it springs back. Tray pieces: throw them.
   let grab = null, lastFlick = 0;
+  // The game always wins: when a move needs a piece you're flicking or holding, you let go of it.
+  function letGo(s) {
+    if (!grab || grab.s !== s) return;
+    if (grab.kind === 'move') hover(null);
+    s.tilt = 0;
+    grab = null;
+  }
   const pt = (e) => { const r = stage.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, t: e.timeStamp }; };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const velocity = (hist) => {
@@ -1301,7 +1362,8 @@ export function mount(el) {
   on(motion, 'change', (e) => {
     reduce = e.matches;
     if (!reduce) return;
-    for (const [sq, s] of onBoard) { const c = center(sq); settle(s, c.x, c.y); }
+    // A move mid-glide still has to land, or the game waits on it forever.
+    for (const [sq, s] of onBoard) { const c = center(sq), land = s.mode === 'glide' && s.land; s.land = null; settle(s, c.x, c.y); if (land) land(); }
     restInTray();
   });
 
@@ -1392,6 +1454,7 @@ export function mount(el) {
   stats();
 
   return function stop() {
+    end('abandoned');
     alive = false;
     ac.abort();
     if (raf) cancelAnimationFrame(raf);

@@ -212,7 +212,7 @@
   "climbing": {
     "page": "/hobbies/climbing/",
     "sel": "[data-t='climbing']",
-    "about": "Rock climbing page: I boulder, and I can only do a V3. You can climb the page with the head"
+    "about": "Rock climbing page: I boulder, and I can only do a V2. You can climb the page with the head"
   },
   "photography": {
     "page": "/hobbies/photography/",
@@ -233,11 +233,6 @@
     "page": "/hobbies/chess/",
     "sel": "[data-t='chess']",
     "about": "Chess page: I played competitively all through elementary school, competed at regionals and got my rating to 1425 playing against adults, then had to focus on classical guitar. I still play online on chess.com and solve puzzles (puzzle rating around 1766). You can play the head on the page"
-  },
-  "drones": {
-    "page": "/hobbies/drones/",
-    "sel": "[data-t='drones']",
-    "about": "Flying drones page: I fly drones. Not written up yet, it asks visitors if they do it too"
   },
   "video": {
     "page": "/hobbies/video/",
@@ -262,7 +257,7 @@
   "cycling": {
     "page": "/hobbies/cycling/",
     "sel": "[data-t='cycling']",
-    "about": "Cycling page: I cycle. Not written up yet, it asks visitors if they do it too"
+    "about": "Cycling page: I picked up my matte black track bike second hand at the start of September and fell in love with cycling. I ride to school and back every day and go on long rides whenever I can. Has a 3D model of the bike you can spin, and a photo of me with it"
   },
   "hiking": {
     "page": "/hobbies/hiking/",

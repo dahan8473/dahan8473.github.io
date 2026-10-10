@@ -79,7 +79,7 @@ const SAY = {
   early: 'jumped too early lol',
   late: 'too late 😭',
   slip: 'nooo',
-  mat: ['ow', 'man only a v3 lol', 'that hold is greasy i swear', 'the mat is my friend'],
+  mat: ['ow', 'man i can only do a v2 :(', 'that hold is greasy i swear', 'the mat is my friend'],
   again: ['ok again', 'one more go', 'from the start. ok'],
   back: ['ok back on the jug', 'jug restart. thank u'],
   match: 'match it! both hands on the top',
@@ -165,8 +165,8 @@ const CSS = `
 
 body:has(> .climb-wall.hide-dl) .dl, body:has(> .climb-wall.hide-dl) .dl * { visibility: hidden !important; }
 
-.climb-wall { position: absolute; left: 0; top: 0; width: 100%; z-index: 45; overflow: hidden; pointer-events: none; --climb-shade: rgba(0, 0, 0, 0.2); }
-[data-theme="dark"] .climb-wall { --climb-shade: rgba(0, 0, 0, 0.6); }
+.climb-wall { position: absolute; left: 0; top: 0; width: 100%; z-index: 45; overflow: hidden; pointer-events: none; --climb-shade: rgba(0, 0, 0, 0.2); --climb-ring: #4f8ea3; }
+[data-theme="dark"] .climb-wall { --climb-shade: rgba(0, 0, 0, 0.6); --climb-ring: ${ROUTE}; }
 .climb-wall > * { position: absolute; left: 0; top: 0; }
 .climb-wall [hidden] { display: none !important; }
 
@@ -175,12 +175,13 @@ body:has(> .climb-wall.hide-dl) .dl, body:has(> .climb-wall.hide-dl) .dl * { vis
 .climb-mat::before { left: 33.3%; }
 .climb-mat::after { left: 66.6%; }
 
-.climb-reach { border-radius: 50%; border: 1.5px dashed rgba(136, 192, 208, 0.75); background: radial-gradient(closest-side, rgba(136, 192, 208, 0.1), rgba(136, 192, 208, 0.03)); transition: transform 380ms cubic-bezier(.2, .8, .2, 1), opacity 220ms ease; }
+.climb-reach { border-radius: 50%; border: 1.5px dashed var(--climb-ring); background: radial-gradient(closest-side, rgba(136, 192, 208, 0.1), rgba(136, 192, 208, 0.03)); transition: transform 380ms cubic-bezier(.2, .8, .2, 1), opacity 220ms ease; }
 .climb-reach.off { opacity: 0; }
+[data-theme="dark"] .climb-reach { border-color: rgba(136, 192, 208, 0.75); }
 
 .climb-hold { display: grid; place-items: center; padding: 0; margin: 0; border: 0; border-radius: 50%; background: none; pointer-events: auto; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; animation: climb-pop 420ms cubic-bezier(.34, 1.56, .64, 1) both; animation-delay: var(--d, 0ms); }
 .climb-hold svg { display: block; width: var(--s); height: var(--s); overflow: visible; pointer-events: none; transition: transform 160ms ease, opacity 220ms ease; }
-.climb-hold::before { content: ''; position: absolute; left: 50%; top: 50%; width: var(--ring); height: var(--ring); margin: calc(var(--ring) / -2) 0 0 calc(var(--ring) / -2); box-sizing: border-box; border-radius: 50%; border: 2px solid ${ROUTE}; opacity: 0; transition: opacity 200ms ease; pointer-events: none; }
+.climb-hold::before { content: ''; position: absolute; left: 50%; top: 50%; width: var(--ring); height: var(--ring); margin: calc(var(--ring) / -2) 0 0 calc(var(--ring) / -2); box-sizing: border-box; border-radius: 50%; border: 2px solid var(--climb-ring); opacity: 0; transition: opacity 200ms ease; pointer-events: none; }
 .climb-hold.in::before { opacity: 1; animation: climb-ring 1.6s ease-in-out infinite; }
 .climb-hold.dy::before { opacity: 0.95; border-style: dashed; }
 .climb-hold.dy::after { content: 'dyno'; position: absolute; left: 50%; top: calc(50% + var(--ring) / 2 + 4px); padding: 2px 6px 3px; border-radius: 999px; background: ${ROUTE}; color: #0a0907; font-size: 10px; line-height: 1; letter-spacing: 0.06em; transform: translateX(-50%); pointer-events: none; white-space: nowrap; }
@@ -208,7 +209,7 @@ body:has(> .climb-wall.hide-dl) .dl, body:has(> .climb-wall.hide-dl) .dl * { vis
 .climb-hand img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; pointer-events: none; }
 .climb-hand.l img { transform: scaleX(-1); }
 
-.climb-dring { box-sizing: border-box; border-radius: 50%; border: 3px solid ${ROUTE}; opacity: 0; }
+.climb-dring { box-sizing: border-box; border-radius: 50%; border: 3px solid var(--climb-ring); opacity: 0; }
 
 .climb-say { max-width: min(230px, 62vw); padding: 8px 13px 9px; border-radius: 16px 16px 16px 5px; background: var(--talk-paper, #fffdf7); color: var(--talk-ink, #2b2925); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 10px 26px -8px rgba(0, 0, 0, 0.3); font-size: 14px; line-height: 1.35; opacity: 0; transition: opacity 160ms ease; width: max-content; }
 .climb-say.on { opacity: 1; }
@@ -250,7 +251,8 @@ body:has(> .climb-wall.hide-dl) .dl, body:has(> .climb-wall.hide-dl) .dl * { vis
 
 const UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>';
 function cardHTML(r, inline) {
-  const best = r.best == null ? '' : `<div class="${r.isBest && r.prior ? 'new' : ''}"><b>${clock(r.best)}</b><span>${r.isBest && r.prior ? 'new best' : 'best'}</span></div>`;
+  // A first send's best is just its time, so it only shows once there's one to beat.
+  const best = r.best == null || !r.prior ? '' : `<div class="${r.isBest ? 'new' : ''}"><b>${clock(r.best)}</b><span>${r.isBest ? 'new best' : 'best'}</span></div>`;
   return '<div class="climb-card" role="group" aria-label="Sent it">' +
     '<span class="climb-tag">Sent it</span><p class="climb-line">ok that was my max lol</p>' +
     `<div class="climb-stats"><div><b>${clock(r.ms)}</b><span>time</span></div><div><b>${r.tries}</b><span>${r.tries === 1 ? 'try' : 'tries'}</span></div>${best}</div>` +
@@ -321,6 +323,9 @@ export function mount(el) {
     const later = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; };
     let raf = 0;
     let dead = false;
+    let sentRun = null;
+    // Said here, not when the head lands: getting off before it does still ends a game that started.
+    try { if (window.dlBus) window.dlBus.emit('game_start', { game: 'climb' }); } catch (e) { /* fine */ }
 
     // ---- Build -----------------------------------------------------------
     const wall = document.createElement('div');
@@ -641,8 +646,11 @@ export function mount(el) {
       follow();
     }
 
-    // The dyno: the ring closes on the hold, tap when they meet.
-    let catcher = null;
+    // The dyno: the ring closes on the hold, tap when they meet. A tap anywhere
+    // counts, timed from when it went down. A finger has to lift where it
+    // landed, so a swipe or a scroll isn't a jump. After it's decided the layer
+    // stays a beat (soak) so a late tap doesn't land on a link under the wall.
+    let catcher = null, press = null, soak = null;
     function dyno(k, i) {
       startClock();
       S.phase = 'dyno';
@@ -655,21 +663,46 @@ export function mount(el) {
       holds[i].el.classList.add('aim');
       const ring = Math.round(holds[i].r * 2.9 + 8);
       Object.assign(dring.style, { width: ring + 'px', height: ring + 'px', margin: `${-ring / 2}px 0 0 ${-ring / 2}px`, opacity: '0' });
+      if (soak) { soak.remove(); soak = null; }
+      press = null;
       catcher = document.createElement('div');
       catcher.className = 'climb-catch';
       catcher.setAttribute('aria-hidden', 'true');
-      catcher.addEventListener('pointerdown', (e) => { e.preventDefault(); dynoTap(); });
+      catcher.addEventListener('pointerdown', catchDown);
+      catcher.addEventListener('pointermove', catchMove);
+      catcher.addEventListener('pointerup', catchUp);
+      catcher.addEventListener('pointercancel', () => { press = null; });
       document.body.appendChild(catcher);
       refresh();
     }
-    function dynoTap() {
+    function catchDown(e) {
+      if (e.button) return;
+      if (e.pointerType === 'mouse') { e.preventDefault(); dynoTap(now()); return; }
+      press = { id: e.pointerId, x: e.clientX, y: e.clientY, t: now() };
+    }
+    function catchMove(e) {
+      if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) press = null;
+    }
+    function catchUp(e) {
+      const p = press;
+      press = null;
+      if (!p || e.pointerId !== p.id || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 10 || now() - p.t > 450) return;
+      dynoTap(p.t);
+    }
+    function dynoTap(at) {
       const d = S.dyno;
-      if (!d || now() < d.t0) return;
-      const off = now() - d.T;
+      if (!d || at < d.t0) return;
+      const off = at - d.T;
       dynoGo(Math.abs(off) <= d.win, off);
     }
     function dynoDone() {
-      if (catcher) { catcher.remove(); catcher = null; }
+      press = null;
+      if (catcher) {
+        if (soak) soak.remove();
+        soak = catcher;
+        catcher = null;
+        later(() => { if (soak) { soak.remove(); soak = null; } }, 450);
+      }
       if (S.dyno) holds[S.dyno.i].el.classList.remove('aim');
       dring.style.opacity = '0';
       S.dyno = null;
@@ -748,7 +781,7 @@ export function mount(el) {
       setFace('neutral');
       S.phase = 'climb';
       refresh();
-      follow(r.y, true);
+      follow(true);
       say(c == null ? pick(SAY.again) : pick(SAY.back), 1300);
     }
     function send() {
@@ -766,7 +799,8 @@ export function mount(el) {
         best = prior && prior <= ms ? prior : ms;
         if (best === ms) localStorage.setItem('dl-climb-best', String(Math.round(ms)));
       } catch (e) { /* no storage, no best */ }
-      lastResult = { ms, tries: S.tries, best, prior, isBest: best === ms };
+      lastResult = sentRun = { ms, tries: S.tries, best, prior, isBest: best === ms };
+      if (window.dlFound) window.dlFound('climb');
       hud.className = 'climb-hud done';
       hud.innerHTML = cardHTML(lastResult, false);
       hud.querySelector('[data-go]').addEventListener('click', () => reset('again'));
@@ -807,21 +841,40 @@ export function mount(el) {
       reachEl.classList.toggle('off', !live);
       reachEl.style.transform = `translate3d(${hd.x}px,${hd.y}px,0)`;
     }
-    // Keep the head a bit under the middle of what's visible, so the next holds show.
-    function follow(y, force) {
-      if (y == null) y = rest().y;
-      const top = G.bar, h = innerHeight - G.bar - G.hud;
-      const at = y - scrollY;
-      if (!force && at > top + h * 0.3 && at < top + h * 0.82) return;
-      const want = clamp(y - (top + h * 0.6), 0, Math.max(0, G.wallH - innerHeight));
-      if (Math.abs(want - scrollY) < 4) return;
-      scrollTo({ top: want, behavior: reduce ? 'instant' : 'smooth' });
+    // Keep the head and every hold it can go for between the top bar and the
+    // HUD (and down to `low`, a page y, when given), so the next move always
+    // shows. Moves only when something's cut off.
+    function follow(force, low) {
+      const r = rest();
+      let hi = r.y - G.hh * 0.5;
+      const lo = Math.max(r.y + G.hh * 0.6, low || 0);
+      holds.forEach((h) => { if (reachOf(h.i).kind !== 'far') hi = Math.min(hi, h.y - h.r * 2.4); });
+      const top = G.bar + 12, bot = innerHeight - G.hud - 12;
+      if (!force && hi - scrollY >= top && lo - scrollY <= bot) return;
+      const fits = lo - hi <= bot - top;
+      const want = clamp(fits ? (hi + lo) / 2 - (top + bot) / 2 : hi - top, 0, Math.max(0, document.documentElement.scrollHeight - innerHeight));
+      if (Math.abs(want - scrollY) >= 4) scrollTo({ top: want, behavior: reduce ? 'instant' : 'smooth' });
+    }
+    // Resolves once the page has stopped scrolling, or after ms.
+    function settle(ms) {
+      return new Promise((done) => {
+        const t0 = now();
+        let y = scrollY, still = 0;
+        const tick = () => {
+          still = scrollY === y ? still + 1 : 0;
+          y = scrollY;
+          if (dead || still >= 3 || now() - t0 > ms) done(); else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
     }
 
     // mode: 'mat' drops the head in from the crash pad, 'fly' borrows the
     // floating head (it flies onto the start holds first), 'again' swoops back
     // down from wherever it is.
-    let taught = false, flown = false;
+    // lent: the floating head, from the moment this climb asks for it, so
+    // getting off at any point gives it back. swapped: ours stands in for it.
+    let taught = false, lent = null, swapped = false;
     function reset(mode) {
       dynoDone();
       endDrag();
@@ -841,7 +894,7 @@ export function mount(el) {
         ['l', 'r'].forEach((k) => { const H = S.hands[k]; H.free = { x: H.p.x, y: H.p.y, vx: 0, vy: 0, rot: 0, vr: 0, down: true }; grip(k, 'palm'); });
         Object.assign(S.head, { vx: 0, vy: 0, vr: 0, down: false });
         refresh();
-        follow(r.y, true);
+        follow(true);
         render('climbing');
         grab(150);
         return;
@@ -849,18 +902,21 @@ export function mount(el) {
       Object.assign(S.head, { x: r.x, y: G.floor - G.hh / 2 + 4, vx: 0, vy: 0, rot: 0, vr: 0, down: false, scale: 1 });
       ['l', 'r'].forEach((k, n) => park(k, n, { x: r.x, y: G.floor - 4 }));
       refresh();
-      follow(r.y, true);
+      follow(true, G.matTop + 22);
       const api = mode === 'fly' && headApi();
       if (!api) {
         wall.classList.add('hide-dl');
         grab(500);
         return;
       }
+      lent = api;
       // Hidden until the floating head lands on the start holds, then swap.
+      // It aims once the page is done scrolling there, or it lands off them.
       [head, handEl.l, handEl.r].forEach((e) => { e.style.opacity = '0'; });
       later(async () => {
+        await settle(1200);
+        if (dead) return;
         const at = rest();
-        flown = true;
         try { await within(api.flyTo(at.x - scrollX - G.hw / 2, at.y - scrollY - G.hh / 2, G.hw, reduce ? 0 : 850), 1800); } catch (e) { /* fall through */ }
         if (dead) return;
         let from = { x: at.x, y: at.y }, scale = 1;
@@ -869,9 +925,13 @@ export function mount(el) {
           if (b && b.width > 0) { from = { x: b.left + b.width / 2 + scrollX, y: b.top + b.height / 2 + scrollY }; scale = b.width / G.hw; }
         } catch (e) { /* use the target */ }
         try { api.away(true); } catch (e) { /* hidden below anyway */ }
+        swapped = true;
         wall.classList.add('hide-dl');
-        Object.assign(S.head, { x: from.x, y: from.y, vx: 0, vy: 0, scale: clamp(scale, 0.5, 2) });
-        ['l', 'r'].forEach((k, n) => park(k, n, { x: from.x, y: from.y - G.hh * 0.3 }));
+        Object.assign(S.head, { x: from.x, y: from.y, vx: 0, vy: 0, rot: 0, vr: 0, scale: clamp(scale, 0.5, 2) });
+        // Hands at hanging height, so it doesn't sag before they reach up.
+        ['l', 'r'].forEach((k, n) => park(k, n, { x: from.x, y: from.y - G.hang }));
+        // Drawn there before it shows, or the first frame is wherever it waited.
+        pose();
         [head, handEl.l, handEl.r].forEach((e) => { e.style.opacity = ''; });
         grab(60);
       }, reduce ? 0 : 450);
@@ -951,6 +1011,16 @@ export function mount(el) {
       try { handEl[d.k].releasePointerCapture(d.id); } catch (err) { /* fine */ }
     }
     holds.forEach((h) => on(h.el, 'click', () => tryMove(h.i)));
+    // A tap that just misses a hold lands on the page under it, often a link.
+    // Close enough counts as the hold, and the link stays put.
+    on(document, 'click', (e) => {
+      if (!e.isTrusted || !e.detail || S.phase === 'sent' || !e.target.closest || !e.target.closest('.page') || invite.contains(e.target)) return;
+      const i = nearest(docPt(e));
+      if (i == null) return;
+      e.preventDefault();
+      e.stopPropagation();
+      tryMove(i);
+    }, true);
     ['l', 'r'].forEach((k) => {
       on(handEl[k], 'pointerdown', (e) => handDown(e, k));
       on(handEl[k], 'pointermove', handMove);
@@ -958,7 +1028,7 @@ export function mount(el) {
       on(handEl[k], 'pointercancel', handUp);
     });
     on(window, 'keydown', (e) => {
-      if (S.dyno && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); dynoTap(); }
+      if (S.dyno && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); dynoTap(now()); }
     }, true);
     let relay = 0;
     const relayout = () => {
@@ -1067,7 +1137,9 @@ export function mount(el) {
           transform: `translate3d(${h.x}px,${h.y}px,0)`,
           opacity: String(clamp(u * 4, 0, 1) * (u > 1 ? clamp(1 - (u - 1) * 5, 0, 1) : 1))
         });
-        if (t > d.T + d.win) dynoGo(false, t - d.T);
+        // A finger that went down in time gets to lift before it counts as late.
+        const held = press && press.t <= d.T + d.win && t - press.t < 450;
+        if (t > d.T + d.win && !held) dynoGo(false, t - d.T);
       }
 
       for (let n = S.bits.length - 1; n >= 0; n--) {
@@ -1085,17 +1157,7 @@ export function mount(el) {
 
       // Draw.
       if (hd.scale !== 1) hd.scale = Math.abs(1 - hd.scale) < 0.01 || reduce ? 1 : hd.scale + (1 - hd.scale) * Math.min(1, dt * 6);
-      head.style.transform = `translate3d(${hd.x - G.hw / 2}px,${hd.y - G.hh / 2}px,0) rotate(${hd.rot.toFixed(2)}deg) scale(${hd.scale.toFixed(3)})`;
-      const shake = S.phase === 'climb' && S.grip < 25 && !reduce ? (1 - S.grip / 25) * 1.8 : 0;
-      ['l', 'r'].forEach((k) => {
-        const H = S.hands[k];
-        const x = H.p.x + (shake ? (Math.random() - 0.5) * shake * 2 : 0);
-        const y = H.p.y + (shake ? (Math.random() - 0.5) * shake * 2 : 0);
-        const ax = FIST.at[0] * G.nw, ay = FIST.at[1] * G.nh;
-        const ang = H.free ? H.free.rot : clamp((Math.atan2(-(hd.x - x), hd.y - y) * 180) / Math.PI, -70, 70);
-        handEl[k].style.transformOrigin = `${ax}px ${ay}px`;
-        handEl[k].style.transform = `translate3d(${x - ax}px,${y - ay}px,0) rotate(${ang.toFixed(2)}deg)`;
-      });
+      pose();
       const open = t < talkUntil ? Math.abs(Math.sin(t / 75)) * 0.85 : 0;
       mouth += (open - mouth) * 0.5;
       sk.style.transform = `translateY(${(-mouth * 13).toFixed(2)}%) rotate(${(-mouth * 5).toFixed(2)}deg)`;
@@ -1129,6 +1191,22 @@ export function mount(el) {
       }
     }
 
+    // Head and hands where the state has them.
+    function pose() {
+      const hd = S.head;
+      head.style.transform = `translate3d(${hd.x - G.hw / 2}px,${hd.y - G.hh / 2}px,0) rotate(${hd.rot.toFixed(2)}deg) scale(${hd.scale.toFixed(3)})`;
+      const shake = S.phase === 'climb' && S.grip < 25 && !reduce ? (1 - S.grip / 25) * 1.8 : 0;
+      ['l', 'r'].forEach((k) => {
+        const H = S.hands[k];
+        const x = H.p.x + (shake ? (Math.random() - 0.5) * shake * 2 : 0);
+        const y = H.p.y + (shake ? (Math.random() - 0.5) * shake * 2 : 0);
+        const ax = FIST.at[0] * G.nw, ay = FIST.at[1] * G.nh;
+        const ang = H.free ? H.free.rot : clamp((Math.atan2(-(hd.x - x), hd.y - y) * 180) / Math.PI, -70, 70);
+        handEl[k].style.transformOrigin = `${ax}px ${ay}px`;
+        handEl[k].style.transform = `translate3d(${x - ax}px,${y - ay}px,0) rotate(${ang.toFixed(2)}deg)`;
+      });
+    }
+
     // ---- Off the wall ------------------------------------------------------
     // user: they got off (Exit, Done, Esc, Stop). Otherwise the page is going away.
     function end(user) {
@@ -1141,29 +1219,44 @@ export function mount(el) {
       off.forEach((fn) => fn());
       if (ro) ro.disconnect();
       if (catcher) catcher.remove();
+      if (soak) soak.remove();
       wall.remove();
       hud.remove();
       game = null;
-      // Hand the head back: the floating one appears where ours is and flies home.
-      const api = flown && headApi();
-      if (api) {
-        try { api.flyTo(S.head.x - scrollX - G.hw / 2, S.head.y - scrollY - G.hh / 2, G.hw, 0); } catch (e) { /* it still goes home */ }
-        try { api.away(false); } catch (e) { /* home shows it too */ }
-        try { if (api.home) api.home(); } catch (e) { /* fine */ }
+      // Hand the head back, wherever it got to: if ours took over, the floating
+      // one appears where ours is first. Mid-flight it just turns around.
+      // keep: it's itself again, not a new game. game_end goes before home(),
+      // which would otherwise close the game without a result.
+      if (lent && swapped) {
+        try { lent.flyTo(S.head.x - scrollX - G.hw / 2, S.head.y - scrollY - G.hh / 2, G.hw, 0, { keep: true }); } catch (e) { /* it still goes home */ }
+      }
+      const bus = window.dlBus;
+      if (bus && typeof bus.emit === 'function') {
+        try { bus.emit('game_end', { game: 'climb', result: score() }); } catch (e) { /* fine */ }
+      }
+      if (lent) {
+        try { lent.away(false); } catch (e) { /* home shows it too */ }
+        try { if (lent.home) lent.home(); } catch (e) { /* fine */ }
       }
       if (user) {
-        const btn = render('idle', true);
-        if (btn) {
-          const b = btn.getBoundingClientRect();
-          if (b.top < G.bar || b.bottom > innerHeight - 16) invite.scrollIntoView({ block: 'center', behavior: reduce ? 'instant' : 'smooth' });
-        }
+        render('idle', true);
+        const b = invite.getBoundingClientRect();
+        if (b.top < G.bar || b.bottom > innerHeight - 16) invite.scrollIntoView({ block: 'center', behavior: reduce ? 'instant' : 'smooth' });
       }
+    }
+    // The last send this time on the wall, else how far this go got.
+    function score() {
+      let best = null;
+      try { best = parseFloat(localStorage.getItem('dl-climb-best')) || null; } catch (e) { /* no storage, no best */ }
+      if (sentRun) return { sent: true, ms: Math.round(sentRun.ms), tries: sentRun.tries, best };
+      return { sent: false, ms: S.t0 ? Math.round(now() - S.t0) : 0, tries: S.tries, best };
     }
 
     on(window, 'keydown', (e) => { if (e.key === 'Escape') end(true); }, true);
+    // The page's own copy changes size first, so the route is measured off the final page.
+    render('climbing');
     measure();
     place();
-    render('climbing');
     reset(headApi() ? 'fly' : 'mat');
     raf = requestAnimationFrame(frame);
     return { end };

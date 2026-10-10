@@ -14,6 +14,8 @@ export interface Ui {
   say: HTMLDivElement | null;
   pops: HTMLDivElement | null;
   caret: HTMLDivElement | null;
+  /** The score bar: nothing we place goes up behind it. */
+  top: HTMLDivElement | null;
   /** Screen rect of the head billboard (px, viewport), set every frame. */
   head: { x: number; y: number; w: number; h: number } | null;
   /** Called once the scene has drawn a few frames. */
@@ -123,6 +125,7 @@ function Project({ g, ui }: { g: Rally; ui: Ui }) {
   const { camera, size, gl } = useThree();
   const frames = useRef(0);
   const typed = useRef({ text: '', n: -1, w: 0, h: 0 });
+  const bar = useRef({ W: 0, H: 0, y: 76 });
   const v = useMemo(() => new Vector3(), []);
   useEffect(() => () => ui.pops?.replaceChildren(), [ui]);
   useFrame(() => {
@@ -130,6 +133,14 @@ function Project({ g, ui }: { g: Rally; ui: Ui }) {
     const W = size.width, H = size.height;
     const rect = gl.domElement.getBoundingClientRect();
     if (frames.current++ === 3) ui.onReady();
+    // The bottom of the score bar, re-read on a resize and now and then (fonts).
+    const sb = bar.current;
+    if ((sb.W !== W || sb.H !== H || frames.current % 60 === 0) && ui.top) {
+      sb.W = W;
+      sb.H = H;
+      sb.y = Math.max(0, ui.top.getBoundingClientRect().bottom - rect.top);
+    }
+    const top = sb.y;
     // The head's rect (for flying the floating head in and out).
     const f = g.foe;
     const yaw = Math.atan2(camera.position.x - f.x, camera.position.z - f.z);
@@ -178,7 +189,7 @@ function Project({ g, ui }: { g: Rally; ui: Ui }) {
           bx = clamp((x0 + x1) / 2 - t.w / 2, 10, W - t.w - 10);
           by = y0 - t.h - 8;
         }
-        say.style.transform = `translate(${bx.toFixed(1)}px,${clamp(by, 56, H - t.h - 10).toFixed(1)}px)`;
+        say.style.transform = `translate(${bx.toFixed(1)}px,${clamp(by, top + 8, H - t.h - 10).toFixed(1)}px)`;
       }
     }
 
@@ -191,8 +202,10 @@ function Project({ g, ui }: { g: Rally; ui: Ui }) {
         g.fx.splice(i, 1);
         let x: number, y: number;
         if (fx.at === 'racket') {
-          x = W * 0.66;
-          y = H * 0.62;
+          // Beside the racket head, not on it.
+          const tall = W < H;
+          x = W * (tall ? 0.4 : 0.58);
+          y = H * (tall ? 0.62 : 0.66);
         } else {
           const q = project(v.set(fx.x, fx.y, fx.z), cam, W, H);
           if (!q.front) continue;
@@ -203,11 +216,17 @@ function Project({ g, ui }: { g: Rally; ui: Ui }) {
         e.className = 'rl-pop' + (fx.good ? ' good' : '');
         e.textContent = fx.text;
         pops.appendChild(e);
-        const base = `translate(${clamp(x, 40, W - 40).toFixed(1)}px,${clamp(y, 70, H - 20).toFixed(1)}px) translate(-50%,-50%)`;
+        const base = `translate(${clamp(x, 48, W - 48).toFixed(1)}px,${clamp(y, top + 24, H - 24).toFixed(1)}px) translate(-50%,-50%)`;
+        // In quickly, held long enough to read, then up and out.
         const kf = g.o.reduce
-          ? [{ transform: base, opacity: 0 }, { transform: base, opacity: 1, offset: 0.2 }, { transform: base, opacity: 0 }]
-          : [{ transform: base + ' translateY(6px) scale(.9)', opacity: 0 }, { transform: base + ' scale(1)', opacity: 1, offset: 0.18 }, { transform: base + ' translateY(-26px)', opacity: 0 }];
-        e.animate(kf, { duration: 1000, easing: 'ease-out', fill: 'forwards' }).onfinish = () => e.remove();
+          ? [{ transform: base, opacity: 0 }, { transform: base, opacity: 1, offset: 0.12 }, { transform: base, opacity: 1, offset: 0.72 }, { transform: base, opacity: 0 }]
+          : [
+              { transform: base + ' translateY(6px) scale(.9)', opacity: 0, easing: 'ease-out' },
+              { transform: base + ' scale(1)', opacity: 1, offset: 0.12 },
+              { transform: base + ' translateY(-10px)', opacity: 1, offset: 0.72, easing: 'ease-in' },
+              { transform: base + ' translateY(-26px)', opacity: 0 }
+            ];
+        e.animate(kf, { duration: 1000, fill: 'forwards' }).onfinish = () => e.remove();
       }
     }
 
@@ -224,7 +243,7 @@ function Project({ g, ui }: { g: Rally; ui: Ui }) {
         const up = !q.front || q.y < 8;
         const side = !up ? (q.x < 8 ? -1 : 1) : 0;
         const cx = side < 0 ? 22 : side > 0 ? W - 22 : x;
-        const cyy = up ? 64 : clamp(q.y, 70, H - 30);
+        const cyy = up ? top + 24 : clamp(q.y, top + 24, H - 30);
         caret.style.transform = `translate(${cx.toFixed(1)}px,${cyy.toFixed(1)}px) translate(-50%,-50%) rotate(${side < 0 ? -90 : side > 0 ? 90 : 0}deg)`;
       }
     }

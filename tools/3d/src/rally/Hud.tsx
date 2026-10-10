@@ -16,7 +16,7 @@ export function Hud({ hud, ui, act, touch }: { hud: Store<HudState>; ui: Ui; act
   const live = s.phase === 'serve' || s.phase === 'rally' || s.phase === 'point';
   return (
     <div className="rl-hud">
-      <div className="rl-top" aria-hidden={s.phase === 'intro' || undefined}>
+      <div className="rl-top" aria-hidden={s.phase === 'intro' || undefined} ref={(el) => void (ui.top = el)}>
         <div className="rl-side rl-you">
           <span>You</span>
           <b>{s.me}</b>
@@ -159,8 +159,10 @@ body:has(.rl.solo) .dl { visibility: hidden; }
   box-shadow: 0 0 0 1px var(--rule), 0 10px 28px -14px rgba(0,0,0,0.3); font-size: 14px; line-height: 1.35; opacity: 0; transition: opacity 160ms ease; }
 .rl-say.on { opacity: 1; }
 .rl-pops { inset: 0; }
-.rl-pop { position: absolute; left: 0; top: 0; font-size: 15px; line-height: 1; color: var(--t2); white-space: nowrap; text-shadow: 0 1px 8px var(--bg); }
-.rl-pop.good { color: var(--t1); font-weight: 600; }
+/* On a chip: the net, the racket and the floor are all busy behind them. */
+.rl-pop { position: absolute; left: 0; top: 0; padding: 6px 11px; border-radius: 999px; background: var(--panel); box-shadow: 0 0 0 1px var(--rule), 0 6px 18px -10px rgba(0,0,0,0.4);
+  font-size: 15px; font-weight: 500; line-height: 1; color: var(--t1); white-space: nowrap; }
+.rl-pop.good { font-weight: 600; }
 .rl-caret { left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--panel); box-shadow: 0 0 0 1px var(--rule); opacity: 0; transition: opacity 120ms ease; }
 .rl-caret.on { opacity: 1; }
 .rl-caret svg { width: 16px; height: 16px; fill: none; stroke: var(--t1); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

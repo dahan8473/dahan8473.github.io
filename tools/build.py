@@ -6,9 +6,9 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 44, 14, 34, 41
+V_CSS, V_TALKCSS, V_JS, V_TALK = 45, 14, 36, 43
 V_TRACK = 1
-V_PIECE = 29  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 30  # bump when anything in /play/ or /3d/ changes
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -530,8 +530,9 @@ def FIGS(items):
 
 
 # A Play button that's always on a game page, floating on the side (site.js).
-def PLAY_NOW(id, icon, label):
-  return f'      <button class="play-now" type="button" data-play-now="{id}"><i aria-hidden="true">{icon}</i><span>{label}</span></button>\n'
+def PLAY_NOW(id, label):
+  # The real thing to click, like the gloves on Muay Thai: media/play/<id>.webp.
+  return f'      <button class="play-now" type="button" data-play-now="{id}"><img src="/media/play/{id}.webp" alt="" width="112" height="120"><span>{label}</span></button>\n'
 
 
 def piece(kind, name, note, cls='', src=''):
@@ -551,33 +552,33 @@ hobby('meowmeow', 'Meowmeow', 'My cat. She/her, black, and always chudding aroun
         <img src="/media/life/meowmeow-belly.webp" alt="Meowmeow on her back with her paws in the air" width="750" height="1000">
         <img src="/media/life/meowmeow-stairs.webp" alt="Meowmeow stretched out on the floor by the stairs" width="750" height="1000">
       </div>
-''' + PLAY_NOW('cat', '🐈‍⬛', 'Call her'), kind='The cat')
+''' + PLAY_NOW('cat', 'Call her'), kind='The cat')
 hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegie Hall. These are recordings of me playing.", [
   ('Highlights', [('Carnegie Hall', '<p>Performed there.</p>'), ('NW Guitar Competition', '<p>2nd place, classical guitar. <a href="https://www.seattleguitar.org/soundings603.pdf" target="_blank" rel="noopener">The results in the Seattle Classic Guitar Society\'s newsletter</a>.</p>')], None),
 ], shot='''      <section class="recordings" data-t="guitar" aria-label="Recordings">
         <div class="tracks hero" id="guitar-tracks"></div>
       </section>
       <p class="bring-again" data-later="guitar" data-v="{V_PIECE}" hidden><button type="button" class="ln" data-bring="guitar">Play the guitar</button></p>
-'''.replace('{V_PIECE}', str(V_PIECE)) + PLAY_NOW('guitar', '🎸', 'Play it'))
+'''.replace('{V_PIECE}', str(V_PIECE)) + PLAY_NOW('guitar', 'Play it'))
 hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, because a friend dragged me to our local gym. I was super intimidated. I was scared of fighting, and of what the people there might be like."
       '</p>\n        <p class="tagline">But by the first week I was addicted. I think a lot of that comes from my love for chess and puzzle games: Muay Thai is like a physical version of them. My Instagram feed turned into Muay Thai highlights, and I bought a bag on Facebook Marketplace and hung it up in my backyard to train in the mornings.'
       "</p>\n        <p class=\"tagline\">If you've never tried something like this, give it a shot. It might reveal more about yourself than you think!", [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched') + '      <button class="spar-glove" type="button" data-spar aria-label="Spar with the head"><img src="/media/muaythai/gloves-btn.webp" alt="" width="112" height="120"><span>Spar</span></button>\n')
-hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V3 right now. Climb this page with me if you want.", [
-], shot=piece('play', 'climbing', 'Loading the wall...') + PLAY_NOW('climb', '🧗', 'Climb'))
+hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V2 right now. Climb this page with me if you want.", [
+], shot=piece('play', 'climbing', 'Loading the wall...') + PLAY_NOW('climb', 'Climb'))
 hobby('swimming', 'Swimming', 'I swim.', [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/swimming/photos.json'))
 hobby('badminton', 'Badminton', "Badminton was my main sport all through high school!"
       '</p>\n        <p class="tagline">My school had a very competitive team, and I played doubles at regional and provincial school competitions. Over the years I\'ve hoarded various expensive rackets. These four are my favourites.'
       '</p>\n        <p class="tagline">Click one for a closer look, and give me a rally!', [
-], shot=piece('3d', 'racket', 'Loading the rackets...') + PLAY_NOW('rally', '🏸', 'Rally me'))
+], shot=piece('3d', 'racket', 'Loading the rackets...') + PLAY_NOW('rally', 'Rally me'))
 hobby('cycling', 'Cycling', "I picked up my bike second hand at the start of September and fell in love with cycling. I ride to school and back every day, and go on long rides whenever I can.", [
 ], shot='''      <figure class="case-shot natural">
         <img src="/media/cycling/me-and-the-bike.webp" alt="David standing with his matte black track bike at night, outside Alumni Hall at Western" width="1500" height="1265">
         <figcaption>Outside Alumni Hall at Western</figcaption>
       </figure>
-''' + piece('3d', 'bike', 'Loading the bike...') + piece('play', 'rides', 'Loading the rides...', src='/hobbies/cycling/rides.json'))
+''' + piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [
@@ -588,7 +589,7 @@ hobby('chess', 'Chess', "I played competitively all through elementary school, u
     ('Then guitar', '<p>Eventually I had to pick one to focus on, and it was <a href="/hobbies/guitar/">classical guitar</a>.</p>'),
     ('Now', '<p>I still play online and solve puzzles. <a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">My chess.com</a>, and live stats are next to the board below.</p>'),
   ], None),
-], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', '♟️', 'Play me'))
+], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity.", [
   ('The habit', [

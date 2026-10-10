@@ -1,4 +1,0 @@
-{
-  "_how": "My rides, newest first. start: ISO time with offset. minutes: moving time. km and elev optional (km is worked out from the path). kind 'commute' + repeat for the daily ride to school. path: [[lat, lng], ...].",
-  "rides": []
-}

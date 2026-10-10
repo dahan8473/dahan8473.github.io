@@ -7,6 +7,10 @@
 //   <div class="play" data-play="pinball" data-v="N">
 // David's best comes from /hobbies/lumosity/best.json (key pinball). The
 // visitor's best lives in localStorage, and a finished run fires dl:lumo on window.
+// lumo-fx.js keeps it to one game at a time, tells the head's bus about runs,
+// and has the feedback: bursts, flashes, the 3-2-1 and the results board.
+
+import * as fx from './lumo-fx.js?v=1';
 
 const CSS_ID = 'play-pinball-css';
 const KEY = 'dl-lumo-pinball';
@@ -17,7 +21,6 @@ const DR = [-1, 0, 1, 0]; // up, right, down, left
 const DC = [0, 1, 0, -1];
 const SIDES = ['top', 'right', 'bottom', 'left'];
 const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5"/></svg>';
-const X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
 // Card art: a tiny board with a ball's route through two bumpers.
 const ART = '<svg viewBox="0 0 64 64" aria-hidden="true">'
   + [0, 1, 2, 3].map((r) => [0, 1, 2, 3].map((c) => `<rect x="${c * 16 + 1}" y="${r * 16 + 1}" width="14" height="14" rx="3"/>`).join('')).join('')
@@ -26,7 +29,7 @@ const ART = '<svg viewBox="0 0 64 64" aria-hidden="true">'
 const CSS = `
 .ppb { max-width: 640px; scroll-margin-top: 24px; }
 .ppb .ppb-board[style*="--n: 1"], .ppb .ppb-board[style*="--n: 9"] { --g: 3px; }
-.ppb-panel { padding: 22px; border-radius: 14px; background: var(--fill); }
+.ppb-panel { position: relative; padding: 22px; border-radius: 14px; background: var(--fill); }
 .ppb-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .ppb-name { color: var(--t1); font-weight: 500; }
 .ppb-what { color: var(--t2); }
@@ -39,23 +42,24 @@ const CSS = `
 .ppb-lines b { font-weight: 400; color: var(--t1); }
 .ppb-lines .say { margin-top: 8px; color: var(--t1); }
 .ppb-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
-.ppb-go { min-height: 40px; padding: 8px 22px; border: 0; border-radius: 999px; background: var(--t1); color: var(--bg); font: inherit; cursor: pointer; transition: opacity 160ms ease; }
+.ppb-go { min-height: 40px; padding: 8px 22px; border: 0; border-radius: 999px; background: var(--t1); color: var(--bg); font: inherit; cursor: pointer; transition: opacity 160ms ease, transform 120ms ease; }
 .ppb-go:hover { opacity: 0.86; }
-.ppb-link { min-height: 40px; padding: 4px 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; }
+.ppb-go:active { transform: scale(0.95); }
+.ppb-link { min-height: 40px; padding: 4px 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; transition: color 140ms ease; }
 .ppb-link:hover { color: var(--t1); }
-.ppb :is(.ppb-go, .ppb-link, .ppb-x):focus-visible { border-radius: 999px; }
+.ppb :is(.ppb-go, .ppb-link):focus-visible { border-radius: 999px; }
 .ppb-top { display: flex; align-items: center; gap: 4px 18px; min-height: 40px; margin-bottom: 10px; color: var(--t3); }
 .ppb-top b { font-weight: 400; color: var(--t1); }
 .ppb-top .end { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.ppb-x { display: grid; place-items: center; width: 40px; height: 40px; margin-right: -8px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--t3); cursor: pointer; }
-.ppb-x:hover { color: var(--t1); background: var(--fill); }
-.ppb-x svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
 .ppb-say { margin-bottom: 14px; color: var(--t1); }
 .ppb-timer { height: 2px; margin: 0 0 14px; border-radius: 2px; background: var(--rule); overflow: hidden; }
 .ppb-timer i { display: block; height: 100%; background: #88c0d0; transform-origin: left; }
 .ppb-timer.off { visibility: hidden; }
+.ppb-slotboard { position: relative; }
 .ppb-msg { min-height: 1.6em; margin-top: 14px; color: var(--t2); text-align: center; }
 .ppb-msg b { font-weight: 400; color: var(--t1); }
+.ppb-msg .hi { color: var(--lfx-hi); }
+.ppb-msg .no { color: var(--lfx-bad); }
 
 .ppb-board {
   --e: 40px; --g: 4px;
@@ -83,6 +87,7 @@ const CSS = `
 .ppb-board.live .ppb-slot:not(:disabled) { color: var(--t2); }
 @media (hover: hover) { .ppb-board.live .ppb-slot:not(:disabled):hover { background: var(--fill); color: #88c0d0; } }
 .ppb-board.live .ppb-slot:not(:disabled):hover::before, .ppb-slot:focus-visible::before { transform: scale(1.8); }
+.ppb-board.live .ppb-slot:not(:disabled):active::before { transform: scale(2.6); background: #88c0d0; transition-duration: 60ms; }
 .ppb-slot:focus-visible { outline: 2px solid #88c0d0; outline-offset: -2px; border-radius: 10px; }
 .ppb-slot.start { color: var(--t1); }
 .ppb-slot.start::before { display: none; }
@@ -92,17 +97,25 @@ const CSS = `
 @keyframes ppb-pop { from { opacity: 0; scale: 0.4; } }
 .ppb-slot.pick::before { transform: scale(2.2); background: none; box-shadow: inset 0 0 0 1.5px currentColor; }
 .ppb-slot.pick { color: var(--t1); }
-.ppb-slot.miss { color: #d08770; }
+.ppb-slot.miss { color: var(--lfx-bad); }
 .ppb-slot.exit { color: #88c0d0; }
 .ppb-slot.exit::before { transform: scale(2.2); background: currentColor; box-shadow: none; }
 .ppb-layer { position: relative; margin: calc(var(--g) / -2); pointer-events: none; }
+.ppb-layer .lfx-flash { border-radius: 10px; }
 .ppb-trail { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .ppb-trail polyline { fill: none; stroke: #88c0d0; stroke-width: 2.5px; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: 0.6; }
-.ppb-ball { position: absolute; width: calc(100% / var(--n) * 0.32); aspect-ratio: 1; border-radius: 50%; background: #88c0d0; transform: translate(-50%, -50%); opacity: 0; transition: left var(--step, 130ms) linear, top var(--step, 130ms) linear, opacity 160ms ease; }
+.ppb-ball { position: absolute; left: 0; top: 0; width: calc(100% / var(--n) * 0.32); aspect-ratio: 1; border-radius: 50%; background: #88c0d0; box-shadow: 0 0 12px rgba(136, 192, 208, 0.55); opacity: 0; transition: opacity 160ms ease; will-change: transform; }
 .ppb-ball.on { opacity: 1; }
-.ppb.rm .ppb-ball, .ppb.rm .ppb-bump svg { transition: none; }
+.ppb.rm .ppb-bump svg { transition: none; }
 .ppb.rm .ppb-slot.start svg { animation: none; }
 @media (max-width: 720px) { .ppb { scroll-margin-top: 72px; } }
+/* The card squeezed into a narrow column (a phone, while another game plays): a small tile. */
+@container (max-width: 260px) {
+  .ppb-panel[data-lumo-card] { padding: 14px; }
+  .ppb-panel[data-lumo-card] .ppb-head { flex-direction: column-reverse; gap: 10px; margin-bottom: 14px; }
+  .ppb-panel[data-lumo-card] :is(.ppb-what, .ppb-lines, .ppb-link) { display: none; }
+  .ppb-panel[data-lumo-card] .ppb-art { width: 36px; height: 36px; }
+}
 @media (max-width: 560px) {
   .ppb-panel { padding: 18px; }
   .ppb-board { --e: 28px; --g: 3px; }
@@ -241,19 +254,42 @@ export function mount(el) {
   const later = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; };
   const clearTimers = () => { timers.forEach(clearTimeout); timers.clear(); };
   const release = useCss(CSS_ID, CSS);
-  const root = h('div', 'ppb');
+  const releaseFx = fx.useFx();
+  const root = h('div', 'ppb lfx');
   let david = null;
   let game = null; // live session, or null outside play
+  let mode = 'card'; // card, tut, play or done
+  let run = null; // the bus run (game_start sent, game_end not yet) and its session
+  let sess = null;
 
   const best = () => { const v = parseInt(load(KEY), 10); return Number.isFinite(v) ? v : 0; };
   const hadFocus = () => root.contains(document.activeElement);
-  function show(node, focusSel) {
+  // Every view goes through here. Anything but the card takes the stage: the
+  // other two games go back to their cards and this one moves to the top.
+  function show(node, focusSel, as) {
     const keep = hadFocus();
     clearTimers();
     game = null;
+    mode = as || 'card';
     root.classList.toggle('rm', reduce.matches);
     root.replaceChildren(node);
-    if (keep && focusSel) { const f = node.querySelector(focusSel); if (f) f.focus(); }
+    el.classList.toggle('lumo-live', mode !== 'card');
+    if (mode !== 'card') {
+      fx.claim('pinball');
+      requestAnimationFrame(() => { if (!ac.signal.aborted && root.contains(node)) fx.reveal(el); });
+    }
+    fx.enter(node);
+    if (keep && focusSel) { const f = node.querySelector(focusSel); if (f) f.focus({ preventScroll: true }); }
+  }
+  // Quit from anywhere: the X, Esc, another game starting, leaving the page.
+  function endRun(quit, score) {
+    if (!run) return;
+    run.end(quit ? (sess ? sess.score : 0) : score, best(), quit);
+    run = null;
+  }
+  function quit() {
+    endRun(true);
+    card();
   }
 
   // One board on screen: cells, edge slots, the ball and its trail.
@@ -303,31 +339,45 @@ export function mount(el) {
     layer.firstChild.setAttribute('viewBox', '0 0 ' + n + ' ' + n);
     wrap.appendChild(layer);
     const line = layer.querySelector('polyline'), ball = layer.querySelector('.ppb-ball');
-    const at = (v) => (v < 0 ? 'calc(var(--e) / -2 - var(--g) / 2)' : v >= n ? 'calc(100% + var(--e) / 2 + var(--g) / 2)' : ((v + 0.5) / n * 100) + '%');
     const pt = (r, c) => Math.min(n, Math.max(0, c + 0.5)) + ',' + Math.min(n, Math.max(0, r + 0.5));
-    const put = (r, c) => { ball.style.left = at(c); ball.style.top = at(r); };
+    // The ball moves by transform. Positions are measured once per roll: the
+    // layer's size, and the edge strip (--e) and gap (--g) for the way out.
+    let geo = null, pos = '';
+    const measure = () => {
+      const cs = getComputedStyle(wrap), r = layer.getBoundingClientRect();
+      geo = { W: r.width, H: r.height, out: (parseFloat(cs.getPropertyValue('--e')) + parseFloat(cs.getPropertyValue('--g'))) / 2 };
+    };
+    const at = (v, size) => (v < 0 ? -geo.out : v >= n ? size + geo.out : (v + 0.5) / n * size);
+    const put = (r, c, ms) => {
+      const to = 'translate(' + at(c, geo.W).toFixed(1) + 'px, ' + at(r, geo.H).toFixed(1) + 'px) translate(-50%, -50%)';
+      ball.style.transform = to;
+      if (ms && pos) ball.animate([{ transform: pos }, { transform: to }], { duration: ms, easing: 'linear' });
+      pos = to;
+    };
     let onPick = null;
 
     slots.forEach((s) => s.el.addEventListener('click', () => { if (onPick) onPick(s); }, sig));
     return {
-      el: wrap, slots,
+      el: wrap, slots, layer,
       hide(v) { wrap.classList.toggle('hide', v); },
       // While the bumpers are up the start arrow is hidden; it pops in when they go.
       study(v) { wrap.classList.toggle('study', v); },
       arm(fn) { onPick = fn; wrap.classList.add('live'); slots.forEach((s) => { s.el.disabled = false; }); },
       disarm() { onPick = null; wrap.classList.remove('live'); slots.forEach((s) => { s.el.disabled = true; }); },
       slot(side, i) { return slots.find((s) => s.side === side && s.i === i); },
-      // Animates the path, revealing bumpers as the ball hits them.
+      // Animates the path, revealing bumpers as the ball hits them. Each hit
+      // gives the bumper a little kick.
       run(path, done) {
         const step = Math.max(90, 150 - n * 8);
-        wrap.style.setProperty('--step', step + 'ms');
         const e = entry(n, st);
         const pts = [pt(e.r, e.c)];
+        measure();
         const hit = (s) => {
           if (!s.hit) return;
           const b = bumps[s.k];
           b.classList.add('seen');
           if (s.flip) { b.rot += 90; b.firstChild.style.transform = 'rotate(' + b.rot + 'deg)'; }
+          if (!reduce.matches) b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)', offset: 0.3 }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
         };
         if (reduce.matches) {
           path.steps.forEach((s) => { hit(s); pts.push(pt(s.r, s.c)); });
@@ -339,16 +389,13 @@ export function mount(el) {
           later(done, 500);
           return;
         }
-        ball.style.transition = 'none';
         put(e.r, e.c);
-        void ball.offsetWidth;
-        ball.style.transition = '';
         ball.classList.add('on');
         let k = 0;
         const next = () => {
           if (k >= path.steps.length) { wrap.classList.remove('hide'); later(done, 260); return; }
           const s = path.steps[k++];
-          put(s.r, s.c);
+          put(s.r, s.c, step);
           later(() => { hit(s); pts.push(pt(s.r, s.c)); line.setAttribute('points', pts.join(' ')); next(); }, step);
         };
         later(next, 180);
@@ -383,11 +430,7 @@ export function mount(el) {
     const i = bar.firstChild;
     bar.classList.toggle('off', !ms);
     if (!ms) return;
-    i.style.transition = 'none';
-    i.style.transform = 'scaleX(1)';
-    void i.offsetWidth;
-    i.style.transition = 'transform ' + ms + 'ms linear';
-    i.style.transform = 'scaleX(0)';
+    i.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: ms, easing: 'linear', fill: 'forwards' });
   }
 
   // ---- Card ----------------------------------------------------------------
@@ -408,6 +451,28 @@ export function mount(el) {
     show(p, '.ppb-go');
   }
 
+  // Right: the way out pops with a ring and a burst. Wrong: the pick shakes
+  // red, the board flashes, and a ring shows where it really came out.
+  function feedback(host, bd, s, path, ok, pts) {
+    const ex = bd.slot(path.exit.side, path.exit.i).el;
+    ex.classList.add('exit');
+    const [x, y] = fx.spot(host, ex);
+    if (ok) {
+      fx.flash(bd.layer, true);
+      fx.pop(ex, 1.6);
+      fx.ring(host, x, y);
+      fx.burst(host, x, y);
+      if (pts) fx.float(host, x, y - 18, '+' + fmt(pts));
+      fx.buzz(14);
+    } else {
+      s.el.classList.add('miss');
+      fx.shake(s.el, 5);
+      fx.flash(bd.layer, false);
+      fx.ring(host, x, y, { r: 16 });
+      fx.buzz([30, 50, 30]);
+    }
+  }
+
   // ---- Tutorial ------------------------------------------------------------
   function tutorial(step) {
     const t = TUT[step];
@@ -415,15 +480,18 @@ export function mount(el) {
     p.innerHTML = `<div class="ppb-top"><span>How to play <b>${step + 1}</b> of ${TUT.length}</span>
       <span class="end"><button class="ppb-link" type="button" data-a="skip">Skip</button></span></div>
       <p class="ppb-say">${t.say}</p><div class="ppb-timer off"><i></i></div>`;
+    p.querySelector('.end').appendChild(fx.xButton('Quit', quit, ac.signal));
     const bd = makeBoard(t.board, true);
+    const host = h('div', 'ppb-slotboard');
+    host.appendChild(bd.el);
     const msg = h('p', 'ppb-msg');
     const btns = h('div', 'ppb-btns');
     btns.style.justifyContent = 'center';
     btns.style.marginTop = '14px';
-    p.append(bd.el, msg, btns);
+    p.append(host, msg, btns);
     const done = () => { save(TUT_KEY, '1'); play(); };
     p.querySelector('[data-a="skip"]').addEventListener('click', done, sig);
-    show(p, '[data-a="skip"]');
+    show(p, '[data-a="skip"]', 'tut');
     const path = trace(t.board);
     const ask = () => {
       p.querySelector('.ppb-timer').classList.add('off');
@@ -434,11 +502,12 @@ export function mount(el) {
         bd.disarm();
         msg.textContent = '';
         s.el.classList.add('pick');
+        fx.press(s.el);
         bd.run(path, () => {
           const ok = s.side === path.exit.side && s.i === path.exit.i;
-          if (!ok) s.el.classList.add('miss');
-          bd.slot(path.exit.side, path.exit.i).el.classList.add('exit');
-          msg.innerHTML = ok ? '<b>Right.</b>' : 'It comes out <b>here</b>.';
+          feedback(host, bd, s, path, ok);
+          msg.innerHTML = ok ? '<b class="hi">Right.</b>' : 'It comes out <b>here</b>.';
+          fx.pop(msg, 1.08);
           const last = step === TUT.length - 1;
           const go = h('button', 'ppb-go', last ? 'Start' : 'Next');
           go.type = 'button';
@@ -450,6 +519,7 @@ export function mount(el) {
             again.addEventListener('click', () => tutorial(step), sig);
             btns.appendChild(again);
           }
+          fx.enter(btns);
           go.focus({ preventScroll: true });
         });
       });
@@ -465,19 +535,22 @@ export function mount(el) {
 
   // ---- Play ----------------------------------------------------------------
   function play() {
-    const g = { level: 1, streak: 0, round: 0, score: 0, bd: null, answering: false };
+    endRun(true);
+    // run counts right answers in a row for show; streak is the level rule.
+    const g = { level: 1, streak: 0, run: 0, right: 0, round: 0, score: 0, bd: null, answering: false };
     const wrap = h('div');
-    wrap.innerHTML = `<div class="ppb-top"><span>Board <b class="rd">1</b> of ${BOARDS}</span><span>Level <b class="lv">1</b></span>
-      <span class="end"><span>Score <b class="sc">0</b></span><button class="ppb-x" type="button" aria-label="Stop">${X}</button></span></div>
+    wrap.innerHTML = `<div class="ppb-top"><span>Board <b class="rd lfx-num">1</b> of ${BOARDS}</span><span>Level <b class="lv lfx-num">1</b></span>
+      <span class="end"><span>Score <b class="sc lfx-num">0</b></span></span></div>
       <div class="ppb-timer off"><i></i></div><div class="ppb-slotboard"></div><p class="ppb-msg" aria-live="polite"></p>`;
     const q = (s) => wrap.querySelector(s);
     const holder = q('.ppb-slotboard'), msg = q('.ppb-msg'), bar = q('.ppb-timer');
-    q('.ppb-x').addEventListener('click', card, sig);
-    show(wrap);
-    game = g;
+    q('.end').appendChild(fx.xButton('Quit', quit, ac.signal));
+    show(wrap, null, 'play');
+    game = sess = g;
+    run = fx.startRun('pinball');
 
     const round = () => {
-      if (g.round >= BOARDS) { results(g.score); return; }
+      if (g.round >= BOARDS) { results(g.score, g.right); return; }
       g.round++;
       q('.rd').textContent = g.round;
       q('.lv').textContent = g.level;
@@ -487,12 +560,7 @@ export function mount(el) {
       const bd = makeBoard(board);
       g.bd = bd;
       holder.replaceChildren(bd.el);
-      // Keep the whole board on screen (phones have the nav bar across the top).
-      const box = wrap.getBoundingClientRect();
-      if (g.round === 1 && (box.top < (innerWidth <= 720 ? 64 : 0) || box.bottom > innerHeight)) root.scrollIntoView({ block: 'start', behavior: reduce.matches ? 'auto' : 'smooth' });
-      bd.hide(false);
       const study = studyFor(level);
-      bd.study(study > 0);
       let t0 = 0;
       const ask = () => {
         bar.classList.add('off');
@@ -507,57 +575,95 @@ export function mount(el) {
           bd.disarm();
           msg.textContent = '';
           s.el.classList.add('pick');
+          fx.press(s.el);
           bd.run(path, () => {
             const ok = s.side === path.exit.side && s.i === path.exit.i;
-            bd.slot(path.exit.side, path.exit.i).el.classList.add('exit');
             if (ok) {
               const bonus = Math.round(25 * level * Math.min(1, Math.max(0, (7000 - ms) / 6000)));
               const pts = 100 * level + bonus;
               g.score += pts;
-              q('.sc').textContent = fmt(g.score);
+              g.right++;
+              g.run++;
+              fx.tally(q('.sc'), g.score);
               g.streak++;
               if (g.streak >= 2 && g.level < MAX_LEVEL) { g.level++; g.streak = 0; }
-              msg.innerHTML = '<b>Right.</b> +' + fmt(pts) + (bonus ? ' (speed +' + bonus + ')' : '') + (g.level > level ? '. Level up.' : '');
+              const up = g.level > level;
+              feedback(holder, bd, s, path, true, pts);
+              let say = '<b>Right.</b> +' + fmt(pts) + (bonus ? ' (speed +' + bonus + ')' : '');
+              if (up) say += '. <span class="hi">Level up.</span>';
+              if (g.run >= 2) say += (up ? ' ' : '. ') + '<span class="hi">' + g.run + ' in a row</span>';
+              msg.innerHTML = say;
+              fx.pop(msg, 1.06);
+              if (up) {
+                q('.lv').textContent = g.level;
+                fx.pop(q('.lv'), 1.7);
+                const [cx, cy] = fx.spot(holder, bd.layer);
+                later(() => fx.float(holder, cx, cy, 'Level ' + g.level, { big: true }), 260);
+              }
             } else {
-              s.el.classList.add('miss');
+              const down = g.level > 1;
               g.streak = 0;
+              g.run = 0;
               g.level = Math.max(1, g.level - 1);
-              msg.innerHTML = 'Not this time. It comes out <b>here</b>.';
+              feedback(holder, bd, s, path, false);
+              msg.innerHTML = '<span class="no">Not this time.</span> It comes out <b>here</b>.';
+              if (down) { q('.lv').textContent = g.level; fx.shake(q('.lv'), 3); }
             }
             later(round, ok ? 1300 : 1900);
           });
         });
       };
-      if (study) {
-        msg.textContent = 'Remember the bumpers.';
-        startTimer(bar, study);
-        later(ask, study);
-      } else ask();
+      const begin = () => {
+        bd.hide(false);
+        bd.study(study > 0);
+        if (study) {
+          msg.textContent = 'Remember the bumpers.';
+          startTimer(bar, study);
+          later(ask, study);
+        } else ask();
+      };
+      if (g.round > 1) {
+        fx.pop(q('.rd'));
+        fx.enter(bd.el);
+        begin();
+        return;
+      }
+      // The first board waits under a 3-2-1, bumpers and arrow hidden.
+      bd.study(true);
+      msg.textContent = 'Get ready.';
+      fx.countdown(holder, later, begin);
     };
     round();
   }
 
   // ---- Results -------------------------------------------------------------
-  function results(score) {
+  function results(score, right) {
     const prev = best();
     const top = Math.max(prev, score);
     if (score > prev) save(KEY, String(score));
-    let say = '';
-    if (david != null && score > david) say = 'You beat David.';
-    else if (david != null && score === david) say = 'You tied David.';
-    else if (david != null) say = 'David is still ahead by ' + fmt(david - score) + '.';
-    if (score > prev && prev) say = (say ? say + ' ' : '') + 'New personal best.';
+    endRun(false, score);
+    const sb = fx.scoreboard({ score, prev, david, extra: 'Right on <b>' + right + '</b> of ' + BOARDS + ' boards' });
     const p = h('div', 'ppb-panel');
     p.innerHTML = `<div class="ppb-head"><div><p class="ppb-name">Pinball Recall</p><p class="ppb-what">${BOARDS} boards done.</p></div>
-      <div class="ppb-art">${ART}</div></div>
-      <div class="ppb-lines"><p>Score: <b>${fmt(score)}</b></p><p>Your best: <b>${fmt(top)}</b></p>
-      <p>${david == null ? 'David hasn\'t set a score yet' : 'David\'s best: <b>' + fmt(david) + '</b>'}</p>${say ? '<p class="say">' + say + '</p>' : ''}</div>
-      <div class="ppb-btns"><button class="ppb-go" type="button">Play again</button><button class="ppb-link" type="button">Done</button></div>`;
+      <div class="ppb-art">${ART}</div></div>`;
+    const btns = h('div', 'ppb-btns', '<button class="ppb-go" type="button">Again</button><button class="ppb-link" type="button">Done</button>');
+    p.append(sb.el, btns);
     p.querySelector('.ppb-go').addEventListener('click', play, sig);
     p.querySelector('.ppb-link').addEventListener('click', card, sig);
-    show(p, '.ppb-go');
+    show(p, '.ppb-go', 'done');
+    sb.play(p);
     window.dispatchEvent(new CustomEvent('dl:lumo', { detail: { game: 'pinball', score, best: top, david } }));
   }
+
+  // Esc quits a run or the tutorial, and closes the results.
+  addEventListener('keydown', (e) => {
+    if (mode === 'card' || !fx.escFor(e)) return;
+    e.preventDefault();
+    if (mode === 'done') card();
+    else quit();
+  }, sig);
+  // Another game started: this one goes back to its card.
+  fx.onClaim('pinball', () => { if (mode !== 'card') quit(); }, ac.signal);
 
   fetch('/hobbies/lumosity/best.json', { signal: ac.signal, cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : null))
@@ -573,10 +679,13 @@ export function mount(el) {
     });
 
   return function stop() {
+    endRun(true);
     ac.abort();
     clearTimers();
     game = null;
+    el.classList.remove('lumo-live');
     root.remove();
     release();
+    releaseFx();
   };
 }

@@ -122,8 +122,8 @@
     },
     // Asked to play something ("can i rally you again"): this, then it starts.
     play: { rally: 'ok serve it up 🏸', spar: 'bet. gloves on 🥊', climb: 'ok chalk up', chess: 'ok your move ♟️', cat: 'psst psst', guitar: 'ok here, play something', go: 'ok come with me' },
-    // Meowmeow's page, every time they land on it.
-    cat: {
+    // Meowmeow's page, the first time they land on it.
+    catPage: {
       hi: 'aww u wanna see meowmeow? let me call her over',
       psst: 'psst psst',
       here: "she's right there 🥹",
@@ -179,7 +179,7 @@
       meowmeow: "that's meowmeow! she's really fat and sleeps all day. want me to call her over?",
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',
       muaythai: 'i coach the beginner class! do you train anything?',
-      climbing: "i'm not very good, i can only do a v3 :( what grade do you climb?",
+      climbing: "i'm not very good, i can only do a v2 :( what grade do you climb?",
       badminton: 'badminton was my main sport all through high school! i played doubles. do you play?',
       hiking: "i'm really proud of panorama ridge. 30km round trip with my friends, i couldn't feel my legs for 2 days after",
       photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
@@ -247,7 +247,7 @@
         yes: 'ooo where? tell me', no: 'fair. the photos are the next best thing'
       },
       climbing: {
-        say: "i'm not very good, i can only do a v3 :(",
+        say: "i'm not very good, i can only do a v2 :(",
         ask: 'what grade do you climb?',
         low: "ok we're basically the same", same: 'twins 🤝',
         high: 'show off 😭', none: "that's ok, the mat's soft"
@@ -276,12 +276,13 @@
         yes: 'we will see 😈', no: 'smart. try anyway',
         lose: 'if you wish to defeat me, you must train for another 100 years!! 😈',
         win: 'IMPOSSIBLE. YOU BEAT ME',
+        tie: 'a tie?? ok rematch. right now',
         unset: "nice. i haven't set my score yet, so enjoy it while it lasts 😈"
       },
       chess: {
         say: 'i played all through elementary. got to 1425 before guitar took over',
         ask: "what's your rating?",
-        none: "that's ok, i'll go easy"
+        none: "that's ok, i play like my 1425 self. it's beatable"
       },
       photography: {
         say: 'i shoot on an x-t200 and an a7r ii',
@@ -783,6 +784,7 @@
 
   let chatOn = false;
   let asking = false;
+  let lastAsk = -1e9; // when they last sent something in the chat
   let talkSeq = 0;
 
   function placeTalk() {
@@ -1505,6 +1507,8 @@
   let queue = Promise.resolve();
   let navTo = null;
   let mode = '';
+  // One hand move per thing per reply: the server's drag and the brain's point at the same thing don't both run.
+  const handled = new Set();
   function act(a) {
     if (a.verb === 'face') { setFace(a.id, 3500); return; }
     if (a.verb === 'summon') { if (a.id === 'cat') summonCat(); return; }
@@ -1520,7 +1524,8 @@
       return;
     }
     const t = targets[a.id];
-    if (!t) return;
+    if (!t || handled.has(a.id)) return;
+    handled.add(a.id);
     const el = find(a.id);
     if (!el) {
       if (t.page !== here) navTo = a;
@@ -1774,6 +1779,7 @@
       pres.waiting = false;
       S.auto = false;
       found('talk');
+      lastAsk = now();
       bus.emit('reply', { via, text: q, after: hear.last ? hear.last.id : '' });
       if (S.msgs.filter((m) => m.role === 'user' && !m.note).length >= MAX_TURNS) { speak(LINES.limit, { id: 'limit', pri: PRI.reply, ctx: null, echo: q }); return; }
       const want = wants(q);
@@ -1794,6 +1800,7 @@
     emote('...', { sticky: true });
     let raw = '';
     let failed = false;
+    handled.clear();
     const parser = makeParser(u.feed, u.act);
     try {
       const res = await fetch(API + '/chat', {
@@ -1809,7 +1816,8 @@
           convo: S.convo,
           tz: TZ,
           local: new Date().toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
-          name: knownName()
+          name: knownName(),
+          who: S.who || ''
         })
       });
       if (!res.ok || !res.body) throw new Error('chat ' + res.status);
@@ -1819,7 +1827,7 @@
         const { value, done } = await reader.read();
         if (done) break;
         const s = dec.decode(value, { stream: true });
-        if (!raw) emoteOff();
+        if (strip(raw).replace(/\[\[[^\]]*$/, '') === '' && strip(raw + s).replace(/\[\[[^\]]*$/, '')) emoteOff();
         raw += s;
         parser.push(s);
       }
@@ -2342,11 +2350,15 @@
   // the page does; pageDone says which ones already went this landing.
   let pageTok = 0;
   const pageDone = {};
+  // The full exchange on a page happens once a visit. After that the page's
+  // own buttons (the gloves, Rally me, Play) start things.
+  const seenPage = (id) => Boolean(S.seen && S.seen[id]);
+  const markSeen = (id) => { S.seen = Object.assign({}, S.seen, { [id]: true }); save(); };
   // On the guitar page the head asks if they play. Yes: it brings the guitar
   // out. No: would they want to try? Typed answers go to the brain, which
   // knows to bring it with [[bring:guitar]].
   async function askGuitar(tok = pageTok, tries = 0) {
-    if (here !== '/hobbies/guitar/' || S.quiet || tok !== pageTok || pageDone.guitar === tok) return;
+    if (here !== '/hobbies/guitar/' || S.quiet || tok !== pageTok || pageDone.guitar === tok || seenPage('guitar')) return;
     if (!document.querySelector('main [data-later="guitar"]:not([data-out])')) return;
     if (busyForPage()) { setTimeout(() => askGuitar(tok, tries), 250); return; }
     interrupt(true);
@@ -2354,7 +2366,7 @@
     openFor();
     const ok = await say(LINES.guitar.ask, {
       id: 'ask:guitar',
-      onStart: () => { noticed('guitar'); S.small = [...new Set([...(S.small || []), 'music'])]; save(); }
+      onStart: () => { noticed('guitar'); markSeen('guitar'); S.small = [...new Set([...(S.small || []), 'music'])]; save(); }
     });
     if (tok !== pageTok) return;
     // Cut off before it was out: ask again once they're free.
@@ -2389,10 +2401,10 @@
   let places = null;
   async function askPage(tok = pageTok, tries = 0) {
     const id = ASK_PAGES[here];
-    if (!id || S.quiet || tok !== pageTok || pageDone[id] === tok) return;
+    if (!id || S.quiet || tok !== pageTok || pageDone[id] === tok || seenPage(id)) return;
     if (busyForPage()) { setTimeout(() => askPage(tok, tries), 250); return; }
     const L = LINES.ask[id];
-    const mark = () => noticed(id);
+    const mark = () => { noticed(id); markSeen(id); };
     // Cut off before the question was out: go again once they're free.
     const again = () => { if (tok === pageTok && tries < 5) setTimeout(() => askPage(tok, tries + 1), 600); };
     interrupt(true);
@@ -2416,8 +2428,8 @@
     if (game) setTimeout(() => { if (tok === pageTok) pitch(game); }, 6000);
     if (id === 'hiking') options([['yeah!', go(L.yes)], ['not really', go(L.no)]]);
     else if (id === 'climbing') options([
-      ['v0 to v2', go(L.low, '.play[data-play="climbing"]')], ['v3', go(L.same, '.play[data-play="climbing"]', 'happy')],
-      ['v4+', go(L.high, null, 'sad')], ["i don't climb", go(L.none, '.play[data-play="climbing"]')]
+      ['v0 to v1', go(L.low, '.play[data-play="climbing"]')], ['v2', go(L.same, '.play[data-play="climbing"]', 'happy')],
+      ['v3+', go(L.high, null, 'sad')], ["i don't climb", go(L.none, '.play[data-play="climbing"]')]
     ]);
     else if (id === 'badminton') options([
       ['singles', go(L.singles, '[data-3d="racket"]')], ['doubles', go(L.doubles, '[data-3d="racket"]', 'happy')],
@@ -2459,12 +2471,12 @@
   }
   // A Lumosity game ended (play/pinball.js, ebbflow.js, penguin.js send dl:lumo).
   function lumoDone({ game, score, david }) {
-    bus.emit('game_end', { game: game || 'lumosity', result: { score, david } });
     if (here !== '/hobbies/lumosity/') return;
     const L = LINES.ask.lumosity;
     const o = { pri: PRI.react, ctx: null };
     if (david == null) quip(L.unset, 2600, 'happy', Object.assign({ id: 'lumo:unset' }, o));
     else if (score > david) quip(L.win, 3000, 'angry', Object.assign({ id: 'lumo:win' }, o));
+    else if (score === david) quip(L.tie, 2600, 'happy', Object.assign({ id: 'lumo:tie' }, o));
     else quip(L.lose, 3000, 'happy', Object.assign({ id: 'lumo:lose' }, o));
   }
 
@@ -2474,7 +2486,7 @@
   let pickTimer = 0;
   async function nudgeHobbies(step = 0, tok = pageTok) {
     clearTimeout(pickTimer);
-    if (here !== '/hobbies/' || S.quiet || step >= LINES.pick.open.length || tok !== pageTok) return;
+    if (here !== '/hobbies/' || S.quiet || step >= LINES.pick.open.length || tok !== pageTok || (step === 0 && seenPage('hobbies'))) return;
     // Not over the top of a question it just asked.
     if (busyForPage() || speaking() || (chatOn && pres.waiting && now() - pres.said < 8000)) {
       pickTimer = setTimeout(() => nudgeHobbies(step, tok), 500);
@@ -2490,7 +2502,7 @@
     wake();
     const ok = await speak(LINES.pick.open[step] + '. ' + LINES.pick.teaser[t], {
       id: 'nudge:hobbies', pri: PRI.page, hold: 2600, keep: 0,
-      onStart: () => { S.hobbies = [...new Set([...(S.hobbies || []), t])]; save(); point(el, { hold: 2400 }); }
+      onStart: () => { if (step === 0) markSeen('hobbies'); S.hobbies = [...new Set([...(S.hobbies || []), t])]; save(); point(el, { hold: 2400 }); }
     });
     if (tok !== pageTok) return;
     pickTimer = setTimeout(() => nudgeHobbies(ok ? step + 1 : step, tok), ok ? 8000 : 600);
@@ -2517,17 +2529,17 @@
   async function pitch(id, { force = false, again = false, line = '', tries = 0 } = {}) {
     const P = PITCHES[id];
     if (!P || here !== P.page || pitching || lent || S.quiet) return;
-    if (!force && pitched[id] === pageTok) return;
+    if (!force && (pitched[id] === pageTok || seenPage('pitch:' + id))) return;
     const piece = document.querySelector('main ' + P.el);
     if (!piece) return;
-    if (!force && (busyForPage() || (chatOn && pres.waiting && now() - pres.said < 6000))) {
+    if (!force && (busyForPage() || (chatOn && (now() - lastAsk < 15000 || (pres.waiting && now() - pres.said < 6000))))) {
       const tok = pageTok;
       setTimeout(() => { if (tok === pageTok) pitch(id, { line, tries: tries + 1 }); }, 1000);
       return;
     }
     pitched[id] = pageTok;
     S.pitchLater = '';
-    save();
+    markSeen('pitch:' + id);
     pitching = id;
     const L = LINES.pitch[id];
     let dim = null;
@@ -2624,7 +2636,6 @@
     if (!document.contains(piece)) return;
     // The ring and the wall borrow the head (dlHead.flyTo), which says game_start for them.
     if (id === 'spar' || id === 'climb') { piece.dispatchEvent(new CustomEvent('dl:start')); return; }
-    bus.emit('game_start', { game: id });
     if (id === 'chess') {
       piece.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
       setTimeout(() => { point(piece, { hold: 1800 }); quip(LINES.pitch.chess.ok, 1600, 'happy', { id: 'pitch:chess:go', pri: PRI.react }); }, reduce ? 0 : 600);
@@ -2671,7 +2682,9 @@
   ];
   const ASKS_TO = /\b(let'?s|lets|can (i|we|u|you)|could (i|we|u|you)|may i|wanna|want to|i want|gimme|give me|start|again|another|one more|rematch|bring it|call|see|show me|summon|try|ready)\b|^(rally|spar|fight|climb|call)\b/;
   const AGAIN = /\b(again|rematch|one more|another (one|round|game|rally|match))\b/;
-  const NOT_NOW = /\b(don'?t|dont|not|never|no more|nah|later|stop|how|why|when|what|who|where|which|ever|often|usually)\b/;
+  const NOT_NOW = /\b(don'?t|dont|not|never|no more|nah|later|stop|how|why|when|what|who|where|which|ever|often|usually|about|tell|explain|story)\b/;
+  // "one more thing", "say that again": not a game.
+  const NOT_AGAIN = /\b(say|said|repeat|explain|tell|thing|things|question|ask|read|show|resume|link|email|that)\b/;
   function wants(q) {
     const t = q.toLowerCase();
     if (NOT_NOW.test(t)) return '';
@@ -2679,7 +2692,7 @@
     if (!ASKS_TO.test(t)) return '';
     const hit = WANTS.filter(([, re]) => re.test(t));
     if (hit.length === 1) return hit[0][0];
-    if (!hit.length && AGAIN.test(t)) return GAME_ON[here] && GAME_ON[here] !== 'guitar' ? GAME_ON[here] : (S.lastGame || '');
+    if (!hit.length && AGAIN.test(t) && t.split(/\s+/).length <= 6 && !NOT_AGAIN.test(t)) return GAME_ON[here] && GAME_ON[here] !== 'guitar' ? GAME_ON[here] : (S.lastGame || '');
     return '';
   }
   async function playAsked(q, id) {
@@ -2710,7 +2723,7 @@
     }
     pitched[id] = tok;
     if (pitching) endPitch(null);
-    const go = () => { if (tok === pageTok) { startGame(id, piece); if (P.fly) found(id); } };
+    const go = () => { if (tok === pageTok) { startGame(id, piece); if (id === 'spar') found(id); } };
     if (id === 'chess') return go();
     if (chatOn) closeChat(null);
     hideTalk().then(go);
@@ -2725,10 +2738,11 @@
   // Meowmeow's page, every time they land on it: the head calls her over (or
   // says she's already here), then asks if they have pets until they answer.
   async function catPage(tok) {
-    if (here !== '/hobbies/meowmeow/' || S.quiet || tok !== pageTok || pageDone.cat === tok) return;
+    if (here !== '/hobbies/meowmeow/' || S.quiet || tok !== pageTok || pageDone.cat === tok || seenPage('cat')) return;
     if (busyForPage()) { setTimeout(() => catPage(tok), 250); return; }
     pageDone.cat = tok;
-    const C = LINES.cat;
+    markSeen('cat');
+    const C = LINES.catPage;
     interrupt(true);
     wake();
     noticed('meowmeow');
@@ -2747,12 +2761,12 @@
     if (tok !== pageTok || S.quiet || S.pets) return;
     if (busyForPage()) { setTimeout(() => petsAsk(tok, tries), 250); return; }
     openFor();
-    const ok = await say(LINES.cat.ask, { id: 'ask:pets', onStart: () => { S.small = [...new Set([...(S.small || []), 'pets'])]; save(); } });
+    const ok = await say(LINES.catPage.ask, { id: 'ask:pets', onStart: () => { S.small = [...new Set([...(S.small || []), 'pets'])]; save(); } });
     if (tok !== pageTok) return;
     if (!ok) { if (tries < 5) setTimeout(() => petsAsk(tok, tries + 1), 600); return; }
     pres.waiting = true;
     const answer = (text) => (label) => { S.pets = true; save(); reply(label, text, 'answer:pets'); };
-    options([['yeah!', answer(LINES.cat.yes)], ['nope', answer(LINES.cat.no)]]);
+    options([['yeah!', answer(LINES.catPage.yes)], ['nope', answer(LINES.catPage.no)]]);
   }
 
   // The things-to-do list can ask for it again on the page it's on.
@@ -3010,7 +3024,7 @@
   }
   // Meowmeow's hobby page: "Call her" brings her in, or gets a reaction if she's already here.
   window.dlCat = () => {
-    if (!cat && !S.quiet) { wake(); quip(LINES.cat.psst, 1400, 'happy', { id: 'cat:psst', pri: PRI.react, ctx: null }); }
+    if (!cat && !S.quiet) { wake(); quip(LINES.catPage.psst, 1400, 'happy', { id: 'cat:psst', pri: PRI.react, ctx: null }); }
     summonCat();
   };
   function heart() {
@@ -3251,6 +3265,9 @@
     bus.on('demo_close', (d) => { if (over === 'demo:' + d.id) setContext('project:' + d.id, 'demo_close'); });
     bus.on('bring', (d) => setContext('bring:' + d.id, 'bring'));
     bus.on('game_start', (d) => {
+      if (over === 'game:' + (d.game || 'game')) return;
+      // A game needs the screen: the chat steps aside (chess talks through it).
+      if (chatOn && !asking && d.game !== 'chess') closeChat(null);
       for (const k in PITCHES) if (PITCHES[k].page === here) pitched[k] = pageTok;
       if (GAME_ON[here]) { S.lastGame = GAME_ON[here]; save(); }
       setContext('game:' + (d.game || 'game'), 'game_start');
@@ -3459,9 +3476,10 @@
     // Put the visible head's top-left at (x, y), w wide. keep: it stays itself
     // there (bubble and hand still show) instead of standing in for a copy.
     flyTo(x, y, w, ms = 750, { keep = false } = {}) {
+      // Borrowed for a game (the ring, the wall), not to listen to the guitar.
+      // The pitch may have it already, so this goes by what's open, not by lent.
+      if (!keep && !over.startsWith('game:')) bus.emit('game_start', { game: Object.keys(PITCHES).find((k) => PITCHES[k].page === here) || 'game' });
       if (!lent) {
-        // Borrowed for a game (the ring, the wall), not to listen to the guitar.
-        if (!keep) bus.emit('game_start', { game: Object.keys(PITCHES).find((k) => PITCHES[k].page === here) || 'game' });
         lend(true, keep);
         interrupt();
         if (chatOn) closeChat(null);

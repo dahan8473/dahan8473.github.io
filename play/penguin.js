@@ -5,6 +5,10 @@
 // so the controls have to be re-mapped on the fly. Five mazes: time trials and
 // races against penguins that follow the shortest path. Card, tutorial, play,
 // results. Scores: best.json has mine, localStorage keeps the visitor's.
+// lumo-fx.js keeps it to one game at a time, tells the head's bus about runs,
+// and has the feedback: bursts, flashes, the 3-2-1 and the results board.
+
+import * as fx from './lumo-fx.js?v=1';
 
 const CSS_ID = 'play-penguin-css';
 const KEY_BEST = 'dl-lumo-penguin';
@@ -29,7 +33,7 @@ const PLAN = [
 const CSS = `
 .ppg { --ppg-me: #2e3440; max-width: 640px; }
 [data-theme="dark"] .ppg { --ppg-me: #4c566a; }
-.ppg-panel { padding: 22px; border-radius: 14px; background: var(--fill); }
+.ppg-panel { position: relative; padding: 22px; border-radius: 14px; background: var(--fill); }
 .ppg-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .ppg-name { color: var(--t1); font-weight: 500; }
 .ppg-what { color: var(--t2); }
@@ -38,18 +42,24 @@ const CSS = `
 .ppg-lines b { font-weight: 400; color: var(--t1); }
 .ppg-lines .say { margin-top: 8px; color: var(--t1); }
 .ppg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
-.ppg-btn { min-height: 44px; padding: 8px 22px; border: 0; border-radius: 999px; background: var(--t1); color: var(--bg); font: inherit; cursor: pointer; transition: opacity 160ms ease; }
+.ppg-btn { min-height: 44px; padding: 8px 22px; border: 0; border-radius: 999px; background: var(--t1); color: var(--bg); font: inherit; cursor: pointer; transition: opacity 160ms ease, transform 120ms ease; }
 .ppg-btn:hover { opacity: 0.86; }
-.ppg-link { min-height: 44px; padding: 4px 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; }
+.ppg-btn:active { transform: scale(0.95); }
+.ppg-link { min-height: 44px; padding: 4px 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; transition: color 140ms ease; }
 .ppg-link:hover { color: var(--t1); }
 .ppg :is(.ppg-btn, .ppg-link):focus-visible { border-radius: 999px; }
-.ppg-hud { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: var(--t3); }
+.ppg-hud { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; margin-bottom: 10px; color: var(--t3); }
 .ppg-hud span span { color: var(--t1); }
+.ppg-hud .end { display: flex; align-items: center; gap: 10px; }
+.ppg-hud .end > span { color: var(--t3); }
 .ppg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
 .ppg-head p { min-height: 3.2em; }
-.ppg-head .ppg-link { margin-top: -10px; flex: none; }
+.ppg-head .end { display: flex; align-items: center; gap: 10px; flex: none; margin-top: -8px; }
+.ppg-line .hi { color: var(--lfx-hi); }
+.ppg-line .no { color: var(--lfx-bad); }
 .ppg-stage { position: relative; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.ppg-board { width: 100%; max-width: 420px; aspect-ratio: 1; margin: 0 auto; }
+.ppg-board { position: relative; width: 100%; max-width: 420px; aspect-ratio: 1; margin: 0 auto; }
+.ppg-board .lfx-flash { border-radius: 7%; }
 .ppg-tut .ppg-board { max-width: 300px; }
 .ppg-board svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .ppg-flag { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 6px 14px; border-radius: 999px; background: var(--bg); color: var(--t1); box-shadow: 0 0 0 1px var(--rule); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 160ms ease; }
@@ -57,7 +67,7 @@ const CSS = `
 .ppg-line { min-height: 1.6em; margin-top: 10px; color: var(--t2); text-align: center; }
 .ppg-keys { margin-top: 2px; color: var(--t3); text-align: center; }
 .ppg-pad { display: none; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(2, 52px); gap: 6px; justify-content: center; margin-top: 12px; }
-.ppg-pad button { display: flex; align-items: center; justify-content: center; border: 0; border-radius: 12px; background: var(--fill); color: var(--t1); touch-action: none; cursor: pointer; }
+.ppg-pad button { position: relative; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 12px; background: var(--fill); color: var(--t1); touch-action: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 120ms ease; }
 .ppg-pad button:active { background: var(--rule); }
 .ppg-pad svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ppg-pad .u { grid-area: 1 / 2; } .ppg-pad .l { grid-area: 2 / 1; } .ppg-pad .d { grid-area: 2 / 2; } .ppg-pad .r { grid-area: 2 / 3; }
@@ -67,6 +77,13 @@ const CSS = `
 .ppg-dot { fill: var(--rule); }
 .ppg-wall { fill: none; stroke: color-mix(in srgb, ${ICE} 45%, var(--t1)); stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 520px) { .ppg-panel { padding: 18px; } }
+/* The card squeezed into a narrow column (a phone, while another game plays): a small tile. */
+@container (max-width: 260px) {
+  .ppg-panel[data-lumo-card] { padding: 14px; }
+  .ppg-panel[data-lumo-card] .ppg-top { flex-direction: column-reverse; gap: 10px; margin-bottom: 14px; }
+  .ppg-panel[data-lumo-card] :is(.ppg-what, .ppg-lines, .ppg-link) { display: none; }
+  .ppg-panel[data-lumo-card] .ppg-icon { width: 36px; height: 36px; }
+}
 `;
 
 function useCss(id, css) {
@@ -312,17 +329,20 @@ function icon() {
 
 export function mount(el) {
   const release = useCss(CSS_ID, CSS);
+  const releaseFx = fx.useFx();
   const ac = new AbortController();
   const on = (t, ev, fn, o) => t.addEventListener(ev, fn, Object.assign({ signal: ac.signal }, o));
   const timers = new Set();
   const later = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; };
-  const root = h('div', 'ppg');
+  const root = h('div', 'ppg lfx');
   let david = undefined; // undefined while loading, null if not set yet
   let state = 'card';
   let raf = 0;
   let board = null;
   let ctl = null; // { move(d), tick(now) } for the view with a board
+  let ui = null; // the stage's line, flag and pad
   let held = -1, holdT = 0;
+  let run = null; // the bus run (game_start sent, game_end not yet)
 
   const note = el.querySelector('.piece-note');
   if (note) note.remove();
@@ -339,14 +359,35 @@ export function mount(el) {
     if (ctl && ctl.tick) ctl.tick(now);
     if (board) board.frame(now);
   }
+  // Every view goes through here. Anything but the card takes the stage: the
+  // other two games go back to their cards and this one moves to the top.
   function view(node, withBoard) {
     stopHold();
     timers.forEach(clearTimeout);
     timers.clear();
+    const focused = root.contains(document.activeElement);
     root.textContent = '';
     root.appendChild(node);
     if (withBoard && !raf) raf = requestAnimationFrame(loop);
-    if (!withBoard) { cancelAnimationFrame(raf); raf = 0; board = null; ctl = null; }
+    if (!withBoard) { cancelAnimationFrame(raf); raf = 0; board = null; ctl = null; ui = null; }
+    el.classList.toggle('lumo-live', state !== 'card');
+    if (state !== 'card') {
+      fx.claim('penguin');
+      requestAnimationFrame(() => { if (!ac.signal.aborted && root.contains(node)) fx.reveal(el); });
+    }
+    fx.enter(node);
+    if (focused && !withBoard) { const b = node.querySelector('.ppg-btn'); if (b) b.focus({ preventScroll: true }); }
+  }
+  function endRun(quit, score) {
+    if (!run) return;
+    run.end(quit ? (G ? G.total : 0) : score, readBest(), quit);
+    run = null;
+  }
+  // Quit from anywhere: the X, Esc, another game starting, leaving the page.
+  function quit() {
+    endRun(true);
+    G = null;
+    showCard();
   }
 
   // The stage: board, a flag over it, swipes on it, the pad and key hint under it.
@@ -377,20 +418,37 @@ export function mount(el) {
     ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => on(pad, ev, stopHold));
     on(pad, 'contextmenu', (e) => e.preventDefault());
     parent.append(line, pad, h('p', 'ppg-keys', 'Arrow keys or WASD'));
-    return {
+    ui = {
+      el: st,
       line,
+      keys: [...pad.children],
       flag(text, ms) {
         flag.textContent = text;
         flag.classList.toggle('on', !!text);
+        if (text && !fx.reduced()) {
+          flag.animate([
+            { opacity: 0, transform: 'translate(-50%, -50%) scale(0.6)' },
+            { opacity: 1, transform: 'translate(-50%, -50%) scale(1.08)', offset: 0.6 },
+            { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' }
+          ], { duration: 320, easing: 'ease-out' });
+        }
         if (text && ms) later(() => flag.classList.remove('on'), ms);
-      }
+      },
+      shakeFlag() {
+        if (fx.reduced()) return;
+        flag.animate([0, -6, 5, -3, 2, 0].map((x) => ({ transform: `translate(calc(-50% + ${x}px), -50%)` })), { duration: 360, easing: 'ease-out' });
+      },
+      // A step into a wall: the penguin bumps (makeBoard) and the key goes red.
+      wall(d) { fx.hit(this.keys[d], false); fx.flash(board.wrap, false, true); fx.buzz(8); }
     };
+    return ui;
   }
 
   // One press is one step; holding repeats at a walking pace.
   function press(d) {
     stopHold();
     if (!ctl) return;
+    if (ui) fx.press(ui.keys[d]);
     ctl.move(d);
     held = d;
     holdT = setTimeout(function rep() { if (ctl && held >= 0) { ctl.move(held); holdT = setTimeout(rep, 150); } }, 260);
@@ -399,10 +457,17 @@ export function mount(el) {
 
   const KEYS = { arrowup: 0, w: 0, arrowright: 1, d: 1, arrowdown: 2, s: 2, arrowleft: 3, a: 3 };
   on(window, 'keydown', (e) => {
+    if (state === 'card') return;
+    // Esc quits a run or the tutorial, and closes the results.
+    if (fx.escFor(e)) {
+      e.preventDefault();
+      if (state === 'result') showCard();
+      else quit();
+      return;
+    }
     if (state !== 'play' && state !== 'tut') return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    const t = e.target;
-    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (fx.typing(e.target)) return;
     const d = KEYS[e.key.toLowerCase()];
     if (d === undefined) return;
     e.preventDefault();
@@ -410,6 +475,8 @@ export function mount(el) {
   });
   on(window, 'keyup', (e) => { if (KEYS[e.key.toLowerCase()] === held) stopHold(); });
   on(window, 'blur', stopHold);
+  // Another game started: this one goes back to its card.
+  fx.onClaim('penguin', () => { if (state !== 'card') quit(); }, ac.signal);
 
   // ---- Card ----
   function panel(what, rows, buttons) {
@@ -436,7 +503,7 @@ export function mount(el) {
     else p.append(label + ': ', h('b', '', value));
     return p;
   }
-  const davidLine = () => typeof david === 'number' ? line("David's best", String(david)) : line(david === null ? "David hasn't set a score yet" : "David's best: ...");
+  const davidLine = () => typeof david === 'number' ? line("David's best", fx.fmt(david)) : line(david === null ? "David hasn't set a score yet" : "David's best: ...");
 
   function showCard() {
     state = 'card';
@@ -444,7 +511,7 @@ export function mount(el) {
     const buttons = [['ppg-btn', 'Play', () => (tutDone() ? startSession() : showTut(0))]];
     if (tutDone()) buttons.push(['ppg-link', 'How to play', () => showTut(0)]);
     const box = panel('Trains spatial orientation: the board turns, and Up always means toward the orange arrow.',
-      [davidLine(), line('Your best', mine ? String(mine) : 'not set yet')], buttons);
+      [davidLine(), line('Your best', mine ? fx.fmt(mine) : 'not set yet')], buttons);
     // The Lumosity page lays the three cards out in a row (styles.css .lumo-games).
     box.dataset.lumoCard = '';
     view(box, false);
@@ -454,14 +521,17 @@ export function mount(el) {
   // 1: walk a 3x3 board to the fish. 2: the board turns; press Up and see it go
   // toward the arrow. 3: turned again, a real little maze.
   function showTut(step) {
+    endRun(true);
     state = 'tut';
     const box = h('div', 'ppg-tut');
     const head = h('div', 'ppg-head');
     const say = h('p');
+    const end = h('span', 'end');
     const skip = h('button', 'ppg-link', 'Skip');
     skip.type = 'button';
     on(skip, 'click', () => { store(KEY_TUT, 1); startSession(); });
-    head.append(say, skip);
+    end.append(skip, fx.xButton('Quit', quit, ac.signal));
+    head.append(say, end);
     box.appendChild(head);
     view(box, true);
     const ui = stage(box);
@@ -477,19 +547,20 @@ export function mount(el) {
     board.turn(step ? steps[step - 1].rot : 0, true);
     board.frame(performance.now());
     if (s.rot) later(() => board.turn(s.rot), 350);
-    board.add('fish', 4);
+    const fishSp = board.add('fish', 4);
     const me = board.add(['var(--ppg-me)', ICE], s.start);
     let cell = s.start, done = false;
     ctl = {
       move(d) {
         if (done) return;
-        if (!(s.m.open[cell] >> d & 1)) { board.bump(me, d); return; }
+        if (!(s.m.open[cell] >> d & 1)) { board.bump(me, d); ui.wall(d); return; }
         cell = stepOf(s.m, cell, d);
         board.put(me, cell);
         if (step === 1 && d !== 0) ui.line.textContent = 'Up is toward the orange arrow. Try it.';
         if (cell !== 4) return;
         done = true;
         ui.flag(step < 2 ? 'Nice' : 'Ready', 0);
+        later(() => { const [x, y] = fx.spot(ui.el, fishSp.g); fx.ring(ui.el, x, y); fx.burst(ui.el, x, y); fx.buzz(14); }, 110);
         later(() => {
           if (step < 2) showTut(step + 1);
           else { store(KEY_TUT, 1); startSession(); }
@@ -501,20 +572,21 @@ export function mount(el) {
   // ---- Play ----
   let G = null;
   function startSession() {
+    endRun(true);
     state = 'play';
     const box = h('div', 'ppg-game');
     const hud = h('div', 'ppg-hud');
     const hMaze = h('span'), hScore = h('span'), hTime = h('span');
-    hud.append(hMaze, hScore, hTime);
+    const end = h('span', 'end');
+    end.append(hTime, fx.xButton('Quit', quit, ac.signal));
+    hud.append(hMaze, hScore, end);
     box.appendChild(hud);
     view(box, true);
     const ui = stage(box);
-    G = { i: -1, total: 0, wins: 0, ui, hMaze, hScore, hTime, shownT: '' };
-    G.hScore.innerHTML = 'Score <span>0</span>';
+    G = { i: -1, total: 0, wins: 0, streak: 0, ui, hMaze, hScore, hTime, shownT: '' };
+    G.hScore.innerHTML = 'Score <span class="lfx-num">0</span>';
     ctl = { move: playerMove, tick };
-    if (root.getBoundingClientRect().top < 0 || root.getBoundingClientRect().bottom > innerHeight) {
-      root.scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
-    }
+    run = fx.startRun('penguin');
     nextMaze();
   }
 
@@ -529,7 +601,7 @@ export function mount(el) {
     const dist = distances(m, fishAt);
     Object.assign(G, { cfg, m, fishAt, dist, phase: 'ready', cell: corners[0], dStart: dist[corners[0]], t0: 0, hiddenAt: 0 });
     board.setMaze(m);
-    board.add('fish', fishAt);
+    G.fish = board.add('fish', fishAt);
     const tints = ['#8f9bb3', '#b48ead'];
     G.rivals = [];
     for (let r = 0; r < cfg.rivals; r++) {
@@ -540,23 +612,30 @@ export function mount(el) {
     G.cap = 20 + G.dStart * 2;
     G.par = 3 + G.dStart * 0.55;
     if (G.i > 0) turnTo(board, true);
-    G.hMaze.innerHTML = `Maze <span>${G.i + 1}</span> of 5`;
+    G.hMaze.innerHTML = `Maze <span class="lfx-num">${G.i + 1}</span> of 5`;
+    if (G.i > 0) fx.pop(G.hMaze.firstElementChild, 1.4);
     G.hTime.innerHTML = '<span>0.0</span>s';
     const kind = cfg.rivals ? `Race against ${cfg.rivals > 1 ? 'two penguins' : 'one penguin'}` : 'Time trial';
-    G.ui.flag(kind, 0);
     G.ui.line.textContent = cfg.spin && G.i === 2 ? 'This one turns while you walk.' : cfg.rivals ? 'Beat them to the fish.' : 'Get to the fish fast.';
-    later(() => {
+    const go = () => {
       G.phase = 'go';
       G.t0 = performance.now();
       G.spinDue = G.t0 + (cfg.spin || 0);
       for (const rv of G.rivals) rv.due = G.t0 + rv.every;
-      G.ui.flag('Go', 500);
-    }, reduced() ? 900 : 1300);
+    };
+    // The first maze starts on a 3-2-1; the rest say what kind they are, then Go.
+    if (G.i === 0) {
+      G.ui.flag('', 0);
+      fx.countdown(G.ui.el, later, go);
+      return;
+    }
+    G.ui.flag(kind, 0);
+    later(() => { go(); G.ui.flag('Go', 500); fx.buzz(16); }, fx.reduced() ? 900 : 1300);
   }
 
   function playerMove(d) {
     if (G.phase !== 'go') return;
-    if (!(G.m.open[G.cell] >> d & 1)) { board.bump(G.me, d); return; }
+    if (!(G.m.open[G.cell] >> d & 1)) { board.bump(G.me, d); G.ui.wall(d); return; }
     G.cell = stepOf(G.m, G.cell, d);
     board.put(G.me, G.cell);
     if (G.cell === G.fishAt) finish('win');
@@ -594,6 +673,8 @@ export function mount(el) {
     if (!G.cfg.rivals && t >= G.cap) finish('time');
   }
 
+  // Win: the fish bursts, the points rise off it and the score counts up.
+  // Lose: the stage flashes red and the flag shakes.
   function finish(how) {
     const t = (performance.now() - G.t0) / 1000;
     const cfg = G.cfg;
@@ -614,9 +695,26 @@ export function mount(el) {
       line = how === 'time' ? 'Out of time.' : 'Another penguin got there first.';
     }
     G.total += pts;
-    G.hScore.innerHTML = `Score <span>${G.total}</span>`;
-    G.ui.line.textContent = `${line} +${pts}`;
-    G.ui.flag(`+${pts}`, 0);
+    G.streak = how === 'win' ? G.streak + 1 : 0;
+    fx.tally(G.hScore.querySelector('span'), G.total);
+    const ui = G.ui;
+    ui.line.innerHTML = '';
+    ui.line.append(h('span', how === 'win' ? 'hi' : 'no', line), ` +${pts}`);
+    if (G.streak >= 2) ui.line.append(' ', h('span', 'hi', `${G.streak} in a row`));
+    ui.flag(`+${pts}`, 0);
+    if (how === 'win') {
+      later(() => {
+        const [x, y] = fx.spot(ui.el, G.fish.g);
+        fx.ring(ui.el, x, y, { r: 30 });
+        fx.burst(ui.el, x, y, { n: 16, spread: 60 });
+        fx.flash(board.wrap, true);
+      }, 110);
+      fx.buzz([14, 30, 14]);
+    } else {
+      fx.flash(board.wrap, false);
+      ui.shakeFlag();
+      fx.buzz([30, 50, 30]);
+    }
     later(nextMaze, 2200);
   }
 
@@ -640,19 +738,22 @@ export function mount(el) {
     const prev = readBest();
     const best = Math.max(prev, score);
     if (score > prev) store(KEY_BEST, score);
+    endRun(false, score);
     const races = PLAN.filter((p) => p.rivals).length;
-    const rows = [line('Score', String(score)), line('Races won', `${G.wins} of ${races}`), line('Your best', String(best)), davidLine()];
-    if (typeof david === 'number' && score > david) rows.push(line('You beat David.', null, 'say'));
-    else if (score > prev && prev) rows.push(line('New personal best.', null, 'say'));
-    const box = panel('Five mazes done.', rows, [['ppg-btn', 'Play again', startSession]]);
+    const d = typeof david === 'number' ? david : null;
+    const sb = fx.scoreboard({ score, prev, david: d, extra: `Races won <b>${G.wins}</b> of ${races}` });
+    const box = panel('Five mazes done.', [], [['ppg-btn', 'Again', startSession], ['ppg-link', 'Done', showCard]]);
+    box.querySelector('.ppg-lines').replaceWith(sb.el);
     view(box, false);
+    sb.play(box);
     G = null;
-    window.dispatchEvent(new CustomEvent('dl:lumo', { detail: { game: 'penguin', score, best, david: typeof david === 'number' ? david : null } }));
+    window.dispatchEvent(new CustomEvent('dl:lumo', { detail: { game: 'penguin', score, best, david: d } }));
   }
 
   showCard();
 
   return function stop() {
+    endRun(true);
     ac.abort();
     stopHold();
     timers.forEach(clearTimeout);
@@ -661,7 +762,9 @@ export function mount(el) {
     raf = 0;
     ctl = null;
     G = null;
+    el.classList.remove('lumo-live');
     root.remove();
     release();
+    releaseFx();
   };
 }

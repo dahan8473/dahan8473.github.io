@@ -121,7 +121,7 @@ flowchart TD
   P -- "/notes/" --> W[A line about the wall]
 ```
 
-Page events fire on every landing, not once a visit. If the head is busy (a game or the guitar is open, or it's waiting on your answer) they wait instead of giving up, and if a line gets cut they try again.
+Each page does its full exchange once a visit. If the head is busy (a game or the guitar is open, or it's waiting on your answer) it waits instead of giving up, and if a line gets cut it tries again. The pitch also waits while you're mid-conversation, so it never shuts a chat you're in. After the first time, the page's own buttons start things: the gloves, Rally me, and a Play button on every game page.
 
 **Starting a game.** There are three ways in, and they all end in the same place:
 

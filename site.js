@@ -1207,12 +1207,22 @@
     return '<div class="' + cls + ' still">' + inner + '</div>';
   }
 
-  var toastEl = null, toastTimer = 0, toastWait = 0;
-  // Nothing pops up over a game: the toast waits until it's closed.
+  var toastEl = null, toastTimer = 0, toastWait = 0, toastAt = 0;
+  // Nothing pops up over a game: the toast waits until it's closed. A game
+  // that was just clicked may not be open yet, so it also gives it a moment.
   var GAME_OPEN = '.mt-over, .climb-wall, .rl, .bring';
-  function toast(head, f) {
+  var gameOn = '';
+  // The head's bus (talk/talk.js) loads after this file.
+  setTimeout(function () {
+    if (!window.dlBus || !window.dlBus.on) return;
+    window.dlBus.on('game_start', function (d) { gameOn = (d && d.game) || 'game'; });
+    window.dlBus.on('game_end', function (d) { if (!d || !gameOn || d.game === gameOn) gameOn = ''; });
+    window.dlBus.on('page', function () { gameOn = ''; });
+  });
+  function toast(head, f, waited) {
     clearTimeout(toastWait);
-    if (document.querySelector(GAME_OPEN)) { toastWait = setTimeout(function () { toast(head, f); }, 1200); return; }
+    if (!waited) toastAt = Date.now();
+    if (gameOn || document.querySelector(GAME_OPEN) || Date.now() - toastAt < 1500) { toastWait = setTimeout(function () { toast(head, f, true); }, 700); return; }
     if (!toastEl) {
       toastEl = document.createElement('div');
       toastEl.className = 'finds-toast';
@@ -1253,7 +1263,7 @@
   };
 
   // Starting the games counts.
-  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['.rk-rally', 'rally'], ['.climb-primary[data-go]', 'climb'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
+  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['.rk-rally', 'rally'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
   document.addEventListener('click', function (e) {
     if (!e.target.closest) return;
     FIND_CLICKS.forEach(function (c) { if (e.target.closest(c[0])) window.dlFound(c[1]); });

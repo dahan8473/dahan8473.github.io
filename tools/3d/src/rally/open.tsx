@@ -6,10 +6,13 @@
 // over with the same head drawn in 3D, and returns close(). close() flies the
 // head home and takes everything down (immediately when asked, for a page
 // swap mid-rally). Without dlHead the floating head just hides while you play.
+//
+// The rally owns its lifecycle on the site's bus (window.dlBus, talk.js):
+// game_start once when it opens, game_end once (with the score) when it closes.
 import { NeutralToneMapping } from 'three';
 import { mountCanvas } from '../lib/mountCanvas';
 import { createStore } from '../lib/store';
-import { Rally, readBest, type HudState } from './engine';
+import { Rally, readBest, WIN, type HudState } from './engine';
 import { Hud, HUD_CSS } from './Hud';
 import { nickname } from './lines';
 import { RallyScene, type Ui } from './Scene';
@@ -38,6 +41,12 @@ const site = (): HeadApi | null => {
   const a = (window as unknown as { dlHead?: HeadApi }).dlHead;
   return a && typeof a.flyTo === 'function' && typeof a.away === 'function' && typeof a.home === 'function' ? a : null;
 };
+const tell = (type: string, data: unknown) => {
+  const b = (window as unknown as { dlBus?: { emit?: (type: string, data: unknown) => void } }).dlBus;
+  try {
+    if (b && typeof b.emit === 'function') b.emit(type, data);
+  } catch {}
+};
 
 const ICONS = {
   on: '<svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
@@ -60,9 +69,10 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
   // The tools live outside React so x works even when 3D can't.
   const tools = document.createElement('div');
   tools.className = 'rl-tools';
+  // Space and Enter swing while you play, so these also have keys: M and Escape.
   tools.innerHTML =
-    `<button class="rl-ic rl-snd" type="button" aria-label="Sound on or off">${ICONS.on}${ICONS.off}</button>` +
-    `<button class="rl-ic rl-x" type="button" aria-label="Stop playing">${ICONS.x}</button>`;
+    `<button class="rl-ic rl-snd" type="button" aria-label="Sound on or off" aria-keyshortcuts="M" title="Sound (M)">${ICONS.on}${ICONS.off}</button>` +
+    `<button class="rl-ic rl-x" type="button" aria-label="Stop playing" aria-keyshortcuts="Escape" title="Stop playing (Esc)">${ICONS.x}</button>`;
   over.appendChild(tools);
   const snd = tools.querySelector('.rl-snd') as HTMLButtonElement;
   const xBtn = tools.querySelector('.rl-x') as HTMLButtonElement;
@@ -95,6 +105,7 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
     say: null,
     pops: null,
     caret: null,
+    top: null,
     head: null,
     onReady: () => {
       if (closed) return;
@@ -122,13 +133,21 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
     requestAnimationFrame(() => requestAnimationFrame(() => !closed && lent && s?.away(true)));
   }
 
+  // The cards' buttons go with the card: keep focus in the layer, not on the page.
+  const offCard = () => {
+    if (document.activeElement?.closest('.rl-card')) over.focus({ preventScroll: true });
+  };
   const act = {
     again: () => {
       sound.unlock();
+      offCard();
       g.startGame();
     },
     done: () => close(),
-    resume: () => g.resume()
+    resume: () => {
+      offCard();
+      g.resume();
+    }
   };
   const stop = mountCanvas(over, {
     className: 'p3d-rally',
@@ -199,6 +218,10 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
     if (e.type === 'pointerup' && g.phase === 'serve' && g.server === 'me' && !d.moved && performance.now() - d.t0 < 900) g.swing();
   };
   const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+  // A point is on: Space and Enter swing even with a button focused (the
+  // cards' buttons and the tools press as usual when it's paused or over).
+  const playing = () => !g.paused && (g.phase === 'serve' || g.phase === 'rally' || g.phase === 'point');
+  let took = '';
   const onKey = (e: KeyboardEvent) => {
     if (closed || e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
@@ -219,17 +242,27 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
       return;
     }
     const onButton = e.target instanceof Element && !!e.target.closest('button');
-    if ((k === ' ' || k === 'Enter') && onButton) return;
+    const press = k === ' ' || k === 'Enter';
+    if (press && onButton && !playing()) return;
+    if (press) took = k;
     if (k === 'p') {
-      if (g.paused) g.resume();
+      if (g.paused) act.resume();
       else g.pause();
-    } else if (k === ' ' || k === 'j' || k === 'k') {
+    } else if (press || k === 'j' || k === 'k') {
       if (!e.repeat) g.swing();
-    } else if (k === 'ArrowLeft' || k === 'a') g.aim.x = Math.max(-1, g.aim.x - 0.2);
+    } else if (k === 'm') snd.click();
+    else if (k === 'ArrowLeft' || k === 'a') g.aim.x = Math.max(-1, g.aim.x - 0.2);
     else if (k === 'ArrowRight' || k === 'd') g.aim.x = Math.min(1, g.aim.x + 0.2);
     else if (k === 'ArrowUp' || k === 'w') g.aim.y = Math.min(1, g.aim.y + 0.25);
     else if (k === 'ArrowDown' || k === 's') g.aim.y = Math.max(-1, g.aim.y - 0.25);
     else return;
+    e.preventDefault();
+  };
+  // A focused button presses on Space's keyup: not when its keydown swung.
+  const onKeyUp = (e: KeyboardEvent) => {
+    if (closed || !took || e.key !== took) return;
+    took = '';
+    e.stopPropagation();
     e.preventDefault();
   };
   const onVis = () => {
@@ -242,6 +275,7 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
   over.addEventListener('pointercancel', onUp);
   over.addEventListener('contextmenu', onCtx);
   window.addEventListener('keydown', onKey, true);
+  window.addEventListener('keyup', onKeyUp, true);
   document.addEventListener('visibilitychange', onVis);
   const sndSync = () => snd.classList.toggle('muted', sound.muted());
   sndSync();
@@ -260,14 +294,22 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
   xBtn.addEventListener('click', () => close());
 
   // ---- Out ----------------------------------------------------------------------------
-  // The floating head appears where ours is and flies home.
+  // The floating head appears where ours is, the game ends, and it flies home.
+  // In that order: talk.js takes a flyTo outside a game for a new one, and
+  // ends one on home() by itself (without the score) if nobody has.
   function giveBack(ms: number) {
-    const s = site();
-    if (!lent || !s) return;
+    const s = lent ? site() : null;
+    const r = ui.head;
+    if (s && arrived && r) {
+      try {
+        s.flyTo(r.x, r.y, r.w, 0);
+      } catch {}
+    }
+    const decided = g.phase === 'end' || Math.max(g.score.me, g.score.foe) >= WIN;
+    tell('game_end', { game: 'rally', result: { won: decided ? g.score.me > g.score.foe : null, you: g.score.me, me: g.score.foe, longest: Math.max(g.gameBest, g.rally) } });
+    if (!s) return;
     lent = false;
     try {
-      const r = ui.head;
-      if (arrived && r) s.flyTo(r.x, r.y, r.w, 0);
       s.away(false);
       s.home(ms);
     } catch {}
@@ -284,6 +326,7 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
     over.removeEventListener('pointercancel', onUp);
     over.removeEventListener('contextmenu', onCtx);
     window.removeEventListener('keydown', onKey, true);
+    window.removeEventListener('keyup', onKeyUp, true);
     document.removeEventListener('visibilitychange', onVis);
     giveBack(reduce ? 0 : 800);
     const done = () => {
@@ -297,8 +340,17 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
       over.style.pointerEvents = 'none';
       over.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 320, easing: 'ease', fill: 'forwards' }).finished.then(done, done);
     }
-    if (!now && before && document.contains(before)) before.focus({ preventScroll: true });
     o.onClose();
+    // Back to where they were (Rally me) once its card is showing again,
+    // unless they've gone somewhere else meanwhile.
+    const back = (n: number) => {
+      const a = document.activeElement;
+      if (!before || before === document.body || !document.contains(before) || (a && a !== document.body && !over.contains(a))) return;
+      before.focus({ preventScroll: true });
+      if (document.activeElement !== before && n < 10) setTimeout(() => back(n + 1), 50);
+    };
+    if (!now) setTimeout(() => back(0), 0);
   }
+  tell('game_start', { game: 'rally' });
   return close;
 }

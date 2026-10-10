@@ -5,6 +5,10 @@
 //   <div class="play" data-play="ebbflow" data-v="N">
 // David's best comes from /hobbies/lumosity/best.json (key ebbflow). The
 // visitor's best lives in localStorage, and a finished run fires dl:lumo on window.
+// lumo-fx.js keeps it to one game at a time, tells the head's bus about runs,
+// and has the feedback: bursts, flashes, the 3-2-1 and the results board.
+
+import * as fx from './lumo-fx.js?v=1';
 
 const CSS_ID = 'play-ebbflow-css';
 const KEY = 'dl-lumo-ebbflow';
@@ -23,7 +27,7 @@ const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5
 const CSS = `
 .peb { --peb-green: #16a34a; --peb-orange: #f97316; max-width: 640px; }
 [data-theme="dark"] .peb { --peb-green: #4ade80; --peb-orange: #fb923c; }
-.peb-panel { padding: 22px; border-radius: 14px; background: var(--fill); }
+.peb-panel { position: relative; padding: 22px; border-radius: 14px; background: var(--fill); }
 .peb-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .peb-name { color: var(--t1); font-weight: 500; }
 .peb-what { color: var(--t2); }
@@ -39,38 +43,32 @@ const CSS = `
 .peb-lines .say { margin-top: 8px; color: var(--t1); }
 .peb-lines .gap { margin-top: 8px; }
 .peb-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
-.peb-go { min-height: 40px; padding: 8px 22px; border: 0; border-radius: 999px; background: var(--t1); color: var(--bg); font: inherit; cursor: pointer; transition: opacity 160ms ease; }
+.peb-go { min-height: 40px; padding: 8px 22px; border: 0; border-radius: 999px; background: var(--t1); color: var(--bg); font: inherit; cursor: pointer; transition: opacity 160ms ease, transform 120ms ease; }
 .peb-go:hover { opacity: 0.86; }
-.peb :is(.peb-go, .peb-link, .peb-quit):focus-visible { border-radius: 999px; }
-.peb-link { min-height: 40px; padding: 4px 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; }
+.peb-go:active { transform: scale(0.95); }
+.peb :is(.peb-go, .peb-link):focus-visible { border-radius: 999px; }
+.peb-link { min-height: 40px; padding: 4px 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; transition: color 140ms ease; }
 .peb-link:hover { color: var(--t1); }
 .peb-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; min-height: 40px; margin-bottom: 10px; color: var(--t3); }
 .peb-bar b { font-weight: 400; color: var(--t1); }
 .peb-bar .end { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .peb-bar .say { color: var(--t1); }
+.peb-bar .low b { color: var(--lfx-bad); }
 .peb-meter { display: inline-flex; gap: 4px; }
 .peb-meter i { width: 8px; height: 8px; border-radius: 50%; background: var(--rule); transition: background 160ms ease; }
-.peb-meter i.on { background: #88c0d0; }
-.peb-x { min-width: 2.4em; text-align: right; }
-.peb-quit { display: grid; place-items: center; width: 40px; height: 40px; margin-right: -8px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--t3); cursor: pointer; }
-.peb-quit:hover { color: var(--t1); background: var(--fill); }
-.peb-quit svg { width: 16px; height: 16px; }
-.peb-quit svg path { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+.peb-meter i.on { background: var(--lfx-hi); }
+.peb-x { min-width: 2.4em; text-align: right; transform-origin: 100% 50%; transition: color 200ms ease; }
+.peb-bar .peb-x.down { color: var(--lfx-bad); transition-duration: 0ms; }
 .peb-field { position: relative; height: 280px; border-radius: 14px; background: color-mix(in srgb, var(--peb-green) 9%, var(--fill)); overflow: hidden; transition: background 200ms ease; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .peb-field.live { touch-action: none; }
-.peb-field::before, .peb-field::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 280ms ease; }
-.peb-field::before { background: rgba(136, 192, 208, 0.14); box-shadow: inset 0 0 0 2px rgba(136, 192, 208, 0.55); }
-.peb-field::after { background: rgba(191, 97, 106, 0.1); box-shadow: inset 0 0 0 2px rgba(191, 97, 106, 0.45); }
-.peb-field.ok::before, .peb-field.no::after { opacity: 1; transition-duration: 40ms; }
-.peb-leaves.in { animation: peb-in 150ms ease; }
-@keyframes peb-in { from { opacity: 0; } }
+.peb-leaves { position: absolute; inset: 0; }
 .peb-leaf { position: absolute; left: 0; top: 0; color: var(--peb-green); will-change: transform; }
 .peb-field.orange { background: color-mix(in srgb, var(--peb-orange) 11%, var(--fill)); }
 .peb-field.orange .peb-leaf { color: var(--peb-orange); }
 .peb-leaf svg { display: block; width: 100%; height: 100%; }
 .peb-pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 44px); gap: 6px; justify-content: center; margin-top: 12px; }
-.peb-pad button { display: grid; place-items: center; padding: 0; border: 0; border-radius: 12px; background: var(--fill); color: var(--t1); cursor: pointer; touch-action: manipulation; transition: background 120ms ease; }
-.peb-pad button:active { background: var(--rule); }
+.peb-pad button { position: relative; display: grid; place-items: center; padding: 0; border: 0; border-radius: 12px; background: var(--fill); color: var(--t1); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background 120ms ease, transform 90ms ease; }
+.peb-pad button:active { background: var(--rule); transform: scale(0.92); }
 .peb-pad svg { width: 18px; height: 18px; }
 .peb-pad svg path { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .peb-pad .b0 { grid-area: 1 / 2; } .peb-pad .b1 { grid-area: 2 / 3; } .peb-pad .b2 { grid-area: 2 / 2; } .peb-pad .b3 { grid-area: 2 / 1; }
@@ -82,6 +80,14 @@ const CSS = `
   .peb-panel { padding: 18px; }
   .peb-field { height: 250px; }
   .peb-pad { grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(2, 48px); }
+}
+/* The card squeezed into a narrow column (a phone, while another game plays): a small tile. */
+@container (max-width: 260px) {
+  .peb-panel[data-lumo-card] { padding: 14px; }
+  .peb-panel[data-lumo-card] .peb-head { flex-direction: column-reverse; gap: 10px; margin-bottom: 14px; }
+  .peb-panel[data-lumo-card] :is(.peb-what, .peb-lines, .peb-link) { display: none; }
+  .peb-panel[data-lumo-card] .peb-art { height: 36px; align-items: center; }
+  .peb-panel[data-lumo-card] .peb-art svg { width: 24px; height: 24px; }
 }
 `;
 
@@ -140,7 +146,10 @@ export function mount(el) {
   const sig = { signal: ac.signal };
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   const release = useCss();
-  const root = h('div', 'peb');
+  const releaseFx = fx.useFx();
+  const root = h('div', 'peb lfx');
+  const timers = new Set();
+  const later = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; };
   let david; // undefined while loading, null if he hasn't played
   let mine = Number(load(KEY)) || 0;
   let stage = null;
@@ -149,8 +158,10 @@ export function mount(el) {
   let raf = 0;
   let last = 0;
   let lockUntil = 0;
-  let flashT = 0;
   let davidLine = null;
+  let mode = 'card'; // card, tut, play or done
+  let run = null; // the bus run (game_start sent, game_end not yet)
+  let sess = null;
 
   const davidText = (line) => {
     line.textContent = '';
@@ -165,15 +176,36 @@ export function mount(el) {
     .catch(() => { david = null; })
     .then(() => { if (!ac.signal.aborted && davidLine) davidText(davidLine); });
 
-  function show(node) {
+  // Every view goes through here. Anything but the card takes the stage: the
+  // other two games go back to their cards and this one moves to the top.
+  function show(node, as) {
     cancelAnimationFrame(raf);
     raf = 0;
+    timers.forEach(clearTimeout);
+    timers.clear();
     onAnswer = null;
     tick = null;
     stage = null;
     davidLine = null;
+    mode = as || 'card';
     root.textContent = '';
     root.appendChild(node);
+    el.classList.toggle('lumo-live', mode !== 'card');
+    if (mode !== 'card') {
+      fx.claim('ebbflow');
+      requestAnimationFrame(() => { if (!ac.signal.aborted && root.contains(node)) fx.reveal(el); });
+    }
+    fx.enter(node);
+  }
+  function endRun(quit, score) {
+    if (!run) return;
+    run.end(quit ? (sess ? sess.score : 0) : score, mine, quit);
+    run = null;
+  }
+  // Quit from anywhere: the X, Esc, another game starting, leaving the page.
+  function quit() {
+    endRun(true);
+    card();
   }
 
   function lines(rows) {
@@ -220,12 +252,14 @@ export function mount(el) {
     const keep = davidLine;
     // The Lumosity page lays the three cards out in a row (styles.css .lumo-games).
     panel.dataset.lumoCard = '';
+    const focused = root.contains(document.activeElement);
     show(panel);
     davidLine = keep;
+    if (focused) panel.querySelector('.peb-go').focus({ preventScroll: true });
   }
 
   // ---- The field, arrow pad and swipes, shared by the tutorial and play ----
-  function buildStage(top, hint) {
+  function buildStage(top, hint, as) {
     const wrap = h('div', 'peb-stage');
     const field = h('div', 'peb-field live');
     field.setAttribute('role', 'img');
@@ -234,11 +268,12 @@ export function mount(el) {
     sr.setAttribute('aria-live', 'polite');
     field.appendChild(layer);
     const pad = h('div', 'peb-pad');
-    DIRS.forEach((name, i) => {
+    const keys = DIRS.map((name, i) => {
       const b = button('b' + i, null, () => answer(i));
       b.setAttribute('aria-label', name);
       b.innerHTML = ARROW;
       pad.appendChild(b);
+      return b;
     });
     // A swipe on the field answers too.
     let sx = 0, sy = 0, sid = null;
@@ -257,11 +292,9 @@ export function mount(el) {
       p.append(h('span', 'g', 'Green'), ': where they point. ', h('span', 'o', 'Orange'), ': where they go.');
       wrap.appendChild(p);
     }
-    show(wrap);
-    // On a phone the field can start below the fold.
-    const r = wrap.getBoundingClientRect();
-    if (r.bottom > innerHeight || r.top < 0) wrap.scrollIntoView({ block: 'nearest', behavior: reduce.matches ? 'auto' : 'smooth' });
-    stage = { field, layer, sr, leaves: [], trial: null, W: 0, H: 0, S: 32, rot: 0 };
+    show(wrap, as);
+    stage = { field, layer, sr, keys, leaves: [], trial: null, W: 0, H: 0, S: 32, rot: 0 };
+    measure();
     last = performance.now();
     raf = requestAnimationFrame(frame);
   }
@@ -278,7 +311,6 @@ export function mount(el) {
   function setTrial(t, note) {
     const st = stage;
     st.trial = t;
-    measure();
     const S = st.S = st.W < 420 ? 36 : 46;
     const cell = S * 1.9;
     const cols = Math.max(1, Math.floor((st.W - S) / cell));
@@ -303,9 +335,7 @@ export function mount(el) {
     const desc = `${t.color === 'green' ? 'Green' : 'Orange'} leaves pointing ${DIRS[t.point]}, moving ${DIRS[t.move]}`;
     st.field.setAttribute('aria-label', desc);
     st.sr.textContent = (note ? note + '. ' : '') + desc;
-    st.layer.classList.remove('in');
-    void st.layer.offsetWidth;
-    st.layer.classList.add('in');
+    st.layer.animate(reduce.matches ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'scale(0.96)' }, { opacity: 1, transform: 'none' }], { duration: 170, easing: 'ease-out' });
     paint();
   }
 
@@ -330,20 +360,18 @@ export function mount(el) {
     if (tick) tick(dt);
   }
 
+  // Every answer lights its pad button right or wrong, whether it came from
+  // the pad, a key or a swipe; the field washes and a miss shakes it.
   function answer(dir) {
     const now = performance.now();
     if (!onAnswer || !stage || now < lockUntil) return;
     lockUntil = now + 110;
-    onAnswer(dir);
-  }
-
-  function flash(kind) {
-    const f = stage.field;
-    f.classList.remove('ok', 'no');
-    void f.offsetWidth;
-    f.classList.add(kind);
-    clearTimeout(flashT);
-    flashT = setTimeout(() => f.classList.remove(kind), 170);
+    const st = stage;
+    const ok = onAnswer(dir);
+    fx.hit(st.keys[dir], ok);
+    fx.flash(st.field, ok);
+    if (ok) fx.buzz(10);
+    else { fx.shake(st.field, 5); fx.buzz([30, 40, 30]); }
   }
 
   // ---- Tutorial: one green trial, one orange, then three mixed ----
@@ -353,14 +381,15 @@ export function mount(el) {
     { say: 'Now mixed. Get three right.', need: 3 }
   ];
   function tutorial() {
+    endRun(true);
     let i = 0, got = 0;
     const top = h('div', 'peb-bar');
     const say = h('span', 'say');
     const end = h('span', 'end');
     const step = h('span');
-    end.append(step, button('peb-link', 'Skip', () => { save(TUT_KEY, '1'); play(); }));
+    end.append(step, button('peb-link', 'Skip', () => { save(TUT_KEY, '1'); play(); }), fx.xButton('Quit', quit, ac.signal));
     top.append(say, end);
-    buildStage(top, false);
+    buildStage(top, false, 'tut');
     const trial = (prev) => {
       const st = STEPS[i];
       return nextTrial(prev, 0.15, { color: st.color || (rnd(2) ? 'green' : 'orange'), conflict: true });
@@ -374,15 +403,15 @@ export function mount(el) {
     onAnswer = (dir) => {
       const t = stage.trial;
       if (dir === want(t)) {
-        flash('ok');
         if (++got >= STEPS[i].need) { i++; got = 0; }
-        if (i >= STEPS.length) return ready();
+        if (i >= STEPS.length) { later(ready, 260); onAnswer = null; return true; }
         go();
-      } else {
-        flash('no');
-        say.textContent = t.color === 'green' ? 'Not quite. Green: the way they point.' : 'Not quite. Orange: the way they move.';
-        setTrial(nextTrial(t, 0.15, { color: t.color, conflict: true }), 'Not quite');
+        fx.pop(say, 1.06);
+        return true;
       }
+      say.textContent = t.color === 'green' ? 'Not quite. Green: the way they point.' : 'Not quite. Orange: the way they move.';
+      setTrial(nextTrial(t, 0.15, { color: t.color, conflict: true }), 'Not quite');
+      return false;
     };
     go();
   }
@@ -390,97 +419,152 @@ export function mount(el) {
   function ready() {
     save(TUT_KEY, '1');
     const panel = h('div', 'peb-panel');
+    const btns = h('div', 'peb-btns');
+    btns.append(button('peb-go', 'Start', play), button('peb-link', 'Not now', card));
     panel.append(
       header("That's the game."),
       lines([
         h('p', '', 'You get 45 seconds. Four right in a row raises your multiplier, up to x10. A miss lowers it by one.'),
         h('p', 'gap', 'Arrow keys, WASD, swipes or the buttons all work.')
       ]),
-      button('peb-go', 'Start', play)
+      btns
     );
-    show(panel);
+    show(panel, 'tut');
     panel.querySelector('.peb-go').focus({ preventScroll: true });
   }
 
   // ---- Play ----
+  // A 3-2-1 over an empty field, then 45 seconds. The clock only runs after Go.
   function play() {
+    endRun(true);
     const s = { score: 0, mult: 1, meter: 0, right: 0, total: 0, left: SECONDS };
     const top = h('div', 'peb-bar');
-    const time = h('b', '', String(SECONDS));
-    const score = h('b', '', '0');
+    const time = h('b', 'lfx-num', String(SECONDS));
+    const score = h('b', 'lfx-num', '0');
     const meter = h('span', 'peb-meter');
     for (let k = 0; k < 4; k++) meter.appendChild(h('i'));
-    const x = h('b', 'peb-x', 'x1');
+    const x = h('b', 'peb-x lfx-num', 'x1');
     const end = h('span', 'end');
-    const quit = button('peb-quit', null, card);
-    quit.setAttribute('aria-label', 'Quit');
-    quit.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-    end.append(meter, x, quit);
+    end.append(meter, x, fx.xButton('Quit', quit, ac.signal));
     const tSpan = h('span');
     tSpan.append(time, ' s');
     const sSpan = h('span');
     sSpan.append('Score ', score);
     top.append(tSpan, sSpan, end);
     meter.setAttribute('aria-hidden', 'true');
-    buildStage(top, true);
-    setTrial(nextTrial(null, 0));
+    buildStage(top, true, 'play');
+    sess = s;
+    run = fx.startRun('ebbflow');
+    const st = stage;
+    let shown = SECONDS;
 
-    const draw = () => {
-      score.textContent = fmt(s.score);
-      x.textContent = 'x' + s.mult;
-      [...meter.children].forEach((d, k) => d.classList.toggle('on', k < s.meter));
-    };
-    tick = (dt) => {
-      s.left -= dt;
-      time.textContent = String(Math.max(0, Math.ceil(s.left)));
-      if (s.left <= 0) finish(s);
-    };
-    onAnswer = (dir) => {
-      const t = stage.trial;
-      const ok = dir === want(t);
-      s.total++;
-      if (ok) {
-        s.right++;
-        s.score += 50 * s.mult;
-        if (++s.meter >= 4) { s.meter = 0; s.mult = Math.min(10, s.mult + 1); }
-        flash('ok');
-      } else {
-        s.meter = 0;
-        s.mult = Math.max(1, s.mult - 1);
-        flash('no');
-      }
-      draw();
-      setTrial(nextTrial(t, Math.min(1, s.right / 28)), ok ? 'Right' : 'Wrong');
-    };
+    const dots = [...meter.children];
+    const draw = () => dots.forEach((d, k) => d.classList.toggle('on', k < s.meter));
+    fx.countdown(st.field, later, () => {
+      setTrial(nextTrial(null, 0));
+      tick = (dt) => {
+        s.left -= dt;
+        const n = Math.max(0, Math.ceil(s.left));
+        if (n !== shown) {
+          shown = n;
+          time.textContent = String(n);
+          // The last five seconds tick red.
+          if (n <= 5) { tSpan.classList.add('low'); fx.pop(time, 1.3); }
+        }
+        if (s.left <= 0) timeUp(s);
+      };
+      onAnswer = (dir) => {
+        const t = stage.trial;
+        const ok = dir === want(t);
+        const was = s.mult;
+        s.total++;
+        if (ok) {
+          s.right++;
+          const pts = 50 * s.mult;
+          s.score += pts;
+          if (++s.meter >= 4) { s.meter = 0; s.mult = Math.min(10, s.mult + 1); }
+          fx.tally(score, s.score, { ms: 260, pop: 1.18 });
+          fx.float(st.field, st.W / 2 + (s.right % 3 - 1) * 56, 34, '+' + fmt(pts), { ms: 620 });
+          if (s.mult > was) {
+            // Multiplier up: all four dots light and pop in a wave, then empty;
+            // the new x pops in the bar and big over the field.
+            x.textContent = 'x' + s.mult;
+            fx.pop(x, 1.6);
+            fx.float(st.field, st.W / 2, st.H / 2, 'x' + s.mult, { big: true });
+            fx.ring(st.field, st.W / 2, st.H / 2, { r: 40 });
+            dots.forEach((d, k) => { d.classList.add('on'); fx.pop(d, 1.9, k * 50); });
+            later(() => { if (s.meter === 0) draw(); }, 460);
+            fx.buzz([12, 30, 12]);
+          } else {
+            draw();
+            fx.pop(dots[s.meter - 1], 1.8);
+          }
+        } else {
+          s.meter = 0;
+          s.mult = Math.max(1, s.mult - 1);
+          draw();
+          fx.shake(meter, 4);
+          if (s.mult < was) {
+            x.textContent = 'x' + s.mult;
+            x.classList.add('down');
+            fx.shake(x, 4);
+            later(() => x.classList.remove('down'), 500);
+          }
+        }
+        setTrial(nextTrial(t, Math.min(1, s.right / 28)), ok ? 'Right' : 'Wrong');
+        return ok;
+      };
+    });
+  }
+
+  // Time's up: the field stops answering, says so, then the results.
+  function timeUp(s) {
+    tick = null;
+    onAnswer = null;
+    if (stage) {
+      stage.trial = null;
+      stage.layer.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' });
+      fx.banner(stage.field, "Time's up", 900);
+    }
+    fx.buzz([20, 40, 20]);
+    later(() => finish(s), 950);
   }
 
   function finish(s) {
-    const beatMine = s.score > mine;
-    if (beatMine) { mine = s.score; save(KEY, String(mine)); }
+    const prev = mine;
+    if (s.score > mine) { mine = s.score; save(KEY, String(mine)); }
+    endRun(false, s.score);
     const d = david === undefined ? null : david;
     window.dispatchEvent(new CustomEvent('dl:lumo', { detail: { game: 'ebbflow', score: s.score, best: mine, david: d } }));
     const panel = h('div', 'peb-panel');
-    const dl = h('p');
-    davidText(dl);
-    const rows = [line('Score', fmt(s.score)), line('Correct', `${s.right} of ${s.total}`), line('Your best', fmt(mine)), dl];
-    if (d != null && s.score > d) rows.push(h('p', 'say', 'You beat David.'));
-    else if (beatMine && s.score > 0) rows.push(h('p', 'say', 'New personal best.'));
-    panel.append(header("Time's up."), lines(rows), button('peb-go', 'Play again', play));
-    show(panel);
+    const sb = fx.scoreboard({ score: s.score, prev, david: d, extra: `Correct <b>${s.right}</b> of ${s.total}` });
+    const btns = h('div', 'peb-btns');
+    btns.append(button('peb-go', 'Again', play), button('peb-link', 'Done', card));
+    panel.append(header("Time's up."), sb.el, btns);
+    show(panel, 'done');
+    sb.play(panel);
     panel.querySelector('.peb-go').focus({ preventScroll: true });
   }
 
-  // Arrow keys and WASD, only while leaves are on screen.
+  // Arrow keys and WASD, only while leaves are on screen. Esc quits, or
+  // closes the results.
   window.addEventListener('keydown', (e) => {
+    if (mode !== 'card' && fx.escFor(e)) {
+      e.preventDefault();
+      if (mode === 'done') card();
+      else quit();
+      return;
+    }
     if (!onAnswer || e.metaKey || e.ctrlKey || e.altKey) return;
-    const tg = e.target;
-    if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
+    if (fx.typing(e.target)) return;
     const d = KEYS[e.key];
     if (d == null) return;
     e.preventDefault();
     if (!e.repeat) answer(d);
   }, sig);
   window.addEventListener('resize', () => { if (stage) measure(); }, sig);
+  // Another game started: this one goes back to its card.
+  fx.onClaim('ebbflow', () => { if (mode !== 'card') quit(); }, ac.signal);
 
   const note = el.querySelector('.piece-note');
   if (note) note.remove();
@@ -488,12 +572,16 @@ export function mount(el) {
   card();
 
   return function stop() {
+    endRun(true);
     ac.abort();
     cancelAnimationFrame(raf);
-    clearTimeout(flashT);
+    timers.forEach(clearTimeout);
+    timers.clear();
     onAnswer = null;
     tick = null;
+    el.classList.remove('lumo-live');
     root.remove();
     release();
+    releaseFx();
   };
 }

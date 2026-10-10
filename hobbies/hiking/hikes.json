@@ -80,8 +80,8 @@
     {
      "video": "/media/hikes/cape-spear/01.mp4",
      "poster": "/media/hikes/cape-spear/01.webp",
-     "w": 720,
-     "h": 1280
+     "w": 432,
+     "h": 768
     },
     {
      "src": "/media/hikes/cape-spear/02.webp",
@@ -92,8 +92,8 @@
     {
      "video": "/media/hikes/cape-spear/03.mp4",
      "poster": "/media/hikes/cape-spear/03.webp",
-     "w": 720,
-     "h": 1280
+     "w": 432,
+     "h": 768
     },
     {
      "src": "/media/hikes/cape-spear/04.webp",
@@ -104,8 +104,8 @@
     {
      "video": "/media/hikes/cape-spear/05.mp4",
      "poster": "/media/hikes/cape-spear/05.webp",
-     "w": 720,
-     "h": 1280
+     "w": 432,
+     "h": 768
     },
     {
      "src": "/media/hikes/cape-spear/06.webp",
@@ -163,8 +163,8 @@
     {
      "video": "/media/hikes/bonavista/02.mp4",
      "poster": "/media/hikes/bonavista/02.webp",
-     "w": 720,
-     "h": 1280
+     "w": 432,
+     "h": 768
     },
     {
      "src": "/media/hikes/bonavista/03.webp",

@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  The share image (og.png, 1200x630). No numbers on it, so it never goes stale.
+  Redo it from the repo root:
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 --screenshot="$PWD/og.png" "file://$PWD/tools/og.html"
+  Then bump V_OG in tools/build.py so link previews fetch the new one.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>og</title>
+<style>
+  @font-face { font-family: 'Geist'; src: url('../fonts/Geist.woff2') format('woff2'); font-weight: 300 700; }
+  :root {
+    --bg: #0d0d0e;
+    --t1: rgba(255, 255, 255, 0.9);
+    --t2: rgba(255, 255, 255, 0.56);
+    --t3: rgba(255, 255, 255, 0.32);
+    --rule: rgba(255, 255, 255, 0.1);
+    --accent: #88c0d0;
+    --paper: #26241f;
+    --ink: #f1efe9;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    position: relative;
+    background: var(--bg);
+    color: var(--t1);
+    font: 400 26px/1.4 'Geist', -apple-system, sans-serif;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* A faint glow behind the head, the only colour besides the link. */
+  body::before {
+    content: '';
+    position: absolute;
+    right: -60px;
+    bottom: -120px;
+    width: 640px;
+    height: 640px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(136, 192, 208, 0.14), transparent);
+  }
+  .side { position: absolute; left: 96px; top: 92px; width: 600px; }
+  .name { margin: 0; font-size: 64px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; }
+  .what { margin: 18px 0 0; color: var(--t2); font-size: 28px; }
+  .rows { margin: 56px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--rule); }
+  .rows li { display: grid; grid-template-columns: 124px 1fr; align-items: baseline; padding: 15px 0; border-bottom: 1px solid var(--rule); }
+  .rows b { color: var(--t3); font-weight: 400; font-size: 17px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .rows span { color: var(--t1); font-size: 25px; }
+  .url { position: absolute; left: 96px; bottom: 64px; margin: 0; color: var(--accent); font-size: 26px; }
+
+  .head { position: absolute; right: 104px; bottom: 58px; width: 238px; transform: rotate(-5deg); filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.55)); }
+  .bubble {
+    position: absolute;
+    right: 92px;
+    top: 84px;
+    width: 330px;
+    padding: 22px 28px;
+    border-radius: 34px 30px 32px 36px / 30px 34px 30px 32px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 23px;
+    line-height: 1.4;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 16px 40px rgba(0, 0, 0, 0.5);
+  }
+  .bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 62%;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    background: inherit;
+    transform: translateX(-50%) rotate(45deg);
+  }
+</style>
+</head>
+<body>
+  <div class="side">
+    <p class="name">David Liu</p>
+    <p class="what">Software engineering at Western</p>
+    <ul class="rows">
+      <li><b>Build</b><span>Tethos Platform, Kunlun, this site</span></li>
+      <li><b>Lead</b><span>Tethos, free software for nonprofits</span></li>
+      <li><b>Play</b><span>Classical guitar, Muay Thai, chess</span></li>
+    </ul>
+  </div>
+  <p class="url">davidliu.work</p>
+  <div class="bubble">hey! i'm the AI version of david. come talk to me :)</div>
+  <img class="head" src="../media/head.webp" alt="">
+</body>
+</html>

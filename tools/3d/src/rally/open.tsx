@@ -15,7 +15,7 @@
 import { NeutralToneMapping } from 'three';
 import { mountCanvas } from '../lib/mountCanvas';
 import { createStore } from '../lib/store';
-import { Rally, readBest, WIN, type HudState } from './engine';
+import { Rally, readBest, readRec, WIN, type HudState } from './engine';
 import { Hud, HUD_CSS, ICONS } from './Hud';
 import { nickname } from './lines';
 import { RallyScene, type Ui } from './Scene';
@@ -92,7 +92,9 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
 
   const sound = makeSound();
   sound.unlock();
-  const hud = createStore<HudState>({ me: 0, foe: 0, rally: 0, best: readBest(), server: 'me', phase: 'intro', card: '', won: false, longest: 0, big: '', bigSub: '', help: true });
+  // The longest rally before this time on the court, so the end can tell a new one.
+  const bestBefore = readBest();
+  const hud = createStore<HudState>({ me: 0, foe: 0, rally: 0, best: bestBefore, server: 'me', phase: 'intro', card: '', won: false, longest: 0, rec: readRec(), big: '', bigSub: '', help: true });
   const g = new Rally({ sound, reduce, hud, touch, racket: nickname(o.name) });
   g.stage();
   // For poking at it from the console or a test: document.querySelector('.rl').rally
@@ -347,7 +349,11 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
       } catch {}
     }
     const decided = g.phase === 'end' || Math.max(g.score.me, g.score.foe) >= WIN;
-    tell('game_end', { game: 'rally', result: { won: decided ? g.score.me > g.score.foe : null, you: g.score.me, me: g.score.foe, longest: Math.max(g.gameBest, g.rally) } });
+    // newLongest: beat the longest rally stored before this time (a first game with any rally counts).
+    tell('game_end', {
+      game: 'rally',
+      result: { won: decided ? g.score.me > g.score.foe : null, you: g.score.me, me: g.score.foe, longest: Math.max(g.gameBest, g.rally), record: readRec(), newLongest: g.best > bestBefore }
+    });
     if (!s) return;
     lent = false;
     try {

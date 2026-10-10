@@ -6,9 +6,10 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 45, 14, 37, 43
+V_CSS, V_TALKCSS, V_JS, V_TALK = 45, 14, 38, 44
 V_TRACK = 1
-V_PIECE = 31  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 32  # bump when anything in /play/ or /3d/ changes
+V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -81,7 +82,7 @@ def page(path, title, desc, body, on, cls='', wide=False, back=None, ld=False):
   <meta property="og:url" content="https://davidliu.work{path}">
   <meta property="og:title" content="{full}">
   <meta property="og:description" content="{desc}">
-  <meta property="og:image" content="https://davidliu.work/og.png">
+  <meta property="og:image" content="https://davidliu.work/og.png?v={V_OG}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="David Liu. davidliu.work">
@@ -91,7 +92,7 @@ def page(path, title, desc, body, on, cls='', wide=False, back=None, ld=False):
   <meta name="twitter:creator" content="@davidliu8473">
   <meta name="twitter:title" content="{full}">
   <meta name="twitter:description" content="{desc}">
-  <meta name="twitter:image" content="https://davidliu.work/og.png">
+  <meta name="twitter:image" content="https://davidliu.work/og.png?v={V_OG}">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/styles.css?v={V_CSS}">
@@ -127,10 +128,15 @@ def page(path, title, desc, body, on, cls='', wide=False, back=None, ld=False):
 '''
 
 
+PAGES = []  # every page written, in order, for the sitemap
+
+
 def write(rel, html):
     p = os.path.join(REPO, rel)
     os.makedirs(os.path.dirname(p), exist_ok=True)
     open(p, 'w').write(html)
+    if rel.endswith('index.html') and rel not in PAGES:
+        PAGES.append(rel)
     print('wrote', rel)
 
 
@@ -261,7 +267,7 @@ resume += sec('projects', 'Projects', [
         'Five LLM characters cloned from real execs, with per-member memory so they remember you between visits',
         'A multi-agent dev pipeline of role-scoped Claude Code agents (build, QA, reviewer) that shipped 70+ unattended build iterations',
         'The platform around it: 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications'],
-       note=[img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 706),
+       note=[img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 702),
              '<p>Standing on the ground used to cost 15,000 sin and floor calls a second, until I baked the terrain into a grid.</p>',
              '<p class="go">' + link('/dashboard/', 'How the island works') + link('/rag/', 'The RAG service') + '</p>']),
   item('hackthenorth', [('<b>Among Us, IRL</b>', 'Sep 2026'), ('C++, ESP32-C3, ESP-NOW, PlatformIO', 'Hack the North')],
@@ -333,7 +339,7 @@ projects += proj('tethos-platform', 'Tethos Platform', '2026', 'A member portal 
   'Solo-built for 400+ members: a 2.5D multiplayer world with 875+ 3D assets, a 91-species fishing system, and five LLM characters who remember you between visits. Around it, 59 API routes and five tiers of role-based access.',
   'Next.js · React · TypeScript · Supabase · FastAPI · React Three Fiber · Colyseus',
   [link('/dashboard/', 'How the island works'), link('/rag/', 'The RAG service'), ext('https://tethos.ca', 'tethos.ca')],
-  img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 706))
+  img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 702))
 projects += proj('hackthenorth', 'Among Us, IRL', '1st, Hack the North 2026', 'Real-life Among Us on conference badges.',
   "36 hours, team of three. The badges sync peer to peer over an ESP-NOW mesh with no server or phones, and signal strength decides if you're close enough to kill. I wrote the game, the voting and the NFC task minigames.",
   'C++ · ESP32-C3 · ESP-NOW · PlatformIO',
@@ -371,7 +377,7 @@ PROJ_MORE = {
                'A multi-agent dev pipeline of role-scoped Claude Code agents (build, QA, reviewer) that shipped 70+ unattended build iterations',
                'The platform around it: 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications'],
     'story': 'Standing on the ground used to cost 15,000 sin and floor calls a second, until I baked the terrain into a grid.',
-    'shots': [['/media/work/island-overview.webp', 'Tethos Island in daylight', 1400, 706], ['/media/work/island-clearing.webp', 'A clearing on Tethos Island', 1400, 706]],
+    'shots': [['/media/work/island-overview.webp', 'Tethos Island in daylight', 1400, 702], ['/media/work/island-clearing.webp', 'A clearing on Tethos Island', 1400, 706]],
   },
   'hackthenorth': {
     'award': '1st, Best Use of Solana and Badge Hack ($2,500)',
@@ -696,6 +702,7 @@ write('brain/index.html', page('/brain/', 'Second brain', "The notes the AI vers
 for rel in ['tethos/index.html', 'dashboard/index.html', 'rag/index.html', 'kunlun/index.html', '404.html']:
     path = os.path.join(REPO, rel)
     html = open(path, encoding='utf-8').read()
+    html = re.sub(r'(https://davidliu\.work/og\.png)(\?v=\d+)?"', lambda m: f'{m.group(1)}?v={V_OG}"', html)
     html = re.sub(r'  <nav class="rail" aria-label="Pages">[\s\S]*?</nav>\n', lambda m: rail(''), html, count=1)
     html = html.replace('<span>London <span id="clock">--:--</span></span>', '<span class="where">Toronto <span id="clock">--:--</span><span id="ahead"></span></span>')
     for asset, v in [('styles.css', V_CSS), ('talk/talk.css', V_TALKCSS), ('site.js', V_JS), ('talk/talk.js', V_TALK)]:
@@ -703,3 +710,20 @@ for rel in ['tethos/index.html', 'dashboard/index.html', 'rag/index.html', 'kunl
     html = re.sub(r'\n  <script type="module" src="/track\.js\?v=\d+"></script>', '', html)
     html = html.replace('</body>', f'  <script type="module" src="/track.js?v={V_TRACK}"></script>\n</body>', 1)
     open(path, 'w', encoding='utf-8').write(html)
+
+
+# Every page above plus the hand-written case studies (404 stays out).
+def sitemap():
+    pages = PAGES + [r for r in ['tethos/index.html', 'dashboard/index.html', 'rag/index.html', 'kunlun/index.html'] if r not in PAGES]
+    def rank(rel):
+        path = '/' + rel[:-len('index.html')]
+        if path == '/': return path, '1.0'
+        if path in ('/resume/', '/projects/'): return path, '0.9'
+        if path.count('/') == 2: return path, '0.8' if path in ('/tethos/', '/dashboard/', '/rag/', '/kunlun/', '/hobbies/') else '0.6'
+        return path, '0.5'
+    urls = ''.join(f'  <url>\n    <loc>https://davidliu.work{path}</loc>\n    <priority>{pr}</priority>\n  </url>\n' for path, pr in map(rank, pages))
+    open(os.path.join(REPO, 'sitemap.xml'), 'w').write(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n')
+    print('wrote sitemap.xml,', len(pages), 'pages')
+
+
+sitemap()

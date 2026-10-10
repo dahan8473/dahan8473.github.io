@@ -101,6 +101,9 @@ const RULES = [['Guard up', 'Kick or teep'], ['Leaning', 'Hook'], ['Knee up', 'P
 const KEY = 'dl-spar';
 function saved() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
 function save(patch) { try { localStorage.setItem(KEY, JSON.stringify(Object.assign(saved(), patch))); } catch (e) {} }
+// Wins and losses against the head on this device. Draws and quits don't count.
+function record() { const r = saved().rec || {}; return { w: r.w | 0, l: r.l | 0 }; }
+const recText = (r) => `${r.w}-${r.l}`;
 
 const CSS = `
 .mt, .mt-over { --mt-a: #88c0d0; color: var(--t1); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
@@ -123,6 +126,7 @@ const CSS = `
 .mt-start .p { margin-top: 2px; color: var(--t2); }
 .mt-start .s { margin-top: 14px; color: var(--t1); }
 .mt-start .s span { margin-right: 8px; color: var(--t3); }
+.mt-start .s span.rec { margin-left: 18px; }
 /* Not a second Spar button: the gloves are that. This is stepping back in. */
 .mt-start .mt-go { margin-top: 16px; padding: 8px 20px; background: none; box-shadow: inset 0 0 0 1px var(--rule); color: var(--t1); font-weight: 400; }
 .mt-start .mt-go:hover { filter: none; background: var(--rule); }
@@ -194,6 +198,8 @@ body:has(.mt-over.solo) .dl { visibility: hidden; }
 .mt-card .s { margin-top: 10px; color: var(--t3); font-size: 13px; line-height: 1.45; }
 .mt-card .cards { display: flex; justify-content: center; gap: 14px; margin-top: 8px; color: var(--t3); font-size: 13px; font-variant-numeric: tabular-nums; }
 .mt-card .cards b { font-weight: 400; color: var(--t1); }
+.mt-card .s.rec { margin-top: 8px; font-variant-numeric: tabular-nums; }
+.mt-card .s.rec b { font-weight: 500; color: var(--t1); }
 .mt-card .row { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 14px; padding: 0; }
 .mt-card .k { color: var(--t3); font-size: 12px; line-height: 1.3; }
 /* The end card's numbers, figure over label like the page's .figs. */
@@ -404,8 +410,9 @@ export function mount(el) {
   // The last result, kept between visits.
   function showLast() {
     const last = saved().last;
+    const rec = record();
     startNote.hidden = !last;
-    if (last) startNote.innerHTML = `<span>Last spar</span>${last}`;
+    if (last) startNote.innerHTML = `<span>Last spar</span>${last}` + (rec.w + rec.l ? `<span class="rec">Your record</span>${recText(rec)}` : '');
     el.classList.toggle('mt-played', !!last);
   }
   showLast();
@@ -1135,7 +1142,7 @@ export function mount(el) {
   }
   function quitResult() {
     const tot = cards.reduce((s, c) => [s[0] + c[0], s[1] + c[1]], [0, 0]);
-    return { won: null, you: tot[0], me: tot[1], ko: false, rounds: phase === 'enter' || phase === 'learn' ? 0 : round };
+    return { won: null, you: tot[0], me: tot[1], ko: false, rounds: phase === 'enter' || phase === 'learn' ? 0 : round, record: record() };
   }
   function closeRing() {
     if (!open) return;
@@ -1334,14 +1341,16 @@ export function mount(el) {
     if (winner) { title = `${who} ${won ? 'win' : 'wins'}`; sub = `KO in round ${round}`; line = won ? L.ko : L.koYou; f = won ? 'blink' : 'sad'; last = `${who} won by KO in round ${round}.`; }
     else if (won === null) { title = 'Draw'; sub = `${tot[0]}-${tot[1]} on the cards`; line = L.draw; f = 'neutral'; last = `A draw, ${tot[0]}-${tot[1]}.`; }
     else { title = `${who} ${won ? 'win' : 'wins'}`; sub = `On points, ${hi}-${lo}`; line = won ? L.win : L.lose; f = 'happy'; last = `${who} won on points, ${hi}-${lo}.`; }
-    save({ last });
+    const rec = record();
+    if (won !== null) rec[won ? 'w' : 'l']++;
+    save({ last, rec });
     showLast();
-    endGame({ won, you: tot[0], me: tot[1], ko: !!winner, rounds: round });
+    endGame({ won, you: tot[0], me: tot[1], ko: !!winner, rounds: round, record: rec });
     setFace(f);
     const rows = cards.map((c, i) => `<span>R${i + 1} <b>${c[0]}-${c[1]}</b></span>`).join('');
     const t = total;
     const nums = `<dl class="mt-stats"><div><dt>Landed</dt><dd>${t.landed} of ${t.thrown}</dd></div><div><dt>Counters</dt><dd>${t.counters}</dd></div><div><dt>Defended</dt><dd>${t.slips + t.blocks}</dd></div></dl>`;
-    showCard('end', `<p class="h big">${title}</p><p class="p">${sub}</p>${rows ? `<div class="cards">${rows}</div>` : ''}${nums}<div class="row"><button class="mt-go" type="button" data-a="again">Again</button><button class="mt-alt" type="button" data-a="quit">Done</button></div>`);
+    showCard('end', `<p class="h big">${title}</p><p class="p">${sub}</p>${rows ? `<div class="cards">${rows}</div>` : ''}${nums}<p class="s rec">Your record against the head: <b>${recText(rec)}</b></p><div class="row"><button class="mt-go" type="button" data-a="again">Again</button><button class="mt-alt" type="button" data-a="quit">Done</button></div>`);
     speak(line, { prio: 3, hold: Infinity });
     focusGo();
   }

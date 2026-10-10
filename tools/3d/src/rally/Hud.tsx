@@ -66,7 +66,14 @@ export function Hud({ hud, ui, act, touch, reduce }: { hud: Store<HudState>; ui:
       {s.card === 'end' && <End s={s} act={act} />}
       {s.card === 'pause' && <Paused act={act} />}
       {s.card === 'how' && <How phase={s.phase} act={act} touch={touch} reduce={reduce} />}
-      <p className={'rl-wait' + (s.phase === 'intro' && !s.card ? '' : ' off')}>The head is coming over...</p>
+      <p className={'rl-wait' + (s.phase === 'intro' && !s.card ? '' : ' off')}>
+        The head is coming over...
+        {s.rec.w + s.rec.l > 0 && (
+          <small>
+            Your record against it: {s.rec.w}-{s.rec.l}
+          </small>
+        )}
+      </p>
     </div>
   );
 }
@@ -94,6 +101,9 @@ function End({ s, act }: { s: HudState; act: HudActions }) {
         </span>
         <span>
           Best ever <b>{s.best}</b>
+        </span>
+        <span>
+          Your record <b>{s.rec.w}-{s.rec.l}</b>
         </span>
       </div>
       <div className="rl-row">
@@ -371,7 +381,7 @@ body:has(.rl.solo) .dl { visibility: hidden; }
 .rl-card p { margin: 0; }
 .rl-card .h { font-size: 24px; font-weight: 500; letter-spacing: -0.015em; }
 .rl-card .p { margin-top: 2px; color: var(--t2); font-variant-numeric: tabular-nums; }
-.rl-stats { display: flex; justify-content: center; gap: 18px; margin-top: 12px; color: var(--t3); font-size: 13px; font-variant-numeric: tabular-nums; }
+.rl-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 12px; color: var(--t3); font-size: 13px; font-variant-numeric: tabular-nums; }
 .rl-stats b { font-weight: 400; color: var(--t1); }
 .rl-row { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 18px; }
 .rl-go { padding: 10px 26px; border: 0; border-radius: 999px; background: var(--rl-a); color: #0e1a1f; font: inherit; font-weight: 500; cursor: pointer; transition: transform 120ms ease, filter 120ms ease; }
@@ -415,6 +425,7 @@ body:has(.rl.solo) .dl { visibility: hidden; }
 .rl-hint { color: var(--t3); font-size: 13px; }
 .rl-wait { left: 0; right: 0; bottom: 18%; margin: 0; text-align: center; color: var(--t3); transition: opacity 300ms ease; }
 .rl-wait.off { opacity: 0; }
+.rl-wait small { display: block; margin-top: 4px; font-size: 13px; font-variant-numeric: tabular-nums; }
 .rl .p3d-note { color: var(--t2); }
 @media (max-width: 560px) {
   .rl-top { gap: 10px; padding: 6px 12px; top: max(10px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left)); transform: none; max-width: calc(100% - 174px); }

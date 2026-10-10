@@ -8,6 +8,7 @@
 // word. The brain is in _gpt.js.
 
 import { readFileSync } from 'node:fs';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { connect } from './_neuralink.js';
 import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
 import { hasSlur, maskSlurs } from './_slurs.js';
@@ -140,15 +141,51 @@ const SITE = [
   ...Object.entries(targets).map(([id, t]) => `- ${id} (${t.page}): ${t.about}`)
 ].join('\n');
 
-// Best effort per-instance limit. The monthly cap below is the real backstop.
-const hits = new Map();
-function limited(ip) {
+// Best effort per-instance limits. The monthly cap below is the real backstop.
+// Drafts (sent while they pause typing) and warm-ups get their own, so they
+// never use up anyone's messages.
+const LIMITS = { chat: 40, draft: 80, warm: 20 };
+const hits = { chat: new Map(), draft: new Map(), warm: new Map() };
+function limited(ip, kind = 'chat') {
   const t = Date.now();
-  const recent = (hits.get(ip) || []).filter((s) => t - s < 10 * 60 * 1000);
+  const seen = hits[kind];
+  const recent = (seen.get(ip) || []).filter((s) => t - s < 10 * 60 * 1000);
   recent.push(t);
-  if (hits.size > 5000) hits.clear();
-  hits.set(ip, recent);
-  return recent.length > 40;
+  if (seen.size > 5000) seen.clear();
+  seen.set(ip, recent);
+  return recent.length > LIMITS[kind];
+}
+
+// Nothing the reply waits on gets to take long. A slow read falls back to
+// what this instance already knows.
+const within = (p, ms, fallback) => Promise.race([p, new Promise((r) => setTimeout(() => r(fallback), ms))]);
+const money = { usd: 0, at: 0, reading: null, last: 0 };
+function spentNow() {
+  if (!money.reading && Date.now() - money.at > 60 * 1000) {
+    money.reading = spent().then((v) => { money.usd = v; money.at = Date.now(); }).finally(() => { money.reading = null; });
+  }
+  return money.at ? money.usd : within(money.reading.then(() => money.usd), 400, money.usd);
+}
+async function addCost(usd) {
+  money.usd += usd;
+  if (usd > 0) money.last = usd;
+  await addSpend(usd);
+}
+const memos = new Map();
+function remember(visitor) {
+  const hit = memos.get(visitor);
+  if (hit && Date.now() - hit.at < 10 * 60 * 1000) return hit.memory;
+  if (memos.size > 2000) memos.clear();
+  return within(recall(visitor).then((memory) => { memos.set(visitor, { at: Date.now(), memory }); return memory; }), 350, null);
+}
+
+// Drafts aren't saved. When they hit Enter on the same text, the page sends
+// the reply back to be saved, signed here so only a real reply gets in.
+const SIGN = 'draft:' + (process.env.OPENROUTER_API_KEY || '');
+const signed = (convo, latest, text) => createHmac('sha256', SIGN).update(`${convo}\n${latest}\n${text}`).digest('hex').slice(0, 32);
+function sameSig(a, b) {
+  const x = Buffer.from(String(a)), y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual(x, y);
 }
 
 function clean(body) {
@@ -175,19 +212,31 @@ const FILLER = /(^|[.!?]\s+|\n)(?:honestly|genuinely)[,]?\s+(?=\S)|,?\s+(?:hones
 function unfiller(text) {
   return text.replace(FILLER, (m, lead) => (lead !== undefined ? lead : ''));
 }
+// Only what could still change is held back: the word being written (a slur
+// is masked whole) and a filler word until the word after it shows up.
+const FILLER_NEAR = /,?\s*\b(?:honestly|genuinely)\b/gi;
 function fillerStream(write) {
   let buf = '', sent = 0;
-  const HOLD = 24; // a filler word plus the word after it
+  const out = (upto) => {
+    const cleaned = maskSlurs(unfiller(buf.slice(0, upto)));
+    if (cleaned.length > sent) { write(cleaned.slice(sent)); sent = cleaned.length; }
+  };
   return {
     push(t) {
       buf += t;
-      const cleaned = maskSlurs(unfiller(buf));
-      const upto = cleaned.length - HOLD;
-      if (upto > sent) { write(cleaned.slice(sent, upto)); sent = upto; }
+      let cut = Math.max(buf.lastIndexOf(' '), buf.lastIndexOf('\n')) + 1;
+      while (cut > 0 && /\s/.test(buf[cut - 1])) cut--;
+      // A filler is settled once the word after it is complete, before the cut.
+      const from = Math.max(0, buf.length - 48);
+      for (const f of buf.slice(from).matchAll(FILLER_NEAR)) {
+        if (from + f.index >= cut) break;
+        const after = buf.slice(from + f.index + f[0].length, cut);
+        if (!/^[.!]|^,\s+\S|^\s+\S+[\s.,!?]/.test(after + (cut < buf.length ? buf[cut] : ''))) { cut = Math.min(cut, from + f.index); break; }
+      }
+      out(cut);
     },
     end() {
-      const cleaned = maskSlurs(unfiller(buf));
-      if (cleaned.length > sent) write(cleaned.slice(sent));
+      out(buf.length);
       buf = ''; sent = 0;
     }
   };
@@ -315,8 +364,29 @@ async function approved() {
   learned.reading ??= approvedKnowledge()
     .then((rows) => { if (rows) learned.text = learnedText(rows); })
     .finally(() => { learned.at = Date.now(); learned.reading = null; });
-  await learned.reading;
-  return learned.text;
+  // Stale is fine while the new copy loads; only a fresh instance waits, briefly.
+  return learned.at ? learned.text : within(learned.reading.then(() => learned.text), 400, '');
+}
+
+// The page pings this once on load, so the first message doesn't pay for a
+// cold start: the instance, its caches and the connection to OpenRouter.
+async function warmUp(visitor) {
+  await Promise.all([
+    spentNow(),
+    approved(),
+    isId(visitor) ? remember(visitor) : null,
+    fetch('https://openrouter.ai/api/v1/key', { headers: { authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` }, signal: AbortSignal.timeout(1500) }).catch(() => null)
+  ]);
+}
+
+// The brain starts on the visitor's message right away, while Jev is still
+// reading it. What it writes waits here until Jev says the brain gets to answer.
+function startBrain(system, context, messages) {
+  const abort = new AbortController();
+  const run = { held: [], sink: null, wrote: false, at: Date.now(), first: 0, stop: () => abort.abort() };
+  run.done = think({ system, context, messages, signal: abort.signal, onText: (t) => { if (!run.wrote) run.first = Date.now() - run.at; run.wrote = true; if (run.sink) run.sink(t); else run.held.push(t); } });
+  run.done.catch(() => {});
+  return run;
 }
 
 function memoryLine(m) {
@@ -336,10 +406,16 @@ export default {
     if (request.method === 'OPTIONS') return preflight(cors);
     if (request.method !== 'POST') return plain('POST only', cors, 405);
     if (!ok) return plain('forbidden', cors, 403);
-    if (limited(clientIp(request))) return plain(TOO_MUCH, cors);
 
     let body;
     try { body = JSON.parse(await request.text()); } catch { return plain('bad json', cors, 400); }
+    const ip = clientIp(request);
+    if (body?.warm) {
+      if (!limited(ip, 'warm')) await warmUp(body.visitor);
+      return new Response(null, { status: 204, headers: cors });
+    }
+    const draft = body?.draft === true;
+    if (limited(ip, draft ? 'draft' : 'chat')) return draft ? plain('', cors, 429) : plain(TOO_MUCH, cors);
     const messages = clean(body);
     if (!messages) return plain('bad messages', cors, 400);
 
@@ -357,50 +433,36 @@ export default {
     const latest = messages[messages.length - 1].content;
     const note = isStageNote(latest);
 
-    const asked = note ? '' : guitarAsked(messages, page);
-    const [read, usd, memory, gread, known] = await Promise.all([
-      note ? null : readMessage(latest, messages),
-      spent(),
-      store ? recall(body.visitor) : null,
-      asked ? readGuitar(latest, asked) : null,
-      approved()
-    ]);
+    // They hit Enter on a draft: save the reply they already have.
+    if (body.commit) {
+      const { reply: said, sig } = body.commit;
+      if (!store || typeof said !== 'string' || !sameSig(sig, signed(body.convo, latest, said))) return plain('bad commit', cors, 400);
+      await saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: said, page });
+      return new Response(null, { status: 204, headers: cors });
+    }
 
+    const t0 = Date.now();
+    const took = {};
+    const timed = (k, p) => Promise.resolve(p).then((v) => { took[k] = Date.now() - t0; return v; });
+    const asked = note ? '' : guitarAsked(messages, page);
+    const reading = note ? null : timed('jev', readMessage(latest, messages));
+    const guitarRead = asked ? readGuitar(latest, asked) : null;
+    const [usd, memory, known] = await Promise.all([
+      timed('spent', spentNow()),
+      timed('memory', store ? remember(body.visitor) : null),
+      timed('known', approved())
+    ]);
+    const timing = () => ({ 'server-timing': Object.entries(took).map(([k, v]) => `${k};dur=${v}`).join(', '), 'access-control-expose-headers': 'server-timing' });
+
+    // Drafts end with a signature the page sends back if they hit Enter on it.
+    const finish = (text) => (draft && store ? `[[sig:${signed(body.convo, latest, text)}]]` : '');
     // Canned answers skip the brain entirely.
     const reply = (text) => {
-      if (store) saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: text, page });
-      return plain(text, cors);
+      if (store && !draft) saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: text, page });
+      return new Response(text + finish(text), { headers: { ...cors, ...timing(), 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } });
     };
     if (slur) return reply(SLUR);
     if (usd >= CAP) return reply(TIRED);
-    if (read?.bouncer?.noul > 0.85) return reply(BOUNCED[Math.floor(Math.random() * BOUNCED.length)]);
-    // Note and tour skip the brain, so they need a clear read. Hand moves can
-    // go on less, since the brain still writes the words.
-    const p = read?.intent?.probabilities?.[read.intent.choice] || 0;
-    const intent = p > 0.45 ? read.intent.choice : 'other';
-    if (intent === 'note' && p > 0.6) return reply(NOTE);
-    if (intent === 'tour' && p > 0.6) return reply(TOUR);
-    const game = read?.game?.choice;
-    if (intent === 'play' && p > 0.6 && PLAY[game] && read.game.probabilities[game] > 0.6) return reply(PLAY[game]);
-    const strum = asked ? guitarReply(gread, asked, latest) : '';
-    if (strum) return reply(strum);
-
-    // Fast actions go out before the brain has started, so the hand is
-    // already moving while the reply is being written.
-    let first = '';
-    let did = '';
-    const target = read?.target?.choice;
-    const sure = target && target !== 'none' && read.target.probabilities[target] > 0.8;
-    // Not the same move two turns running.
-    const lastHand = [...(Array.isArray(body.messages) ? body.messages : [])].reverse().find((m) => m?.role === 'assistant')?.content || '';
-    const fresh = (id) => typeof lastHand !== 'string' || !lastHand.includes(':' + id + ']]');
-    if (intent === 'resume' && fresh('resume-swe')) { first = '[[drag:resume-swe]] '; did = 'resume-swe'; }
-    else if ((intent === 'project' || intent === 'hobbies') && sure && onPage.includes(target) && fresh(target)) { first = `[[point:${target}]] `; did = target; }
-    const who = read?.who?.probabilities?.[read.who.choice] > 0.6 && read.who.choice !== 'unknown' ? read.who.choice : '';
-    if (who && who !== String(body.who || '')) first += `[[note:who=${who}]]`;
-    const notes = recalled(read);
-    if (notes.length) first = `[[recall:${notes.join(',')}]]` + first;
-    const titles = notes.map((id) => cortexNotes().find((n) => n.id === id)?.title).filter(Boolean);
 
     // How this turn should feel: short for short, curious before opinions.
     const prevHead = [...messages.slice(0, -1)].reverse().find((m) => m.role === 'assistant');
@@ -418,8 +480,7 @@ export default {
       flat ? "They've kept it short twice in a row: don't ask another question about this. React in a few words and let it go." : '',
       answered && !askedBack && !flat ? "They just answered your question. Don't give your own take yet: react in a few words and ask why, or ask about the specific thing they said." : ''
     ].filter(Boolean).join(' ');
-
-    const context = [
+    const contextFor = ({ who = '', did = '', titles = [] }) => [
       pace,
       `The visitor is on ${page}. Things you can point at without leaving this page: ${onPage.join(', ') || 'none'}.`,
       local ? `For the visitor it's ${local}${tz ? ` (${tz})` : ''}.` : '',
@@ -430,43 +491,77 @@ export default {
       memoryLine(memory)
     ].filter(Boolean).join(' ');
 
+    // The brain starts now, on what the page already told us. Jev can still
+    // swap in a set line (the brain is dropped) or recall a note or learn who
+    // they are (the brain starts over with that).
+    const system = `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}\n\n${cortexText()}${known ? `\n\n${known}` : ''}`;
+    const knownWho = WHO[body.who] && body.who !== 'unknown' ? body.who : '';
+    let run = startBrain(system, contextFor({ who: knownWho }), messages);
+    const drop = () => { run.stop(); addCost(money.last).catch(() => {}); };
+
+    const [read, gread] = await Promise.all([reading, guitarRead]);
+    if (read?.bouncer?.noul > 0.85) { drop(); return reply(BOUNCED[Math.floor(Math.random() * BOUNCED.length)]); }
+    // Note and tour skip the brain, so they need a clear read. Hand moves can
+    // go on less, since the brain still writes the words.
+    const p = read?.intent?.probabilities?.[read.intent.choice] || 0;
+    const intent = p > 0.45 ? read.intent.choice : 'other';
+    if (intent === 'note' && p > 0.6) { drop(); return reply(NOTE); }
+    if (intent === 'tour' && p > 0.6) { drop(); return reply(TOUR); }
+    const game = read?.game?.choice;
+    if (intent === 'play' && p > 0.6 && PLAY[game] && read.game.probabilities[game] > 0.6) { drop(); return reply(PLAY[game]); }
+    const strum = asked ? guitarReply(gread, asked, latest) : '';
+    if (strum) { drop(); return reply(strum); }
+
+    // Fast actions go out before the brain's words, so the hand is already
+    // moving while the reply is being written.
+    let first = '';
+    let did = '';
+    const target = read?.target?.choice;
+    const sure = target && target !== 'none' && read.target.probabilities[target] > 0.8;
+    // Not the same move two turns running.
+    const lastHand = [...(Array.isArray(body.messages) ? body.messages : [])].reverse().find((m) => m?.role === 'assistant')?.content || '';
+    const fresh = (id) => typeof lastHand !== 'string' || !lastHand.includes(':' + id + ']]');
+    if (intent === 'resume' && fresh('resume-swe')) { first = '[[drag:resume-swe]] '; did = 'resume-swe'; }
+    else if ((intent === 'project' || intent === 'hobbies') && sure && onPage.includes(target) && fresh(target)) { first = `[[point:${target}]] `; did = target; }
+    const who = read?.who?.probabilities?.[read.who.choice] > 0.6 && read.who.choice !== 'unknown' ? read.who.choice : '';
+    if (who && who !== String(body.who || '')) first += `[[note:who=${who}]]`;
+    const notes = recalled(read);
+    if (notes.length) first = `[[recall:${notes.join(',')}]]` + first;
+    const titles = notes.map((id) => cortexNotes().find((n) => n.id === id)?.title).filter(Boolean);
+    const redo = titles.length > 0 || (who && who !== knownWho);
+    if (redo) { drop(); run = startBrain(system, contextFor({ who, did, titles }), messages); took.redo = Date.now() - t0; }
+
     const encoder = new TextEncoder();
-    const abort = new AbortController();
     const out = new ReadableStream({
       async start(controller) {
-        let sent = false;
         let text = '';
-        const raw = (t) => { text += t; controller.enqueue(encoder.encode(t)); };
+        const raw = (t) => { if (!took.out && t.replace(/\[\[[^\]]*\]\]/g, '').trim()) took.out = Date.now() - t0; text += t; controller.enqueue(encoder.encode(t)); };
         const clean = fillerStream(raw);
-        const emit = (t) => clean.push(t);
         if (first) raw(first);
+        for (const t of run.held.splice(0)) clean.push(t);
+        run.sink = (t) => clean.push(t);
         try {
-          const { usage, refused } = await think({
-            system: `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}\n\n${cortexText()}${known ? `\n\n${known}` : ''}`,
-            context,
-            messages,
-            onText: (t) => { emit(t); sent = true; },
-            signal: abort.signal
-          });
+          const { usage, refused } = await run.done;
           const cost = costOf(usage);
-          console.log(JSON.stringify({ usage, cost, intent, who, did }));
-          if (refused && !sent) emit(DECLINED);
-          await addSpend(cost);
+          console.log(JSON.stringify({ usage, cost, intent, who, did, draft, took: { ...took, brain: run.first } }));
+          if (refused && !run.wrote) clean.push(DECLINED);
+          await addCost(cost);
         } catch (err) {
           console.error('brain', err?.status || '', err?.message || err);
-          emit((sent ? ' ' : '') + OFFLINE);
+          clean.push((run.wrote ? ' ' : '') + OFFLINE);
         }
         clean.end();
+        if (draft) { if (store) controller.enqueue(encoder.encode(finish(text))); }
         // The typewriter is seconds behind the stream, so waiting on the save
         // before closing costs the visitor nothing.
-        if (store) await saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: text, page });
+        else if (store) await saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: text, page });
         controller.close();
       },
-      cancel() { abort.abort(); }
+      cancel() { run.stop(); }
     });
 
     return new Response(out, {
-      headers: { ...cors, 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+      headers: { ...cors, ...timing(), 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
     });
   }
 };

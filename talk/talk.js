@@ -274,7 +274,7 @@
         say: 'i religiously do lumosity every morning. these are my favs',
         ask: 'think you can beat me?',
         yes: 'we will see 😈', no: 'smart. try anyway',
-        lose: 'if you wish to defeat me, you must train for another 100 years!! 😈',
+        lose: "gg!! i just play it every morning, that's my only secret",
         win: 'IMPOSSIBLE. YOU BEAT ME',
         tie: 'a tie?? ok rematch. right now',
         unset: "nice. i haven't set my score yet, so enjoy it while it lasts 😈"
@@ -677,7 +677,7 @@
   // ---- Life: mouth, sway, looking at the cursor, twitches -------------------
 
   const cursor = { x: innerWidth / 2, y: innerHeight / 2, seen: false };
-  const life = { open: 0, kick: 0, talkT: -1e9, surprise: 0, nextBlink: 0, lean: 0, leanNow: 0, spin: 0, flying: false, shy: false, sleep: false, listen: false };
+  const life = { open: 0, kick: 0, talkT: -1e9, surprise: 0, nextBlink: 0, lean: 0, leanNow: 0, spin: 0, flying: false, shy: false, sleep: false, listen: false, read: false };
 
   // Expressions swap whole morphed photos. Temporary ones fall back to rest.
   let face = 'neutral';
@@ -712,6 +712,7 @@
       if (life.shy) { rot = 13 + Math.sin(s * 40) * 0.8; tx = 5; }
       if (life.sleep) { rot = 15 + Math.sin(s * 1.4) * 2; ty = 3; }
       if (life.listen) { rot = -9 + Math.sin(s * 2.2) * 1.5; ty = -2; }
+      else if (life.read && !talking) { rot = rot * 0.5 + 5 + Math.sin(s * 3) * 0.8; ty += 2; }
       // Thrown heads spin; once it lands the spin unwinds to the nearest upright.
       if (!life.flying && life.spin) {
         const up = Math.round(life.spin / 360) * 360;
@@ -1649,6 +1650,7 @@
     S.open = true;
     S.auto = false;
     save();
+    warm();
     root.classList.add('chat');
     await goHome(420);
     showTalk();
@@ -1697,6 +1699,8 @@
   }
   function closeChat(text = LINES.close, id = 'close') {
     touring = false;
+    dropDraft();
+    life.read = false;
     chatOn = false;
     S.open = false;
     S.auto = false;
@@ -1760,6 +1764,111 @@
     try { rec.start(); } catch (e) { rec = null; }
   }
 
+  // What a message sends. A draft and the real thing build it the same way,
+  // so Enter can tell whether a draft was for exactly this.
+  function chatBody(msgs) {
+    return {
+      page: here,
+      here: Object.keys(targets).filter((id) => find(id)),
+      messages: msgs.slice(-16),
+      visitor,
+      convo: S.convo,
+      tz: TZ,
+      local: new Date().toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
+      name: knownName(),
+      who: S.who || ''
+    };
+  }
+  const draftKey = (b) => JSON.stringify([b.page, b.here, b.messages, b.name, b.who]);
+  async function* streamText(stream) {
+    const reader = stream.getReader();
+    const dec = new TextDecoder();
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) return;
+      yield dec.decode(value, { stream: true });
+    }
+  }
+
+  // Replies before Enter: when they stop typing for a moment, what they've
+  // written goes to the server as a draft. Enter on the same text picks up a
+  // reply that's already coming; typing more drops it. Drafts aren't saved.
+  const DRAFT_PAUSE = 600;
+  let draft = null;
+  let draftTimer = 0;
+  const draftable = (q) => q.length >= 3 && chatOn && !asking && !touring && !S.noting && !wants(q) &&
+    S.msgs.filter((m) => m.role === 'user' && !m.note).length < MAX_TURNS && document.visibilityState === 'visible';
+  function startDraft() {
+    const q = input.value.trim().slice(0, 500);
+    if (!draftable(q)) return;
+    const body = chatBody([...S.msgs, { role: 'user', content: q }]);
+    const key = draftKey(body);
+    if (draft && draft.key === key) return;
+    dropDraft();
+    const d = draft = { q, key, body, ctrl: new AbortController(), chunks: [], done: false, failed: false, wake: null };
+    const ping = () => { const w = d.wake; d.wake = null; if (w) w(); };
+    fetch(API + '/chat', { method: 'POST', headers: { 'content-type': 'text/plain' }, signal: d.ctrl.signal, body: JSON.stringify(Object.assign({ draft: true }, body)) })
+      .then(async (res) => {
+        if (!res.ok || !res.body) throw new Error('draft ' + res.status);
+        for await (const s of streamText(res.body)) { d.chunks.push(s); ping(); }
+      })
+      .catch(() => { d.failed = true; })
+      .finally(() => { d.done = true; ping(); });
+  }
+  function dropDraft() {
+    clearTimeout(draftTimer);
+    if (draft) { draft.ctrl.abort(); draft = null; }
+  }
+  function takeDraft(body) {
+    clearTimeout(draftTimer);
+    const d = draft;
+    draft = null;
+    if (!d) return null;
+    if (d.key !== draftKey(body) || (d.failed && !d.chunks.length)) { d.ctrl.abort(); return null; }
+    return d;
+  }
+  async function* draftText(d) {
+    for (let i = 0; ;) {
+      while (i < d.chunks.length) yield d.chunks[i++];
+      if (d.done) { if (d.failed) throw new Error('draft broke'); return; }
+      await new Promise((r) => { d.wake = r; });
+    }
+  }
+
+  // The page wakes the server on load and when the chat opens, so the first
+  // message doesn't wait on a cold start.
+  function warm() {
+    if (now() - (warm.at || -1e9) < 4 * 60 * 1000) return;
+    warm.at = now();
+    fetch(API + '/chat', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ warm: true, visitor }) }).catch(() => {});
+  }
+
+  // While they type, the head reads along: it leans in, and perks up at
+  // things it knows about.
+  const PERKS = [
+    [/\b(meow ?meow|cat|kitty|pets?)\b/, 'happy'],
+    [/\b(rally|badminton|spar|muay ?thai|chess|climb(ing)?|guitar)\b/, 'happy'],
+    [/\b(resume|cv|hiring|intern(ship)?|tethos)\b/, 'happy'],
+    [/\b(bye|gtg|gotta go|cya)\b/, 'sad']
+  ];
+  const perked = new Set();
+  function typing() {
+    const q = input.value.trim();
+    life.read = Boolean(q) && !asking;
+    if (draft && draft.q !== q.slice(0, 500)) dropDraft();
+    clearTimeout(draftTimer);
+    if (!q) { perked.clear(); return; }
+    draftTimer = setTimeout(startDraft, DRAFT_PAUSE);
+    if (sp.typing || asking || life.flying) return;
+    const t = q.toLowerCase();
+    PERKS.forEach(([re, mood], i) => {
+      if (perked.has(i) || !re.test(t)) return;
+      perked.add(i);
+      setFace(mood, 1400);
+      if (mood === 'happy') { emote('!', { hold: 700 }); life.surprise = now() + 220; }
+    });
+  }
+
   // A note is the page asking for a line on its own (the chat went quiet),
   // so nothing is echoed and it doesn't use up the visitor's turns. Notes
   // speak at pri (small talk is ambient) and stop, fetch and all, if they
@@ -1770,6 +1879,8 @@
     if (!note && S.noting) return takeNote(q, via);
     if (!note) {
       touring = false;
+      life.read = false;
+      perked.clear();
       if (giveBack) giveBack();
       choicesEl.hidden = true;
       input.value = '';
@@ -1793,9 +1904,13 @@
     save();
     const ctrl = new AbortController();
     let dead = false;
+    let stop = () => ctrl.abort();
+    const body = chatBody(S.msgs);
+    // A draft of this exact message went out while they paused: its reply is already coming.
+    const d = note ? null : takeDraft(body);
     const u = utter('', {
       id: id || (note ? 'server:note' : 'server'), pri: pri || (note ? PRI.ambient : PRI.reply), ctx: note ? undefined : null,
-      stream: true, echo: note ? '' : q, onCut: () => { dead = true; ctrl.abort(); }
+      stream: true, echo: note ? '' : q, onCut: () => { dead = true; stop(); }
     });
     emote('...', { sticky: true });
     let raw = '';
@@ -1803,30 +1918,20 @@
     handled.clear();
     const parser = makeParser(u.feed, u.act);
     try {
-      const res = await fetch(API + '/chat', {
-        method: 'POST',
-        // text/plain keeps this a simple request, so no CORS preflight.
-        headers: { 'content-type': 'text/plain' },
-        signal: ctrl.signal,
-        body: JSON.stringify({
-          page: here,
-          here: Object.keys(targets).filter((id) => find(id)),
-          messages: S.msgs.slice(-16),
-          visitor,
-          convo: S.convo,
-          tz: TZ,
-          local: new Date().toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
-          name: knownName(),
-          who: S.who || ''
-        })
-      });
-      if (!res.ok || !res.body) throw new Error('chat ' + res.status);
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        const s = dec.decode(value, { stream: true });
+      let chunks;
+      if (d) { stop = () => d.ctrl.abort(); chunks = draftText(d); }
+      else {
+        const res = await fetch(API + '/chat', {
+          method: 'POST',
+          // text/plain keeps this a simple request, so no CORS preflight.
+          headers: { 'content-type': 'text/plain' },
+          signal: ctrl.signal,
+          body: JSON.stringify(body)
+        });
+        if (!res.ok || !res.body) throw new Error('chat ' + res.status);
+        chunks = streamText(res.body);
+      }
+      for await (const s of chunks) {
         if (strip(raw).replace(/\[\[[^\]]*$/, '') === '' && strip(raw + s).replace(/\[\[[^\]]*$/, '')) emoteOff();
         raw += s;
         parser.push(s);
@@ -1838,6 +1943,13 @@
         if (!raw && note) { S.msgs = S.msgs.filter((m) => m !== mine); raw = fallback || smallLine()?.text || LINES.offline; parser.push(raw); parser.end(); }
         else if (!raw) { raw = LINES.offline; setFace('sad', 3000); parser.push(raw); parser.end(); }
       }
+    }
+    // A draft's reply ends with the server's signature; sending both back saves it like any other.
+    const signed = /\[\[sig:([0-9a-f]+)\]\]$/.exec(raw);
+    if (signed) raw = raw.slice(0, signed.index);
+    else raw = raw.replace(/\[\[sig:[^\]]*$/, '');
+    if (d && signed && !dead && !failed) {
+      fetch(API + '/chat', { method: 'POST', headers: { 'content-type': 'text/plain' }, keepalive: true, body: JSON.stringify(Object.assign({}, d.body, { commit: { reply: raw, sig: signed[1] } })) }).catch(() => {});
     }
     emoteOff();
     if (dead || u.phase === 'dropped') {
@@ -2469,6 +2581,37 @@
     setFace(best && best[0] < 600 ? 'happy' : 'sad', 2200);
     await reply(`(tapped ${lat.toFixed(1)}, ${lng.toFixed(1)} on the globe)`, text, 'answer:travel');
   }
+  // A game ended and the head is back: how it went, humble either way (David's
+  // call). Spar, chess, climbing, the guitar and Lumosity say theirs in the
+  // game, so here it's the rally, and records or bests the game didn't mention.
+  const GAME_LINES = {
+    rally: (r) => {
+      if (r.won == null) return null;
+      const close = Math.abs(r.you - r.me) <= 2;
+      const pool = r.won ? ['gg, u got me fair and square', 'ok ur good at this. gg', 'gg!! i need to practice more']
+        : close ? ['that was so close. gg', 'gg. u had me for a bit there'] : ['gg, u almost had me', 'gg. rematch whenever'];
+      let text = pick(pool);
+      if (r.newLongest && r.longest >= 8) text += `. and ${r.longest} in one rally?? new longest`;
+      else if (record(r)) text += `. ${record(r)}`;
+      return { text, mood: 'happy' };
+    },
+    spar: (r) => (r.won == null || !record(r) ? null : { text: record(r) + '. good fights', mood: 'happy' }),
+    climb: (r) => (r.sent && r.newBest ? { text: `new best!! ${(r.ms / 1000).toFixed(1)}s`, mood: 'happy' } : null)
+  };
+  // "we're 2-1 now", once there's more than one game in it.
+  function record(r) {
+    const c = r.record;
+    if (!c || (c.w || 0) + (c.l || 0) + (c.d || 0) < 2) return '';
+    return c.w === c.l ? `we're tied ${c.w}-${c.l}` : `we're ${c.w}-${c.l} now`;
+  }
+  function gameDone(d, tries = 0) {
+    const say = GAME_LINES[d.game] && d.result && GAME_LINES[d.game](d.result);
+    if (!say) return;
+    // Wait for the head to get home, and not over the next game.
+    if (lent || over.startsWith('game:')) { if (tries < 8 && !over.startsWith('game:')) setTimeout(() => gameDone(d, tries + 1), 400); return; }
+    quip(say.text, 2800, say.mood, { id: 'game:' + d.game + ':done', pri: PRI.react, ctx: null });
+  }
+
   // A Lumosity game ended (play/pinball.js, ebbflow.js, penguin.js send dl:lumo).
   function lumoDone({ game, score, david }) {
     if (here !== '/hobbies/lumosity/') return;
@@ -3205,6 +3348,9 @@
       if (sp.typing) sp.fast = true;
     });
     form.addEventListener('submit', (e) => { e.preventDefault(); ask(input.value); });
+    input.addEventListener('input', typing);
+    input.addEventListener('focus', warm);
+    input.addEventListener('blur', () => { life.read = false; });
 
     // What they open or play. Capture runs before a <details> toggles, so a
     // row that's already open is being closed.
@@ -3265,14 +3411,18 @@
     bus.on('demo_close', (d) => { if (over === 'demo:' + d.id) setContext('project:' + d.id, 'demo_close'); });
     bus.on('bring', (d) => setContext('bring:' + d.id, 'bring'));
     bus.on('game_start', (d) => {
-      if (over === 'game:' + (d.game || 'game')) return;
+      // The guitar is brought out, not a game over the page (bring sets its context).
+      if (d.game === 'guitar' || over === 'game:' + (d.game || 'game')) return;
       // A game needs the screen: the chat steps aside (chess talks through it).
       if (chatOn && !asking && d.game !== 'chess') closeChat(null);
       for (const k in PITCHES) if (PITCHES[k].page === here) pitched[k] = pageTok;
       if (GAME_ON[here]) { S.lastGame = GAME_ON[here]; save(); }
       setContext('game:' + (d.game || 'game'), 'game_start');
     });
-    bus.on('game_end', (d) => { if (over === 'game:' + d.game) setContext('', 'game_end'); });
+    bus.on('game_end', (d) => {
+      if (over === 'game:' + d.game) setContext('', 'game_end');
+      setTimeout(() => gameDone(d), 900);
+    });
 
     document.documentElement.addEventListener('mouseleave', (e) => {
       if (!fine || e.clientY > 0 || now() <= 8000 || S.once.includes('exit')) return;
@@ -3355,6 +3505,7 @@
     if (S.quiet) root.classList.add('quiet');
     if (!sound.on) root.classList.add('muted');
     if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer, tz: TZ }));
+    warm();
     const met = S.met;
     // A chat the head opened that they never answered doesn't follow them to a new page.
     if (S.open && S.auto) { S.open = false; S.auto = false; save(); }

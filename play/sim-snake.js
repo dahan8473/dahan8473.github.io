@@ -23,6 +23,7 @@ const CSS = `
 .psnk-bar button { padding: 6px 11px; border: 0; border-radius: 8px; background: var(--fill); box-shadow: inset 0 0 0 1px var(--rule); color: var(--t1); font: inherit; font-size: 13px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .psnk-bar button:hover { background: var(--rule); }
 .psnk-bar button[aria-pressed="true"] { box-shadow: inset 0 0 0 1px ${ACC}; color: var(--t1); }
+@media (pointer: coarse) { .psnk-bar button { min-height: 44px; padding: 6px 14px; } }
 .psnk-n { margin-left: auto; color: var(--t3); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 `;
 

@@ -29,6 +29,8 @@ import type { Sound } from './sound';
 export const TS = 0.85;
 export const WIN = 7;
 export const BEST_KEY = 'dl-badminton-best';
+/** Your wins and losses against the head on this device, { w, l }. */
+export const REC_KEY = 'dl-badminton-rec';
 /** Eye height. */
 export const EYE = 1.7;
 /** Where you meet it, from your body: a bit right, about an arm and a racket in front. */
@@ -46,6 +48,10 @@ const VME = 5.4;
 const SW_T = 0.3; // the head's swing: wind up, contact at half, follow through
 
 export type Who = 'me' | 'foe';
+export interface Rec {
+  w: number;
+  l: number;
+}
 export type Phase = 'intro' | 'serve' | 'rally' | 'point' | 'end';
 export type Shot = 'clear' | 'lift' | 'drop' | 'net' | 'drive' | 'smash' | 'serveHigh' | 'serveShort';
 export type SwingKind = 'over' | 'side' | 'under';
@@ -60,6 +66,7 @@ export interface HudState {
   card: '' | 'end' | 'pause' | 'how';
   won: boolean;
   longest: number;
+  rec: Rec;
   big: string;
   bigSub: string;
   help: boolean;
@@ -391,8 +398,13 @@ export class Rally {
     this.phase = 'end';
     this.timers = [];
     const won = this.score.me > this.score.foe;
+    const rec = readRec();
+    rec[won ? 'w' : 'l']++;
+    try {
+      localStorage.setItem(REC_KEY, JSON.stringify(rec));
+    } catch {}
     this.setFace(won ? 'sad' : 'happy');
-    this.hud({ card: 'end', won, longest: this.gameBest, best: this.best, phase: 'end' });
+    this.hud({ card: 'end', won, longest: this.gameBest, best: this.best, phase: 'end', rec });
     this.speak(won ? L.matchWin : L.matchLose, { prio: 3, hold: Infinity });
   }
   /** Paused under the pause card, or the how to play card. */
@@ -972,6 +984,15 @@ export function fitC(kind: SwingKind, c: number) {
   if (kind === 'over') return clamp(c, 20, 165);
   if (kind === 'under') return c > 90 ? -170 : clamp(c, -170, -10);
   return clamp(c, -60, 60);
+}
+
+export function readRec(): Rec {
+  try {
+    const r = JSON.parse(localStorage.getItem(REC_KEY) || '{}') || {};
+    return { w: Number(r.w) | 0, l: Number(r.l) | 0 };
+  } catch {
+    return { w: 0, l: 0 };
+  }
 }
 
 export function readBest() {

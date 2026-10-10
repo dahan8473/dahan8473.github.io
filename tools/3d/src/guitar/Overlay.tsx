@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { usePiece } from '../lib/mountCanvas';
 import { useNarrow } from '../lib/view';
-import { playTake, startRec, stopPlay, stopRec } from './record';
+import { GOAL, playTake, startRec, stopPlay, stopRec } from './record';
 import { CHORD_NAMES, gesture, pluck, setChord, shapeOf, strum, useGuitar, useGuitarStore, whereFor, type GuitarStore, type Seg } from './store';
 
 type Pt = { x: number; y: number; t: number };
@@ -196,6 +196,21 @@ export function Overlay() {
     }
   }, [full, ready, root]);
 
+  // Over the page, Escape while recording stops the take and keeps it. It runs
+  // before site.js's Escape (which puts the guitar away), so a take is never
+  // dropped by accident; the next Escape puts it away.
+  useEffect(() => {
+    if (!full) return;
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || store.get().rec !== 'rec') return;
+      e.preventDefault();
+      e.stopPropagation();
+      stopRec(store);
+    };
+    window.addEventListener('keydown', esc, true);
+    return () => window.removeEventListener('keydown', esc, true);
+  }, [full, store]);
+
   // Keyboard, while the guitar (or a chord button) has focus.
   useEffect(() => {
     root.tabIndex = 0;
@@ -258,6 +273,7 @@ function Rec() {
   };
   return (
     <div className={'gt-rec' + (ready ? '' : ' off')} role="group" aria-label="Recorder">
+      {(rec === 'idle' || rec === 'rec') && <Goal rec={rec} />}
       {rec === 'idle' && (
         <button type="button" className="gt-pill" onClick={go(() => startRec(store))}>
           <span className="gt-dot" aria-hidden="true" />
@@ -301,6 +317,29 @@ function Rec() {
       <p className="gt-sr" aria-live="polite">
         {rec === 'rec' ? 'Recording' : rec === 'done' ? 'Recorded ' + clock(time) : ''}
       </p>
+    </div>
+  );
+}
+
+// What makes the head cry, under the recorder: said before the first take, then
+// a meter while recording (the bar fills over the seconds, a dot per note).
+function Goal({ rec }: { rec: 'idle' | 'rec' }) {
+  const notes = useGuitar((s) => s.notes);
+  const take = useGuitar((s) => s.takeNo);
+  const time = useGuitar((s) => s.clock);
+  if (rec === 'idle') return <p className="gt-goal idle">{GOAL.ms / 1000} seconds and {GOAL.notes} notes makes the head cry</p>;
+  const met = time * 1000 >= GOAL.ms && notes >= GOAL.notes;
+  return (
+    <div className={'gt-goal' + (met ? ' met' : '')} aria-hidden="true">
+      <span className="gt-goal-t">
+        <i key={take} style={{ animationDuration: GOAL.ms + 'ms', ['--p' as string]: Math.min(1, (time * 1000) / GOAL.ms) }} />
+      </span>
+      <span className="gt-goal-n">
+        {Array.from({ length: GOAL.notes }, (_, i) => (
+          <i key={i} className={i < notes ? 'on' : ''} />
+        ))}
+      </span>
+      <span className="gt-goal-k">{met ? "that'll do it" : `${GOAL.ms / 1000}s, ${GOAL.notes} notes`}</span>
     </div>
   );
 }
@@ -430,11 +469,38 @@ export const css = `
 .p3d-guitar .gt-sep { width: 1px; height: 16px; background: var(--rule); }
 .p3d-guitar .gt-stop { flex: none; width: 10px; height: 10px; border-radius: 2px; background: currentColor; }
 .p3d-guitar .gt-play { flex: none; width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent currentColor; }
+.p3d-guitar .gt-goal {
+  position: absolute; left: 50%; top: calc(100% + 10px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; margin: 0; padding: 6px 12px; border-radius: 999px;
+  background: var(--panel); box-shadow: 0 0 0 1px var(--rule);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  color: var(--t2); font-size: 12px; line-height: 1; white-space: nowrap; pointer-events: none;
+  animation: gt-goal-in 260ms ease both;
+}
+.p3d-guitar .gt-goal.idle { padding: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; color: var(--t3); }
+.p3d-guitar .gt-goal-t { position: relative; width: 54px; height: 4px; border-radius: 2px; background: var(--fill); box-shadow: inset 0 0 0 1px var(--rule); overflow: hidden; }
+.p3d-guitar .gt-goal-t i { position: absolute; inset: 0; border-radius: inherit; background: #88c0d0; transform-origin: 0 50%; animation: gt-fill linear both; }
+.p3d-guitar .gt-goal-n { display: flex; gap: 4px; }
+.p3d-guitar .gt-goal-n i { width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--t3); transition: background 120ms ease, box-shadow 120ms ease, transform 160ms cubic-bezier(.34, 1.6, .64, 1); }
+.p3d-guitar .gt-goal-n i.on { background: #88c0d0; box-shadow: none; transform: scale(1.15); }
+.p3d-guitar .gt-goal-k { min-width: 6.4em; font-variant-numeric: tabular-nums; }
+.p3d-guitar .gt-goal.met { color: var(--t1); box-shadow: 0 0 0 1px #88c0d0; }
+@keyframes gt-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes gt-goal-in { from { opacity: 0; } }
+.p3d-guitar.narrow .gt-goal { top: auto; bottom: calc(100% + 10px); }
+@media (pointer: coarse) {
+  .p3d-guitar.gt-full .gt-bar { padding: 0 8px; }
+  .p3d-guitar.gt-full .gt-chords { max-width: 100%; }
+  .p3d-guitar.gt-full .gt-chord, .p3d-guitar.gt-full.narrow .gt-chord { flex: 1 1 0; min-width: 0; height: 44px; padding: 0 6px; }
+  .p3d-guitar.gt-full.narrow .gt-chords { width: 100%; max-width: 400px; }
+}
 .p3d-guitar .gt-sr { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .p3d-guitar.narrow .gt-rec { top: auto; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
 @media (prefers-reduced-motion: reduce) {
   .p3d-guitar.gt-full.gt-in > div:first-child { animation: none; }
   .p3d-guitar .gt-dot.live { animation: none; }
   .p3d-guitar .gt-rec { transition: none; }
+  .p3d-guitar .gt-goal { animation: none; }
+  .p3d-guitar .gt-goal-t i { animation: none; transform: scaleX(var(--p, 0)); }
 }
 `;

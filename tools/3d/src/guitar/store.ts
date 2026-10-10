@@ -107,16 +107,24 @@ export interface GuitarState {
   rec: RecState;
   /** Whole seconds on the recorder's clock. */
   clock: number;
+  /** Notes on the take being recorded, for the goal meter. */
+  notes: number;
+  /** Bumped per take, so the goal meter starts over. */
+  takeNo: number;
 }
 
 export function createGuitarStore(full = false) {
-  const store = createStore<GuitarState>({ chord: null, ready: false, armed: full, muted: false, played: 0, full, rec: 'idle', clock: 0 });
+  const store = createStore<GuitarState>({ chord: null, ready: false, armed: full, muted: false, played: 0, full, rec: 'idle', clock: 0, notes: 0, takeNo: 0 });
   return Object.assign(store, {
     refs: {
       engine: null as Engine | null,
       /** Our own context and output, so the recorder can tap what the synth plays. */
       audio: null as { ctx: AudioContext; out: GainNode } | null,
       take: null as Take | null,
+      /** Every finished take this time out: length and notes. */
+      takes: [] as { ms: number; notes: number }[],
+      /** Notes they played themselves (not playbacks). */
+      mine: 0,
       /** Timers and the playing source of the recorder, cleared together. */
       recTimers: [] as number[],
       source: null as AudioBufferSourceNode | null,
@@ -196,6 +204,7 @@ function capture(store: GuitarStore, ev: Untimed<TakeEvent>) {
   take.events.push({ ...ev, t: performance.now() - take.t0 } as TakeEvent);
   if (ev.kind !== 'chord') {
     take.notes++;
+    store.set({ notes: take.notes });
     if (take.tape && isMuted()) take.tape.gaps = true;
   }
 }
@@ -254,6 +263,7 @@ export function playStrum(store: GuitarStore, shape: (number | null)[], down: bo
 export function pluck(store: GuitarStore, s: number, velocity = 0.7, where = 0.5) {
   const f = shapeOf(store)[s] ?? null;
   capture(store, { kind: 'pluck', string: s, fret: f, chord: store.get().chord, velocity, where });
+  store.refs.mine++;
   playPluck(store, s, f, velocity, where);
 }
 
@@ -264,6 +274,7 @@ export function strum(store: GuitarStore, opts: { down?: boolean; velocity?: num
   const velocity = opts.velocity ?? 0.8;
   const shape = shapeOf(store);
   capture(store, { kind: 'strum', frets: shape.slice(), chord: store.get().chord, velocity, down });
+  store.refs.mine++;
   playStrum(store, shape, down, velocity);
 }
 

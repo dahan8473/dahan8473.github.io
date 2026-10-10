@@ -1215,7 +1215,8 @@
   // The head's bus (talk/talk.js) loads after this file.
   setTimeout(function () {
     if (!window.dlBus || !window.dlBus.on) return;
-    window.dlBus.on('game_start', function (d) { gameOn = (d && d.game) || 'game'; });
+    // A game opening takes the screen: a toast already up goes now, not when its timer runs out.
+    window.dlBus.on('game_start', function (d) { gameOn = (d && d.game) || 'game'; hideToast(); });
     window.dlBus.on('game_end', function (d) { if (!d || !gameOn || d.game === gameOn) gameOn = ''; });
     window.dlBus.on('page', function () { gameOn = ''; });
   });

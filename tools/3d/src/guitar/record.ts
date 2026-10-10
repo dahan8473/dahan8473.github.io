@@ -6,6 +6,9 @@
 import { isMuted, playPluck, playStrum, setChord, type GuitarStore, type Tape, type Take, type TakeEvent } from './store';
 
 const MAX_MS = 180000; // a take stops itself after 3 minutes
+/** A take this long with this many notes makes the head cry (talk.js, dlHead.moved). */
+export const GOAL = { ms: 3000, notes: 4 };
+export const moving = (t: { ms: number; notes: number }) => t.ms >= GOAL.ms && t.notes >= GOAL.notes;
 const TAIL_MS = 1400; // the tape keeps rolling this long after Stop, for the ring-out
 const LEAD_MS = 150; // playback starts this long before the first note
 const RING_MS = 1800; // how long the last note rings on a replay without a tape
@@ -85,7 +88,7 @@ export function startRec(store: GuitarStore) {
   store.refs.engine?.ready().catch(() => {});
   const t0 = performance.now();
   store.refs.take = { events: [], t0, ms: 0, notes: 0, chord0: store.get().chord, tape: startTape(store), buffer: null };
-  store.set({ rec: 'rec', clock: 0 });
+  store.set({ rec: 'rec', clock: 0, notes: 0, takeNo: store.get().takeNo + 1 });
   every(
     store,
     () => {
@@ -105,6 +108,7 @@ export function stopRec(store: GuitarStore) {
   take.ms = performance.now() - take.t0;
   endTape(take.tape, TAIL_MS);
   store.set({ rec: 'done', clock: Math.round(take.ms / 1000) });
+  store.refs.takes.push({ ms: Math.round(take.ms), notes: take.notes });
   store.refs.emit('dl:guitar-take', { ms: Math.round(take.ms), notes: take.notes });
 }
 
@@ -216,6 +220,26 @@ export function stopPlay(store: GuitarStore) {
   store.refs.playSeq++;
   finishPlay(store);
   store.refs.engine?.damp();
+}
+
+/**
+ * How it went, for the head (game_end): how many takes, the best one's length
+ * and notes, and whether any was enough to make it cry. A take still rolling
+ * counts as it stands. played is every note, recorded or not.
+ */
+export function summary(store: GuitarStore) {
+  const all = store.refs.takes.slice();
+  const t = store.refs.take;
+  if (t && store.get().rec === 'rec') all.push({ ms: Math.round(performance.now() - t.t0), notes: t.notes });
+  const rank = (a: { ms: number; notes: number }) => (moving(a) ? 1e9 : 0) + a.notes * 1e5 + a.ms;
+  const best = all.reduce<{ ms: number; notes: number } | null>((b, a) => (!b || rank(a) > rank(b) ? a : b), null);
+  return {
+    takes: all.length,
+    secs: best ? Math.floor(best.ms / 100) / 10 : 0,
+    notes: best ? best.notes : 0,
+    cried: all.some(moving),
+    played: store.refs.mine
+  };
 }
 
 /** Unmounting: stop everything the recorder started. */

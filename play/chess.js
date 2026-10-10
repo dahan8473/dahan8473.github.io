@@ -53,6 +53,9 @@ const CSS = `
 .cx-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 160ms ease; }
 .cx-face img.off { opacity: 0; }
 .cx-who { color: var(--t3); line-height: 1.35; }
+.cx-rec { margin-left: 10px; font-variant-numeric: tabular-nums; transition: color 300ms ease; }
+.cx-rec::before { content: '·'; margin-right: 10px; }
+.cx-rec.bump { color: var(--t1); transition: none; }
 .cx-say { color: var(--t1); line-height: 1.35; min-height: 1.35em; transition: opacity 160ms ease; }
 .cx-say.swap { opacity: 0; }
 .cx-say .dots::after { content: ''; animation: cx-dots 1.2s steps(4) infinite; }
@@ -120,6 +123,16 @@ const CSS = `
 .cx-grid .m { color: var(--t3); }
 .cx-soon { color: var(--t3); }
 
+@container (max-width: 719.98px) {
+  /* Phones: undo and new game get their own row on the left, clear of the
+     floating head docked in the bottom right corner. */
+  .cx-ctl { justify-content: flex-start; padding: 10px 0 8px; }
+  .cx-acts { flex-basis: 100%; margin-left: -10px; }
+  .cx-acts .cx-b:last-child { margin-right: 0; }
+}
+@media (pointer: coarse) {
+  .cx button.cx-b { min-height: 44px; padding: 3px 12px; }
+}
 @container (min-width: 720px) {
   .cx-wrap { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-rows: auto auto minmax(150px, 1fr) auto; grid-template-areas: "stage head" "stage ctl" "stage moves" "stage stats"; column-gap: 48px; }
   .cx-stage { align-self: start; }
@@ -598,7 +611,7 @@ export function mount(el) {
     <div class="cx-wrap">
       <div class="cx-head">
         <div class="cx-face" aria-hidden="true">${Object.keys(FACES).map((f, i) => `<img alt="" draggable="false" data-f="${f}" src="${FACES[f]}"${i ? ' class="off"' : ''}>`).join('')}</div>
-        <div><p class="cx-who">the head</p><p class="cx-say" aria-live="polite"></p></div>
+        <div><p class="cx-who">the head<span class="cx-rec" hidden></span></p><p class="cx-say" aria-live="polite"></p></div>
       </div>
       <div class="cx-stage">
         <div class="cx-board" role="img" aria-label="chess board"></div>
@@ -946,8 +959,27 @@ export function mount(el) {
   function end(outcome) {
     if (!begun) return;
     begun = false;
-    tell('game_end', { game: 'chess', result: { outcome, moves: game.history({ verbose: true }).filter((m) => m.color === you).length } });
+    const rec = record();
+    const k = { win: 'w', loss: 'l', draw: 'd' }[outcome];
+    if (k) { rec[k]++; try { localStorage.setItem(REC_KEY, JSON.stringify(rec)); } catch (e) {} showRecord(true); }
+    tell('game_end', { game: 'chess', result: { outcome, moves: game.history({ verbose: true }).filter((m) => m.color === you).length, record: rec } });
   }
+  // Your wins, losses and draws against the head on this device. Abandoned games don't count.
+  const REC_KEY = 'dl-chess-rec';
+  function record() {
+    let r = null;
+    try { r = JSON.parse(localStorage.getItem(REC_KEY)); } catch (e) {}
+    r = r || {};
+    return { w: r.w | 0, l: r.l | 0, d: r.d | 0 };
+  }
+  const recEl = $('.cx-rec');
+  function showRecord(bump) {
+    const r = record();
+    recEl.hidden = !(r.w + r.l + r.d);
+    recEl.textContent = `your record ${r.w}-${r.l}` + (r.d ? `, ${r.d} draw${r.d === 1 ? '' : 's'}` : '');
+    if (bump && !reduce) { recEl.classList.add('bump'); later(() => recEl.classList.remove('bump'), 1600); }
+  }
+  showRecord(false);
   const victimSquare = (m) => (m.isEnPassant() ? m.to[0] + m.from[1] : m.captured ? m.to : null);
 
   function render() {

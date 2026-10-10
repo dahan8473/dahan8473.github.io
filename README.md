@@ -10,7 +10,7 @@ My personal site. A floating cutout of my head lives on it. It's an AI version o
 
 - **Knows me.** It's wired into my second brain. When it pulls from a note, the bubble says what it's recalling, and that note lights up on the map at `/brain/`.
 - **Starts the conversation.** It waits for you to settle in, pops onto the page, introduces itself and asks your name.
-- **Acts before it talks.** Every message goes through Jev first. In about 100ms it knows what you want, so the hand is already moving when the reply starts typing. Say you're a recruiter and it walks you to my resume and puts the PDF next to your cursor.
+- **Acts before it talks.** Every message goes through Jev while the brain starts writing. In about 200ms it knows what you want, so the hand is already moving when the reply starts typing. Say you're a recruiter and it walks you to my resume and puts the PDF next to your cursor.
 - **Picks things up.** The hand points at things, brings them to your cursor, and carries photos and project cards around before putting them back.
 - **Eats things.** Drag anything on the page onto its face. It eats it, then tells you about it.
 - **Notices you.** Open something or stop to read it and it says something about it, once. It also reacts to inspect element, right clicks, dark mode, leaving the tab, and getting thrown across the screen.
@@ -48,7 +48,7 @@ The head talks to a few small functions on Vercel. The models all go through Ope
 
 | Model | Job |
 |---|---|
-| **Jev** (`typesafe/jev-1.13`) | Fast typed decisions. Reads every message (troll or not, what you want, which thing on the site it's about, who you are, which notes to recall), picks the head's next move while you browse, and screens public notes. About 100ms, fractions of a cent. |
+| **Jev** (`typesafe/jev-1.13`) | Fast typed decisions. Reads every message (troll or not, what you want, which thing on the site it's about, who you are, which notes to recall), picks the head's next move while you browse, and screens public notes. About 200ms, fractions of a cent. |
 | **DeepSeek V4.1 Flash** (`deepseek/deepseek-v4.1-flash`) | Writes the replies, in my voice, with reasoning off. First word in under a second, about $0.0002 a reply. |
 | **GPT-6.1 Sol** (`openai/gpt-6.1-sol`) | Backup. Takes the reply if DeepSeek errors or comes back empty. |
 
@@ -63,12 +63,18 @@ sequenceDiagram
   participant G as DeepSeek V4.1 Flash
   V->>H: "can i see your resume?"
   H->>C: the message, and what's on the page
-  C->>J: bouncer, intent, target, who
-  J-->>C: resume, recruiter (~100ms)
+  par at the same time
+    C->>J: bouncer, intent, target, who
+    C->>G: rules, site map, what it knows about me
+  end
+  J-->>C: resume, recruiter (~200ms)
   C-->>H: [[drag:resume-swe]], so the hand moves now
-  C->>G: rules, site map, what it knows about me
-  G-->>H: the reply, streamed, with stage directions
+  G-->>H: the reply, held until Jev says go, then streamed
 ```
+
+The brain doesn't wait for Jev. Both start the moment the message lands, and what the brain writes is held until Jev answers. If Jev picks a set line, the brain is dropped. If Jev recalls a note or works out who you are for the first time, the brain starts over with that in its instructions. Otherwise the reply goes straight out, so most replies start in about the time the brain takes to write its first word (around 400ms on the server).
+
+**Before you hit enter.** Stop typing for 0.6s and what you've written goes to the server as a draft, run exactly like a real message but not saved. Hit enter on the same text and the reply is already there or on its way. Keep typing and the draft is dropped. A draft's reply ends with a signature, and the page sends it back with the reply when you hit enter, so it gets saved like any other (and nobody can save a reply the server didn't write). The page also pings the server on load and when the chat opens, so the first message doesn't pay for a cold start. While you type, the head leans in to read, and perks up when you mention something it knows (Meowmeow, a game, the resume).
 
 Replies stream as plain text with stage directions inline. The page acts them out when the typewriter gets to them:
 
@@ -147,13 +153,13 @@ flowchart TD
   L1 -- no --> L2{Asking to play something?}
   L2 -- yes --> PL[Set line, game starts]
   L2 -- no --> API["POST /api/chat: page, what's on it, last 16 messages, local time, name"]
-  API --> CK["Rate limit, slur filter, monthly spend cap"]
-  CK --> J["Jev, about 100ms: troll? intent, game, target, who, which notes"]
-  J --> SET{Set line?}
-  SET -- "troll, slur, note for David, tour, play, guitar answer" --> OUT[Reply without the brain]
+  API --> CK["Rate limit, slur filter, monthly spend cap (cached, never waited on)"]
+  CK --> BOTH["Jev and the brain start together; the pace hint goes to the brain: short for short, ask why before giving a take"]
+  BOTH --> SET{"Jev: set line?"}
+  SET -- "troll, note for David, tour, play, guitar answer" --> OUT[Brain dropped, set line out]
+  SET -- "recalled a note, or new who" --> REDO[Brain starts over with that] --> HAND
   SET -- no --> HAND["Hand moves first: drag the resume, point at the project"]
-  HAND --> PACE["Pace hint: short for short, ask why before giving a take"]
-  PACE --> BR[DeepSeek streams the reply]
+  HAND --> BR[What the brain already wrote goes out, then the rest streams]
   BR --> TW[Typewriter acts out markers as it reaches them]
 ```
 
@@ -207,7 +213,7 @@ The admin portal is a private page on the Vercel domain at `/admin/<ADMIN_SLUG>`
 | `brain/` | The second brain page. `map.json` is the graph, `graph.json` the synced notes |
 | `tools/build.py` | Writes the pages (home, resume, projects, every hobby, brain, notes). Edit it, then `python3 tools/build.py` |
 | `tools/brain/sync.mjs` | Condenses my Obsidian notes into the second brain |
-| `api/chat.js` | The conversation: Jev first, then the brain, streamed |
+| `api/chat.js` | The conversation: Jev and the brain together, streamed; drafts and warm-ups |
 | `api/decide.js` | Jev picks the head's next move |
 | `api/note.js`, `api/wall.js` | Notes for me (sent to my Telegram), and the public wall |
 | `api/visit.js` | Page-view beacon |

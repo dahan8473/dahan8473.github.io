@@ -29,7 +29,8 @@ export async function think(opts) {
   const onText = (t) => { wrote = true; opts.onText(t); };
   try {
     const out = await ask({ ...opts, onText }, brainModel(), brainReasoning());
-    if (wrote) return out;
+    // Stopped on purpose (Jev picked a set line, or a draft was dropped): no fallback.
+    if (wrote || opts.signal?.aborted) return out;
     console.error('brain', brainModel(), 'came back empty');
   } catch (err) {
     if (wrote || opts.signal?.aborted) throw err;

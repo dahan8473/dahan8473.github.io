@@ -228,6 +228,9 @@ body:has(> .climb-wall.hide-dl) .dl, body:has(> .climb-wall.hide-dl) .dl * { vis
 .climb-hud.low .climb-bar i { animation: climb-blink 450ms ease-in-out infinite alternate; }
 .climb-hud.low .climb-k { color: var(--t1); }
 .climb-time { min-width: 3.6em; color: var(--t1); }
+.climb-clock { display: inline-flex; flex-direction: column; gap: 3px; font-variant-numeric: tabular-nums; }
+.climb-best { color: var(--t3); font-size: 11px; transition: opacity 400ms ease; }
+.climb-best.past { opacity: 0.45; text-decoration: line-through; }
 .climb-hud > button { padding: 7px 12px; border: 0; border-radius: 9px; background: var(--fill); color: var(--t1); font: inherit; line-height: 1; cursor: pointer; }
 .climb-hud > button:hover { background: var(--rule); }
 .climb-hud.done { display: block; width: min(380px, calc(100vw - 32px)); padding: 0; border-radius: 18px; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
@@ -324,6 +327,9 @@ export function mount(el) {
     let raf = 0;
     let dead = false;
     let sentRun = null;
+    // The time to beat this go, from earlier sends on this device.
+    const readBest = () => { try { return parseFloat(localStorage.getItem('dl-climb-best')) || null; } catch (e) { return null; } };
+    const startBest = readBest();
     // Said here, not when the head lands: getting off before it does still ends a game that started.
     try { if (window.dlBus) window.dlBus.emit('game_start', { game: 'climb' }); } catch (e) { /* fine */ }
 
@@ -412,12 +418,15 @@ export function mount(el) {
       hud.className = 'climb-hud';
       hud.innerHTML =
         '<b>V2</b><span class="climb-meter" role="meter" aria-label="Grip" aria-valuemin="0" aria-valuemax="100"><span class="climb-k">Grip</span><span class="climb-bar"><i></i></span></span>' +
-        '<span class="climb-time">0:00.0</span><span class="climb-tries">Try 1</span><button type="button" class="x">Exit</button>';
+        `<span class="climb-clock"><span class="climb-time">0:00.0</span>${toBeat ? `<span class="climb-best">best ${clock(toBeat)}</span>` : ''}</span><span class="climb-tries">Try 1</span><button type="button" class="x">Exit</button>`;
       hud.querySelector('.x').addEventListener('click', () => end(true));
-      hudBits = { meter: hud.querySelector('.climb-meter'), bar: hud.querySelector('.climb-bar i'), time: hud.querySelector('.climb-time'), tries: hud.querySelector('.climb-tries') };
+      hudBits = { meter: hud.querySelector('.climb-meter'), bar: hud.querySelector('.climb-bar i'), time: hud.querySelector('.climb-time'), tries: hud.querySelector('.climb-tries'), best: hud.querySelector('.climb-best') };
       lastTime = lastGrip = '';
+      behind = false;
     }
     let hudBits = null, lastTime = '', lastGrip = '';
+    // The best send so far, shown under the clock while climbing; it fades once you're past it.
+    let toBeat = startBest, behind = false;
 
     // ---- Layout ------------------------------------------------------------
     // Everything is in document coordinates, measured off the real page: the
@@ -800,6 +809,7 @@ export function mount(el) {
         if (best === ms) localStorage.setItem('dl-climb-best', String(Math.round(ms)));
       } catch (e) { /* no storage, no best */ }
       lastResult = sentRun = { ms, tries: S.tries, best, prior, isBest: best === ms };
+      if (best) toBeat = best;
       if (window.dlFound) window.dlFound('climb');
       hud.className = 'climb-hud done';
       hud.innerHTML = cardHTML(lastResult, false);
@@ -1180,6 +1190,7 @@ export function mount(el) {
       if (hudBits) {
         const ts = clock(S.t0 ? (S.tEnd || t) - S.t0 : 0);
         if (ts !== lastTime) { lastTime = ts; hudBits.time.textContent = ts; }
+        if (hudBits.best && !behind && S.t0 && (S.tEnd || t) - S.t0 > toBeat) { behind = true; hudBits.best.classList.add('past'); }
         const g = Math.round(S.grip);
         if (g !== lastGrip) {
           lastGrip = g;
@@ -1246,10 +1257,11 @@ export function mount(el) {
     }
     // The last send this time on the wall, else how far this go got.
     function score() {
-      let best = null;
-      try { best = parseFloat(localStorage.getItem('dl-climb-best')) || null; } catch (e) { /* no storage, no best */ }
-      if (sentRun) return { sent: true, ms: Math.round(sentRun.ms), tries: sentRun.tries, best };
-      return { sent: false, ms: S.t0 ? Math.round(now() - S.t0) : 0, tries: S.tries, best };
+      const best = readBest();
+      // Beat a send from before this go (a first ever send isn't a new best).
+      const newBest = !!(startBest && best && best < startBest);
+      if (sentRun) return { sent: true, ms: Math.round(sentRun.ms), tries: sentRun.tries, best, newBest };
+      return { sent: false, ms: S.t0 ? Math.round(now() - S.t0) : 0, tries: S.tries, best, newBest };
     }
 
     on(window, 'keydown', (e) => { if (e.key === 'Escape') end(true); }, true);

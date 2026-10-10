@@ -9,11 +9,14 @@
 //
 // The rally owns its lifecycle on the site's bus (window.dlBus, talk.js):
 // game_start once when it opens, game_end once (with the score) when it closes.
+//
+// The first time (HOW_KEY), how to play comes up once the head has landed and
+// the first serve waits for it. The ? in the corner brings it back, paused.
 import { NeutralToneMapping } from 'three';
 import { mountCanvas } from '../lib/mountCanvas';
 import { createStore } from '../lib/store';
 import { Rally, readBest, WIN, type HudState } from './engine';
-import { Hud, HUD_CSS } from './Hud';
+import { Hud, HUD_CSS, ICONS } from './Hud';
 import { nickname } from './lines';
 import { RallyScene, type Ui } from './Scene';
 import { makeSound } from './sound';
@@ -37,6 +40,7 @@ export interface RallyOptions {
 }
 
 const EASE = 'cubic-bezier(.45,.05,.25,1)';
+const HOW_KEY = 'dl-badminton-how';
 const site = (): HeadApi | null => {
   const a = (window as unknown as { dlHead?: HeadApi }).dlHead;
   return a && typeof a.flyTo === 'function' && typeof a.away === 'function' && typeof a.home === 'function' ? a : null;
@@ -46,12 +50,6 @@ const tell = (type: string, data: unknown) => {
   try {
     if (b && typeof b.emit === 'function') b.emit(type, data);
   } catch {}
-};
-
-const ICONS = {
-  on: '<svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
-  off: '<svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
-  x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>'
 };
 
 export function openRally(o: RallyOptions): (now?: boolean) => void {
@@ -69,13 +67,15 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
   // The tools live outside React so x works even when 3D can't.
   const tools = document.createElement('div');
   tools.className = 'rl-tools';
-  // Space and Enter swing while you play, so these also have keys: M and Escape.
+  // Space and Enter swing while you play, so these also have keys: ?, M and Escape.
   tools.innerHTML =
+    `<button class="rl-ic rl-how-btn" type="button" aria-label="How to play" aria-keyshortcuts="?" title="How to play (?)" hidden>${ICONS.how}</button>` +
     `<button class="rl-ic rl-snd" type="button" aria-label="Sound on or off" aria-keyshortcuts="M" title="Sound (M)">${ICONS.on}${ICONS.off}</button>` +
     `<button class="rl-ic rl-x" type="button" aria-label="Stop playing" aria-keyshortcuts="Escape" title="Stop playing (Esc)">${ICONS.x}</button>`;
   over.appendChild(tools);
   const snd = tools.querySelector('.rl-snd') as HTMLButtonElement;
   const xBtn = tools.querySelector('.rl-x') as HTMLButtonElement;
+  const howBtn = tools.querySelector('.rl-how-btn') as HTMLButtonElement;
   document.body.appendChild(over);
   const scrollWas = document.documentElement.style.overflow;
   document.documentElement.style.overflow = 'hidden';
@@ -101,6 +101,9 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
   let closed = false;
   let lent = false;
   let arrived = false;
+  let started = false;
+  // Over the end card, the how to play card goes back to it; otherwise it resumes.
+  let howFrom: HudState['card'] = '';
   const ui: Ui = {
     say: null,
     pops: null,
@@ -128,9 +131,24 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
       if (closed) return;
     } else over.classList.add('solo');
     arrived = true;
-    g.begin();
+    g.arrive();
+    howBtn.hidden = false;
     // Hide the floating one once ours has drawn in its place.
     requestAnimationFrame(() => requestAnimationFrame(() => !closed && lent && s?.away(true)));
+    let seen = false;
+    try {
+      seen = localStorage.getItem(HOW_KEY) === '1';
+    } catch {}
+    if (seen) start();
+    else hud.set({ card: 'how' });
+  }
+  function start() {
+    if (closed || started) return;
+    started = true;
+    try {
+      localStorage.setItem(HOW_KEY, '1');
+    } catch {}
+    g.begin();
   }
 
   // The cards' buttons go with the card: keep focus in the layer, not on the page.
@@ -147,13 +165,32 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
     resume: () => {
       offCard();
       g.resume();
+    },
+    howDone: () => {
+      if (closed || hud.get().card !== 'how') return;
+      sound.unlock();
+      offCard();
+      if (!started) {
+        hud.set({ card: '' });
+        start();
+      } else if (howFrom) hud.set({ card: howFrom });
+      else g.resume();
     }
+  };
+  // The ?: how to play over a paused game, or off again.
+  const howToggle = () => {
+    if (closed || !arrived) return;
+    const c = hud.get().card;
+    if (c === 'how') return act.howDone();
+    howFrom = c === 'end' ? c : '';
+    if (c) hud.set({ card: 'how' });
+    else g.pause('how');
   };
   const stop = mountCanvas(over, {
     className: 'p3d-rally',
     camera: { fov: 60, near: 0.04, far: 120, position: [0.5, 1.62, 3.9] },
     scene: <RallyScene g={g} ui={ui} model={o.model} foeModel={o.foeModel} />,
-    html: <Hud hud={hud} ui={ui} act={act} touch={touch} />,
+    html: <Hud hud={hud} ui={ui} act={act} touch={touch} reduce={reduce} />,
     canvas: {
       style: { position: 'absolute', inset: 0, touchAction: 'none' },
       onCreated: ({ gl }) => {
@@ -245,7 +282,10 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
     const press = k === ' ' || k === 'Enter';
     if (press && onButton && !playing()) return;
     if (press) took = k;
-    if (k === 'p') {
+    if (press && hud.get().card === 'how') {
+      if (!e.repeat) act.howDone();
+    } else if (k === '?') howToggle();
+    else if (k === 'p') {
       if (g.paused) act.resume();
       else g.pause();
     } else if (press || k === 'j' || k === 'k') {
@@ -292,6 +332,7 @@ export function openRally(o: RallyOptions): (now?: boolean) => void {
     sndSync();
   });
   xBtn.addEventListener('click', () => close());
+  howBtn.addEventListener('click', howToggle);
 
   // ---- Out ----------------------------------------------------------------------------
   // The floating head appears where ours is, the game ends, and it flies home.

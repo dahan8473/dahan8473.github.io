@@ -1263,7 +1263,7 @@
   };
 
   // Starting the games counts.
-  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['.rk-rally', 'rally'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
+  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['[data-spar]', 'spar'], ['.rk-rally', 'rally'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
   document.addEventListener('click', function (e) {
     if (!e.target.closest) return;
     FIND_CLICKS.forEach(function (c) { if (e.target.closest(c[0])) window.dlFound(c[1]); });

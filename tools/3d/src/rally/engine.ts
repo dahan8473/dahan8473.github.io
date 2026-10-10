@@ -57,7 +57,7 @@ export interface HudState {
   best: number;
   server: Who;
   phase: Phase;
-  card: '' | 'end' | 'pause';
+  card: '' | 'end' | 'pause' | 'how';
   won: boolean;
   longest: number;
   big: string;
@@ -282,11 +282,16 @@ export class Rally {
     Object.assign(this.sh, this.heldAt());
     this.hud({ phase: 'intro', big: '', help: true, card: '' });
   }
-  /** The head has arrived: first serve. */
-  begin() {
+  /** The head has landed on its side: ours draws in its place. */
+  arrive() {
+    if (this.foe.shown) return;
     this.foe.shown = true;
     this.foe.sqAt = this.gt;
     this.o.sound.floor(0.6);
+  }
+  /** First serve. */
+  begin() {
+    this.arrive();
     this.startGame();
   }
   startGame() {
@@ -390,11 +395,12 @@ export class Rally {
     this.hud({ card: 'end', won, longest: this.gameBest, best: this.best, phase: 'end' });
     this.speak(won ? L.matchWin : L.matchLose, { prio: 3, hold: Infinity });
   }
-  pause() {
+  /** Paused under the pause card, or the how to play card. */
+  pause(card: 'pause' | 'how' = 'pause') {
     if (this.paused || this.phase === 'end' || this.phase === 'intro') return;
     this.paused = true;
-    this.hud({ card: 'pause' });
-    this.speak(L.paused, { prio: 3, hold: Infinity });
+    this.hud({ card });
+    if (card === 'pause') this.speak(L.paused, { prio: 3, hold: Infinity });
   }
   resume() {
     if (!this.paused) return;

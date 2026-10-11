@@ -245,9 +245,9 @@
     "about": "Watercolor page: I paint with watercolor. Photos of the paintings coming"
   },
   "swimming": {
-    "page": "/hobbies/swimming/",
+    "page": "/hobbies/",
     "sel": "[data-t='swimming']",
-    "about": "Swimming page: I swim. Not written up yet, it asks visitors if they do it too"
+    "about": "Swimming, on the hobbies list (no page of its own, hovering it shows a line): one of the sports my parents forced on me. I'm a registered lifeguard"
   },
   "badminton": {
     "page": "/hobbies/badminton/",
@@ -267,7 +267,7 @@
   "speed-skating": {
     "page": "/hobbies/speed-skating/",
     "sel": "[data-t='speed-skating']",
-    "about": "Speed skating page: I speed skate. Not written up yet, it asks visitors if they do it too"
+    "about": "Speed skating page: my main sport growing up. I competed provincially and won 1st and 2nd place in various 100m, 200m, 400m and 1000m races. Trophy photos coming"
   },
   "tethos-page": {
     "page": "/tethos/",
@@ -368,10 +368,5 @@
     "page": "/hobbies/lumosity/",
     "sel": "[data-t='lumosity']",
     "about": "Lumosity page: my own versions of my three favourite Lumosity games (Pinball Recall, Ebb and Flow, Penguin Rally), each with a quick tutorial and my best score to beat"
-  },
-  "horror": {
-    "page": "/hobbies/horror/",
-    "sel": "[data-t='horror']",
-    "about": "Horror page: any genre, a love-hate thing. I like getting creeped out once in a while, just not too much"
   }
 }

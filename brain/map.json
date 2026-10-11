@@ -594,7 +594,12 @@
               "t": "Badminton"
             },
             {
-              "t": "Swimming"
+              "t": "Swimming",
+              "c": [
+                {
+                  "t": "Registered lifeguard"
+                }
+              ]
             },
             {
               "t": "Cycling",
@@ -615,7 +620,12 @@
               "t": "Hiking"
             },
             {
-              "t": "Speed skating"
+              "t": "Speed skating",
+              "c": [
+                {
+                  "t": "Competed provincially"
+                }
+              ]
             },
             {
               "t": "Watercolor"

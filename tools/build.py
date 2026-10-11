@@ -6,9 +6,9 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 45, 14, 38, 44
+V_CSS, V_TALKCSS, V_JS, V_TALK = 46, 14, 38, 44
 V_TRACK = 1
-V_PIECE = 32  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 33  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {
@@ -263,7 +263,7 @@ resume += sec('leadership', 'Leadership', [
 ])
 resume += sec('projects', 'Projects', [
   item('tethos-platform', [('<b>Tethos Platform</b>, tethos.ca', 'May 2026 – now'), ('Next.js, TypeScript, FastAPI, Supabase, React Three Fiber', '')],
-       ['Solo-built a 2.5D multiplayer world as the member portal: 875+ 3D assets, procedural terrain, a 91-species fishing system, and a dual-currency economy enforced by Postgres RPCs',
+       ['Solo-building a 2.5D world as the member portal, in development and single player for now: 875+ 3D assets, procedural terrain, a 91-species fishing system, and a dual-currency economy enforced by Postgres RPCs',
         'Five LLM characters cloned from real execs, with per-member memory so they remember you between visits',
         'A multi-agent dev pipeline of role-scoped Claude Code agents (build, QA, reviewer) that shipped 70+ unattended build iterations',
         'The platform around it: 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications'],
@@ -336,7 +336,7 @@ projects = '''      <header class="doc-head">
       <div class="projs" data-t="build">
 '''
 projects += proj('tethos-platform', 'Tethos Platform', '2026', 'A member portal you walk around as a 3D island.',
-  'Solo-built for 400+ members: a 2.5D multiplayer world with 875+ 3D assets, a 91-species fishing system, and five LLM characters who remember you between visits. Around it, 59 API routes and five tiers of role-based access.',
+  'Solo-built for 400+ members: a 2.5D world (in development, single player for now) with 875+ 3D assets, a 91-species fishing system, and five LLM characters who remember you between visits. Around it, 59 API routes and five tiers of role-based access.',
   'Next.js · React · TypeScript · Supabase · FastAPI · React Three Fiber · Colyseus',
   [link('/dashboard/', 'How the island works'), link('/rag/', 'The RAG service'), ext('https://tethos.ca', 'tethos.ca')],
   img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 702))
@@ -372,7 +372,7 @@ projects += '      </div>\n\n'
 # /play/sim-<name>.js (or 'compare' for a before and after slider).
 PROJ_MORE = {
   'tethos-platform': {
-    'points': ['A 2.5D multiplayer world as the member portal: 875+ 3D assets, procedural terrain, a 91-species fishing system, and a dual-currency economy enforced by Postgres RPCs',
+    'points': ['A 2.5D world as the member portal, in development and single player for now: 875+ 3D assets, procedural terrain, a 91-species fishing system, and a dual-currency economy enforced by Postgres RPCs',
                'Five LLM characters cloned from real execs, with per-member memory so they remember you between visits',
                'A multi-agent dev pipeline of role-scoped Claude Code agents (build, QA, reviewer) that shipped 70+ unattended build iterations',
                'The platform around it: 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications'],
@@ -451,15 +451,20 @@ GROUPS = [
     ('travel', 'Travel', 'China, Europe, Canada coast to coast, the US, Seoul.', None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
     ('lumosity', 'Lumosity', 'Every morning, religiously. Play my three favourites and try to beat me.', None),
-  ], [('chess', 'Chess'), ('video', 'Video production'), ('horror', 'Horror')]),
+  ], [('chess', 'Chess'), ('video', 'Video production')]),
   ('Soul', [
     ('meowmeow', 'Meowmeow', 'My cat. Always chudding around.', '/media/life/meowmeow-sleep.webp'),
     ('guitar', 'Classical guitar', 'Competed nationally, played Carnegie Hall. Four recordings.', None),
     ('photography', 'Photography', 'Fujifilm X-T200 and Sony A7R II.', None),
   ], [('watercolor', 'Watercolor')]),
 ]
+# Small ones with no page: hovering (or tapping) the name shows a picture, once
+# there is one, and a line. (src or None, line)
+TIPS = {
+  'swimming': (None, "One of the sports my parents forced on me. I'm a registered lifeguard."),
+}
 # Page order, for previous and next.
-HOBBIES = [h[:2] for _, rows, more in GROUPS for h in rows + more]
+HOBBIES = [h[:2] for _, rows, more in GROUPS for h in rows + more if h[0] not in TIPS]
 DT = {'muay-thai': 'muaythai'}
 
 hob = '''      <header class="doc-head">
@@ -495,7 +500,13 @@ for label, rows, more in GROUPS:
             pic += f'<span class="hob-gloves" data-3d="gloves" data-v="{V_PIECE}"></span>'
         hob += f'            <a class="hob-card" href="/hobbies/{slug}/" data-t="{DT.get(slug, slug)}">{pic}<span class="hob-name">{name}<span class="hob-go" aria-hidden="true">&#8594;</span></span><span class="hob-line">{line}</span></a>\n'
     hob += '          </div>\n'
-    links = ''.join(f'<a class="ln" href="/hobbies/{slug}/" data-t="{slug}">{name}</a>' for slug, name in more)
+    def also(slug, name):
+        if slug not in TIPS:
+            return f'<a class="ln" href="/hobbies/{slug}/" data-t="{slug}">{name}</a>'
+        src, line = TIPS[slug]
+        pic = f'<img src="{src}" alt="" loading="lazy" decoding="async">' if src else ''
+        return f'<span class="ln hob-tip" tabindex="0" data-t="{slug}">{name}<span class="hob-tip-card" role="tooltip">{pic}<span>{line}</span></span></span>'
+    links = ''.join(also(slug, name) for slug, name in more)
     hob += f'          <p class="hob-more"><span>Also</span><span class="go">{links}</span></p>\n        </section>\n'
 hob += '      </div>\n'
 write('hobbies/index.html', page('/hobbies/', 'Hobbies', 'What David Liu does outside of work: his cat, travel, classical guitar, photography, fashion, Muay Thai, rock climbing and more.', hob, 'hobbies', cls='hobbies'))
@@ -573,8 +584,6 @@ hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, bec
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched') + '      <button class="spar-glove" type="button" data-spar aria-label="Spar with the head"><img src="/media/muaythai/gloves-btn.webp" alt="" width="112" height="120"><span>Spar</span></button>\n')
 hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V2 right now. Climb this page with me if you want.", [
 ], shot=piece('play', 'climbing', 'Loading the wall...') + PLAY_NOW('climb', 'Climb'))
-hobby('swimming', 'Swimming', 'I swim.', [
-], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/swimming/photos.json'))
 hobby('badminton', 'Badminton', "Badminton was my main sport all through high school!"
       '</p>\n        <p class="tagline">My school had a very competitive team, and I played doubles at regional and provincial school competitions. Over the years I\'ve hoarded various expensive rackets. These four are my favourites.'
       '</p>\n        <p class="tagline">Click one for a closer look, and give me a rally!', [
@@ -589,7 +598,7 @@ hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a
 ''' + piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
-hobby('speed-skating', 'Speed skating', 'I speed skate. This is my trophy case.', [
+hobby('speed-skating', 'Speed skating', 'Speed skating was my main sport growing up. I competed provincially, and won 1st and 2nd place in various 100m, 200m, 400m and 1000m races.', [
 ], shot=piece('play', 'trophycase', 'Digging out photos rn.', src='/hobbies/speed-skating/trophies.json'))
 hobby('chess', 'Chess', "I played competitively all through elementary school, until guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
   ('The story', [
@@ -597,7 +606,7 @@ hobby('chess', 'Chess', "I played competitively all through elementary school, u
     ('Then guitar', '<p>Eventually I had to pick one to focus on, and it was <a href="/hobbies/guitar/">classical guitar</a>.</p>'),
     ('Now', '<p>I still play online and solve puzzles. <a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">My chess.com</a>, and live stats are next to the board below.</p>'),
   ], None),
-], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('1766', 'My puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
+], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('<span data-live="puzzles">1840</span>', 'My best puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity.", [
   ('The habit', [
@@ -606,7 +615,6 @@ hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every 
     ('These three', "<p>Pinball Recall, Ebb and Flow and Penguin Rally are the three I think I'm best at, so I made my own versions. Quick tutorial, then try to beat my best.</p>"),
   ], None),
 ], after='      <div class="lumo-games">\n' + piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...') + '      </div>\n')
-hobby('horror', 'Horror', "Any genre. It's a love-hate thing: I like getting creeped out once in a while, just not too much.", [])
 hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
   ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),

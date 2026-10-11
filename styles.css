@@ -439,6 +439,14 @@ a.row:hover .m { transform: translateX(3px); }
 .hob-card:focus-visible .hob-pic { outline: 2px solid rgb(var(--tint)); outline-offset: 3px; }
 .hob-more { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--rule); }
 .hob-more > span:first-child { color: var(--t3); }
+/* Small hobbies with no page: a card on hover, or on tap (focus). */
+.hob-tip { position: relative; cursor: default; text-decoration: underline dotted var(--t3); text-underline-offset: 3px; outline: none; }
+.hob-tip-card { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 10px); width: 220px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); color: var(--fg); font-size: 13px; line-height: 1.45; white-space: normal; opacity: 0; transform: translate(-50%, 6px); transition: opacity 0.18s ease, transform 0.18s ease; pointer-events: none; }
+.hob-tip-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin-bottom: 10px; border-radius: 8px; }
+.hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card { opacity: 1; transform: translate(-50%, 0); }
+.hob-tip:hover, .hob-tip:focus { color: var(--t1); }
+@media (max-width: 640px) { .hob-tip-card { left: 0; transform: translate(0, 6px); } .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .hob-tip-card { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .hob-pic, .hob-pic img, .hob-go { transition: none; } }
 .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .cats img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 12px; background: var(--fill); }

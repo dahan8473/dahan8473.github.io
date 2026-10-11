@@ -1445,6 +1445,9 @@ export function mount(el) {
     const url = d ? d.url : site === 'lichess' ? `https://lichess.org/@/${encodeURIComponent(user)}` : `https://www.chess.com/member/${encodeURIComponent(user)}`;
     const top = `<div class="cx-st-top"><span>stats</span>${user ? `<a class="out" href="${esc(url)}" target="_blank" rel="noopener">${esc(d ? d.name : user)} on ${site}</a>` : ''}</div>`;
     if (!d || !d.rows.length) { statsEl.innerHTML = top + `<p class="cx-soon">${esc(note || 'no rated games yet')}</p>`; return; }
+    // The page's own puzzle figure follows the live number.
+    const pz = d.rows.find((r) => r.k === 'puzzles');
+    if (pz && pz.best) document.querySelectorAll('[data-live="puzzles"]').forEach((el) => { el.textContent = pz.best; });
     const dot = '<span class="m">·</span>';
     const cell = (v, cls) => (v == null || v === '' ? dot : `<span class="${cls}">${esc(v)}</span>`);
     let g = '<span class="h"></span><span class="h">now</span><span class="h">best</span><span class="h">w / l / d</span>';

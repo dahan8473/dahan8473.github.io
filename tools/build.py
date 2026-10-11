@@ -152,7 +152,7 @@ def link(href, text):
 
 home = '''      <section class="hello" data-t="now">
         <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
-        <p>I run <em>Tethos</em>, a nonprofit where 150+ student developers have built free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
+        <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers have built free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
         <p><em>But I'm a lot more than my technical skills.</em> I'm a person of whimsy, ambition and out-of-the-box ideas. The things I suggest always get people giggling, or saying out loud, “how did you even think of something like that?”</p>
         <p>Since this is my personal website, I wanted it to feel like me, packed with little bits of fun that reward you the more you explore. Click around, drag things, and talk to the floating head in the corner, an AI version of me wired into <a class="ln" href="/brain/">my second brain</a>. But most of all,</p>
         <p><em>stay curious.</em></p>
@@ -173,7 +173,7 @@ home = '''      <section class="hello" data-t="now">
         <a class="ln out" href="https://x.com/davidliu8473" aria-label="X">X</a>
       </p>
 '''
-write('index.html', page('/', 'David Liu', 'Software engineering at Western. Founder of Tethos, a nonprofit where 150+ student developers have built free software for nonprofits. 16 months as a software engineering intern at J.D. Power.', home, 'home', cls='home', ld=True))
+write('index.html', page('/', 'David Liu', 'Software engineering at Western. Founder of Tethos, a nonprofit where 250+ student developers have built free software for nonprofits. 16 months as a software engineering intern at J.D. Power.', home, 'home', cls='home', ld=True))
 
 
 # ---- Resume -----------------------------------------------------------------
@@ -251,7 +251,7 @@ resume += sec('experience', 'Experience', [
 ])
 resume += sec('leadership', 'Leadership', [
   item('tethos', [('<b>Tethos</b>', 'May 2024 – now'), ('Founder and President', 'London, ON')],
-       ["Solo-founded Western's largest student-run tech organization, now a federally incorporated nonprofit: 150+ student developers and a 250+ person team over the years, with chapters at Western and UBC",
+       ["Solo-founded Western's largest student-run tech organization, now a federally incorporated nonprofit: 250+ student developers, an 80+ person exec team, and chapters at Western and UBC",
         'Delivered 20+ pro-bono projects for nonprofits including World Vision, the Canadian Red Cross and the London Children\'s Museum, saving partners $500,000+',
         '<span data-t="genesis">Produced GENESIS, London\'s largest student demo day: 260+ attendees, 7 project demos, 8 sponsors and $12,000 raised</span>'],
        note=[img('/media/work/tethos-team.webp', 'The Tethos team in front of a Western University building', 1400, 934),

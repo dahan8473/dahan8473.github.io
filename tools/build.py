@@ -579,7 +579,9 @@ hobby('badminton', 'Badminton', "Badminton was my main sport all through high sc
       '</p>\n        <p class="tagline">My school had a very competitive team, and I played doubles at regional and provincial school competitions. Over the years I\'ve hoarded various expensive rackets. These four are my favourites.'
       '</p>\n        <p class="tagline">Click one for a closer look, and give me a rally!', [
 ], shot=piece('3d', 'racket', 'Loading the rackets...') + PLAY_NOW('rally', 'Rally me'))
-hobby('cycling', 'Cycling', "I picked up my bike second hand at the start of September and fell in love with cycling. I ride to school and back every day, and go on long rides whenever I can.", [
+hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a $20 bike from Facebook Marketplace, because transit in London, Ontario is just too horrible. The bus takes 40 minutes, and it's always 20 minutes late."
+      '</p>\n        <p class="tagline">Since getting that $20 bike I became obsessed. Then, doomscrolling Marketplace again, I saw a really nice bike. Like, reaalllyy nice. The only problem: it was in Detroit, a 2 hour drive away.'
+      "</p>\n        <p class=\"tagline\">I kept thinking about it for a week. After trying to lowball the guy and going back and forth, I locked in the offer, rented a car and drove over to buy it. It's one of the best decisions I've made. That bike is so fun to ride, and I've been biking to school every day and going on long rides ever since.", [
 ], shot='''      <figure class="case-shot natural">
         <img src="/media/cycling/me-and-the-bike.webp" alt="David standing with his matte black track bike at night, outside Alumni Hall at Western" width="1500" height="1265">
         <figcaption>Outside Alumni Hall at Western</figcaption>

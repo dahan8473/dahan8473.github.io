@@ -597,7 +597,12 @@
               "t": "Swimming"
             },
             {
-              "t": "Cycling"
+              "t": "Cycling",
+              "c": [
+                {
+                  "t": "Drove to Detroit for a bike"
+                }
+              ]
             },
             {
               "t": "Video production",

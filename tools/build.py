@@ -8,7 +8,7 @@ import json, os, re, sys
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 46, 14, 38, 44
 V_TRACK = 1
-V_PIECE = 33  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 34  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {
@@ -152,7 +152,7 @@ def link(href, text):
 
 home = '''      <section class="hello" data-t="now">
         <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
-        <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers build free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
+        <p>I run <em>Tethos</em>, a nonprofit where 150+ student developers have built free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
         <p><em>But I'm a lot more than my technical skills.</em> I'm a person of whimsy, ambition and out-of-the-box ideas. The things I suggest always get people giggling, or saying out loud, “how did you even think of something like that?”</p>
         <p>Since this is my personal website, I wanted it to feel like me, packed with little bits of fun that reward you the more you explore. Click around, drag things, and talk to the floating head in the corner, an AI version of me wired into <a class="ln" href="/brain/">my second brain</a>. But most of all,</p>
         <p><em>stay curious.</em></p>
@@ -173,7 +173,7 @@ home = '''      <section class="hello" data-t="now">
         <a class="ln out" href="https://x.com/davidliu8473" aria-label="X">X</a>
       </p>
 '''
-write('index.html', page('/', 'David Liu', 'Software engineering at Western. Founder of Tethos, a nonprofit where 250+ student developers build free software for nonprofits. 16 months as a software engineering intern at J.D. Power.', home, 'home', cls='home', ld=True))
+write('index.html', page('/', 'David Liu', 'Software engineering at Western. Founder of Tethos, a nonprofit where 150+ student developers have built free software for nonprofits. 16 months as a software engineering intern at J.D. Power.', home, 'home', cls='home', ld=True))
 
 
 # ---- Resume -----------------------------------------------------------------
@@ -251,7 +251,7 @@ resume += sec('experience', 'Experience', [
 ])
 resume += sec('leadership', 'Leadership', [
   item('tethos', [('<b>Tethos</b>', 'May 2024 – now'), ('Founder and President', 'London, ON')],
-       ["Solo-founded Western's largest student-run tech organization, now a federally incorporated nonprofit: 250+ student developers, an 80+ person exec team, and chapters at Western and UBC",
+       ["Solo-founded Western's largest student-run tech organization, now a federally incorporated nonprofit: 150+ student developers and a 250+ person team over the years, with chapters at Western and UBC",
         'Delivered 20+ pro-bono projects for nonprofits including World Vision, the Canadian Red Cross and the London Children\'s Museum, saving partners $500,000+',
         '<span data-t="genesis">Produced GENESIS, London\'s largest student demo day: 260+ attendees, 7 project demos, 8 sponsors and $12,000 raised</span>'],
        note=[img('/media/work/tethos-team.webp', 'The Tethos team in front of a Western University building', 1400, 934),
@@ -336,7 +336,7 @@ projects = '''      <header class="doc-head">
       <div class="projs" data-t="build">
 '''
 projects += proj('tethos-platform', 'Tethos Platform', '2026', 'A member portal you walk around as a 3D island.',
-  'Solo-built for 400+ members: a 2.5D world (in development, single player for now) with 875+ 3D assets, a 91-species fishing system, and five LLM characters who remember you between visits. Around it, 59 API routes and five tiers of role-based access.',
+  'Solo-built for Tethos members: a 2.5D world (in development, single player for now) with 875+ 3D assets, a 91-species fishing system, and five LLM characters who remember you between visits. Around it, 59 API routes and five tiers of role-based access.',
   'Next.js · React · TypeScript · Supabase · FastAPI · React Three Fiber · Colyseus',
   [link('/dashboard/', 'How the island works'), link('/rag/', 'The RAG service'), ext('https://tethos.ca', 'tethos.ca')],
   img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 702))
@@ -595,7 +595,7 @@ hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a
         <img src="/media/cycling/me-and-the-bike.webp" alt="David standing with his matte black track bike at night, outside Alumni Hall at Western" width="1500" height="1265">
         <figcaption>Outside Alumni Hall at Western</figcaption>
       </figure>
-''' + piece('3d', 'bike', 'Loading the bike...'))
+''' + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/cycling/photos.json') + piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'Speed skating was my main sport growing up. I competed provincially, and won 1st and 2nd place in various 100m, 200m, 400m and 1000m races.', [
@@ -615,7 +615,9 @@ hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every 
     ('These three', "<p>Pinball Recall, Ebb and Flow and Penguin Rally are the three I think I'm best at, so I made my own versions. Quick tutorial, then try to beat my best.</p>"),
   ], None),
 ], after='      <div class="lumo-games">\n' + piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...') + '      </div>\n')
-hobby('watercolor', 'Watercolor', 'I paint with watercolor.', [], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/watercolor/photos.json'))
+hobby('watercolor', 'Watercolor', "I paint with watercolor."
+      '</p>\n        <p class="tagline">Move over it, or drag it on your phone, to tilt the paper.', [
+], shot=piece('3d', 'painting', 'Loading the painting...', src='/media/watercolor/koi-pond.webp'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
   ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),
 ], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/photography/footage.json'))

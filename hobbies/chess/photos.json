@@ -1,1 +1,14 @@
-{ "_how": "Chess photos and clips. Put files under /media/chess/. src for photos, video + poster for clips. alt required, caption optional.", "photos": [] }
+{
+  "_how": "Chess photos and clips. Put files under /media/chess/. src for photos, video + poster for clips. alt required, caption optional.",
+  "photos": [
+    {
+      "src": "/media/chess/with-friends.webp",
+      "alt": "A friend in a pink jersey thinking over a wooden chess board",
+      "caption": "Chess with friends"
+    },
+    {
+      "src": "/media/chess/outside.webp",
+      "alt": "An outdoor game on a green roll-up board, seen from David's side"
+    }
+  ]
+}

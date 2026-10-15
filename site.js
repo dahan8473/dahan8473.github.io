@@ -211,7 +211,7 @@
   // the corner: write a note, then click the spot on the wall to stick it.
   var when = new Intl.DateTimeFormat('en-CA', { month: 'short', day: 'numeric' });
   // The wall in its own units; it scales to fit, and scrolls sideways on phones.
-  var VW = 1200, VH = 780, NS = 184;
+  var VW = 1200, VH = 780, NS = 150;
   var WELCOME = { id: 'welcome', message: 'hi! leave me a note. say hi, or tell me something cool :)', name: 'david', pinned: true, x: 0.03, y: 0.05 };
   function seed(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return function () { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }; }
   function sticky(n) {
@@ -222,13 +222,15 @@
     n.tilt = n.pinned ? -1.5 : n.tilt != null ? n.tilt : (rnd() * 2 - 1) * 4;
     // Old notes without a spot get a steady one from their text.
     if (n.x == null || n.y == null) { n.x = 0.05 + rnd() * 0.8; n.y = 0.08 + rnd() * 0.84; }
+    // Its paper colour, steady from its text (the welcome note is yellow).
+    b.className += ' c' + (n.pinned ? 0 : Math.floor(rnd() * 5));
     b._note = n;
     var msg = document.createElement('span');
     msg.className = 'msg';
     msg.textContent = n.message;
     var by = document.createElement('span');
     by.className = 'by';
-    by.textContent = (n.name || 'Anonymous') + (n.at ? ' · ' + when.format(new Date(n.at)) : '');
+    by.textContent = (n.name || 'anon') + (n.at ? ' · ' + when.format(new Date(n.at)) : '');
     b.append(msg, by);
     b.setAttribute('aria-label', 'Note from ' + (n.name || 'Anonymous') + ': ' + n.message);
     return b;

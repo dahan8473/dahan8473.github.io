@@ -246,7 +246,7 @@ a.row:hover .m { transform: translateX(3px); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .board-wrap { margin: 0 -14px; overflow-x: auto; overflow-y: hidden; border-radius: 16px; scrollbar-width: none; }
 .board-wrap::-webkit-scrollbar { display: none; }
-.board { position: relative; border-radius: 16px; background: var(--fill); }
+.board { position: relative; border-radius: 16px; background-color: var(--fill); background-image: radial-gradient(var(--rule) 1.2px, transparent 1.3px); background-size: 24px 24px; background-position: 12px 12px; }
 .board.placing { cursor: crosshair; }
 .wall-write { display: none; }
 .write-btn { padding: 0; border: 0; background: none; color: var(--t1); font: inherit; cursor: pointer; }
@@ -259,38 +259,52 @@ a.row:hover .m { transform: translateX(3px); }
   top: 0;
   display: flex;
   flex-direction: column;
-  width: var(--note, 176px);
-  height: var(--note, 176px);
-  padding: calc(var(--note, 176px) * 0.09);
+  width: var(--note, 150px);
+  height: var(--note, 150px);
+  padding: calc(var(--note, 150px) * 0.11) calc(var(--note, 150px) * 0.1) calc(var(--note, 150px) * 0.09);
   border: 0;
-  border-radius: 12px;
-  background: var(--panel);
-  box-shadow: 0 0 0 1px var(--rule), 0 1px 2px rgba(0, 0, 0, 0.04);
-  color: var(--t1);
+  border-radius: 3px 3px 10px 3px;
+  background: var(--paper, #fbf1c2);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06), 0 10px 18px -12px rgba(0, 0, 0, 0.45);
+  color: rgba(0, 0, 0, 0.82);
   font: inherit;
+  font-size: 0.86em;
   text-align: left;
   transform: translate(var(--x), var(--y)) rotate(var(--r));
-  transition: box-shadow 200ms ease, transform 300ms cubic-bezier(.2, .8, .2, 1);
+  transition: box-shadow 220ms ease, transform 300ms cubic-bezier(.2, .8, .2, 1);
   cursor: pointer;
 }
+/* Paper colours, soft in light mode, deeper in dark. A strip of tape on top. */
+.sticky.c0 { --paper: #fbf1c2; } .sticky.c1 { --paper: #dbf0df; } .sticky.c2 { --paper: #d9e9f6; } .sticky.c3 { --paper: #f8e0d3; } .sticky.c4 { --paper: #e8e0f4; }
+[data-theme="dark"] .sticky { color: rgba(255, 255, 255, 0.9); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 12px 22px -12px rgba(0, 0, 0, 0.8); }
+[data-theme="dark"] .sticky.c0 { --paper: #4a4329; } [data-theme="dark"] .sticky.c1 { --paper: #2b4233; } [data-theme="dark"] .sticky.c2 { --paper: #283c50; } [data-theme="dark"] .sticky.c3 { --paper: #4b3226; } [data-theme="dark"] .sticky.c4 { --paper: #3a3150; }
+.sticky::before { content: ''; position: absolute; top: -7px; left: 50%; width: 42%; height: 15px; margin-left: -21%; background: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04); transform: rotate(-2deg); pointer-events: none; }
+[data-theme="dark"] .sticky::before { background: rgba(255, 255, 255, 0.16); box-shadow: none; }
+.sticky.lifted::before { display: none; }
 .sticky .msg { flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; max-height: calc(1.45em * 5); line-height: 1.45; overflow-wrap: anywhere; }
-.sticky .by { margin-top: auto; padding-top: 8px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sticky:hover, .sticky:focus-visible { box-shadow: 0 0 0 1px var(--t3), 0 1px 2px rgba(0, 0, 0, 0.04); z-index: 40; }
+.sticky .by { margin-top: auto; padding-top: 8px; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Hover: it lifts off the wall and straightens up. */
+.sticky:hover, .sticky:focus-visible { transform: translate(var(--x), var(--y)) rotate(0deg) scale(1.06); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06), 0 22px 30px -16px rgba(0, 0, 0, 0.5); z-index: 40; outline: none; }
+.sticky:focus-visible { box-shadow: 0 0 0 2px #88c0d0, 0 22px 30px -16px rgba(0, 0, 0, 0.5); }
 .sticky.ghost { z-index: 60; pointer-events: none; transition: none; box-shadow: 0 0 0 1px var(--t3), 0 18px 40px -18px rgba(0, 0, 0, 0.35); }
 .sticky.pending { opacity: 0.6; }
 .sticky.pinned .msg { -webkit-line-clamp: 4; max-height: calc(1.45em * 4); padding-right: 14px; }
-.sticky.pinned::after { content: ''; position: absolute; top: 14px; right: 14px; width: 14px; height: 14px; background: var(--t3); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; }
+.sticky.pinned::after { content: ''; position: absolute; top: 12px; right: 10px; width: 13px; height: 13px; background: currentColor; opacity: 0.45; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; }
 
 /* The pad in the corner: a small stack of blank notes and a pen. */
 .pad { position: absolute; top: calc(22px * var(--s, 1)); right: calc(22px * var(--s, 1)); width: calc(var(--note, 176px) * 0.85); height: calc(var(--note, 176px) * 0.85); padding: 0; border: 0; background: none; color: var(--t2); font: inherit; cursor: pointer; z-index: 45; }
-.pad-sheet { position: absolute; inset: 0; border-radius: 12px; background: var(--panel); box-shadow: 0 0 0 1px var(--rule); }
+.pad-sheet { position: absolute; inset: 0; border-radius: 3px 3px 10px 3px; background: #fbf1c2; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06), 0 8px 14px -10px rgba(0, 0, 0, 0.4); }
+.pad { color: rgba(0, 0, 0, 0.6); }
+.pad:hover, .pad:focus-visible { color: rgba(0, 0, 0, 0.86); }
+[data-theme="dark"] .pad-sheet { background: #4a4329; }
+[data-theme="dark"] .pad { color: rgba(255, 255, 255, 0.7); }
+[data-theme="dark"] .pad:hover, [data-theme="dark"] .pad:focus-visible { color: #fff; }
 .pad-sheet:nth-child(1) { transform: translate(6px, 6px); }
 .pad-sheet:nth-child(2) { transform: translate(3px, 3px); }
 .pad-sheet.top { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 16px; text-align: left; transition: transform 300ms cubic-bezier(.2, .8, .2, 1), box-shadow 200ms ease; }
 .pad svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .pad-label { line-height: 1.35; }
-.pad:hover, .pad:focus-visible { color: var(--t1); }
-.pad:hover .pad-sheet.top, .pad:focus-visible .pad-sheet.top { transform: translate(-2px, -2px); box-shadow: 0 0 0 1px var(--t3); }
+.pad:hover .pad-sheet.top, .pad:focus-visible .pad-sheet.top { transform: translate(-3px, -3px) rotate(-1.5deg); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06), 0 16px 22px -12px rgba(0, 0, 0, 0.45); }
 
 /* Lifted: a note brought into focus, or one being written. */
 .lift-dim { position: fixed; inset: 0; z-index: 80; background: rgba(0, 0, 0, 0.18); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; transition: opacity 260ms ease; }

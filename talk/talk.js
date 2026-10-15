@@ -1699,6 +1699,12 @@
     openFor();
     await greet();
   }
+  // Phones: typing into the page (Messages, the note pad) tucks the chat away
+  // so it isn't sitting on top of the box they're typing in.
+  document.addEventListener('focusin', (e) => {
+    const t = e.target;
+    if (innerWidth < 641 && chatOn && t && !root.contains(t) && t.matches('input, textarea')) closeChat(null);
+  });
   function closeChat(text = LINES.close, id = 'close') {
     touring = false;
     dropDraft();
@@ -3500,7 +3506,8 @@
     wave();
     if (is404()) return lost();
     await wait(350);
-    if (!chatOn) intro();
+    // Phones on the Messages page: the composer sits where the chat would open.
+    if (!chatOn && !(innerWidth < 641 && here === '/messages/')) intro();
   }
 
   function start() {

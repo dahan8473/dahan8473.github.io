@@ -311,8 +311,8 @@
 .dl-echo[hidden] + .dl-text::before {
   content: '';
   float: right;
-  width: 30px;
-  height: 1em;
+  width: 40px;
+  height: 1.2em;
 }
 .dl-text.clip { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 1.5em); mask-image: linear-gradient(to bottom, transparent, #000 1.5em); }
 .dl-text a { color: inherit; text-decoration-color: var(--talk-accent); }
@@ -426,8 +426,11 @@
 
 .dl-fine a { color: inherit; }
 .dl-fine {
+  align-self: flex-start;
   margin: 0;
-  padding-left: 16px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--talk-paper);
   color: var(--muted);
   font-size: 11px;
 }

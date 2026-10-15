@@ -15,15 +15,15 @@
 :root {
   --bg: #fbfbfd;
   --t1: rgba(0, 0, 0, 0.86);
-  --t2: rgba(0, 0, 0, 0.54);
-  --t3: rgba(0, 0, 0, 0.32);
+  --t2: rgba(0, 0, 0, 0.66);
+  --t3: rgba(0, 0, 0, 0.55); /* lightest text still reads at 4.5:1 */
   --rule: rgba(0, 0, 0, 0.08);
   --fill: rgba(0, 0, 0, 0.04);
 
   --strong: #1d1d1f;
   --fg: #3a3a3c;
-  --muted: #86868b;
-  --label: #86868b;
+  --muted: #6e6e73;
+  --label: #6e6e73;
 
   --label-col: 120px;
   --panel: rgba(255, 255, 255, 0.92);
@@ -31,15 +31,15 @@
 [data-theme="dark"] {
   --bg: #0d0d0e;
   --t1: rgba(255, 255, 255, 0.9);
-  --t2: rgba(255, 255, 255, 0.56);
-  --t3: rgba(255, 255, 255, 0.32);
+  --t2: rgba(255, 255, 255, 0.64);
+  --t3: rgba(255, 255, 255, 0.48); /* lightest text still reads at 4.5:1 */
   --rule: rgba(255, 255, 255, 0.1);
   --fill: rgba(255, 255, 255, 0.06);
 
   --strong: #f5f5f7;
   --fg: #d2d2d7;
-  --muted: #86868b;
-  --label: #86868b;
+  --muted: #98989d;
+  --label: #98989d;
   --panel: rgba(28, 28, 30, 0.92);
 }
 

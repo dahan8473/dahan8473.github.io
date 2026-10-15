@@ -1,7 +1,10 @@
 // Page-view beacon: the site sends one of these per page load.
 
-import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
+import { corsFor, preflight, plain, isId, clientIp, limiter } from './_http.js';
 import { trackVisit } from './_store.js';
+
+// A page view a few seconds, plenty for a real visit, per IP and instance.
+const limited = limiter(120, 10 * 60 * 1000);
 
 const BOTS = /bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit|embedly/i;
 
@@ -11,6 +14,7 @@ export default {
     if (request.method === 'OPTIONS') return preflight(headers);
     if (request.method !== 'POST') return plain('POST only', headers, 405);
     if (!ok) return plain('forbidden', headers, 403);
+    if (limited(clientIp(request))) return new Response(null, { status: 204, headers });
 
     let body;
     try { body = JSON.parse(await request.text()); } catch { return plain('bad json', headers, 400); }

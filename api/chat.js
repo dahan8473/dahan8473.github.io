@@ -14,6 +14,7 @@ import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
 import { hasSlur, maskSlurs } from './_slurs.js';
 import { saveChat, spent, addSpend, recall, approvedKnowledge } from './_store.js';
 import { think, costOf, PRICE } from './_gpt.js';
+import { waitUntil } from '@vercel/functions';
 import { decide, choice, noul } from './_jev.js';
 import { cortexNotes, cortexText } from './_cortex.js';
 
@@ -390,7 +391,7 @@ function startBrain(system, context, messages) {
   // The long system prompt is cached; about 4 characters a token.
   const chars = messages.reduce((n, m) => n + m.content.length, context.length);
   run.prepaid = ((system.length / 4) * PRICE.cached + (chars / 4) * PRICE.input) / 1e6;
-  addCost(run.prepaid).catch(() => {});
+  waitUntil(addCost(run.prepaid).catch(() => {}));
   run.done = think({ system, context, messages, signal: abort.signal, onText: (t) => { if (!run.wrote) run.first = Date.now() - run.at; run.wrote = true; if (run.sink) run.sink(t); else run.held.push(t); } });
   run.done.catch(() => {});
   return run;
@@ -468,7 +469,8 @@ export default {
     const finish = (text) => (draft && store ? `[[sig:${signed(body.convo, latest, text)}]]` : '');
     // Canned answers skip the brain entirely.
     const reply = (text) => {
-      if (store && !draft) saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: text, page });
+      // Saved after the response goes out, without the function freezing first.
+      if (store && !draft) waitUntil(saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: text, page }).catch(() => {}));
       return new Response(text + finish(text), { headers: { ...cors, ...timing(), 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } });
     };
     if (slur) return reply(SLUR);

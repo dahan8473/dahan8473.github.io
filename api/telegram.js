@@ -2,6 +2,7 @@
 // lands in that visitor's thread on /messages/. Only his chat, and only with
 // the secret Telegram sends with every update (TELEGRAM_WEBHOOK_SECRET).
 
+import { same } from './_auth.js';
 import { addMessage, messageByTelegram, recentVisitors } from './_store.js';
 import { tell, react } from './_notify.js';
 
@@ -11,11 +12,11 @@ export default {
   async fetch(request) {
     if (request.method !== 'POST') return new Response('POST only', { status: 405 });
     const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
-    if (!secret || request.headers.get('x-telegram-bot-api-secret-token') !== secret) return new Response('forbidden', { status: 403 });
+    if (!secret || !same(request.headers.get('x-telegram-bot-api-secret-token') || '', secret)) return new Response('forbidden', { status: 403 });
 
     let update;
     try { update = await request.json(); } catch { return done(); }
-    const msg = update.message;
+    const msg = update && update.message;
     if (!msg || String(msg.chat?.id) !== String(process.env.TELEGRAM_CHAT_ID) || typeof msg.text !== 'string') return done();
 
     // /visitors [n]: who's been on the site lately.

@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 46, 14, 38, 44
+V_CSS, V_TALKCSS, V_JS, V_TALK = 47, 15, 38, 45
 V_TRACK = 1
 V_PIECE = 34  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -117,6 +117,7 @@ def page(path, title, desc, body, on, cls='', wide=False, back=None, ld=False):
 
     <footer class="foot">
       <span>&copy; 2026 David Liu</span>
+      <a class="ln" href="/privacy/">Privacy</a>
     </footer>
   </div>
 
@@ -340,7 +341,7 @@ projects += proj('tethos-platform', 'Tethos Platform', '2026', 'A member portal 
   'Next.js · React · TypeScript · Supabase · FastAPI · React Three Fiber · Colyseus',
   [link('/dashboard/', 'How the island works'), link('/rag/', 'The RAG service'), ext('https://tethos.ca', 'tethos.ca')],
   img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 702))
-projects += proj('hackthenorth', 'Among Us, IRL', '1st, Hack the North 2026', 'Real-life Among Us on conference badges.',
+projects += proj('hackthenorth', 'Among Us, IRL', 'Solana and Badge Hack winner, Hack the North 2026', 'Real-life Among Us on conference badges.',
   "36 hours, team of three. The badges sync peer to peer over an ESP-NOW mesh with no server or phones, and signal strength decides if you're close enough to kill. I wrote the game, the voting and the NFC task minigames.",
   'C++ · ESP32-C3 · ESP-NOW · PlatformIO',
   [ext('https://github.com/dahan8473/htn-amongus', 'GitHub'), ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost')],
@@ -434,7 +435,7 @@ projects += '        </ul>\n      </section>\n'
 proj_data = {t: {**PROJ_BASE[t], **PROJ_MORE.get(t, {})} for t in PROJ_BASE}
 projects += '      <script type="application/json" id="proj-data">' + json.dumps(proj_data, ensure_ascii=False).replace('</', '<\\/') + '</script>\n'
 projects += f'      <div data-play="projects" data-v="{V_PIECE}" hidden></div>\n'
-write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Platform, Among Us IRL (1st at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
+write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Platform, Among Us IRL (a category win at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
 
 
 # ---- Hobbies ------------------------------------------------------------------
@@ -690,6 +691,49 @@ messages = '''      <h1 class="sr">Messages</h1>
       </section>
       <p class="imsg-note">This goes straight to my phone. When I reply, it shows up here and the head tells you. Rather email? <a class="ln" href="mailto:davidliu8473@gmail.com" aria-label="Email">davidliu8473@gmail.com</a></p>
 '''
+# ---- Privacy -----------------------------------------------------------------
+
+privacy = '''      <header class="doc-head">
+        <div>
+          <h1>Privacy</h1>
+          <p class="hint">What this site keeps about you, and why. Plain version.</p>
+        </div>
+      </header>
+
+      <div class="legal">
+        <section>
+          <h2>When you visit</h2>
+          <p>Your browser gets a random id, so the head can remember you next time. With it I keep the pages you open and when, where you came from, your browser, your time zone, and a rough location (city, region, country) worked out from your IP address. The IP address itself is kept too.</p>
+          <p>The site also notes how it gets used: clicks, scrolling, time on a page, which games get played. That's how I find out what's fun and what's broken.</p>
+        </section>
+        <section>
+          <h2>When you talk to the head</h2>
+          <p>Chats are saved so the real me can read them. If you tell it things about yourself (your name, what you do, why you're here), it remembers them for your next visit.</p>
+          <p>To write its replies, your messages go to AI models through OpenRouter, only to hosts that don't train on what they're sent. A small model called Jev reads each message first to catch spam and abuse.</p>
+        </section>
+        <section>
+          <h2>Notes and messages</h2>
+          <p>Notes on the wall are public once a check lets them through. Private notes and anything you send on the Messages page go to my phone through Telegram, with whatever contact you leave, so I can reply.</p>
+        </section>
+        <section>
+          <h2>The camera</h2>
+          <p>If you ask the head to rate you and allow the camera, the picture stays in your browser for a few seconds. Nothing is recorded or sent anywhere.</p>
+        </section>
+        <section>
+          <h2>What I don't do</h2>
+          <p>No ads, no selling anything to anyone, no third-party trackers or analytics cookies. Only I see this, through a private dashboard.</p>
+        </section>
+        <section>
+          <h2>Turning it off, and deleting it</h2>
+          <p>Turn on Do Not Track or Global Privacy Control in your browser and the site stops logging your page views and how you use it. Chats you have with the head are still saved, since that's how I read them.</p>
+          <p>Want everything about you deleted? Email <a class="ln" href="mailto:davidliu8473@gmail.com">davidliu8473@gmail.com</a> with your visitor id and I'll remove it. <span class="vid-line">Yours is <code id="my-visitor">not set yet</code>.</span></p>
+          <script>try { var v = localStorage.getItem('dl-visitor'); if (v) document.getElementById('my-visitor').textContent = v; } catch (e) {}</script>
+        </section>
+        <p class="t3">Where it lives: the site is on GitHub Pages, the head runs on Vercel, and the data is stored in Supabase. Last updated October 2026.</p>
+      </div>
+'''
+write('privacy/index.html', page('/privacy/', 'Privacy', 'What davidliu.work keeps about visitors, and why.', privacy, '', cls='privacy'))
+
 write('messages/index.html', page('/messages/', 'Messages', 'Message David Liu directly. It goes to his phone, and his replies show up here.', messages, 'messages', cls='messages'))
 
 

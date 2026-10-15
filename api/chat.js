@@ -13,7 +13,7 @@ import { connect } from './_neuralink.js';
 import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
 import { hasSlur, maskSlurs } from './_slurs.js';
 import { saveChat, spent, addSpend, recall, approvedKnowledge } from './_store.js';
-import { think, costOf } from './_gpt.js';
+import { think, costOf, PRICE } from './_gpt.js';
 import { decide, choice, noul } from './_jev.js';
 import { cortexNotes, cortexText } from './_cortex.js';
 
@@ -385,6 +385,12 @@ async function warmUp(visitor) {
 function startBrain(system, context, messages) {
   const abort = new AbortController();
   const run = { held: [], sink: null, wrote: false, at: Date.now(), first: 0, stop: () => abort.abort() };
+  // Charged up front: the input is billed even if the visitor's tab drops the
+  // stream before the end, so a cut-off reply still counts toward the cap.
+  // The long system prompt is cached; about 4 characters a token.
+  const chars = messages.reduce((n, m) => n + m.content.length, context.length);
+  run.prepaid = ((system.length / 4) * PRICE.cached + (chars / 4) * PRICE.input) / 1e6;
+  addCost(run.prepaid).catch(() => {});
   run.done = think({ system, context, messages, signal: abort.signal, onText: (t) => { if (!run.wrote) run.first = Date.now() - run.at; run.wrote = true; if (run.sink) run.sink(t); else run.held.push(t); } });
   run.done.catch(() => {});
   return run;
@@ -447,6 +453,9 @@ export default {
     const timed = (k, p) => Promise.resolve(p).then((v) => { took[k] = Date.now() - t0; return v; });
     const asked = note ? '' : guitarAsked(messages, page);
     const reading = note ? null : timed('jev', readMessage(latest, messages));
+    // Anyone can type "(stage note: ...)" into the box, so page notes still go
+    // past the bouncer; only its verdict is used for them.
+    const noteRead = note ? readMessage(latest, messages).catch(() => null) : null;
     const guitarRead = asked ? readGuitar(latest, asked) : null;
     const [usd, memory, known] = await Promise.all([
       timed('spent', spentNow()),
@@ -498,10 +507,10 @@ export default {
     const system = `${RULES}\n\n${SITE}\n\n# About David\n\n${brain}\n\n${cortexText()}${known ? `\n\n${known}` : ''}`;
     const knownWho = WHO[body.who] && body.who !== 'unknown' ? body.who : '';
     let run = startBrain(system, contextFor({ who: knownWho }), messages);
-    const drop = () => { run.stop(); addCost(money.last).catch(() => {}); };
+    const drop = () => { run.stop(); };
 
-    const [read, gread] = await Promise.all([reading, guitarRead]);
-    if (read?.bouncer?.noul > 0.85) { drop(); return reply(BOUNCED[Math.floor(Math.random() * BOUNCED.length)]); }
+    const [read, gread, nread] = await Promise.all([reading, guitarRead, noteRead]);
+    if (read?.bouncer?.noul > 0.85 || nread?.bouncer?.noul > 0.85) { drop(); return reply(BOUNCED[Math.floor(Math.random() * BOUNCED.length)]); }
     // Note and tour skip the brain, so they need a clear read. Hand moves can
     // go on less, since the brain still writes the words.
     const p = read?.intent?.probabilities?.[read.intent.choice] || 0;
@@ -543,7 +552,7 @@ export default {
         run.sink = (t) => clean.push(t);
         try {
           const { usage, refused } = await run.done;
-          const cost = costOf(usage);
+          const cost = Math.max(0, costOf(usage) - run.prepaid);
           console.log(JSON.stringify({ usage, cost, intent, who, did, draft, took: { ...took, brain: run.first } }));
           if (refused && !run.wrote) clean.push(DECLINED);
           await addCost(cost);

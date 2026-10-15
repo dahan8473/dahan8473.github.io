@@ -81,6 +81,10 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://davidliu.work/privacy/</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://davidliu.work/messages/</loc>
     <priority>0.6</priority>
   </url>

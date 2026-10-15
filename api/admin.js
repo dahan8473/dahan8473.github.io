@@ -75,7 +75,8 @@ const POST = {
   proposal: (b) => data.decide(b),
   knowledge: (b) => data.editKnowledge(b),
   variant: (b) => data.editVariant(b),
-  learn: () => data.learnNow()
+  learn: () => data.learnNow(),
+  note: (b) => data.deleteNote(b)
 };
 
 export default {

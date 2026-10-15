@@ -739,10 +739,20 @@ function client(base) {
     show(token,
       h('div', { class: 'phead' }, h('div', {}, h('h1', {}, 'Inbox'), h('p', { class: 'sub' }, 'Messages from /messages/ and private notes. Answer in Telegram: reply to the bot\'s message and it lands in their thread on the site.'))),
       sec('Messages', `${threads.size} thread${threads.size === 1 ? '' : 's'}`, cards.length ? cards : empty('No messages yet.')),
-      sec('Notes', `${(r.notes || []).length}`, (r.notes || []).length ? r.notes.map((n) => h('div', { class: 'row' },
-        h('div', { class: 'grow' }, h('div', {}, n.message), h('div', { class: 'note' }, [n.name || 'no name', n.contact ? `reply to ${n.contact}` : '', n.page || '', when(n.at)].filter(Boolean).join(' · '))),
-        n.flagged ? chip('flagged', 'warn') : n.public ? chip('on the wall', 'acc') : chip('private'),
-        n.visitor_id ? vlink(n.visitor_id, '→') : null)) : empty('No notes yet.')));
+      sec('Notes', `${(r.notes || []).length}`, (r.notes || []).length ? r.notes.map((n) => {
+        // Delete takes it off the wall (and out of here) for good.
+        const del = h('button', { class: 'btn ghost small', type: 'button' }, 'Delete');
+        del.addEventListener('click', async () => {
+          if (!confirm(n.public && !n.flagged ? 'Take this note off the wall and delete it for good?' : 'Delete this note for good?')) return;
+          const out = await api('note', null, { id: n.id }).catch((e) => ({ error: e.message }));
+          if (out.error) return alert(out.error);
+          inbox(token);
+        });
+        return h('div', { class: 'row' },
+          h('div', { class: 'grow' }, h('div', {}, n.message), h('div', { class: 'note' }, [n.name || 'no name', n.contact ? `reply to ${n.contact}` : '', n.page || '', when(n.at)].filter(Boolean).join(' · '))),
+          n.flagged ? chip('flagged', 'warn') : n.public ? chip('on the wall', 'acc') : chip('private'),
+          n.visitor_id ? vlink(n.visitor_id, '→') : null, del);
+      }) : empty('No notes yet.')));
   }
 
   // ---- shell --------------------------------------------------------------------------

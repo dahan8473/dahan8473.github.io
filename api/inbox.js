@@ -25,6 +25,7 @@ export default {
 
     let body;
     try { body = JSON.parse(await request.text()); } catch { return plain('bad json', headers, 400); }
+    if (!body || typeof body !== 'object') return plain('bad json', headers, 400);
     const text = typeof body.message === 'string' ? body.message.trim().slice(0, 1000) : '';
     const name = typeof body.name === 'string' ? body.name.trim().slice(0, 40) : '';
     if (!text || !isId(body.visitor)) return plain('bad message', headers, 400);

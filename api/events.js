@@ -79,6 +79,7 @@ export default {
     if (raw.length > MAX_BODY) return plain('too big', headers, 413);
     let body;
     try { body = JSON.parse(raw); } catch { return plain('bad json', headers, 400); }
+    if (!body || typeof body !== 'object') return plain('bad json', headers, 400);
     const batch = cleanBatch(body);
     if (!batch) return plain('bad events', headers, 400);
 

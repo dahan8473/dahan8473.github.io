@@ -437,6 +437,14 @@ a.row:hover .m { transform: translateX(3px); }
 }
 .hob-card:focus-visible { outline: none; }
 .hob-card:focus-visible .hob-pic { outline: 2px solid rgb(var(--tint)); outline-offset: 3px; }
+/* Privacy: plain sections, one column. */
+.legal { max-width: 640px; }
+.legal section + section { margin-top: 32px; }
+.legal h2 { color: var(--t1); font-weight: 500; margin-bottom: 8px; }
+.legal p { color: var(--t2); }
+.legal p + p { margin-top: 10px; }
+.legal code { font: inherit; color: var(--t1); overflow-wrap: anywhere; }
+.legal > .t3 { margin-top: 40px; color: var(--t3); }
 .hob-more { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--rule); }
 .hob-more > span:first-child { color: var(--t3); }
 /* Small hobbies with no page: a card on hover, or on tap (focus). */

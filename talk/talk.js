@@ -45,6 +45,8 @@
   const API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
     ? '/api'
     : 'https://davidliu-work.vercel.app/api';
+  // Do Not Track or Global Privacy Control: no page-view beacon (track.js stays off too).
+  const NO_TRACK = navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.globalPrivacyControl === true;
   const EMAIL = 'davidliu8473@gmail.com';
   const MAX_TURNS = 25;
 
@@ -87,7 +89,7 @@
       dashboard: 'i built a whole 3D game for this, you should take a look',
       kunlun: 'i made a clothing brand. based on chinese mythology. click',
       github: 'take a look at my commits here!',
-      hackthenorth: 'this one won hack the north. just saying...',
+      hackthenorth: 'this one won its category at hack the north. just saying...',
       email: "here's my email. talk to me here!"
     },
     shove: {
@@ -435,7 +437,7 @@
           <button class="dl-mic" type="button" aria-label="Talk with your mic" hidden>${ICON.mic}</button>
           <button class="dl-send" type="submit" aria-label="Send">${ICON.send}</button>
         </form>
-        <p class="dl-fine" hidden>chats are saved so the real me can read them</p>
+        <p class="dl-fine" hidden>chats are saved so the real me can read them · <a href="/privacy/">privacy</a></p>
       </div>
     </div>
     <div class="dl-hand" aria-hidden="true"><div class="dl-hand-in">${HANDS ? `<img src="${HANDS.point.src}" alt="" draggable="false">` : ICON.hand}</div></div>`;
@@ -3464,7 +3466,7 @@
     hear.leaving = 0;
     setContext('', 'page');
     if (giveBack) giveBack();
-    if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: '', tz: TZ }));
+    if (visitor && navigator.sendBeacon && !NO_TRACK) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: '', tz: TZ }));
     setTimeout(watchRackets);
     pageLines(here === '/hobbies/' ? 1200 : /^\/hobbies\/./.test(here) ? 500 : 1500);
   }
@@ -3504,7 +3506,7 @@
   function start() {
     if (S.quiet) root.classList.add('quiet');
     if (!sound.on) root.classList.add('muted');
-    if (visitor && navigator.sendBeacon) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer, tz: TZ }));
+    if (visitor && navigator.sendBeacon && !NO_TRACK) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer, tz: TZ }));
     warm();
     const met = S.met;
     // A chat the head opened that they never answered doesn't follow them to a new page.

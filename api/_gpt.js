@@ -11,7 +11,7 @@ const brainModel = () => process.env.BRAIN_MODEL || 'deepseek/deepseek-v4.1-flas
 const brainReasoning = () => process.env.BRAIN_REASONING || 'off';
 const FALLBACK = { model: 'openai/gpt-6.1-sol', reasoning: 'low' };
 // Dollars per million tokens, only used when OpenRouter doesn't report cost.
-const PRICE = { input: 2, cached: 0.1, output: 10 };
+export const PRICE = { input: 2, cached: 0.1, output: 10 };
 
 let client;
 

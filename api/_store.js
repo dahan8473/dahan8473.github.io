@@ -87,13 +87,15 @@ export function saveChat({ convo, visitor, messages, reply, page }) {
   });
 }
 
-// Monthly spend on the brain, in dollars. Without a store the count lives in
-// this instance only, which is a floor, not a cap; the OpenAI project budget
-// is the backstop.
+// Monthly spend on the brain, in dollars. Without a store (local dev) the
+// count lives in this instance. With one, a failed read counts as over the
+// cap, so the head goes quiet instead of spending blind. The credit limit on
+// the OpenRouter key is the backstop.
 let local = 0;
 export async function spent() {
   const v = await rpc('spent_this_month', {});
-  return v == null ? local : Number(v);
+  if (v == null) return hasStore ? Infinity : local;
+  return Number(v);
 }
 export async function addSpend(usd) {
   local += usd;

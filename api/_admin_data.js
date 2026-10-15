@@ -241,6 +241,13 @@ async function edit(table, body, { maxText }) {
   const r = await call(`${table}?id=eq.${id}`, { method: 'PATCH', body: patch, prefer: 'return=representation' });
   return r.ok && rows(r).length ? { ok: true, row: r.data[0] } : { error: 'could not save' };
 }
+// Take a note down: off the wall and out of the inbox, for good.
+export async function deleteNote(body) {
+  const id = Number(body?.id);
+  if (!Number.isSafeInteger(id) || id < 1) return { error: 'bad id' };
+  const r = await call(`notes?id=eq.${id}`, { method: 'DELETE', prefer: 'return=representation' });
+  return r.ok && rows(r).length ? { ok: true } : { error: 'could not delete' };
+}
 export const editKnowledge = (body) => edit('knowledge', body, { maxText: 1000 });
 export const editVariant = (body) => edit('line_variants', body, { maxText: 300 });
 

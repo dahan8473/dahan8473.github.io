@@ -459,13 +459,22 @@ GROUPS = [
     ('photography', 'Photography', 'Fujifilm X-T200 and Sony A7R II.', None),
   ], [('watercolor', 'Watercolor')]),
 ]
-# Small ones with no page: hovering (or tapping) the name shows a picture, once
-# there is one, and a line. (src or None, line)
+# The "Also" ones aren't links: hovering (or tapping) the name shows a picture,
+# when there is one, and a line. (src or None, line)
 TIPS = {
+  'climbing': (None, "I boulder. Not very good yet, but I keep going back."),
   'swimming': (None, "One of the sports my parents forced on me. I'm a registered lifeguard."),
+  'cycling': ('/media/cycling/me-and-the-bike-s.webp', "Started with a $20 bike off Marketplace. Now I ride a track bike."),
+  'speed-skating': (None, "My main sport growing up. I raced provincially, from 100m up to 1000m."),
+  'chess': ('/media/chess/with-friends.webp', "Competed all through elementary school. Still do puzzles online."),
+  'video': (None, "Reels I make for TSI."),
+  'watercolor': ('/media/watercolor/koi-pond-s.webp', "I paint with watercolor. This one's a koi pond."),
 }
+# No page at all, just the hover card. The rest keep their pages (the head
+# and the previous / next links still go there).
+NOPAGE = {'swimming'}
 # Page order, for previous and next.
-HOBBIES = [h[:2] for _, rows, more in GROUPS for h in rows + more if h[0] not in TIPS]
+HOBBIES = [h[:2] for _, rows, more in GROUPS for h in rows + more if h[0] not in NOPAGE]
 DT = {'muay-thai': 'muaythai'}
 
 hob = '''      <header class="doc-head">

@@ -505,9 +505,6 @@ for label, rows, more in GROUPS:
     for slug, name, line, photo in rows:
         src, kind, alt = PICS.get(slug, (photo or '', 'photo', name))
         pic = f'<span class="hob-pic {kind}"><img src="{src}" alt="{alt}" loading="lazy" decoding="async"></span>' if src else f'<span class="hob-pic blank"><span>{name[0]}</span></span>'
-        # Muay Thai: my red gloves hang off the card (/3d/gloves.js); clicking them starts the spar.
-        if slug == 'muay-thai':
-            pic += f'<span class="hob-gloves" data-3d="gloves" data-v="{V_PIECE}"></span>'
         hob += f'            <a class="hob-card" href="/hobbies/{slug}/" data-t="{DT.get(slug, slug)}">{pic}<span class="hob-name">{name}<span class="hob-go" aria-hidden="true">&#8594;</span></span><span class="hob-line">{line}</span></a>\n'
     hob += '          </div>\n'
     def also(slug, name):

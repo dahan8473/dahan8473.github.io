@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 49, 16, 39, 46
+V_CSS, V_TALKCSS, V_JS, V_TALK = 49, 16, 39, 48
 V_TRACK = 1
 V_PIECE = 34  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -444,7 +444,7 @@ write('projects/index.html', page('/projects/', 'Projects', 'Projects by David L
 # link under their group. Every hobby has its own page either way.
 GROUPS = [
   ('Body', [
-    ('hiking', 'Hiking', 'Panorama Ridge, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
+    ('hiking', 'Hiking', 'Panorama Ridge, Flora Peak, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
     ('badminton', 'Badminton', 'My main sport all through high school. Doubles.', None),
     ('muay-thai', 'Muay Thai', 'I train, and coach the beginner class.', None),
   ], [('climbing', 'Rock climbing'), ('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),
@@ -597,7 +597,7 @@ hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a
         <figcaption>Outside Alumni Hall at Western</figcaption>
       </figure>
 ''' + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/cycling/photos.json') + piece('3d', 'bike', 'Loading the bike...'))
-hobby('hiking', 'Hiking', "Twelve hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
+hobby('hiking', 'Hiking', "Thirteen hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('speed-skating', 'Speed skating', 'Speed skating was my main sport growing up. I competed provincially, and won 1st and 2nd place in various 100m, 200m, 400m and 1000m races.', [
 ], shot=piece('play', 'trophycase', 'Digging out photos rn.', src='/hobbies/speed-skating/trophies.json'))

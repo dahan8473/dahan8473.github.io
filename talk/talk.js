@@ -229,7 +229,7 @@
     pick: {
       open: ['ok pick one', 'go on, click one', "fine, i'll pick for you"],
       teaser: {
-        hiking: '12 hikes in there with photos. hover one for the stats',
+        hiking: '13 hikes in there with photos. hover one for the stats',
         badminton: 'my 4 rackets are in 3d in there, and you can rally me',
         muaythai: 'you can spar me in there',
         travel: "there's a globe in there. spin it",
@@ -437,7 +437,7 @@
           <button class="dl-mic" type="button" aria-label="Talk with your mic" hidden>${ICON.mic}</button>
           <button class="dl-send" type="submit" aria-label="Send">${ICON.send}</button>
         </form>
-        <p class="dl-fine" hidden>chats are saved so the real me can read them · <a href="/privacy/">privacy</a></p>
+        <p class="dl-fine" hidden>chats are saved for the real me · <a href="/privacy/">privacy</a></p>
       </div>
     </div>
     <div class="dl-hand" aria-hidden="true"><div class="dl-hand-in">${HANDS ? `<img src="${HANDS.point.src}" alt="" draggable="false">` : ICON.hand}</div></div>`;

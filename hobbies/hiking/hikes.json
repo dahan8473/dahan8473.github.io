@@ -2,6 +2,64 @@
  "_how": "Newest first. trail is the trail itself (distance, gain, top, time, note). me is my day: total time where I know it, first and last photo, and the highest altitude my phone recorded (or the summit). Media lives in /media/hikes/<id>/.",
  "hikes": [
   {
+   "id": "flora-peak",
+   "name": "Flora Peak",
+   "where": "Chilliwack Lake, BC",
+   "date": "2026-10-15",
+   "trail": {
+    "distance": "About 13 km round trip",
+    "gain": "About 1,300 m",
+    "time": "5 to 7 hours",
+    "note": "Steep the whole way up from Chilliwack Lake, in full fall colour."
+   },
+   "me": {},
+   "media": [
+    {
+     "video": "/media/hikes/flora-peak/01.mp4",
+     "poster": "/media/hikes/flora-peak/01.webp",
+     "w": 1280,
+     "h": 720
+    },
+    {
+     "src": "/media/hikes/flora-peak/02.webp",
+     "small": "/media/hikes/flora-peak/02-s.webp",
+     "w": 1800,
+     "h": 1013,
+     "note": "Toto"
+    },
+    {
+     "src": "/media/hikes/flora-peak/03.webp",
+     "small": "/media/hikes/flora-peak/03-s.webp",
+     "w": 1800,
+     "h": 1013
+    },
+    {
+     "src": "/media/hikes/flora-peak/04.webp",
+     "small": "/media/hikes/flora-peak/04-s.webp",
+     "w": 1800,
+     "h": 1013
+    },
+    {
+     "video": "/media/hikes/flora-peak/05.mp4",
+     "poster": "/media/hikes/flora-peak/05.webp",
+     "w": 1280,
+     "h": 720
+    },
+    {
+     "video": "/media/hikes/flora-peak/06.mp4",
+     "poster": "/media/hikes/flora-peak/06.webp",
+     "w": 1280,
+     "h": 720
+    },
+    {
+     "video": "/media/hikes/flora-peak/07.mp4",
+     "poster": "/media/hikes/flora-peak/07.webp",
+     "w": 1280,
+     "h": 720
+    }
+   ]
+  },
+  {
    "id": "tunnel-bluffs",
    "name": "Tunnel Bluffs",
    "where": "Howe Sound, BC",

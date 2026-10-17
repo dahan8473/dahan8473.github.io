@@ -465,6 +465,13 @@ a.row:hover .m { transform: translateX(3px); }
 .hob-tip { position: relative; cursor: default; text-decoration: underline dotted var(--t3); text-underline-offset: 3px; outline: none; }
 .hob-tip-card { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 10px); width: 220px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); color: var(--fg); font-size: 13px; line-height: 1.45; white-space: normal; opacity: 0; transform: translate(-50%, 6px); transition: opacity 0.18s ease, transform 0.18s ease; pointer-events: none; }
 .hob-tip-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin-bottom: 10px; border-radius: 8px; }
+.hob-tip-card .tip-video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; margin-bottom: 10px; border-radius: 8px; background: #000; }
+.hob-tip-card .tip-stat { display: block; margin-bottom: 4px; color: var(--t1); font-weight: 500; }
+/* A slideshow: the pictures take turns, three seconds each. */
+.tip-slides { position: relative; display: block; aspect-ratio: 4 / 3; margin-bottom: 10px; border-radius: 8px; overflow: hidden; background: var(--fill); }
+.tip-slides img { position: absolute; inset: 0; height: 100%; margin: 0; border-radius: 0; opacity: 0; animation: tip-slide 9s infinite; animation-delay: calc(var(--i) * 3s); }
+@keyframes tip-slide { 0%, 30% { opacity: 1; } 36%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .tip-slides img { animation: none; } .tip-slides img:first-child { opacity: 1; } }
 .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card { opacity: 1; transform: translate(-50%, 0); }
 .hob-tip:hover, .hob-tip:focus { color: var(--t1); }
 @media (max-width: 640px) { .hob-tip-card { left: 0; transform: translate(0, 6px); } .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card { transform: none; } }

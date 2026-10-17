@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 49, 16, 39, 48
+V_CSS, V_TALKCSS, V_JS, V_TALK = 50, 16, 40, 49
 V_TRACK = 1
 V_PIECE = 34  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -454,21 +454,22 @@ GROUPS = [
     ('lumosity', 'Lumosity', 'Every morning, religiously. Play my three favourites and try to beat me.', None),
   ], [('chess', 'Chess'), ('video', 'Video production')]),
   ('Soul', [
-    ('meowmeow', 'Meowmeow', 'My cat. Always chudding around.', '/media/life/meowmeow-sleep.webp'),
     ('guitar', 'Classical guitar', 'Competed nationally, played Carnegie Hall. Four recordings.', None),
     ('photography', 'Photography', 'Fujifilm X-T200 and Sony A7R II.', None),
-  ], [('watercolor', 'Watercolor')]),
+    ('watercolor', 'Watercolor', 'A koi pond in watercolor. Tilt the paper.', None),
+  ], [('meowmeow', 'Meowmeow')]),
 ]
 # The "Also" ones aren't links: hovering (or tapping) the name shows a picture,
 # when there is one, and a line. (src or None, line)
+# src is one picture, a list (a slideshow), or {'video': mp4, 'poster': img}.
 TIPS = {
-  'climbing': (None, "I boulder. Not very good yet, but I keep going back."),
+  'climbing': (None, "I boulder with my friends. I'm not very good at it tho, maybe one day I can finally climb a V4."),
   'swimming': (None, "One of the sports my parents forced on me. I'm a registered lifeguard."),
-  'cycling': ('/media/cycling/me-and-the-bike-s.webp', "Started with a $20 bike off Marketplace. Now I ride a track bike."),
-  'speed-skating': (None, "My main sport growing up. I raced provincially, from 100m up to 1000m."),
-  'chess': ('/media/chess/with-friends.webp', "Competed all through elementary school. Still do puzzles online."),
-  'video': (None, "Reels I make for TSI."),
-  'watercolor': ('/media/watercolor/koi-pond-s.webp', "I paint with watercolor. This one's a koi pond."),
+  'cycling': ('/media/cycling/me-and-the-bike-s.webp', "I have a really cool track bike. I drove over 2 hours to pick it up from a Facebook Marketplace seller, and I've ridden it every day since."),
+  'speed-skating': (None, "1st at BC provincials in my youth group, in the 100m, 200m, 300m and 1000m."),
+  'chess': ('/media/chess/with-friends.webp', '<b class="tip-stat"><span data-live="puzzles">1840</span> puzzle rating</b>2nd at BC provincials in my youth group. I still play for fun with friends.'),
+  'video': ({'video': '/media/video/reels-teaser.mp4', 'poster': '/media/video/reels-teaser.webp'}, "Reels I make for TSI."),
+  'meowmeow': (['/media/life/meowmeow-sleep.webp', '/media/life/meowmeow-belly.webp', '/media/life/meowmeow-stairs.webp'], "My cat. Always chudding around. Here she comes."),
 }
 # No page at all, just the hover card. The rest keep their pages (the head
 # and the previous / next links still go there).
@@ -499,6 +500,7 @@ PICS = {
   'guitar': ('/media/tiles/guitar.webp', 'cut', 'A classical guitar'),
   'photography': ('/media/tiles/cameras.webp', 'cut', 'A Fujifilm X-T200 and a Sony A7R II'),
   'lumosity': ('/media/tiles/lumosity.svg', 'cut', 'A Pinball Recall board'),
+  'watercolor': ('/media/watercolor/koi-pond-s.webp', 'photo', 'A koi pond in watercolor'),
 }
 for label, rows, more in GROUPS:
     hob += f'        <section class="hob-group {label.lower()}">\n          <header class="hob-gh"><h2>{label}</h2><p>{GROUP_LINE.get(label, "")}</p></header>\n          <div class="hob-cards">\n'
@@ -511,7 +513,12 @@ for label, rows, more in GROUPS:
         if slug not in TIPS:
             return f'<a class="ln" href="/hobbies/{slug}/" data-t="{slug}">{name}</a>'
         src, line = TIPS[slug]
-        pic = f'<img src="{src}" alt="" loading="lazy" decoding="async">' if src else ''
+        if isinstance(src, dict):
+            pic = f'<video class="tip-video" src="{src["video"]}" poster="{src["poster"]}" muted loop playsinline preload="none"></video>'
+        elif isinstance(src, list):
+            pic = '<span class="tip-slides">' + ''.join(f'<img src="{s}" alt="" loading="lazy" decoding="async" style="--i:{i}">' for i, s in enumerate(src)) + '</span>'
+        else:
+            pic = f'<img src="{src}" alt="" loading="lazy" decoding="async">' if src else ''
         return f'<span class="ln hob-tip" tabindex="0" data-t="{slug}">{name}<span class="hob-tip-card" role="tooltip">{pic}<span>{line}</span></span></span>'
     links = ''.join(also(slug, name) for slug, name in more)
     hob += f'          <p class="hob-more"><span>Also</span><span class="go">{links}</span></p>\n        </section>\n'
@@ -605,7 +612,7 @@ hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a
 ''' + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/cycling/photos.json') + piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Thirteen hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
-hobby('speed-skating', 'Speed skating', 'Speed skating was my main sport growing up. I competed provincially, and won 1st and 2nd place in various 100m, 200m, 400m and 1000m races.', [
+hobby('speed-skating', 'Speed skating', 'Speed skating was my main sport growing up. I won 1st at the BC provincials in my youth group, in the 100m, 200m, 300m and 1000m.', [
 ], shot=piece('play', 'trophycase', 'Digging out photos rn.', src='/hobbies/speed-skating/trophies.json'))
 hobby('chess', 'Chess', "I played competitively all through elementary school, until guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
   ('The story', [

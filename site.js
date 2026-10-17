@@ -1424,8 +1424,31 @@
     renderUpNext();
   }
 
+  // ---- Hover cards on the hobbies list ---------------------------------------------------
+  // A clip plays only while its card is open. Meowmeow's card calls her over
+  // (once a page view).
+  var catCalled = false;
+  function tipOn(e) {
+    var tip = e.target.closest && e.target.closest('.hob-tip');
+    if (!tip || tip.contains(e.relatedTarget)) return;
+    var v = tip.querySelector('video');
+    if (v) { v.muted = true; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+    if (tip.getAttribute('data-t') === 'meowmeow' && !catCalled && window.dlCat) { catCalled = true; window.dlCat(); }
+  }
+  function tipOff(e) {
+    var tip = e.target.closest && e.target.closest('.hob-tip');
+    if (!tip || tip.contains(e.relatedTarget)) return;
+    var v = tip.querySelector('video');
+    if (v) v.pause();
+  }
+  document.addEventListener('mouseover', tipOn);
+  document.addEventListener('focusin', tipOn);
+  document.addEventListener('mouseout', tipOff);
+  document.addEventListener('focusout', tipOff);
+
   // ---- Per page --------------------------------------------------------------------
   function setup() {
+    catCalled = false;
     tick();
     syncTheme();
     mountTracks();

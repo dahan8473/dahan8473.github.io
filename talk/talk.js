@@ -235,7 +235,8 @@
         travel: "there's a globe in there. spin it",
         fashion: 'kunlun! the clothing brand i\'m building',
         lumosity: 'my lumosity games. try to beat my score',
-        meowmeow: 'you can call my cat in there',
+        meowmeow: 'hover her name and she comes over',
+        watercolor: 'my watercolor. you can tilt the paper',
         guitar: 'real recordings of me playing. they keep going while you browse',
         photography: 'my camera kit, in 3d'
       }

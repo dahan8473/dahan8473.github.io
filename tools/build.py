@@ -444,7 +444,7 @@ write('projects/index.html', page('/projects/', 'Projects', 'Projects by David L
 # link under their group. Every hobby has its own page either way.
 GROUPS = [
   ('Body', [
-    ('hiking', 'Hiking', 'Panorama Ridge, Flora Peak, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
+    ('hiking', 'Hiking', 'Panorama Ridge, Lindeman Lake, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
     ('badminton', 'Badminton', 'My main sport all through high school. Doubles.', None),
     ('muay-thai', 'Muay Thai', 'I train, and coach the beginner class.', None),
   ], [('climbing', 'Rock climbing'), ('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),

@@ -2,58 +2,73 @@
  "_how": "Newest first. trail is the trail itself (distance, gain, top, time, note). me is my day: total time where I know it, first and last photo, and the highest altitude my phone recorded (or the summit). Media lives in /media/hikes/<id>/.",
  "hikes": [
   {
-   "id": "flora-peak",
-   "name": "Flora Peak",
-   "where": "Chilliwack Lake, BC",
+   "id": "lindeman-lake",
+   "name": "Lindeman Lake",
+   "where": "Chilliwack Lake Provincial Park, BC",
    "date": "2026-10-15",
    "trail": {
-    "distance": "About 13 km round trip",
-    "gain": "About 1,300 m",
-    "time": "5 to 7 hours",
-    "note": "Steep the whole way up from Chilliwack Lake, in full fall colour."
+    "distance": "About 3.5 km round trip",
+    "gain": "About 240 m",
+    "time": "About 2 hours",
+    "note": "Up a boulder-filled creek to a green lake under the cliffs, in full fall colour."
    },
-   "me": {},
+   "me": {
+    "total": "About 3 hours",
+    "high": "818 m (the lake)"
+   },
    "media": [
     {
-     "video": "/media/hikes/flora-peak/01.mp4",
-     "poster": "/media/hikes/flora-peak/01.webp",
+     "video": "/media/hikes/lindeman-lake/01.mp4",
+     "poster": "/media/hikes/lindeman-lake/01.webp",
      "w": 1280,
      "h": 720
     },
     {
-     "src": "/media/hikes/flora-peak/02.webp",
-     "small": "/media/hikes/flora-peak/02-s.webp",
+     "src": "/media/hikes/lindeman-lake/02.webp",
+     "small": "/media/hikes/lindeman-lake/02-s.webp",
      "w": 1800,
      "h": 1013,
      "note": "Toto"
     },
     {
-     "src": "/media/hikes/flora-peak/03.webp",
-     "small": "/media/hikes/flora-peak/03-s.webp",
+     "src": "/media/hikes/lindeman-lake/03.webp",
+     "small": "/media/hikes/lindeman-lake/03-s.webp",
      "w": 1800,
      "h": 1013
     },
     {
-     "src": "/media/hikes/flora-peak/04.webp",
-     "small": "/media/hikes/flora-peak/04-s.webp",
+     "src": "/media/hikes/lindeman-lake/04.webp",
+     "small": "/media/hikes/lindeman-lake/04-s.webp",
      "w": 1800,
      "h": 1013
     },
     {
-     "video": "/media/hikes/flora-peak/05.mp4",
-     "poster": "/media/hikes/flora-peak/05.webp",
+     "video": "/media/hikes/lindeman-lake/05.mp4",
+     "poster": "/media/hikes/lindeman-lake/05.webp",
      "w": 1280,
      "h": 720
     },
     {
-     "video": "/media/hikes/flora-peak/06.mp4",
-     "poster": "/media/hikes/flora-peak/06.webp",
+     "src": "/media/hikes/lindeman-lake/08.webp",
+     "small": "/media/hikes/lindeman-lake/08-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "src": "/media/hikes/lindeman-lake/09.webp",
+     "small": "/media/hikes/lindeman-lake/09-s.webp",
+     "w": 1350,
+     "h": 1800
+    },
+    {
+     "video": "/media/hikes/lindeman-lake/06.mp4",
+     "poster": "/media/hikes/lindeman-lake/06.webp",
      "w": 1280,
      "h": 720
     },
     {
-     "video": "/media/hikes/flora-peak/07.mp4",
-     "poster": "/media/hikes/flora-peak/07.webp",
+     "video": "/media/hikes/lindeman-lake/07.mp4",
+     "poster": "/media/hikes/lindeman-lake/07.webp",
      "w": 1280,
      "h": 720
     }

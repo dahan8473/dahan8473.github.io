@@ -262,7 +262,7 @@
   "hiking": {
     "page": "/hobbies/hiking/",
     "sel": "[data-t='hiking']",
-    "about": "Hiking page: thirteen hikes with photos and clips, newest first. Flora Peak (with Toto the dog), Panorama Ridge, Tunnel Bluffs, Quarry Rock, Buntzen Lake, Gros Morne (Tablelands, Western Brook Pond), Bonavista, Signal Hill, Cape Spear, Èze, Mount Heng and Lushan. Hover one for the trail stats and what my phone recorded"
+    "about": "Hiking page: thirteen hikes with photos and clips, newest first. Lindeman Lake (with Toto the dog), Panorama Ridge, Tunnel Bluffs, Quarry Rock, Buntzen Lake, Gros Morne (Tablelands, Western Brook Pond), Bonavista, Signal Hill, Cape Spear, Èze, Mount Heng and Lushan. Hover one for the trail stats and what my phone recorded"
   },
   "speed-skating": {
     "page": "/hobbies/speed-skating/",

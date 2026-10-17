@@ -21,7 +21,8 @@
      "video": "/media/hikes/lindeman-lake/01.mp4",
      "poster": "/media/hikes/lindeman-lake/01.webp",
      "w": 1280,
-     "h": 720
+     "h": 720,
+     "note": "Bird whisperer"
     },
     {
      "src": "/media/hikes/lindeman-lake/02.webp",
@@ -46,13 +47,15 @@
      "video": "/media/hikes/lindeman-lake/05.mp4",
      "poster": "/media/hikes/lindeman-lake/05.webp",
      "w": 1280,
-     "h": 720
+     "h": 720,
+     "note": "Poo"
     },
     {
      "src": "/media/hikes/lindeman-lake/08.webp",
      "small": "/media/hikes/lindeman-lake/08-s.webp",
      "w": 1350,
-     "h": 1800
+     "h": 1800,
+     "note": "Totem pole"
     },
     {
      "src": "/media/hikes/lindeman-lake/09.webp",
@@ -70,7 +73,8 @@
      "video": "/media/hikes/lindeman-lake/07.mp4",
      "poster": "/media/hikes/lindeman-lake/07.webp",
      "w": 1280,
-     "h": 720
+     "h": 720,
+     "note": "River"
     }
    ]
   },

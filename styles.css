@@ -768,36 +768,9 @@ button.ft-next { width: calc(100% + 16px); border: 0; background: none; font: in
 .ft-next:hover .ft-m { transform: translateX(3px); color: var(--t2); }
 .ft-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--rule); color: var(--t3); }
 
-/* Haven't tried yet. Rows read like the home page's doors. */
-.upnext { padding-top: 72px; }
-.upnext > h2 { padding-bottom: 12px; color: var(--t3); }
-.r-sec.upnext { padding-top: 0; }
-.r-sec.upnext > h2 { padding-bottom: 8px; margin-bottom: 0; }
-.up-list > li { border-bottom: 1px solid var(--rule); }
-.up-list > li:first-child { border-top: 1px solid var(--rule); }
-.r-sec.upnext .up-list > li:first-child { border-top: 0; }
-.up-row { display: grid; grid-template-columns: 180px minmax(0, 1fr) 24px; gap: 4px 20px; align-items: baseline; width: 100%; padding: 12px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
-button.up-row { cursor: pointer; }
-.case .up-row { grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.6fr) 24px; }
-.home .up-row { grid-template-columns: 160px minmax(0, 1fr) 24px; }
-.home .upnext { padding-top: 48px; }
-.up-name { color: var(--t1); }
-.up-line { color: var(--t2); }
-.up-m { color: var(--t3); text-align: right; transition: transform 200ms ease; }
-a.up-row:hover .up-line, button.up-row:hover .up-line { color: var(--t1); }
-a.up-row:hover .up-m, button.up-row:hover .up-m { color: var(--t2); transform: translateX(3px); }
-.up-all { margin-top: 14px; }
-.upnext + .next { margin-top: 56px; }
-.upnext + .reach { margin-top: 40px; }
-
 @media (max-width: 720px) {
   .finds-pill { margin-right: -4px; padding: 0 6px; }
   .finds-toast { top: 66px; bottom: auto; left: 16px; right: 16px; width: auto; transform: translateY(-8px); }
-  .upnext { padding-top: 56px; }
-  .case .upnext { padding-top: 48px; }
-  .up-row, .case .up-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .up-line { grid-column: 1 / -1; grid-row: 2; }
-  .up-m { grid-column: 2; grid-row: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

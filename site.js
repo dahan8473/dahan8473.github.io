@@ -1387,41 +1387,9 @@
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
 
-  // The end of most pages: what they haven't tried yet, laid out like the rest
-  // of that page (a labelled section on case pages, a resume section on the
-  // resume, a list under a heading everywhere else).
-  var NO_UPNEXT = ['/messages/', '/notes/', '/brain/'];
-  function renderUpNext() {
-    var main = document.getElementById('main');
-    if (!main || NO_UPNEXT.indexOf(here()) >= 0 || main.querySelector('.globe-full')) return;
-    var rest = left(true).slice(0, 3);
-    if (!rest.length) return;
-    var rows = rest.map(function (f) {
-      return '<li>' + findRow(f, 'up-row', '<span class="up-name">' + escHtml(f.name) + '</span><span class="up-line">' + escHtml(f.line) + '</span><span class="up-m" aria-hidden="true">' + (f.href || f.act ? '&#8594;' : '') + '</span>') + '</li>';
-    }).join('');
-    var more = '<p class="up-all"><button class="ln" type="button" data-finds-open>All twelve things to do</button></p>';
-    var box = document.createElement('section');
-    box.setAttribute('aria-labelledby', 'up-h');
-    var doc = main.querySelector(':scope > .doc');
-    if (document.body.classList.contains('case')) {
-      box.className = 'section upnext';
-      box.innerHTML = '<p class="label" id="up-h">Try next</p><div><ul class="up-list">' + rows + '</ul>' + more + '</div>';
-    } else if (doc) {
-      box.className = 'r-sec upnext';
-      box.innerHTML = '<h2 id="up-h">Try next</h2><ul class="up-list">' + rows + '</ul>' + more;
-    } else {
-      box.className = 'upnext';
-      box.innerHTML = '<h2 id="up-h">Try next</h2><ul class="up-list">' + rows + '</ul>' + more;
-    }
-    var nav = main.querySelector(':scope > nav.next, :scope > .reach');
-    if (doc) doc.appendChild(box);
-    else if (nav) main.insertBefore(box, nav);
-    else main.appendChild(box);
-  }
   function setupFinds() {
     closePanel(true);
     renderPill();
-    renderUpNext();
   }
 
   // ---- Hover cards on the hobbies list ---------------------------------------------------

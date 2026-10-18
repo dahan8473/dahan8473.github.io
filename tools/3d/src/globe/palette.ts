@@ -1,5 +1,4 @@
 // Colors and look per theme. Dark keeps the tsi-globe values.
-export const ACCENT = '#88c0d0';
 
 export interface Palette {
   land: string;
@@ -17,9 +16,6 @@ export interface Palette {
   aces: boolean;
   backdrop: number;
   stars: number;
-  marker: string;
-  markerCore: string;
-  markerHalo: number;
 }
 
 export const DARK: Palette = {
@@ -36,10 +32,7 @@ export const DARK: Palette = {
   bloomThreshold: 0,
   aces: true,
   backdrop: 0.85,
-  stars: 1,
-  marker: ACCENT,
-  markerCore: '#e5f4f8',
-  markerHalo: 0.55
+  stars: 1
 };
 
 export const LIGHT: Palette = {
@@ -56,8 +49,5 @@ export const LIGHT: Palette = {
   bloomThreshold: 0,
   aces: false,
   backdrop: 0,
-  stars: 0,
-  marker: ACCENT,
-  markerCore: '#2c7389',
-  markerHalo: 0.8
+  stars: 0
 };

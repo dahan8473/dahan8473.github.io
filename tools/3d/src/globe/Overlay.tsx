@@ -1,9 +1,10 @@
-// DOM over the globe: loading note, hover card, a keyboard list of places, and
+// DOM over the globe: loading note, pins, hover card, a keyboard list of places, and
 // the popup (portaled to <body>).
 import { useEffect } from 'react';
 import { usePiece } from '../lib/mountCanvas';
 import { Card } from './Card';
 import { Modal } from './Modal';
+import { Pins } from './Pins';
 import { useGlobe, useGlobeStore } from './store';
 
 export function Overlay() {
@@ -22,6 +23,7 @@ export function Overlay() {
   return (
     <>
       <Wait />
+      <Pins />
       <Card />
       <PlaceList />
       <Modal />

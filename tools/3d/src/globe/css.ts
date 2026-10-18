@@ -7,6 +7,26 @@ export const css = `
 .p3d-globe .g-wait { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--t3); pointer-events: none; transition: opacity 400ms ease; }
 .p3d-globe .g-wait.off { opacity: 0; }
 
+.p3d-globe .g-pins { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.p3d-globe .g-pin {
+  position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; padding: 0;
+  border: 0; border-radius: 50%; background: none; cursor: pointer; pointer-events: auto;
+  visibility: hidden; -webkit-tap-highlight-color: transparent;
+}
+.p3d-globe .g-pin::before, .p3d-globe .g-pin::after { content: ''; position: absolute; left: 50%; top: 50%; border-radius: 50%; }
+.p3d-globe .g-pin::before {
+  width: 8px; height: 8px; margin: -4px 0 0 -4px; background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg), 0 1px 3px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 160ms ease;
+}
+.p3d-globe .g-pin::after {
+  width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: inset 0 0 0 1.5px var(--accent);
+  opacity: 0; transform: scale(0.5); transition: opacity 160ms ease, transform 160ms ease;
+}
+.p3d-globe .g-pin:hover::before, .p3d-globe .g-pin.on::before { transform: scale(1.2); }
+.p3d-globe .g-pin.on::after { opacity: 1; transform: scale(1); }
+@media (prefers-reduced-motion: reduce) { .p3d-globe .g-pin::before, .p3d-globe .g-pin::after { transition: none; } }
+
 .p3d-globe .g-card {
   position: absolute; left: 0; top: 0; z-index: 2;
   display: flex; flex-direction: column; gap: 10px;

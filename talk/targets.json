@@ -356,7 +356,7 @@
   },
   "gear": {
     "page": "/hobbies/photography/",
-    "sel": "[data-t='gear']",
+    "sel": "[data-3d='cameras']",
     "about": "my cameras: a Fujifilm X-T200 and a Sony A7R II"
   },
   "brain": {

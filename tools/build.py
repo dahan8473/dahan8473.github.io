@@ -586,7 +586,6 @@ def piece(kind, name, note, cls='', src=''):
 
 
 hobby('meowmeow', 'Meowmeow', 'My cat. She/her, black, and always chudding around.', [
-  ('Meet her', [('Call her over', '<p>She walks in from the edge of the screen and plops down. <button class="ln cat-call" type="button" data-cat-call>Call her</button></p>')], None),
 ], shot='''      <div class="cats big">
         <img src="/media/life/meowmeow-sleep.webp" alt="Meowmeow, a black cat, asleep in a beanbag" width="750" height="1000">
         <img src="/media/life/meowmeow-belly.webp" alt="Meowmeow on her back with her paws in the air" width="750" height="1000">
@@ -594,7 +593,6 @@ hobby('meowmeow', 'Meowmeow', 'My cat. She/her, black, and always chudding aroun
       </div>
 ''' + PLAY_NOW('cat', 'Call her'), kind='The cat')
 hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegie Hall. These are recordings of me playing.", [
-  ('Highlights', [('Carnegie Hall', '<p>Performed there.</p>'), ('NW Guitar Competition', '<p>2nd place, classical guitar. <a href="https://www.seattleguitar.org/soundings603.pdf" target="_blank" rel="noopener">The results in the Seattle Classic Guitar Society\'s newsletter</a>.</p>')], None),
 ], shot='''      <section class="recordings" data-t="guitar" aria-label="Recordings">
         <div class="tracks hero" id="guitar-tracks"></div>
       </section>
@@ -603,7 +601,6 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
 hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, because a friend dragged me to our local gym. I was super intimidated. I was scared of fighting, and of what the people there might be like."
       '</p>\n        <p class="tagline">But by the first week I was addicted. I think a lot of that comes from my love for chess and puzzle games: Muay Thai is like a physical version of them. My Instagram feed turned into Muay Thai highlights, and I bought a bag on Facebook Marketplace and hung it up in my backyard to train in the mornings.'
       "</p>\n        <p class=\"tagline\">If you've never tried something like this, give it a shot. It might reveal more about yourself than you think!", [
-  ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched') + '      <button class="spar-glove" type="button" data-spar aria-label="Spar with the head"><img src="/media/muaythai/gloves-btn.webp" alt="" width="112" height="120"><span>Spar</span></button>\n')
 hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V3 right now. Climb this page with me if you want.", [
 ], shot=piece('play', 'climbing', 'Loading the wall...') + PLAY_NOW('climb', 'Climb'))
@@ -622,11 +619,6 @@ hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a
 hobby('hiking', 'Hiking', "Thirteen hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('chess', 'Chess', "I played competitively all through elementary school, until guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
-  ('The story', [
-    ('Elementary', '<p>I played all through elementary school and competed at regionals. I got my rating up to 1425, playing against adults.</p>'),
-    ('Then guitar', '<p>Eventually I had to pick one to focus on, and it was <a href="/hobbies/guitar/">classical guitar</a>.</p>'),
-    ('Now', '<p>I still play online and solve puzzles. <a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">My chess.com</a>, and live stats are next to the board below.</p>'),
-  ], None),
 ], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('<span data-live="puzzles">1840</span>', 'My best puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity."
@@ -636,7 +628,6 @@ hobby('watercolor', 'Watercolor', "I paint with watercolor."
       '</p>\n        <p class="tagline">Move over it, or drag it on your phone, to tilt the paper.', [
 ], shot=piece('3d', 'painting', 'Loading the painting...', src='/media/watercolor/koi-pond.webp'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
-  ('Gear', [('Sony A7R II', '<p>Full frame.</p>'), ('Fujifilm X-T200', '<p>Mirrorless, APS-C.</p>'), ('Tamron 17-70mm f/2.8', '<p>Di III-A VC RXD.</p>'), ('DJI Mini 4K', '<p>The drone.</p>'), ('DJI Mic Mini', '<p>Wireless mic.</p>')], 'gear'),
 ], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/photography/footage.json'))
 hobby('travel', 'Travel', "Eight countries so far, and a list I'm behind on. Spin the globe, hover a place.", [
 ], shot=piece('3d', 'globe', 'Loading the globe...', 'globe-full'))

@@ -108,6 +108,12 @@ function Dialog({ place }: { place: Place }) {
             )}
           </section>
 
+          {photos.length === 0 && (
+            <section className="gm-sec" aria-label="Photos">
+              <p className="gm-label">Photos</p>
+              <p className="gm-soon">Coming soon.</p>
+            </section>
+          )}
           {photos.length > 0 && (
             <section className="gm-sec" aria-label="Photos">
               <p className="gm-label">Photos</p>

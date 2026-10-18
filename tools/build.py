@@ -6,9 +6,9 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 51, 16, 41, 49
+V_CSS, V_TALKCSS, V_JS, V_TALK = 52, 16, 41, 49
 V_TRACK = 1
-V_PIECE = 34  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 35  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {
@@ -341,7 +341,7 @@ projects += proj('tethos-platform', 'Tethos Platform', '2026', 'A member portal 
   'Next.js · React · TypeScript · Supabase · FastAPI · React Three Fiber · Colyseus',
   [link('/dashboard/', 'How the island works'), link('/rag/', 'The RAG service'), ext('https://tethos.ca', 'tethos.ca')],
   img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 702))
-projects += proj('hackthenorth', 'Among Us, IRL', 'Solana and Badge Hack winner, Hack the North 2026', 'Real-life Among Us on conference badges.',
+projects += proj('hackthenorth', 'Among Us, IRL', 'Hack the North 2026', 'Real-life Among Us on conference badges.',
   "36 hours, team of three. The badges sync peer to peer over an ESP-NOW mesh with no server or phones, and signal strength decides if you're close enough to kill. I wrote the game, the voting and the NFC task minigames.",
   'C++ · ESP32-C3 · ESP-NOW · PlatformIO',
   [ext('https://github.com/dahan8473/htn-amongus', 'GitHub'), ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost')],
@@ -601,7 +601,7 @@ hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do 
 hobby('badminton', 'Badminton', "Badminton was my main sport all through high school!"
       '</p>\n        <p class="tagline">My school had a very competitive team, and I played doubles at regional and provincial school competitions. Over the years I\'ve hoarded various expensive rackets. These four are my favourites.'
       '</p>\n        <p class="tagline">Click one for a closer look, and give me a rally!', [
-], shot=piece('3d', 'racket', 'Loading the rackets...') + PLAY_NOW('rally', 'Rally me'))
+], shot=piece('3d', 'racket', 'Loading the rackets...'))
 hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a $20 bike from Facebook Marketplace, because transit in London, Ontario is just too horrible. The bus takes 40 minutes, and it's always 20 minutes late."
       '</p>\n        <p class="tagline">Since getting that $20 bike I became obsessed. Then, doomscrolling Marketplace again, I saw a really nice bike. Like, reaalllyy nice. The only problem: it was in Detroit, a 2 hour drive away.'
       "</p>\n        <p class=\"tagline\">I kept thinking about it for a week. After trying to lowball the guy and going back and forth, I locked in the offer, rented a car and drove over to buy it. It's one of the best decisions I've made. That bike is so fun to ride, and I've been biking to school every day and going on long rides ever since.", [

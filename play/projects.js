@@ -18,9 +18,9 @@ const CSS = `
 .projs .proj { cursor: pointer; }
 .projs .proj .shot { transition: transform 260ms cubic-bezier(.2, .8, .2, 1), box-shadow 260ms ease; }
 @media (hover: hover) { .projs .proj:hover .shot { transform: translateY(-3px); } }
-.projs .proj:focus-visible { outline: 2px solid #88c0d0; outline-offset: 8px; border-radius: 14px; }
+.projs .proj:focus-visible { outline: 2px solid var(--accent, #88c0d0); outline-offset: 8px; border-radius: 14px; }
 .proj-more { margin-left: 12px; color: var(--t3); }
-@media (hover: hover) { .projs .proj:hover .proj-more { color: var(--t1); } }
+@media (hover: hover) { .projs .proj:hover .proj-more { color: var(--accent, var(--t1)); } }
 
 .pov [hidden] { display: none !important; }
 .pov { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: rgba(0, 0, 0, 0.42); opacity: 0; transition: opacity 200ms ease; }

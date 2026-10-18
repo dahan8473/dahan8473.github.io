@@ -24,6 +24,7 @@ export const css = `
 .p3d-globe .g-card-name { font-weight: 500; color: var(--t1); }
 .p3d-globe .g-card-date { color: var(--t3); }
 .p3d-globe .g-card-for { margin-top: 4px !important; color: var(--t2); }
+.p3d-globe .g-card-soon { margin-top: 6px !important; color: var(--t3); font-size: 12px; }
 .p3d-globe .g-card-more { margin-top: 6px !important; color: var(--t3); }
 .p3d-globe .g-card-photos { display: grid; gap: 4px; width: 212px; max-width: 100%; }
 .p3d-globe .g-card-photos.n1 { grid-template-columns: 1fr; width: 160px; }
@@ -76,6 +77,7 @@ export const css = `
 .p3d-globe-modal .gm-note { margin-top: 14px; color: var(--t2); max-width: 36em; }
 .p3d-globe-modal .gm-sec { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--rule); }
 .p3d-globe-modal .gm-label { margin-bottom: 10px !important; font-size: 13px; color: var(--t3); }
+.p3d-globe-modal .gm-soon { color: var(--t2); }
 .p3d-globe-modal .gm-empty { font-size: 14px; color: var(--t3); }
 .p3d-globe-modal .gm-videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 12px; }
 .p3d-globe-modal .gm-yt {

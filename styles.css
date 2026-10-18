@@ -25,6 +25,8 @@
   --muted: #6e6e73;
   --label: #6e6e73;
 
+  --accent: #2a7593; /* the one highlight colour: hover, the page you're on, focus */
+  --on-accent: #fff;
   --label-col: 120px;
   --panel: rgba(255, 255, 255, 0.92);
 }
@@ -40,6 +42,7 @@
   --fg: #d2d2d7;
   --muted: #98989d;
   --label: #98989d;
+  --accent: var(--accent);
   --panel: rgba(28, 28, 30, 0.92);
 }
 
@@ -65,7 +68,7 @@ img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; transition: color 150ms ease, opacity 150ms ease; }
 /* Page swaps move focus to <main> for screen readers; no ring for that. */
 main:focus { outline: none; }
-a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid #0071e3; outline-offset: 3px; border-radius: 4px; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 
 .t1 { color: var(--t1); }
 .t2 { color: var(--t2); }
@@ -74,7 +77,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 
 /* Links read as text until you point at them. */
 .ln { color: var(--t2); }
-.ln:hover { color: var(--t1); }
+.ln:hover { color: var(--accent); }
 button.ln { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
 .hello .finds-open { color: var(--t1); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
 .hello .finds-open:hover { text-decoration-color: var(--t3); }
@@ -147,7 +150,7 @@ button.ln { padding: 0; border: 0; background: none; font: inherit; cursor: poin
   color: var(--t2);
   white-space: nowrap;
 }
-.rail a.on { color: var(--t1); background: var(--fill); }
+.rail a.on { color: var(--accent); background: var(--fill); }
 @media (hover: hover) { .rail a:hover { color: var(--t1); background: var(--fill); } }
 .rail svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .rail span { opacity: 0; transition: opacity 120ms ease; }
@@ -181,7 +184,7 @@ button.ln { padding: 0; border: 0; background: none; font: inherit; cursor: poin
 .row .m .ln + .ln { margin-left: 16px; }
 .row .s .stack { display: block; margin-top: 2px; }
 a.row:hover .p, a.row:hover .s { color: var(--t1); }
-a.row:hover .m { color: var(--t2); }
+a.row:hover .m { color: var(--accent); }
 
 /* Home: who I am, then three doors. */
 .hello { max-width: 38em; padding: clamp(48px, 12vh, 128px) 0 0; }
@@ -202,7 +205,7 @@ a.row:hover .m { transform: translateX(3px); }
 .r-item { position: relative; margin: 0 -14px; padding: 10px 14px; border-radius: 12px; outline: none; }
 .r-item:not(.plain) { cursor: pointer; }
 .r-item.on, .r-item.pinned { background: var(--fill); }
-.r-item:focus-visible { box-shadow: 0 0 0 2px #0071e3; }
+.r-item:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
 .r-line { display: flex; justify-content: space-between; gap: 16px; color: var(--t2); }
 .r-line > :last-child { flex: none; text-align: right; }
 .r-line b { font-weight: 400; color: var(--t1); }
@@ -285,7 +288,7 @@ a.row:hover .m { transform: translateX(3px); }
 .sticky .by { margin-top: auto; padding-top: 8px; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Hover: it lifts off the wall and straightens up. */
 .sticky:hover, .sticky:focus-visible { transform: translate(var(--x), var(--y)) rotate(0deg) scale(1.06); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06), 0 22px 30px -16px rgba(0, 0, 0, 0.5); z-index: 40; outline: none; }
-.sticky:focus-visible { box-shadow: 0 0 0 2px #88c0d0, 0 22px 30px -16px rgba(0, 0, 0, 0.5); }
+.sticky:focus-visible { box-shadow: 0 0 0 2px var(--accent), 0 22px 30px -16px rgba(0, 0, 0, 0.5); }
 .sticky.ghost { z-index: 60; pointer-events: none; transition: none; box-shadow: 0 0 0 1px var(--t3), 0 18px 40px -18px rgba(0, 0, 0, 0.35); }
 .sticky.pending { opacity: 0.6; }
 .sticky.pinned .msg { -webkit-line-clamp: 4; max-height: calc(1.45em * 4); padding-right: 14px; }
@@ -447,7 +450,7 @@ a.row:hover .m { transform: translateX(3px); }
   .hob-card:hover .hob-pic { transform: translateY(-3px); box-shadow: 0 14px 30px -18px rgba(var(--tint), 0.9); }
   .hob-card:hover .hob-pic.photo img { transform: scale(1.04); }
   .hob-card:hover .hob-pic.cut img { transform: scale(1.06) rotate(-2deg); }
-  .hob-card:hover .hob-go { transform: translateX(3px); color: var(--t1); }
+  .hob-card:hover .hob-go { transform: translateX(3px); color: var(--accent); }
 }
 .hob-card:focus-visible { outline: none; }
 .hob-card:focus-visible .hob-pic { outline: 2px solid rgb(var(--tint)); outline-offset: 3px; }
@@ -529,7 +532,7 @@ a.row:hover .m { transform: translateX(3px); }
 .tracks.hero .t-n { color: var(--t3); font-variant-numeric: tabular-nums; }
 .tracks.hero .track button { width: 48px; height: 48px; background: var(--t1); color: var(--bg); transition: transform 160ms ease, background 160ms ease; }
 .tracks.hero .track button:hover { transform: scale(1.06); }
-.tracks.hero .track.playing button { background: #88c0d0; color: #0d111a; }
+.tracks.hero .track.playing button { background: var(--accent); color: var(--on-accent); }
 .tracks.hero .track button svg { width: 12px; height: 14px; }
 .tracks.hero .t-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
 .tracks.hero .t-title { font-size: 1.15em; }
@@ -537,7 +540,7 @@ a.row:hover .m { transform: translateX(3px); }
 .tracks.hero .t-dur { font-variant-numeric: tabular-nums; }
 .tracks.hero .t-bar { left: 94px; bottom: -1px; height: 2px; background: transparent; cursor: pointer; }
 .tracks.hero .t-bar::before { content: ''; position: absolute; inset: -8px 0; }
-.tracks.hero .track.playing .t-fill { background: #88c0d0; }
+.tracks.hero .track.playing .t-fill { background: var(--accent); }
 .stage3d.strip { aspect-ratio: 16 / 5; margin: 48px 0 0; }
 /* Brought out over the page (site.js): the page dims behind the guitar, the
    head (talk.css, z-index 70) stays above it to listen. Always dark inside. */
@@ -817,16 +820,16 @@ button.ft-next { width: calc(100% + 16px); border: 0; background: none; font: in
 .spar-glove img { width: 112px; height: auto; filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.28)); transition: transform 260ms cubic-bezier(.34, 1.56, .64, 1); }
 .spar-glove span { padding: 4px 12px; border-radius: 999px; background: var(--t1); color: var(--bg); font-weight: 500; letter-spacing: 0.01em; }
 .spar-glove:hover img { transform: rotate(-8deg) translateY(2px); }
-.spar-glove:hover span { background: #88c0d0; color: #0d111a; }
-.spar-glove:focus-visible { outline: 2px solid #88c0d0; outline-offset: 6px; border-radius: 12px; }
+.spar-glove:hover span { background: var(--accent); color: var(--on-accent); }
+.spar-glove:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 12px; }
 @keyframes glove-sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
 body:has(.mt-over) .spar-glove { visibility: hidden; }
 .play-now { position: fixed; z-index: 75; right: max(24px, calc(50vw - 640px)); top: 40%; display: grid; justify-items: center; gap: 8px; padding: 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: 13px; cursor: pointer; animation: play-bob 3.6s ease-in-out infinite; }
 .play-now img { width: 112px; height: 120px; object-fit: contain; filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.28)); transition: transform 260ms cubic-bezier(.34, 1.56, .64, 1); }
 .play-now span { padding: 4px 12px; border-radius: 999px; background: var(--t1); color: var(--bg); font-weight: 500; letter-spacing: 0.01em; white-space: nowrap; }
 .play-now:hover img { transform: rotate(-8deg) translateY(2px) scale(1.04); }
-.play-now:hover span { background: #88c0d0; color: #0d111a; }
-.play-now:focus-visible { outline: 2px solid #88c0d0; outline-offset: 6px; border-radius: 12px; }
+.play-now:hover span { background: var(--accent); color: var(--on-accent); }
+.play-now:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 12px; }
 @keyframes play-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 body:has(.rl, .mt-over, .climb-wall, .bring) .play-now { visibility: hidden; }
 @media (max-width: 1340px) { .spar-glove, .play-now { top: auto; right: auto; left: 14px; bottom: 18px; } }

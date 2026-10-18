@@ -38,6 +38,7 @@ export function Card() {
             <p className="g-card-name">{place.name}</p>
             {place.date && <p className="g-card-date">{place.date}</p>}
             {place.for && <p className="g-card-for">{place.for}</p>}
+            {photos.length === 0 && <p className="g-card-soon">Photos coming soon</p>}
             {pinned && <p className="g-card-more">Tap for more</p>}
           </div>
         </>

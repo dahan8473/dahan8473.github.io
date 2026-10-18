@@ -167,7 +167,7 @@
       tsinghua: 'ahhh take me back 🥹',
       genesis: 'genesis was our demo day. 260 people came to watch students demo software for nonprofits',
       wfn: "this was the first student club i was in! while i was VP i hosted ontario's largest hackathon education event!",
-      'tethos-platform': 'you can actually walk around that island. i made models for 91 kinds of fish, i just really like fish',
+      'tethos-platform': "i built this whole game solo. the title screen is live at play.tethos.ca, it's whatever time it is in london rn",
       hackthenorth: 'ooo this was my first hardware project! it was really fun running around the hackathon at night testing it with my teammates',
       biopilot: 'this was the first hackathon i won!',
       kunlun: "my clothing brand. i'm still working on the pieces for the first drop rn",

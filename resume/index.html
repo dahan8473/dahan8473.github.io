@@ -154,18 +154,18 @@
       <section class="r-sec" id="projects" data-t="projects" aria-labelledby="projects-h">
         <h2 id="projects-h">Projects</h2>
         <div class="r-item" data-t="tethos-platform" tabindex="0">
-          <div class="r-line first"><span><b>Tethos Platform</b>, tethos.ca</span><span class="t3">May 2026 – now</span></div>
-          <div class="r-line"><span>Next.js, TypeScript, FastAPI, Supabase, React Three Fiber</span><span class="t3"></span></div>
+          <div class="r-line first"><span><b>Tethos Island</b>, play.tethos.ca</span><span class="t3">May 2026 – now</span></div>
+          <div class="r-line"><span>Next.js, TypeScript, Three.js, React Three Fiber, Colyseus, Supabase</span><span class="t3"></span></div>
           <ul class="r-bullets">
-            <li>Solo-building a 2.5D world as the member portal, in development and single player for now: 875+ 3D assets, procedural terrain, a 91-species fishing system, and a dual-currency economy enforced by Postgres RPCs</li>
-            <li>Five LLM characters cloned from real execs, with per-member memory so they remember you between visits</li>
-            <li>A multi-agent dev pipeline of role-scoped Claude Code agents (build, QA, reviewer) that shipped 70+ unattended build iterations</li>
-            <li>The platform around it: 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications</li>
+            <li>Solo-building a cozy multiplayer 3D island game as the Tethos member portal: game design and mechanics, multiplayer, backend, character rig, animation, models and shaders</li>
+            <li>Realtime multiplayer on Colyseus with interpolation, interest management and server-checked movement, in shards of up to 40 players</li>
+            <li>A server-authoritative economy in Postgres functions with rate limits and hourly caps; cut the world from 697 draw calls to 252 by merging terrain</li>
+            <li>Built with a team of role-scoped Claude Code agents I run (build, QA, reviewer): about 2,400 commits and 2,900 tests, plus 59 API routes, five tiers of role-based access and a recruiting dashboard with 240+ applications</li>
           </ul>
           <aside class="note"><div>
-            <img src="/media/work/island-overview.webp" alt="Tethos Island, the member dashboard, in daylight" width="1400" height="702" loading="lazy">
-            <p>Standing on the ground used to cost 15,000 sin and floor calls a second, until I baked the terrain into a grid.</p>
-            <p class="go"><a class="ln" href="/dashboard/">How the island works</a><a class="ln" href="/rag/">The RAG service</a></p>
+            <img src="/media/work/tethos-island/village.webp" alt="Tethos Island: the village at golden hour" width="1440" height="860" loading="lazy">
+            <p>The title screen is the real game running behind the menu, at whatever time it is in London right now.</p>
+            <p class="go"><a class="ln out" href="https://play.tethos.ca">Play it</a><a class="ln" href="/dashboard/">How it works</a></p>
           </div></aside>
         </div>
         <div class="r-item" data-t="hackthenorth" tabindex="0">
@@ -267,7 +267,7 @@
   </div>
 
   <script src="/site.js?v=41"></script>
-  <script src="/talk/talk.js?v=50"></script>
+  <script src="/talk/talk.js?v=51"></script>
   <script type="module" src="/track.js?v=1"></script>
 </body>
 </html>

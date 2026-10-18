@@ -7,28 +7,28 @@
       "id": "projects",
       "c": [
         {
-          "t": "Tethos Platform",
+          "t": "Tethos Island (the game)",
           "id": "tethos-platform",
           "c": [
             {
-              "t": "Walkable 3D island",
+              "t": "Multiplayer 3D island, built solo",
               "id": "tp-island"
             },
             {
-              "t": "875+ 3D assets"
+              "t": "Colyseus multiplayer, 40 a shard"
             },
             {
-              "t": "91-species fishing system"
+              "t": "141 species to collect"
             },
             {
-              "t": "Five LLM characters",
+              "t": "12 residents with routines",
               "id": "tp-npcs",
               "c": [
                 {
-                  "t": "Cloned from real execs"
+                  "t": "My rig, hand-keyed animation"
                 },
                 {
-                  "t": "Remember you between visits"
+                  "t": "21 hairstyles I made"
                 }
               ]
             },
@@ -1193,10 +1193,6 @@
     [
       "tp-agents",
       "wu-mas"
-    ],
-    [
-      "tp-npcs",
-      "sk-openai"
     ],
     [
       "tp-economy",

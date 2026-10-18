@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 52, 16, 41, 50
+V_CSS, V_TALKCSS, V_JS, V_TALK = 52, 16, 41, 51
 V_TRACK = 1
 V_PIECE = 35  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -263,14 +263,14 @@ resume += sec('leadership', 'Leadership', [
   item('mentoring', [('<b>Mentoring and judging</b>', ''), (MENTORING, '')], plain=True),
 ])
 resume += sec('projects', 'Projects', [
-  item('tethos-platform', [('<b>Tethos Platform</b>, tethos.ca', 'May 2026 – now'), ('Next.js, TypeScript, FastAPI, Supabase, React Three Fiber', '')],
-       ['Solo-building a 2.5D world as the member portal, in development and single player for now: 875+ 3D assets, procedural terrain, a 91-species fishing system, and a dual-currency economy enforced by Postgres RPCs',
-        'Five LLM characters cloned from real execs, with per-member memory so they remember you between visits',
-        'A multi-agent dev pipeline of role-scoped Claude Code agents (build, QA, reviewer) that shipped 70+ unattended build iterations',
-        'The platform around it: 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications'],
-       note=[img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 702),
-             '<p>Standing on the ground used to cost 15,000 sin and floor calls a second, until I baked the terrain into a grid.</p>',
-             '<p class="go">' + link('/dashboard/', 'How the island works') + link('/rag/', 'The RAG service') + '</p>']),
+  item('tethos-platform', [('<b>Tethos Island</b>, play.tethos.ca', 'May 2026 – now'), ('Next.js, TypeScript, Three.js, React Three Fiber, Colyseus, Supabase', '')],
+       ['Solo-building a cozy multiplayer 3D island game as the Tethos member portal: game design and mechanics, multiplayer, backend, character rig, animation, models and shaders',
+        'Realtime multiplayer on Colyseus with interpolation, interest management and server-checked movement, in shards of up to 40 players',
+        'A server-authoritative economy in Postgres functions with rate limits and hourly caps; cut the world from 697 draw calls to 252 by merging terrain',
+        'Built with a team of role-scoped Claude Code agents I run (build, QA, reviewer): about 2,400 commits and 2,900 tests, plus 59 API routes, five tiers of role-based access and a recruiting dashboard with 240+ applications'],
+       note=[img('/media/work/tethos-island/village.webp', 'Tethos Island: the village at golden hour', 1440, 860),
+             '<p>The title screen is the real game running behind the menu, at whatever time it is in London right now.</p>',
+             '<p class="go">' + ext('https://play.tethos.ca', 'Play it') + link('/dashboard/', 'How it works') + '</p>']),
   item('hackthenorth', [('<b>Among Us, IRL</b>', 'Sep 2026'), ('C++, ESP32-C3, ESP-NOW, PlatformIO', 'Hack the North')],
        ['Built the game for real-life Among Us on conference badges: role dealing, the kill, report and meeting state machine, on-badge voting, and NFC tasks with motion minigames',
         'No server, router or phones: game state syncs peer to peer over a mesh, and signal strength decides if you\'re close enough to kill'],
@@ -336,11 +336,11 @@ projects = '''      <header class="doc-head">
 
       <div class="projs" data-t="build">
 '''
-projects += proj('tethos-platform', 'Tethos Platform', '2026', 'A member portal you walk around as a 3D island.',
-  'Solo-built for Tethos members: a 2.5D world (in development, single player for now) with 875+ 3D assets, a 91-species fishing system, and five LLM characters who remember you between visits. Around it, 59 API routes and five tiers of role-based access.',
-  'Next.js · React · TypeScript · Supabase · FastAPI · React Three Fiber · Colyseus',
-  [link('/dashboard/', 'How the island works'), link('/rag/', 'The RAG service'), ext('https://tethos.ca', 'tethos.ca')],
-  img('/media/work/island-overview.webp', 'Tethos Island, the member dashboard, in daylight', 1400, 702))
+projects += proj('tethos-platform', 'Tethos Island', '2026, solo', 'A cozy multiplayer island game for Tethos members.',
+  "A 3D island in the browser where Tethos's student members fish, catch bugs, fill a museum, study in a café and hang out together, under the real sky and weather of London, Ontario. I designed and built it on my own: the game, the multiplayer server, the backend, the character rig, animation, models and shaders, with a team of Claude Code agents I run. The title screen is live; the island opens to members soon.",
+  'Next.js · React · TypeScript · Three.js · React Three Fiber · Colyseus · Supabase · Blender',
+  [ext('https://play.tethos.ca', 'Play it'), link('/dashboard/', 'How it works'), ext('https://tethos.ca', 'tethos.ca')],
+  img('/media/work/tethos-island/village.webp', 'Tethos Island: the village main street at golden hour', 1440, 860))
 projects += proj('hackthenorth', 'Among Us, IRL', 'Hack the North 2026', 'Real-life Among Us on conference badges.',
   "36 hours, team of three. The badges sync peer to peer over an ESP-NOW mesh with no server or phones, and signal strength decides if you're close enough to kill. I wrote the game, the voting and the NFC task minigames.",
   'C++ · ESP32-C3 · ESP-NOW · PlatformIO',
@@ -373,12 +373,21 @@ projects += '      </div>\n\n'
 # /play/sim-<name>.js (or 'compare' for a before and after slider).
 PROJ_MORE = {
   'tethos-platform': {
-    'points': ['A 2.5D world as the member portal, in development and single player for now: 875+ 3D assets, procedural terrain, a 91-species fishing system, and a dual-currency economy enforced by Postgres RPCs',
-               'Five LLM characters cloned from real execs, with per-member memory so they remember you between visits',
-               'A multi-agent dev pipeline of role-scoped Claude Code agents (build, QA, reviewer) that shipped 70+ unattended build iterations',
-               'The platform around it: 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications'],
-    'story': 'Standing on the ground used to cost 15,000 sin and floor calls a second, until I baked the terrain into a grid.',
-    'shots': [['/media/work/island-overview.webp', 'Tethos Island in daylight', 1400, 702], ['/media/work/island-clearing.webp', 'A clearing on Tethos Island', 1400, 706]],
+    'points': ['Multiplayer on a Colyseus server: 20 updates a second, other players smoothed with a 120 to 300 ms buffer, each player only gets the people within 50 units, and the server checks every move. Shards fill to 30 and cap at 40.',
+               'A server-authoritative economy: the server rolls every catch, casts are spaced and checked, and everything that pays out runs in Postgres functions with hourly caps. One fix closed a hole that let players write their own item counts and sell them.',
+               'Performance as a feature: merging the ground and cliff pieces cut the world from 697 draw calls to 252, and detail tiers keep a full 40-player shard about 3% costlier than 24.',
+               "The sky and weather of real London, Ontario, from Open-Meteo with a NOAA-computed fallback. Everyone sees the same rain.",
+               'My own art, built by 128 Blender Python scripts: the character rig with hand-keyed animation and IK foot planting, 12 residents with daily routines, 21 hairstyles, the café and shop interiors, weapons and enemies, and 31 custom shaders for water, sky, grass and faces.',
+               'Around it: about 2,400 commits and 2,900 tests, 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications.'],
+    'story': 'The title screen is the real game running behind the menu, at whatever time it is in London, Ontario right now.',
+    'shots': [['/media/work/tethos-island/title.webp', 'The title screen over the village at night', 1600, 900],
+              ['/media/work/tethos-island/village.webp', 'The village at golden hour', 1440, 860],
+              ['/media/work/tethos-island/campfire.webp', 'A campfire on the beach at night', 1440, 860],
+              ['/media/work/tethos-island/cafe.webp', 'The café interior with study tables', 1280, 700],
+              ['/media/work/tethos-island/multiplayer.webp', 'Players chatting on the island', 1280, 760],
+              ['/media/work/tethos-island/water.webp', 'The water shader at the shoreline', 1280, 720],
+              ['/media/work/tethos-island/residents.webp', 'The twelve residents on my rig', 1600, 746],
+              ['/media/work/tethos-island/hairstyles.webp', 'My 21 hairstyles in the character creator', 1600, 779]],
   },
   'hackthenorth': {
     'award': '1st, Best Use of Solana and Badge Hack ($2,500)',
@@ -435,7 +444,7 @@ projects += '        </ul>\n      </section>\n'
 proj_data = {t: {**PROJ_BASE[t], **PROJ_MORE.get(t, {})} for t in PROJ_BASE}
 projects += '      <script type="application/json" id="proj-data">' + json.dumps(proj_data, ensure_ascii=False).replace('</', '<\\/') + '</script>\n'
 projects += f'      <div data-play="projects" data-v="{V_PIECE}" hidden></div>\n'
-write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Platform, Among Us IRL (a category win at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
+write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Island (a multiplayer game he built solo), Among Us IRL (a category win at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
 
 
 # ---- Hobbies ------------------------------------------------------------------

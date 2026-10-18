@@ -127,7 +127,7 @@
   "tethos-platform": {
     "page": "/projects/",
     "sel": "[data-t='tethos-platform']",
-    "about": "Tethos Platform (the 3D island member portal)"
+    "about": "Tethos Island: the cozy multiplayer 3D island game I built solo as the Tethos member portal (play.tethos.ca). Click it for the details and screenshots"
   },
   "hackthenorth": {
     "page": "/projects/",
@@ -177,7 +177,7 @@
   "dashboard": {
     "page": "/projects/",
     "sel": "a[href='/dashboard/']",
-    "about": "link to the 3D island case study"
+    "about": "link to the Tethos Island case study (how the game works)"
   },
   "rag": {
     "page": "/projects/",
@@ -312,17 +312,17 @@
   "dashboard-hard-part": {
     "page": "/dashboard/",
     "sel": "[data-t='dashboard-hard-part']",
-    "about": "dashboard page, the terrain height bake (50x cheaper)"
+    "about": "Tethos Island case study: the server-authoritative economy (the server rolls every catch)"
   },
   "dashboard-ghosts": {
     "page": "/dashboard/",
     "sel": "[data-t='dashboard-ghosts']",
-    "about": "dashboard page, the 'empty world' ghosts"
+    "about": "Tethos Island case study: the Colyseus multiplayer (interpolation, only people within 50 units, shards of 30 to 40)"
   },
   "dashboard-budget": {
     "page": "/dashboard/",
     "sel": "[data-t='dashboard-budget']",
-    "about": "dashboard page, NPC budget and cost gates"
+    "about": "Tethos Island case study: performance (697 to 252 draw calls, detail tiers for 40 players)"
   },
   "kunlun-page": {
     "page": "/kunlun/",

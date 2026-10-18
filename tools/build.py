@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 54, 16, 41, 52
+V_CSS, V_TALKCSS, V_JS, V_TALK = 54, 16, 41, 53
 V_TRACK = 1
 V_PIECE = 44  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -341,6 +341,11 @@ projects += proj('tethos-platform', 'Tethos Island', '2026, solo', 'A cozy multi
   'Next.js · React · TypeScript · Three.js · React Three Fiber · Colyseus · Supabase · Blender',
   [ext('https://play.tethos.ca', 'Play it'), link('/dashboard/', 'How it works'), ext('https://tethos.ca', 'tethos.ca')],
   img('/media/work/tethos-island/village.webp', 'Tethos Island: the village main street at golden hour', 1440, 860))
+projects += proj('this-site', 'davidliu.work', '2026, solo', 'This site, and the floating head that talks like me.',
+  "An AI version of me floats on every page. It answers in under a second, flies over and points at what it's talking about, pulls from my second brain, and passes messages to my phone. Two models: Jev decides in about 100 ms, DeepSeek V4.1 Flash writes the reply. Everything else is plain HTML, CSS and JavaScript, plus the games and the 3D pieces. I built it solo, with Claude Code.",
+  'JavaScript · HTML · CSS · Three.js · Vercel Functions · Supabase · OpenRouter · DeepSeek V4.1 Flash · Jev · Telegram',
+  [ext('https://github.com/dahan8473/dahan8473.github.io', 'GitHub')],
+  img('/media/work/site/head.webp', 'The floating head on davidliu.work saying hi, with its reply buttons', 1168, 730))
 projects += proj('hackthenorth', 'Among Us, IRL', 'Hack the North 2026', 'Real-life Among Us on conference badges.',
   "36 hours, team of three. The badges sync peer to peer over an ESP-NOW mesh with no server or phones, and signal strength decides if you're close enough to kill. I wrote the game, the voting and the NFC task minigames.",
   'C++ · ESP32-C3 · ESP-NOW · PlatformIO',
@@ -393,6 +398,20 @@ PROJ_MORE = {
               ['/media/work/tethos-island/water.webp', 'The water shader at the shoreline', 1280, 720],
               ['/media/work/tethos-island/residents.webp', 'The twelve residents on my rig', 1600, 746],
               ['/media/work/tethos-island/hairstyles.webp', 'My 21 hairstyles in the character creator', 1600, 779]],
+  },
+  'this-site': {
+    'points': ['Two models through OpenRouter. Jev, a fast decision model, reads every message in about 100 ms: troll or not, what they want, which part of the site it is about, who they seem to be and which of my notes to recall. So the head points and reacts before the reply has typed a word.',
+               'The reply is DeepSeek V4.1 Flash with reasoning off, streamed. It was the fastest in my tests (first word in under a second), the cheapest, and it never made things up. If it fails, the reply retries once on GPT-6.1 Sol.',
+               'Fast on purpose: the page warms the function up on load so nobody pays for a cold start, the reply starts drafting while you pause typing, the brain starts while Jev is still reading and waits for its OK, and the long system prompt is cached.',
+               'Stage directions inside the stream, like [[point:projects]], fly the head across the page to point at things as it talks. Between messages, Jev picks its next move from what you are doing.',
+               'It knows me from my second brain, the notes I keep in Obsidian, synced in. A nightly job reads the day of chats and proposes facts and better lines; only what I approve in my admin portal reaches it.',
+               'The inbox goes straight to my Telegram, and my reply lands back in your thread. Under it: GitHub Pages, Vercel functions, Supabase, a monthly spend cap, and slurs and filler words caught mid-stream.'],
+    'story': 'The pages stay static and fast; the head only costs money when someone talks to it.',
+    'shots': [
+      {'src': '/media/work/site/home.webp', 'thumb': '/media/work/site/home-s.webp', 'w': 1600, 'h': 956, 'caption': 'The head greeting a visitor on the home page'},
+      {'src': '/media/work/site/brain.webp', 'thumb': '/media/work/site/brain-s.webp', 'w': 1600, 'h': 956, 'caption': 'The second brain it thinks with, from my Obsidian vault'},
+      {'src': '/media/work/site/messages.webp', 'thumb': '/media/work/site/messages-s.webp', 'w': 1600, 'h': 956, 'caption': 'Messages: straight to my phone over Telegram'},
+    ],
   },
   'hackthenorth': {
     'award': '1st, Best Use of Solana and Badge Hack ($2,500)',
@@ -459,12 +478,11 @@ projects += '''      <section class="more-projs" aria-labelledby="more-h">
 projects += more('rag-card', 'RAG service', "Cited answers from Tethos's Drive and Notion. Never re-embeds what didn't change.", 'FastAPI · pgvector · OpenAI embeddings · Docker · Cloud Run', [link('/rag/', 'Case study')])
 projects += more('ur5', 'UR5 motion library', 'Six programs for a collaborative robot arm, from my Modern Engineering internship.', 'Python · RTDE · OpenCV', [ext('https://github.com/dahan8473/ModernEngineering_UR', 'GitHub')])
 projects += more('wec', 'WEC 2024', 'Our 2024 Western Engineering Competition entry.', 'Unity · C#', [ext('https://github.com/dahan8473/WEC_24', 'GitHub')])
-projects += more('this-site', 'davidliu.work', 'This site, and the floating head that talks like me.', 'HTML · CSS · JavaScript · DeepSeek · Jev', [ext('https://github.com/dahan8473/dahan8473.github.io', 'GitHub')])
 projects += '        </ul>\n      </section>\n'
 proj_data = {t: {**PROJ_BASE[t], **PROJ_MORE.get(t, {})} for t in PROJ_BASE}
 projects += '      <script type="application/json" id="proj-data">' + json.dumps(proj_data, ensure_ascii=False).replace('</', '<\\/') + '</script>\n'
 projects += f'      <div data-play="projects" data-v="{V_PIECE}" hidden></div>\n'
-write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Island (a multiplayer game he built solo), Among Us IRL (a category win at Hack the North), Tethotchi (a virtual pet keychain), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
+write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Island (a multiplayer game he built solo), davidliu.work and its AI head, Among Us IRL (a category win at Hack the North), Tethotchi (a virtual pet keychain), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
 
 
 # ---- Hobbies ------------------------------------------------------------------

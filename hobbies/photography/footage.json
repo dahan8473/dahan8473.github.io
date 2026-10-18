@@ -1,4 +1,47 @@
 {
-  "_how": "Drone footage from the DJI Mini 4K. youtube is the video id.",
-  "videos": []
+  "_how": "Drone footage from the DJI Mini 4K. youtube is a video id; video + poster is a short clip of our own under /media/drone/.",
+  "videos": [
+    {
+      "video": "/media/drone/cape-bonavista.mp4",
+      "poster": "/media/drone/cape-bonavista.webp",
+      "title": "Cape Bonavista, Newfoundland",
+      "date": "2026-06-23"
+    },
+    {
+      "video": "/media/drone/bonavista-peninsula.mp4",
+      "poster": "/media/drone/bonavista-peninsula.webp",
+      "title": "Bonavista Peninsula, Newfoundland",
+      "date": "2026-06-23"
+    },
+    {
+      "video": "/media/drone/avalon-lake.mp4",
+      "poster": "/media/drone/avalon-lake.webp",
+      "title": "Avalon Peninsula, Newfoundland",
+      "date": "2026-06-27"
+    },
+    {
+      "video": "/media/drone/placentia.mp4",
+      "poster": "/media/drone/placentia.webp",
+      "title": "Placentia, Newfoundland",
+      "date": "2026-06-27"
+    },
+    {
+      "video": "/media/drone/point-prim.mp4",
+      "poster": "/media/drone/point-prim.webp",
+      "title": "Point Prim Lighthouse, PEI",
+      "date": "2026-06-28"
+    },
+    {
+      "video": "/media/drone/pei-lupins.mp4",
+      "poster": "/media/drone/pei-lupins.webp",
+      "title": "Lupins and daisies, PEI",
+      "date": "2026-06-28"
+    },
+    {
+      "video": "/media/drone/pei-north-shore.mp4",
+      "poster": "/media/drone/pei-north-shore.webp",
+      "title": "North shore, PEI",
+      "date": "2026-06-29"
+    }
+  ]
 }

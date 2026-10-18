@@ -106,6 +106,7 @@ export const css = `
 }
 .p3d-globe-modal .gm-yt img { width: 100%; height: 100%; object-fit: cover; transition: opacity 150ms ease; }
 .p3d-globe-modal .gm-yt:hover img { opacity: 0.9; }
+.p3d-globe-modal .gm-clip { object-fit: cover; cursor: default; }
 .p3d-globe-modal .gm-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .p3d-globe-modal .gm-play {
   position: absolute; left: 50%; top: 50%; translate: -50% -50%;

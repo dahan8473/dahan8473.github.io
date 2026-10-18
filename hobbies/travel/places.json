@@ -1,5 +1,5 @@
 {
- "_how": "One entry per place. lat/lng in degrees. for is one line on what the trip was for. videos are YouTube ids (unlisted is fine). photos are paths under /media/travel/. cover is up to 3 photo paths for the hover card (defaults to the first 3 photos).",
+ "_how": "One entry per place. lat/lng in degrees. for is one line on what the trip was for. videos are YouTube ids (unlisted is fine) or paths to our own .mp4 clips (poster beside it as .webp). photos are paths under /media/travel/. cover is up to 3 photo paths for the hover card (defaults to the first 3 photos).",
  "places": [
   {
    "id": "beijing",
@@ -257,8 +257,8 @@
    "date": "June 2026",
    "for": "Gros Morne, Bonavista, Signal Hill, Cape Spear",
    "note": "Gros Morne, Bonavista, Signal Hill and Cape Spear, the most easterly point in North America.",
-   "videos": [],
-   "photos": [],
+   "videos": ["/media/drone/cape-bonavista.mp4", "/media/drone/bonavista-peninsula.mp4", "/media/drone/avalon-lake.mp4", "/media/drone/placentia.mp4"],
+   "photos": ["/media/travel/newfoundland/avalon-island.webp", "/media/travel/newfoundland/avalon-pond.webp", "/media/travel/newfoundland/avalon-beach.webp"],
    "cover": []
   },
   {
@@ -283,8 +283,8 @@
    "date": "June 2026",
    "for": "The red cliffs at Thunder Cove",
    "note": "",
-   "videos": [],
-   "photos": [],
+   "videos": ["/media/drone/point-prim.mp4", "/media/drone/pei-lupins.mp4", "/media/drone/pei-north-shore.mp4"],
+   "photos": ["/media/travel/pei/point-prim-flats.webp"],
    "cover": []
   },
   {

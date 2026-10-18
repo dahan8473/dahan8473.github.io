@@ -1,5 +1,5 @@
 // The place popup: a modal over the whole page (portaled to <body>), with the
-// trip details, vlog embeds and every photo. Photos open larger inside it.
+// trip details, videos (YouTube vlogs or our own .mp4 clips) and every photo. Photos open larger inside it.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Place } from './data';
@@ -96,12 +96,12 @@ function Dialog({ place }: { place: Place }) {
           {place.note && norm(place.note) !== norm(place.for) && <p className="gm-note">{place.note}</p>}
 
           <section className="gm-sec" aria-label="Videos">
-            <p className="gm-label">Vlog</p>
+            <p className="gm-label">Videos</p>
             {videos.length ? (
               <div className="gm-videos">
-                {videos.map((id) => (
-                  <LiteYouTube key={id} id={id} title={place.name} />
-                ))}
+                {videos.map((id) =>
+                  CLIP.test(id) ? <Clip key={id} src={id} title={place.name} /> : <LiteYouTube key={id} id={id} title={place.name} />
+                )}
               </div>
             ) : (
               <p className="gm-empty">No videos yet.</p>
@@ -157,6 +157,26 @@ function Dialog({ place }: { place: Place }) {
         )}
       </div>
     </div>
+  );
+}
+
+// A clip of our own (a path to an .mp4, poster beside it as .webp): loops muted, with controls.
+const CLIP = /^\/[\w/.-]+\.mp4$/;
+function Clip({ src, title }: { src: string; title: string }) {
+  const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return (
+    <video
+      className="gm-yt gm-clip"
+      src={src}
+      poster={src.replace(/\.mp4$/, '.webp')}
+      aria-label={`${title}, from the drone`}
+      muted
+      loop
+      playsInline
+      autoPlay={!still}
+      controls
+      preload="metadata"
+    />
   );
 }
 

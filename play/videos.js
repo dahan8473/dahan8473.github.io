@@ -3,7 +3,9 @@
 //   <div class="play" data-play="videos" data-src="/hobbies/video/videos.json">
 //   videos.json: { "videos": [
 //     { "youtube": "<id>", "title", "date", "note" },
-//     { "instagram": "<shortcode>", "title", "date", "note" } ] }
+//     { "instagram": "<shortcode>", "title", "date", "note" },
+//     { "video": "/media/drone/x.mp4", "poster": "/media/drone/x.webp", "title", "date", "note" } ] }
+// A video is a short clip of our own: it loops muted while it's on screen.
 // youtube takes an id or a pasted link. instagram takes the shortcode from
 // instagram.com/reel/<shortcode>/ (a reel) or a pasted /reel/ or /p/ link.
 // YouTube runs sit in a 16:9 grid, Instagram runs in a 9:16 grid; order is kept.
@@ -37,6 +39,7 @@ const CSS = `
 .pvid-btn svg { width: 22px; height: 22px; margin-left: 3px; fill: currentColor; }
 @media (hover: hover) { .pvid-play:hover .pvid-btn { background: #88c0d0; color: #0d0d0e; transform: scale(1.04); } }
 .pvid-play:focus-visible .pvid-btn { background: #88c0d0; color: #0d0d0e; }
+.pvid-frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
 .pvid-text { padding: 10px 2px 0; }
 .pvid-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 16px; }
 .pvid-title { min-width: 0; color: var(--t1); }
@@ -163,6 +166,7 @@ export function mount(el) {
 
   let alive = true;
   let liveReel = null;
+  let io = null;
   const ctrl = new AbortController();
 
   function textBlock(v) {
@@ -213,6 +217,37 @@ export function mount(el) {
       f.focus({ preventScroll: true });
     });
     frame.appendChild(btn);
+    li.appendChild(frame);
+    const text = textBlock(v);
+    if (text) li.appendChild(text);
+    return li;
+  }
+
+  // Our own clip: muted, looping while on screen; a click pauses or plays it.
+  function clipItem(v) {
+    const li = h('li', 'pvid-item');
+    const frame = h('div', 'pvid-frame');
+    const vid = h('video');
+    vid.muted = true;
+    vid.loop = true;
+    vid.playsInline = true;
+    vid.preload = 'none';
+    if (v.poster) vid.poster = v.poster;
+    vid.src = v.video;
+    vid.setAttribute('aria-label', v.title || 'Clip');
+    vid.addEventListener('click', () => { if (vid.paused) vid.play().catch(() => {}); else vid.pause(); });
+    if (!reduce.matches) {
+      if (!io) {
+        io = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) e.target.play().catch(() => {});
+            else e.target.pause();
+          }
+        }, { threshold: 0.4 });
+      }
+      io.observe(vid);
+    }
+    frame.appendChild(vid);
     li.appendChild(frame);
     const text = textBlock(v);
     if (text) li.appendChild(text);
@@ -304,12 +339,13 @@ export function mount(el) {
     const runs = [];
     list.forEach((v) => {
       const last = runs[runs.length - 1];
-      if (last && last.type === v.type) last.items.push(v);
-      else runs.push({ type: v.type, items: [v] });
+      const type = v.type === 'ig' ? 'ig' : 'wide';
+      if (last && last.type === type) last.items.push(v);
+      else runs.push({ type, items: [v] });
     });
     runs.forEach((run) => {
       const ul = h('ul', 'pvid-group ' + (run.type === 'ig' ? 'pvid-reels' : 'pvid-grid' + (list.length === 1 ? ' one' : '')));
-      run.items.forEach((v) => ul.appendChild(run.type === 'ig' ? reelItem(v) : youtubeItem(v)));
+      run.items.forEach((v) => ul.appendChild(v.type === 'ig' ? reelItem(v) : v.type === 'clip' ? clipItem(v) : youtubeItem(v)));
       root.appendChild(ul);
     });
   }
@@ -333,6 +369,7 @@ export function mount(el) {
         const ig = !yt && v.instagram && instagramRef(v.instagram);
         if (yt) list.push({ ...base, type: 'yt', id: yt });
         else if (ig) list.push({ ...base, type: 'ig', kind: ig.kind, code: ig.code, poster: typeof v.poster === 'string' ? v.poster : '' });
+        else if (typeof v.video === 'string' && v.video) list.push({ ...base, type: 'clip', video: v.video, poster: typeof v.poster === 'string' ? v.poster : '' });
       });
       render(list);
     });
@@ -341,6 +378,8 @@ export function mount(el) {
     alive = false;
     ctrl.abort();
     liveReel = null;
+    if (io) io.disconnect();
+    root.querySelectorAll('video').forEach((v) => { v.pause(); v.removeAttribute('src'); v.load(); });
     document.removeEventListener('dl:footage', onFootage);
     window.removeEventListener('message', onMessage);
     root.remove();

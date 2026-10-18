@@ -42,7 +42,8 @@
   --fg: #d2d2d7;
   --muted: #98989d;
   --label: #98989d;
-  --accent: var(--accent);
+  --accent: #88c0d0;
+  --on-accent: #0d0d0e;
   --panel: rgba(28, 28, 30, 0.92);
 }
 

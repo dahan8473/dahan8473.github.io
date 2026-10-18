@@ -1,0 +1,38 @@
+{
+ "_how": "Penguin Rally's last maze, a race against David. Set maps: open is one hex digit per cell (bit 0 north, 1 east, 2 south, 3 west open), fish/you/david are cells, turns is the board's orientation (quarter turns) at the start and then every spin ms. run is David's recorded presses, [ms after Go, direction 0-3], from /hobbies/lumosity/?record=penguin; null until recorded. Changing a map throws its run away.",
+ "maps": [
+  {
+   "n": 9,
+   "open": "6a86c6eac3ac5395696e93c6938516c53c6c56955455553c3953957a96afa853aa9696852aaab83a9",
+   "fish": 40,
+   "you": 72,
+   "david": 80,
+   "steps": 26,
+   "turns": [2, 1, 0, 2, 1, 2, 0, 2, 3, 2, 3, 2, 0, 1, 0, 2],
+   "spin": 5000,
+   "run": null
+  },
+  {
+   "n": 9,
+   "open": "6a86ec6c47aa95793d3a86d16c56c69169555396a96957aabc692d16c693ac52953aa8552abaaaa91",
+   "fish": 40,
+   "you": 0,
+   "david": 72,
+   "steps": 22,
+   "turns": [2, 0, 2, 3, 2, 1, 3, 1, 3, 0, 2, 3, 1, 0, 1, 0],
+   "spin": 5000,
+   "run": null
+  },
+  {
+   "n": 9,
+   "open": "6e86aaaec53c546a95545553ac53d3bfa855692c56a9556a9156c553c2e955556969695513a92b839",
+   "fish": 40,
+   "you": 72,
+   "david": 80,
+   "steps": 18,
+   "turns": [2, 1, 3, 0, 3, 2, 0, 2, 3, 1, 2, 0, 1, 3, 0, 2],
+   "spin": 5000,
+   "run": null
+  }
+ ]
+}

@@ -4,6 +4,8 @@
     {
       "video": "/media/photos/sunset-silhouettes.mp4",
       "poster": "/media/photos/sunset-silhouettes.webp",
+      "w": 1280,
+      "h": 720,
       "title": "Sunset silhouettes",
       "alt": "Two friends in silhouette on a rock by the water at sunset",
       "camera": "xt200",
@@ -12,6 +14,8 @@
     },
     {
       "src": "/media/photos/jellyfish.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Jellyfish",
       "alt": "Glowing blue jellyfish drifting in a dark aquarium tank",
       "camera": "xt200",
@@ -20,6 +24,8 @@
     },
     {
       "src": "/media/photos/noodles-kimbap.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Noodles and kimbap",
       "alt": "A bowl of noodles and a plate of kimbap on a wooden table",
       "camera": "xt200",
@@ -28,6 +34,8 @@
     },
     {
       "src": "/media/photos/mountains-clouds.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Mountains and clouds",
       "alt": "Mountains and big white clouds over the water behind a line of trees",
       "camera": "xt200",
@@ -36,6 +44,8 @@
     },
     {
       "src": "/media/photos/seagull.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Gull on the beach",
       "alt": "A young gull standing on a sandy beach, driftwood and people behind",
       "camera": "xt200",
@@ -44,6 +54,8 @@
     },
     {
       "src": "/media/photos/sunset-clouds.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Dusk clouds",
       "alt": "Pink and purple clouds over the water at dusk",
       "camera": "xt200",
@@ -52,6 +64,8 @@
     },
     {
       "src": "/media/photos/blue-hour-silhouettes.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Blue hour",
       "alt": "Two people in silhouette by the water at blue hour",
       "camera": "xt200",
@@ -60,6 +74,8 @@
     },
     {
       "src": "/media/photos/doorway-tassel.webp",
+      "w": 1013,
+      "h": 1800,
       "title": "Tassel in the doorway",
       "alt": "A red Chinese knot tassel hanging from a doorknob in a strip of evening sun",
       "camera": "xt200",
@@ -68,6 +84,8 @@
     },
     {
       "src": "/media/photos/restricted-visibility.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Restricted visibility",
       "alt": "A yellow Restricted Visibility sign and a 40 km/h sign on a hill road, mountains behind",
       "camera": "xt200",
@@ -76,6 +94,8 @@
     },
     {
       "src": "/media/photos/park-evening.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Park picnic",
       "alt": "People picnicking under trees by the water on a bright evening",
       "camera": "xt200",
@@ -84,6 +104,8 @@
     },
     {
       "src": "/media/photos/waterfront-rock.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Golden hour by the water",
       "alt": "A friend sitting on a rock by the water, mountains behind, in low evening light",
       "camera": "xt200",
@@ -92,6 +114,8 @@
     },
     {
       "src": "/media/photos/aquarium-arch.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Aquarium arch",
       "alt": "A big aquarium tank with a rock arch and fish overhead",
       "camera": "xt200",
@@ -100,6 +124,8 @@
     },
     {
       "src": "/media/photos/aquarium-school.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "School of fish",
       "alt": "A school of fish swimming through a green-lit tank",
       "camera": "xt200",
@@ -108,6 +134,8 @@
     },
     {
       "src": "/media/photos/hotpot-dinner.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Hot pot night",
       "alt": "Friends around a table at a hot pot dinner",
       "camera": "xt200",
@@ -116,6 +144,8 @@
     },
     {
       "src": "/media/travel/seoul/glow-store.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "GLOW, Seoul",
       "alt": "Shoppers walking into a GLOW store with walls of products",
       "camera": "xt200",
@@ -124,6 +154,8 @@
     },
     {
       "src": "/media/travel/seoul/cafe-tarts.webp",
+      "w": 1800,
+      "h": 1013,
       "title": "Café tarts, Seoul",
       "alt": "A lit cafe display packed with rows of fruit tarts",
       "camera": "xt200",

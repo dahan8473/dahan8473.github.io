@@ -3,11 +3,15 @@
   "photos": [
     {
       "src": "/media/cycling/listing.webp",
+      "w": 1179,
+      "h": 880,
       "alt": "The matte black track bike leaning against a garage wall, yellow camo bar tape, from the Facebook Marketplace listing",
       "caption": "The Marketplace listing"
     },
     {
       "src": "/media/cycling/night-ride.webp",
+      "w": 1200,
+      "h": 1600,
       "alt": "David riding the bike past campus at night under the street lights",
       "caption": "A night ride"
     }

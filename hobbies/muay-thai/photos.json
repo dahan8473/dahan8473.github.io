@@ -3,24 +3,34 @@
   "photos": [
     {
       "src": "/media/muaythai/gloves.webp",
+      "w": 1200,
+      "h": 1600,
       "alt": "David and a training partner in gloves, arms around each other, in Western's wrestling room"
     },
     {
       "video": "/media/muaythai/spar.mp4",
       "poster": "/media/muaythai/spar-s.webp",
+      "w": 800,
+      "h": 1422,
       "alt": "Sparring: a teep and a kick in the wrestling room"
     },
     {
       "src": "/media/muaythai/punch.webp",
+      "w": 1200,
+      "h": 1600,
       "alt": "David landing a jab on his training partner, both laughing it off"
     },
     {
       "video": "/media/muaythai/pads.mp4",
       "poster": "/media/muaythai/pads-s.webp",
+      "w": 800,
+      "h": 1422,
       "alt": "Light sparring with shin guards on"
     },
     {
       "src": "/media/muaythai/gym.webp",
+      "w": 1200,
+      "h": 1600,
       "alt": "The gym: black mats, mirrors and pads"
     }
   ]

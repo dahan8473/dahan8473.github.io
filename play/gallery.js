@@ -1,7 +1,8 @@
-// Photo gallery piece: a grid of cards, each with the photo sitting in the
-// middle, its title and camera under it, the month in a tag, and a lightbox.
+// Photo gallery piece: justified rows, every photo at its own shape and filling
+// its card; the title, camera and month come up over it on hover. Lightbox on click.
 //   <div class="play" data-play="gallery" data-src="/hobbies/photography/photos.json">
-//   photos.json: { "photos": [ { "src", "title", "caption", "camera", "lens", "date", "alt" } ] }
+//   photos.json: { "photos": [ { "src", "w", "h", "title", "caption", "camera", "lens", "date", "alt" } ] }
+// w and h give the shape before the photo loads (otherwise it's read on load).
 // camera is "xt200" or "a7r2". When photos have cameras, a pill bar on top
 // filters by camera; it and the 3D kit stay in step through a dl:camera event
 // on document ({ detail: { id } }, id null for all).
@@ -26,40 +27,47 @@ const CSS = `
 .pgal-tab svg { display: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
 .pgal-tab.on svg { display: block; }
 .pgal-tab:focus-visible { border-radius: 999px; }
-.pgal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 10px; }
-.pgal-item { margin: 0; }
+.pgal-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Takes up the slack in the last row, so it isn't stretched. */
+.pgal-grid::after { content: ''; flex-grow: 1000000; }
+.pgal-item { flex-grow: var(--ar, 1.33); flex-basis: calc(var(--ar, 1.33) * 180px); min-width: 0; margin: 0; }
 .pgal-open {
-  position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; padding: 14px;
-  border: 0; border-radius: 18px; background: var(--fill); color: inherit; font: inherit; text-align: left; cursor: zoom-in;
-  transition: background 160ms ease;
+  position: relative; display: block; width: 100%; aspect-ratio: var(--ar, 1.33); padding: 0;
+  border: 0; border-radius: 14px; overflow: hidden; background: var(--fill); color: #fff; font: inherit; text-align: left; cursor: zoom-in;
 }
-.pgal-open:focus-visible { border-radius: 18px; outline-offset: 3px; }
-.pgal-media { display: flex; align-items: center; justify-content: center; aspect-ratio: 5 / 4; padding: 8% 6% 4%; overflow: hidden; }
-.pgal-media img { min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 6px; opacity: 0; transition: opacity 320ms ease, transform 260ms ease; }
-.pgal-media img.in { opacity: 1; }
-.pgal-go { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 22px; height: 22px; color: var(--t2); transition: color 160ms ease, transform 160ms ease; }
-.pgal-go svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.pgal-badge { position: absolute; top: 12px; left: 12px; display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 7px; border-radius: 7px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); font-size: 13px; }
+.pgal-open:focus-visible { border-radius: 14px; outline-offset: 3px; }
+.pgal-open img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 320ms ease, transform 500ms cubic-bezier(.2, .7, .2, 1); }
+.pgal-open img.in { opacity: 1; }
+.pgal-go {
+  position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; transition: opacity 180ms ease, transform 180ms ease;
+}
+.pgal-go svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pgal-badge { position: absolute; top: 10px; left: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 7px; background: rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #fff; font-size: 13px; }
 .pgal-badge svg { width: 10px; height: 10px; fill: currentColor; }
-.pgal-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 10px; }
-.pgal-text { min-width: 0; }
-.pgal-title { display: block; overflow: hidden; color: var(--t1); white-space: nowrap; text-overflow: ellipsis; }
-.pgal-meta { display: block; overflow: hidden; color: var(--t3); white-space: nowrap; text-overflow: ellipsis; }
-.pgal-meta i { margin: 0 6px; font-style: normal; opacity: 0.6; }
-.pgal-pill { flex: none; padding: 3px 9px; border-radius: 8px; background: var(--fill); color: var(--t2); font-size: 13px; white-space: nowrap; }
-@media (hover: hover) {
-  .pgal-open:hover { background: color-mix(in srgb, var(--fill) 100%, var(--t1) 4%); }
-  .pgal-open:hover .pgal-media img.in { transform: scale(1.02); }
-  .pgal-open:hover .pgal-go { color: var(--accent); transform: translate(2px, -2px); }
+.pgal-info {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  padding: 48px 14px 12px; background: linear-gradient(to top, rgba(0, 0, 0, 0.66), rgba(0, 0, 0, 0.28) 55%, rgba(0, 0, 0, 0));
+  opacity: 0; transform: translateY(6px); transition: opacity 200ms ease, transform 200ms ease;
 }
-.pgal-open.broken { cursor: default; }
+.pgal-text { min-width: 0; }
+.pgal-title { display: block; overflow: hidden; color: #fff; white-space: nowrap; text-overflow: ellipsis; }
+.pgal-meta { display: block; overflow: hidden; color: rgba(255, 255, 255, 0.72); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+.pgal-meta i { margin: 0 6px; font-style: normal; opacity: 0.6; }
+.pgal-pill { flex: none; padding: 3px 9px; border-radius: 8px; background: rgba(255, 255, 255, 0.18); color: #fff; font-size: 13px; white-space: nowrap; }
+.pgal-open:focus-visible :is(.pgal-info, .pgal-go) { opacity: 1; transform: none; }
+@media (hover: hover) {
+  .pgal-open:hover :is(.pgal-info, .pgal-go) { opacity: 1; transform: none; }
+  .pgal-open:hover img.in { transform: scale(1.03); }
+}
+.pgal-open.broken { display: grid; place-items: center; cursor: default; }
 .pgal-open.broken img { display: none; }
-.pgal-media > svg { width: 22px; height: 22px; fill: none; stroke: var(--t3); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.pgal-open.broken > svg { width: 22px; height: 22px; fill: none; stroke: var(--t3); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .pgal-empty { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-radius: 14px; background: var(--fill); color: var(--t2); }
 .pgal-empty svg { flex: none; width: 22px; height: 22px; fill: none; stroke: var(--t3); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .pgal-loading { height: 160px; border-radius: 14px; background: var(--fill); }
-@media (prefers-reduced-motion: reduce) { .pgal-media img, .pgal-go { transition: none; } }
-@media (max-width: 720px) { .pgal-grid { gap: 8px; } .pgal-open { padding: 12px; border-radius: 16px; } }
+@media (prefers-reduced-motion: reduce) { .pgal-open img, .pgal-go, .pgal-info { transition: none; } .pgal-open:hover img.in { transform: none; } }
+@media (max-width: 720px) { .pgal-grid { gap: 6px; } .pgal-item { flex-basis: calc(var(--ar, 1.33) * 150px); } .pgal-open { border-radius: 10px; } }
 `;
 
 const LB_CSS = `
@@ -391,25 +399,28 @@ export function mount(el) {
     }
     const go = h('span', 'pgal-go');
     go.appendChild(icon(ICON.arrow));
-    const media = h('span', 'pgal-media');
+    if (p.w > 0 && p.h > 0) fig.style.setProperty('--ar', (p.w / p.h).toFixed(4));
     const img = h('img');
     img.loading = 'lazy';
     img.decoding = 'async';
     img.alt = p.alt || name;
-    img.addEventListener('load', () => img.classList.add('in'));
+    img.addEventListener('load', () => {
+      if (!(p.w > 0 && p.h > 0) && img.naturalWidth && img.naturalHeight) fig.style.setProperty('--ar', (img.naturalWidth / img.naturalHeight).toFixed(4));
+      img.classList.add('in');
+    });
     img.addEventListener('error', () => {
       if (btn.classList.contains('broken')) return;
       btn.classList.add('broken');
-      media.appendChild(icon(ICON.photo));
+      btn.appendChild(icon(ICON.photo));
     });
     img.src = p.src || p.poster;
-    media.appendChild(img);
-    btn.append(go, media);
-    // Title and camera on the left, the month in a tag on the right.
+    btn.prepend(img);
+    btn.appendChild(go);
+    // On hover: title and camera on the left, the month in a tag on the right.
     const meta = [p.camera && camName(p.camera), p.lens].filter(Boolean);
     const month = monthOf(p.date);
     if (name || meta.length || month) {
-      const foot = h('span', 'pgal-foot');
+      const info = h('span', 'pgal-info');
       const text = h('span', 'pgal-text');
       if (name) text.appendChild(h('span', 'pgal-title', name));
       if (meta.length) {
@@ -417,9 +428,9 @@ export function mount(el) {
         meta.forEach((x, k) => { if (k) m.appendChild(h('i', null, '·')); m.append(x); });
         text.appendChild(m);
       }
-      foot.appendChild(text);
-      if (month) foot.appendChild(h('span', 'pgal-pill', month));
-      btn.appendChild(foot);
+      info.appendChild(text);
+      if (month) info.appendChild(h('span', 'pgal-pill', month));
+      btn.appendChild(info);
     }
     btn.addEventListener('click', () => {
       const at = shown.indexOf(p);

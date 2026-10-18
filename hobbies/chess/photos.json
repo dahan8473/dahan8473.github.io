@@ -3,11 +3,15 @@
   "photos": [
     {
       "src": "/media/chess/with-friends.webp",
+      "w": 1200,
+      "h": 1600,
       "alt": "A friend in a pink jersey thinking over a wooden chess board",
       "caption": "Chess with friends"
     },
     {
       "src": "/media/chess/outside.webp",
+      "w": 1200,
+      "h": 1600,
       "alt": "An outdoor game on a green roll-up board, seen from David's side"
     }
   ]

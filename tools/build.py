@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 52, 16, 41, 49
+V_CSS, V_TALKCSS, V_JS, V_TALK = 52, 16, 41, 50
 V_TRACK = 1
 V_PIECE = 35  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -466,14 +466,14 @@ TIPS = {
   'climbing': (None, "I boulder with my friends. I'm not very good at it tho, maybe one day I can finally climb a V4."),
   'swimming': (None, "One of the sports my parents forced on me. I'm a registered lifeguard."),
   'cycling': ('/media/cycling/me-and-the-bike-s.webp', "I have a really cool track bike. I drove over 2 hours to pick it up from a Facebook Marketplace seller, and I've ridden it every day since."),
-  'speed-skating': (None, "1st at BC provincials in my youth group, in the 100m, 200m, 300m and 1000m."),
+  'speed-skating': (None, "My main sport growing up. 1st at BC provincials in my youth group, in the 100m, 200m, 400m and 1000m."),
   'chess': ('/media/chess/with-friends.webp', '<b class="tip-stat"><span data-live="puzzles">1840</span> puzzle rating</b>2nd at BC provincials in my youth group. I still play for fun with friends.'),
   'video': ({'video': '/media/video/reels-teaser.mp4', 'poster': '/media/video/reels-teaser.webp'}, "Reels I make for TSI."),
   'meowmeow': (['/media/life/meowmeow-sleep.webp', '/media/life/meowmeow-belly.webp', '/media/life/meowmeow-stairs.webp'], "My cat. Always chudding around. Here she comes."),
 }
 # No page at all, just the hover card. The rest keep their pages (the head
 # and the previous / next links still go there).
-NOPAGE = {'swimming'}
+NOPAGE = {'swimming', 'speed-skating'}
 # Page order, for previous and next.
 HOBBIES = [h[:2] for _, rows, more in GROUPS for h in rows + more if h[0] not in NOPAGE]
 DT = {'muay-thai': 'muaythai'}
@@ -596,7 +596,7 @@ hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, bec
       "</p>\n        <p class=\"tagline\">If you've never tried something like this, give it a shot. It might reveal more about yourself than you think!", [
   ('Coaching', [('Beginner class', "<p>I coach the people walking in for the first time. If you train anything, tell the head. It'll want to hear about it.</p>")], None),
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched') + '      <button class="spar-glove" type="button" data-spar aria-label="Spar with the head"><img src="/media/muaythai/gloves-btn.webp" alt="" width="112" height="120"><span>Spar</span></button>\n')
-hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V2 right now. Climb this page with me if you want.", [
+hobby('climbing', 'Rock climbing', "I boulder. I'm not very good, I can only do a V3 right now. Climb this page with me if you want.", [
 ], shot=piece('play', 'climbing', 'Loading the wall...') + PLAY_NOW('climb', 'Climb'))
 hobby('badminton', 'Badminton', "Badminton was my main sport all through high school!"
       '</p>\n        <p class="tagline">My school had a very competitive team, and I played doubles at regional and provincial school competitions. Over the years I\'ve hoarded various expensive rackets. These four are my favourites.'
@@ -612,8 +612,6 @@ hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a
 ''' + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/cycling/photos.json') + piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Thirteen hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
-hobby('speed-skating', 'Speed skating', 'Speed skating was my main sport growing up. I won 1st at the BC provincials in my youth group, in the 100m, 200m, 300m and 1000m.', [
-], shot=piece('play', 'trophycase', 'Digging out photos rn.', src='/hobbies/speed-skating/trophies.json'))
 hobby('chess', 'Chess', "I played competitively all through elementary school, until guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
   ('The story', [
     ('Elementary', '<p>I played all through elementary school and competed at regionals. I got my rating up to 1425, playing against adults.</p>'),
@@ -739,6 +737,7 @@ privacy = '''      <header class="doc-head">
         <section>
           <h2>Turning it off, and deleting it</h2>
           <p>Turn on Do Not Track or Global Privacy Control in your browser and the site stops logging your page views and how you use it. Chats you have with the head are still saved, since that's how I read them.</p>
+          <p>Old data clears itself: IP addresses after 30 days, page views and how the site got used after 90 days, chats after 12 months.</p>
           <p>Want everything about you deleted? Email <a class="ln" href="mailto:davidliu8473@gmail.com">davidliu8473@gmail.com</a> with your visitor id and I'll remove it. <span class="vid-line">Yours is <code id="my-visitor">not set yet</code>.</span></p>
           <script>try { var v = localStorage.getItem('dl-visitor'); if (v) document.getElementById('my-visitor').textContent = v; } catch (e) {}</script>
         </section>

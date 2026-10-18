@@ -181,7 +181,7 @@
       meowmeow: "that's meowmeow! she's really fat and sleeps all day. want me to call her over?",
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',
       muaythai: 'i coach the beginner class! do you train anything?',
-      climbing: "i'm not very good, i can only do a v2 :( what grade do you climb?",
+      climbing: "i'm not very good, i can only do a v3 :( what grade do you climb?",
       badminton: 'badminton was my main sport all through high school! i played doubles. do you play?',
       hiking: "i'm really proud of panorama ridge. 30km round trip with my friends, i couldn't feel my legs for 2 days after",
       photography: 'i shoot on my fujifilm x-t200 and sony a7r ii, do you shoot at all?',
@@ -250,7 +250,7 @@
         yes: 'ooo where? tell me', no: 'fair. the photos are the next best thing'
       },
       climbing: {
-        say: "i'm not very good, i can only do a v2 :(",
+        say: "i'm not very good, i can only do a v3 :(",
         ask: 'what grade do you climb?',
         low: "ok we're basically the same", same: 'twins 🤝',
         high: 'show off 😭', none: "that's ok, the mat's soft"
@@ -2549,8 +2549,8 @@
     if (game) setTimeout(() => { if (tok === pageTok) pitch(game); }, 6000);
     if (id === 'hiking') options([['yeah!', go(L.yes)], ['not really', go(L.no)]]);
     else if (id === 'climbing') options([
-      ['v0 to v1', go(L.low, '.play[data-play="climbing"]')], ['v2', go(L.same, '.play[data-play="climbing"]', 'happy')],
-      ['v3+', go(L.high, null, 'sad')], ["i don't climb", go(L.none, '.play[data-play="climbing"]')]
+      ['v0 to v2', go(L.low, '.play[data-play="climbing"]')], ['v3', go(L.same, '.play[data-play="climbing"]', 'happy')],
+      ['v4+', go(L.high, null, 'sad')], ["i don't climb", go(L.none, '.play[data-play="climbing"]')]
     ]);
     else if (id === 'badminton') options([
       ['singles', go(L.singles, '[data-3d="racket"]')], ['doubles', go(L.doubles, '[data-3d="racket"]', 'happy')],

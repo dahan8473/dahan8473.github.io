@@ -212,7 +212,7 @@
   "climbing": {
     "page": "/hobbies/climbing/",
     "sel": "[data-t='climbing']",
-    "about": "Rock climbing page: I boulder, and I can only do a V2. You can climb the page with the head"
+    "about": "Rock climbing page: I boulder, and I can only do a V3. You can climb the page with the head"
   },
   "photography": {
     "page": "/hobbies/photography/",
@@ -265,9 +265,9 @@
     "about": "Hiking page: thirteen hikes with photos and clips, newest first. Lindeman Lake (with Toto the dog), Panorama Ridge, Tunnel Bluffs, Quarry Rock, Buntzen Lake, Gros Morne (Tablelands, Western Brook Pond), Bonavista, Signal Hill, Cape Spear, Èze, Mount Heng and Lushan. Hover one for the trail stats and what my phone recorded"
   },
   "speed-skating": {
-    "page": "/hobbies/speed-skating/",
+    "page": "/hobbies/",
     "sel": "[data-t='speed-skating']",
-    "about": "Speed skating page: my main sport growing up. I competed provincially and won 1st and 2nd place in various 100m, 200m, 400m and 1000m races. Trophy photos coming"
+    "about": "Speed skating, on the hobbies list (no page of its own, hovering it shows a line): my main sport growing up. 1st at the BC provincials in my youth group, in the 100m, 200m, 400m and 1000m"
   },
   "tethos-page": {
     "page": "/tethos/",

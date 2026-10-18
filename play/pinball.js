@@ -2,8 +2,9 @@
 // diagonal bumpers shows for a few seconds, then hides, and only then does the
 // arrow show where the ball rolls in. It turns 90 degrees at every bumper; call
 // the edge it comes out of. 12 boards. Two right in a row moves you up a level,
-// a miss drops you one, and every level is a bigger grid with more bumpers.
-// From level 3 some bumpers carry a ring: they flip after the ball hits them.
+// a miss drops you one. Levels climb slowly (LEVELS below): the timer comes in
+// at 2, the grid grows at 3 and 5, and from level 6 some bumpers carry a ring:
+// they flip after the ball hits them.
 //   <div class="play" data-play="pinball" data-v="N">
 // David's best comes from /hobbies/lumosity/best.json (key pinball). The
 // visitor's best lives in localStorage, and a finished run fires dl:lumo on window.
@@ -204,18 +205,36 @@ function trace(board) {
   return { steps, exit: slotAt(n, r, c), hits, flipHits, flipBack };
 }
 
-// Level 1 is 4x4 and every level adds a row and a column, up to 12x12.
-const sizeFor = (level) => Math.min(12, 3 + level);
-const studyFor = (level) => (level === 1 ? 0 : Math.max(2400, 4500 - 200 * (level - 2)));
+// The levels, gentle on purpose. n: grid size, bumpers: [fewest, most],
+// study: ms the bumpers show before hiding (0: they never hide), flips: how
+// many carry a ring, need: fewest bounces the ball has to make. The timer
+// steps down a second, then back up when the grid grows.
+const T = 4500;
+const LEVELS = [
+  null,
+  { n: 4, bumpers: [4, 5], study: 0, flips: 0, need: 2 },
+  { n: 4, bumpers: [4, 5], study: T, flips: 0, need: 2 },
+  { n: 5, bumpers: [4, 5], study: T, flips: 0, need: 3 },
+  { n: 5, bumpers: [5, 6], study: T - 1000, flips: 0, need: 3 },
+  { n: 6, bumpers: [6, 6], study: T, flips: 0, need: 3 },
+  { n: 6, bumpers: [7, 7], study: T, flips: 1, need: 4 },
+  { n: 6, bumpers: [8, 8], study: T - 1000, flips: 1, need: 4 },
+  { n: 7, bumpers: [8, 9], study: T, flips: 2, need: 4 },
+  { n: 7, bumpers: [9, 10], study: T - 1000, flips: 2, need: 5 },
+  { n: 8, bumpers: [10, 11], study: T - 1000, flips: 3, need: 5 }
+];
+const levelOf = (level) => LEVELS[Math.max(1, Math.min(MAX_LEVEL, level))];
+const studyFor = (level) => levelOf(level).study;
 
 // Random boards until one is worth playing: enough bounces, a flip that gets
-// hit once flips exist, and from level 5 one the ball comes back to.
+// hit once flips exist, and from level 8 one the ball comes back to.
 function generate(level) {
-  const n = sizeFor(level);
-  const count = Math.min(Math.round(n * n * 0.4), 3 + 2 * level);
-  const flips = level < 3 ? 0 : Math.min(4, 1 + Math.floor((level - 3) / 2));
-  const need = Math.min(1 + level, 7);
+  const L = levelOf(level);
+  const n = L.n;
   const rnd = (k) => Math.floor(Math.random() * k);
+  const count = L.bumpers[0] + rnd(L.bumpers[1] - L.bumpers[0] + 1);
+  const flips = L.flips;
+  const need = L.need;
   let spare = null;
   for (let tries = 0; tries < 800; tries++) {
     const cells = new Array(n * n).fill(null);
@@ -229,7 +248,7 @@ function generate(level) {
     if (!t || (t.exit.side === board.start.side && t.exit.i === board.start.i)) continue;
     if (!spare && t.hits) spare = board;
     if (t.hits < need || (flips && !t.flipHits)) continue;
-    if (level >= 5 && tries < 400 && !t.flipBack) continue;
+    if (level >= 8 && tries < 400 && !t.flipBack) continue;
     return board;
   }
   return spare;

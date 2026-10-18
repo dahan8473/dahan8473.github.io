@@ -4,9 +4,9 @@
 // toward the orange arrow painted on the board, and the board turns on screen,
 // so the controls have to be re-mapped on the fly. Six mazes: time trials,
 // races against penguins that follow the shortest path, and last a race against
-// me: my head replays my real presses on a set map (penguin-david.json, recorded
-// at /hobbies/lumosity/?record=penguin). In a race a small arrow marks your
-// penguin. Card, tutorial, play, results. Scores: best.json has mine,
+// me on a set map (penguin-david.json): my head plays it like a person (human*
+// below), or replays my real presses if the map has a run recorded at
+// /hobbies/lumosity/?record=penguin. In a race a small arrow marks your penguin. Card, tutorial, play, results. Scores: best.json has mine,
 // localStorage keeps the visitor's.
 // lumo-fx.js keeps it to one game at a time, tells the head's bus about runs,
 // and has the feedback: bursts, flashes, the 3-2-1 and the results board.
@@ -31,9 +31,8 @@ const PLAN = [
   { n: 7, rivals: 0, spin: 6500 },
   { n: 8, rivals: 2, base: 560, err: 0.12, spin: 6000 },
   { n: 9, rivals: 2, base: 480, err: 0.05, spin: 5000 },
-  // A set map from penguin-david.json; without one, a random maze and my head
-  // walking the shortest path at base.
-  { n: 9, david: true, base: 480, spin: 5000 }
+  // A set map from penguin-david.json, or a random maze if they don't load.
+  { n: 9, david: true, spin: 5000 }
 ];
 
 const CSS = `
@@ -188,6 +187,79 @@ function distances(m, goal) {
     for (const x of exits(m, q[i])) if (dist[x] < 0) { dist[x] = dist[q[i]] + 1; q.push(x); }
   }
   return dist;
+}
+
+// ---- My head, played like a person -----------------------------------------------
+// rv: { cell, at: where the queued presses leave it, d0: its start distance,
+// q: [{ d, wait: ms before this press }] }. It thinks before each new direction
+// (longer at junctions), holds the key down straight passages, gets quicker as
+// it nears the fish, and now and then presses the wrong way, overshoots a turn
+// or tries a wrong branch and backs out. HUMAN scales the thinking and the
+// pauses, not the held-key steps.
+
+const HUMAN = 1.6;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pause = (a, b) => HUMAN * rand(a, b);
+
+function humanPlan(G, rv) {
+  const m = G.m, dist = G.dist, c = rv.at;
+  if (c === G.fishAt) return;
+  const open = (x, d) => m.open[x] >> d & 1;
+  const downOf = (x) => [0, 1, 2, 3].find((d) => open(x, d) && dist[stepOf(m, x, d)] === dist[x] - 1);
+  const push = (d, wait) => { rv.q.push({ d, wait }); if (open(rv.at, d)) rv.at = stepOf(m, rv.at, d); };
+  const down = downOf(c);
+  const ways = exits(m, c).length;
+  let think = pause(170, 330) + (ways >= 3 ? pause(60, 220) : 0);
+  // A wrong key: into a wall, or a step the wrong way and back.
+  if (Math.random() < 0.06) {
+    const wrong = pick([0, 1, 2, 3].filter((d) => d !== down && !(open(c, d) && stepOf(m, c, d) === G.fishAt)));
+    const moved = open(c, wrong);
+    push(wrong, think);
+    if (moved) push((wrong + 2) % 4, pause(220, 420));
+    think = pause(160, 300);
+  }
+  // A wrong branch at a junction: a few steps in, a pause, back out.
+  const branches = [0, 1, 2, 3].filter((d) => d !== down && open(c, d) && dist[stepOf(m, c, d)] > dist[c]);
+  if (ways >= 3 && branches.length && Math.random() < 0.13) {
+    const went = [];
+    let x = c, d = pick(branches), k = 1 + ((Math.random() * 3) | 0);
+    while (k-- > 0) {
+      went.push(d);
+      x = stepOf(m, x, d);
+      const on = [0, 1, 2, 3].filter((e) => e !== (d + 2) % 4 && open(x, e));
+      if (!on.length) break;
+      if (!on.includes(d)) d = pick(on);
+    }
+    went.forEach((e, i) => push(e, i ? rand(120, 170) : think));
+    went.slice().reverse().forEach((e, i) => push((e + 2) % 4, i ? rand(120, 170) : pause(300, 600)));
+    think = pause(150, 280);
+  }
+  // The right way: one key held down the straight part of the route.
+  let n = 0;
+  while (rv.at !== G.fishAt && downOf(rv.at) === down) push(down, n++ ? rand(115, 165) : think);
+  // Held a beat too long: into the wall at the end, or past the turn and back.
+  if (n >= 3 && rv.at !== G.fishAt) {
+    if (!open(rv.at, down) && Math.random() < 0.25) push(down, rand(110, 160));
+    else if (open(rv.at, down) && stepOf(m, rv.at, down) !== G.fishAt && Math.random() < 0.15) {
+      push(down, rand(110, 160));
+      push((down + 2) % 4, pause(260, 420));
+    }
+  }
+}
+
+// The wait before the head's next press, planning more when the queue runs out.
+function humanWait(G, rv) {
+  if (!rv.q.length) humanPlan(G, rv);
+  if (!rv.q.length) return Infinity;
+  const pace = 1.25 - 0.45 * Math.max(0, 1 - G.dist[rv.cell] / rv.d0);
+  return rv.q[0].wait * pace;
+}
+
+// The board turned: a beat to re-map the keys, sometimes a press into a wall.
+function humanSpin(G, rv, now) {
+  const walls = [0, 1, 2, 3].filter((d) => !(G.m.open[rv.cell] >> d & 1));
+  if (walls.length && Math.random() < 0.35) rv.q.unshift({ d: pick(walls), wait: 0 });
+  rv.due = Math.max(rv.due, now + pause(250, 650));
 }
 
 // ---- Drawing -------------------------------------------------------------------
@@ -719,7 +791,8 @@ export function mount(el) {
       const c = corners[1];
       const sp = board.add('head', c);
       board.dropIn(sp, 250);
-      G.rivals.push({ cell: c, prev: -1, stray: 0, due: 0, sp, run: set && set.run, ri: 0, every: cfg.base * G.dStart / dist[c] });
+      const run = set && set.run;
+      G.rivals.push({ cell: c, sp, run, ri: 0, human: !run, at: c, d0: dist[c], q: [], due: 0 });
     }
     G.me = board.add(['var(--ppg-me)', ICE], G.cell);
     if (G.rivals.length) board.mark(G.me);
@@ -737,7 +810,7 @@ export function mount(el) {
       G.t0 = performance.now();
       G.turnI = 0;
       G.spinDue = G.t0 + ((set ? set.spin : cfg.spin) || 0);
-      for (const rv of G.rivals) rv.due = G.t0 + rv.every;
+      for (const rv of G.rivals) rv.due = G.t0 + (rv.human ? rand(150, 350) + humanWait(G, rv) : rv.every);
     };
     // The first maze starts on a 3-2-1; the rest say what kind they are, then Go.
     if (G.i === 0) {
@@ -794,6 +867,7 @@ export function mount(el) {
     if (shown !== G.shownT) { G.shownT = shown; G.hTime.firstChild.textContent = shown; }
     for (const rv of G.rivals) {
       if (rv.run) while (G.phase === 'go' && rv.ri < rv.run.length && now >= G.t0 + rv.run[rv.ri][0]) headStep(rv, rv.run[rv.ri++][1]);
+      else if (rv.human) while (G.phase === 'go' && now >= rv.due) { headStep(rv, rv.q.shift().d); rv.due += humanWait(G, rv); }
       else while (G.phase === 'go' && now >= rv.due) { rivalStep(rv); rv.due += rv.every; }
     }
     if (G.phase !== 'go') return;
@@ -802,6 +876,7 @@ export function mount(el) {
     if (spin && now >= G.spinDue) {
       if (G.set) { G.turnI++; faceTo(board, G.set.turns[G.turnI % G.set.turns.length]); G.spinDue += spin; }
       else { turnTo(board, false); G.spinDue = now + spin; }
+      for (const rv of G.rivals) if (rv.human) humanSpin(G, rv, now);
     }
     if (!G.rivals.length && !cfgRec() && t >= G.cap) finish('time');
   }

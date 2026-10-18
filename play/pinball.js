@@ -1,7 +1,8 @@
 // Pinball Recall: a working-memory game for the Lumosity page. A grid of
 // diagonal bumpers shows for a few seconds, then hides, and only then does the
 // arrow show where the ball rolls in. It turns 90 degrees at every bumper; call
-// the edge it comes out of. 12 boards. Two right in a row moves you up a level,
+// the edge it comes out of. 12 boards, and with no miss in them it keeps going
+// until the first miss or board 20. Two right in a row moves you up a level,
 // a miss drops you one. Levels climb slowly (LEVELS below): the timer comes in
 // at 2, the grid grows at 3 and 5, and from level 6 some bumpers carry a ring:
 // they flip after the ball hits them.
@@ -17,6 +18,7 @@ const CSS_ID = 'play-pinball-css';
 const KEY = 'dl-lumo-pinball';
 const TUT_KEY = 'dl-lumo-pinball-tut';
 const BOARDS = 12;
+const MAX_BOARDS = 20; // past BOARDS only while there's been no miss
 const MAX_LEVEL = 10;
 const DR = [-1, 0, 1, 0]; // up, right, down, left
 const DC = [0, 1, 0, -1];
@@ -92,6 +94,10 @@ const CSS = `
 .ppb-slot:focus-visible { outline: 2px solid #88c0d0; outline-offset: -2px; border-radius: 10px; }
 .ppb-slot.start { color: var(--t1); }
 .ppb-slot.start::before { display: none; }
+/* While the bumpers show, the start slot looks like any other: no tell. */
+.ppb-board.study .ppb-slot.start { color: var(--t3); }
+.ppb-board.study .ppb-slot.start::before { display: block; }
+.ppb-board.study .ppb-slot.start svg { display: none; }
 .ppb-slot.start svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: opacity 160ms ease; }
 .ppb-board.study .ppb-slot.start svg { opacity: 0; }
 .ppb-board:not(.study) .ppb-slot.start svg { animation: ppb-pop 360ms cubic-bezier(.3, 1.6, .5, 1); }
@@ -558,7 +564,7 @@ export function mount(el) {
     // run counts right answers in a row for show; streak is the level rule.
     const g = { level: 1, streak: 0, run: 0, right: 0, round: 0, score: 0, bd: null, answering: false };
     const wrap = h('div');
-    wrap.innerHTML = `<div class="ppb-top"><span>Board <b class="rd lfx-num">1</b> of ${BOARDS}</span><span>Level <b class="lv lfx-num">1</b></span>
+    wrap.innerHTML = `<div class="ppb-top"><span>Board <b class="rd lfx-num">1</b> of <span class="of">${BOARDS}</span></span><span>Level <b class="lv lfx-num">1</b></span>
       <span class="end"><span>Score <b class="sc lfx-num">0</b></span></span></div>
       <div class="ppb-timer off"><i></i></div><div class="ppb-slotboard"></div><p class="ppb-msg" aria-live="polite"></p>`;
     const q = (s) => wrap.querySelector(s);
@@ -569,9 +575,11 @@ export function mount(el) {
     run = fx.startRun('pinball');
 
     const round = () => {
-      if (g.round >= BOARDS) { results(g.score, g.right); return; }
+      if (g.round >= MAX_BOARDS || (g.round >= BOARDS && g.right < g.round)) { results(g.score, g.right, g.round); return; }
       g.round++;
       q('.rd').textContent = g.round;
+      const bonus = g.round === BOARDS + 1;
+      if (bonus) q('.of').textContent = MAX_BOARDS;
       q('.lv').textContent = g.level;
       const level = g.level;
       const board = generate(level);
@@ -644,7 +652,13 @@ export function mount(el) {
       if (g.round > 1) {
         fx.pop(q('.rd'));
         fx.enter(bd.el);
-        begin();
+        if (bonus) {
+          bd.study(true);
+          msg.innerHTML = '<span class="hi">No misses.</span> Keep going until one, up to board ' + MAX_BOARDS + '.';
+          const [cx, cy] = fx.spot(holder, bd.layer);
+          fx.float(holder, cx, cy, 'Bonus boards', { big: true });
+          later(begin, 1600);
+        } else begin();
         return;
       }
       // The first board waits under a 3-2-1, bumpers and arrow hidden.
@@ -656,14 +670,14 @@ export function mount(el) {
   }
 
   // ---- Results -------------------------------------------------------------
-  function results(score, right) {
+  function results(score, right, boards) {
     const prev = best();
     const top = Math.max(prev, score);
     if (score > prev) save(KEY, String(score));
     endRun(false, score);
-    const sb = fx.scoreboard({ score, prev, david, extra: 'Right on <b>' + right + '</b> of ' + BOARDS + ' boards' });
+    const sb = fx.scoreboard({ score, prev, david, extra: 'Right on <b>' + right + '</b> of ' + boards + ' boards' });
     const p = h('div', 'ppb-panel');
-    p.innerHTML = `<div class="ppb-head"><div><p class="ppb-name">Pinball Recall</p><p class="ppb-what">${BOARDS} boards done.</p></div>
+    p.innerHTML = `<div class="ppb-head"><div><p class="ppb-name">Pinball Recall</p><p class="ppb-what">${boards} boards done.</p></div>
       <div class="ppb-art">${ART}</div></div>`;
     const btns = h('div', 'ppb-btns', '<button class="ppb-go" type="button">Again</button><button class="ppb-link" type="button">Done</button>');
     p.append(sb.el, btns);

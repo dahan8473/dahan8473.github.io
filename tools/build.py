@@ -6,9 +6,9 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 53, 16, 41, 51
+V_CSS, V_TALKCSS, V_JS, V_TALK = 54, 16, 41, 51
 V_TRACK = 1
-V_PIECE = 37  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 38  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {
@@ -476,7 +476,7 @@ TIPS = {
   'swimming': (None, "One of the sports my parents forced on me. I'm a registered lifeguard."),
   'cycling': ('/media/cycling/me-and-the-bike-s.webp', "I have a really cool track bike. I drove over 2 hours to pick it up from a Facebook Marketplace seller, and I've ridden it every day since."),
   'speed-skating': (None, "My main sport growing up. 1st at BC provincials in my youth group, in the 100m, 200m, 400m and 1000m."),
-  'chess': ('/media/chess/with-friends.webp', '<b class="tip-stat"><span data-live="puzzles">1840</span> puzzle rating</b>2nd at BC provincials in my youth group. I still play for fun with friends.'),
+  'chess': ('/media/chess/with-friends.webp', '<b class="tip-stat"><a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">1727 rapid on chess.com</a></b>2nd at BC provincials in my youth group. I still play for fun with friends.'),
   'video': ({'video': '/media/video/reels-teaser.mp4', 'poster': '/media/video/reels-teaser.webp'}, "Reels I make for TSI."),
   'meowmeow': (['/media/life/meowmeow-sleep.webp', '/media/life/meowmeow-belly.webp', '/media/life/meowmeow-stairs.webp'], "My cat. Always chudding around. Here she comes."),
 }
@@ -629,12 +629,8 @@ hobby('chess', 'Chess', "I played competitively all through elementary school, u
   ], None),
 ], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('<span data-live="puzzles">1840</span>', 'My best puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
-hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity.", [
-  ('The habit', [
-    ('What it is', '<p>An app of short brain games. Each one trains a single skill, like memory, attention, flexibility or speed, and every day it gives you a quick workout of a few of them.</p>'),
-    ('My mornings', "<p>Every morning, before anything else. I don't skip it.</p>"),
-    ('These three', "<p>Pinball Recall, Ebb and Flow and Penguin Rally are the three I think I'm best at, so I made my own versions. Quick tutorial, then try to beat my best.</p>"),
-  ], None),
+hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity."
+      '</p>\n        <p class="tagline">These three are my favourites. Play them and try to beat me.', [
 ], after='      <div class="lumo-games">\n' + piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...') + '      </div>\n')
 hobby('watercolor', 'Watercolor', "I paint with watercolor."
       '</p>\n        <p class="tagline">Move over it, or drag it on your phone, to tilt the paper.', [
@@ -645,7 +641,6 @@ hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a 
 hobby('travel', 'Travel', "Eight countries so far, and a list I'm behind on. Spin the globe, hover a place.", [
 ], shot=piece('3d', 'globe', 'Loading the globe...', 'globe-full'))
 hobby('fashion', 'Fashion', "I'm building Kunlun, a clothing brand built on Chinese mythology. Traditional Chinese and English run side by side as two voices.", [
-  ('Kunlun', [('The brand', '<p>Kunlun is the axis mountain of Chinese myth, and each drop is a step up it. I built the bilingual design system and the storefront. Pre-launch.</p><p class="go"><a class="ln" href="/kunlun/">Kunlun case study</a></p>')], None),
 ], shot='''      <figure class="case-shot ink">
         <img src="/media/work/kunlun-liangfeng.webp" alt="Kunlun storefront: 涼風, Liangfeng, Cool Wind" width="1400" height="876">
         <figcaption>Drop I, Liangfeng</figcaption>

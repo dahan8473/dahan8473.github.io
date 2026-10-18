@@ -5,8 +5,8 @@ import { Vector3, type BufferGeometry, type PerspectiveCamera } from 'three';
 import { usePiece } from '../lib/mountCanvas';
 import { CardTracker } from './Card';
 import { Earth } from './Earth';
+import { Markers } from './Markers';
 import { DARK, LIGHT } from './palette';
-import { PinTracker } from './Pins';
 import { PostFX } from './PostFX';
 import { Rig } from './Rig';
 import { GLOBE_SPIN, useGlobeStore } from './store';
@@ -19,10 +19,10 @@ export function GlobeScene({ points }: { points: Promise<BufferGeometry> }) {
     <PostFX palette={palette}>
       <group rotation={[0, GLOBE_SPIN, 0]}>
         <Earth geometry={geometry} palette={palette} />
+        <Markers palette={palette} />
       </group>
       <Rig />
       <CardTracker />
-      <PinTracker />
       <GlowTracker />
       <Ready />
     </PostFX>

@@ -29,7 +29,7 @@ export function createGlobeStore() {
   const subs = new Set<() => void>();
   const store = {
     /** DOM the canvas writes to every frame, and how the last pointer pressed. */
-    refs: { card: null as HTMLDivElement | null, pins: new Map<string, HTMLButtonElement>(), pointer: 'mouse' as string },
+    refs: { card: null as HTMLDivElement | null, pointer: 'mouse' as string },
     get: () => state,
     set(patch: Partial<GlobeState>) {
       state = { ...state, ...patch };

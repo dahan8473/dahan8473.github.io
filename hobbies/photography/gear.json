@@ -1,10 +1,11 @@
 {
-  "_how": "The kit on the photography page. Specs show on hover. Photos are matched to a camera by its id.",
+  "_how": "The kit on the photography page. Specs show on hover. Photos are matched to a camera by its id. label, when set, replaces the kind on the card.",
   "bodies": [
     {
       "id": "a7r2",
       "name": "Sony A7R II",
       "kind": "camera",
+      "label": "Main camera",
       "specs": [
         "42.4 MP full-frame BSI sensor",
         "5-axis in-body stabilization",
@@ -16,6 +17,7 @@
       "id": "xt200",
       "name": "Fujifilm X-T200",
       "kind": "camera",
+      "label": "Travel camera",
       "specs": [
         "24.2 MP APS-C sensor",
         "4K video at 30p",

@@ -7,6 +7,7 @@ import { activate, actionOf, PARTS, useKit, useKitStore, type Info, type PartId 
 const KIND: Record<string, string> = { camera: 'Camera', lens: 'Lens', drone: 'Drone', mic: 'Audio' };
 
 function kindLine(info: Info) {
+  if (info.label) return info.label;
   const k = KIND[info.kind ?? ''] ?? '';
   if (info.kind === 'lens' && info.mount) return `${k}, ${info.mount} mount`;
   return k;

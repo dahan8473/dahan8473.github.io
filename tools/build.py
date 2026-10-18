@@ -6,9 +6,9 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 54, 16, 41, 51
+V_CSS, V_TALKCSS, V_JS, V_TALK = 54, 16, 41, 52
 V_TRACK = 1
-V_PIECE = 42  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 43  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {
@@ -346,6 +346,11 @@ projects += proj('hackthenorth', 'Among Us, IRL', 'Hack the North 2026', 'Real-l
   'C++ · ESP32-C3 · ESP-NOW · PlatformIO',
   [ext('https://github.com/dahan8473/htn-amongus', 'GitHub'), ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost')],
   img('/media/work/htn-badges.webp', 'Two Hack the North badges running Among Us', 1000, 750))
+projects += proj('tethotchi', 'Tethotchi', '2026, Tethos merch', 'A virtual pet keychain shaped like a tiny CRT TV.',
+  "You feed it, it grows, it visits other Tethotchis over Bluetooth, and it dies if you forget about it. The board and the case are both code: change one layout file and the PCB, the case, the collision check and the factory files all follow. I designed it with a team of Claude Code agents I run. The render is generated from the CAD; the first five units are next.",
+  'Python · KiCad · build123d · Zephyr · nRF52832 · Web Bluetooth',
+  [ext('https://github.com/dahan8473/tethos-port', 'GitHub')],
+  img('/media/work/tethotchi/hero.webp', 'Render of the Tethotchi, a clear CRT TV keychain with a pixel smiley on its screen', 1024, 1024))
 projects += proj('biopilot', 'biopilot', '2nd, TELUS AI', 'Drone footage in, crop-health maps out.',
   'YOLOv8 wheat-head detection, per-cell health scores, and heatmaps you can compare run to run. Won $5,000 at TELUS AI at the Edge of Innovation.',
   'React · TypeScript · Vite · FastAPI · YOLOv8 · deck.gl · MapLibre',
@@ -406,6 +411,21 @@ PROJ_MORE = {
     ],
     'demo': 'See it work', 'demo_note': 'Six badges, one mesh, no server. Runs right here.',
   },
+  'tethotchi': {
+    'points': ['A 4-layer, 48.4 x 38.4 mm board and a 52 x 42 mm case, both generated from two Python files. Change the layout and the PCB, the case, the collision check and the JLCPCB factory files all follow.',
+               'A u-blox ANNA-B112 (nRF52832) for Bluetooth, a 1.7 inch 128x64 screen, four side buttons, a buzzer, and a CR2477 coin cell behind a twist-lock cap, aiming for 6 to 12 months on one.',
+               'Routed with Freerouting and DRC clean, with gerbers, BOM and placement files ready to order. About $19 to $23 a unit at 100.',
+               'Next: the firmware on Zephyr (the pet loop, visits between pets, sync and updates from a web page over Web Bluetooth). It is an early scaffold for now.'],
+    'story': 'Tethos merch you have to keep alive. The first run is five, with numbered backs, from 1/5 to 5/5.',
+    'shots': [
+      {'src': '/media/work/tethotchi/hero.webp', 'thumb': '/media/work/tethotchi/hero-s.webp', 'w': 1024, 'h': 1024, 'caption': 'Render generated from the CAD (GPT Image 2). Real units are still being built.'},
+      {'src': '/media/work/tethotchi/pcb-top.webp', 'thumb': '/media/work/tethotchi/pcb-top-s.webp', 'w': 1400, 'h': 1129, 'caption': 'The screen side of the board, with its art'},
+      {'src': '/media/work/tethotchi/pcb-bottom.webp', 'thumb': '/media/work/tethotchi/pcb-bottom-s.webp', 'w': 1400, 'h': 1129, 'caption': 'The battery side: the Bluetooth module, the coin cell and the rest'},
+      {'src': '/media/work/tethotchi/case.webp', 'thumb': '/media/work/tethotchi/case-s.webp', 'w': 1800, 'h': 615, 'caption': 'The case assembled, exploded, and cut through the battery'},
+      {'src': '/media/work/tethotchi/cad.webp', 'thumb': '/media/work/tethotchi/cad-s.webp', 'w': 1800, 'h': 615, 'caption': 'The CAD from the front, back and side'},
+      {'src': '/media/work/tethotchi/backs.webp', 'thumb': '/media/work/tethotchi/backs-s.webp', 'w': 1600, 'h': 729, 'caption': 'Numbered backs for the first run of five'},
+    ],
+  },
   'biopilot': {
     'award': '2nd, TELUS AI at the Edge of Innovation ($5,000)',
     'points': ['YOLOv8 wheat-head detection on drone footage', 'Per-cell crop-health scores', 'Heatmaps you can compare run to run, on a deck.gl and MapLibre map'],
@@ -444,7 +464,7 @@ projects += '        </ul>\n      </section>\n'
 proj_data = {t: {**PROJ_BASE[t], **PROJ_MORE.get(t, {})} for t in PROJ_BASE}
 projects += '      <script type="application/json" id="proj-data">' + json.dumps(proj_data, ensure_ascii=False).replace('</', '<\\/') + '</script>\n'
 projects += f'      <div data-play="projects" data-v="{V_PIECE}" hidden></div>\n'
-write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Island (a multiplayer game he built solo), Among Us IRL (a category win at Hack the North), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
+write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Island (a multiplayer game he built solo), Among Us IRL (a category win at Hack the North), Tethotchi (a virtual pet keychain), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
 
 
 # ---- Hobbies ------------------------------------------------------------------

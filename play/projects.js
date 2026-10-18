@@ -3,7 +3,7 @@
 // live site, a case study) and, for some, a small demo to play with.
 //   <script type="application/json" id="proj-data">{ "<id>": { name, meta,
 //     line, desc, stack: [], links: [{ href, text }], shot, award, points: [],
-//     story, shots: [[src, alt, w, h]], sim, sim_note, compare, demo,
+//     story, shots: [[src, alt, w, h]] (or { src, thumb, w, h, caption } for captions), sim, sim_note, compare, demo,
 //     demo_note } }</script>
 //   <div data-play="projects" hidden></div>
 // sim 'compare' is a before and after slider built here; any other sim loads
@@ -434,6 +434,10 @@ export function mount(el) {
         stage.appendChild(img);
         sim.querySelector('.pov-note').remove();
       });
+    } else if (p.shots && p.shots.some((s) => !Array.isArray(s))) {
+      // Shots with captions get the photo viewer, without a demo.
+      gal = gallery(p, oac, v);
+      box.appendChild(gal.el);
     } else {
       const shots = p.shots && p.shots.length ? p.shots : p.shot ? [[p.shot, p.name, 0, 0]] : [];
       if (shots.length) {

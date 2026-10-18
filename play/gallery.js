@@ -1,8 +1,10 @@
-// Photo gallery piece: a masonry-ish grid with captions and a lightbox.
+// Photo gallery piece: a grid of cards, each with the photo sitting in the
+// middle, its title and camera under it, the month in a tag, and a lightbox.
 //   <div class="play" data-play="gallery" data-src="/hobbies/photography/photos.json">
-//   photos.json: { "photos": [ { "src", "caption", "camera", "lens", "date", "alt" } ] }
-// camera is "xt200" or "a7r2". A dl:camera event on document ({ detail: { id } },
-// id null to clear) filters the grid to one camera.
+//   photos.json: { "photos": [ { "src", "title", "caption", "camera", "lens", "date", "alt" } ] }
+// camera is "xt200" or "a7r2". When photos have cameras, a pill bar on top
+// filters by camera; it and the 3D kit stay in step through a dl:camera event
+// on document ({ detail: { id } }, id null for all).
 // Also exports lightbox(), which the trophy case reuses.
 
 const CSS_ID = 'play-gallery-css';
@@ -15,41 +17,49 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const CSS = `
 .pgal { scroll-margin-top: 24px; }
-.pgal-bar { margin-bottom: 14px; }
+.pgal-bar { display: flex; justify-content: center; margin-bottom: 18px; }
 .pgal-bar:empty { display: none; }
-.pgal-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 4px 4px 4px 12px; border-radius: 999px; background: var(--fill); color: var(--t2); }
-.pgal-chip::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: #88c0d0; }
-.pgal-chip b { font-weight: 400; color: var(--t1); }
-.pgal-chip .pgal-dot { color: var(--t3); }
-.pgal-all { padding: 2px 10px; border: 0; border-radius: 999px; background: none; color: var(--t1); font: inherit; cursor: pointer; }
-.pgal-all:hover { background: var(--fill); }
-.pgal-all:focus-visible { border-radius: 999px; }
-.pgal-cols { display: flex; align-items: flex-start; gap: 12px; }
-.pgal-cols.one { max-width: 680px; }
-.pgal-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+.pgal-tabs { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 5px; border-radius: 999px; background: var(--fill); }
+.pgal-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 16px; border: 0; border-radius: 999px; background: none; color: var(--t3); font: inherit; cursor: pointer; transition: color 140ms ease, background 140ms ease; }
+.pgal-tab:hover { color: var(--t1); }
+.pgal-tab.on { color: var(--accent); background: var(--fill); }
+.pgal-tab svg { display: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
+.pgal-tab.on svg { display: block; }
+.pgal-tab:focus-visible { border-radius: 999px; }
+.pgal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 10px; }
 .pgal-item { margin: 0; }
-.pgal-open { display: block; width: 100%; padding: 0; border: 0; border-radius: 14px; background: var(--fill); overflow: hidden; cursor: zoom-in; }
-.pgal-open:focus-visible { border-radius: 14px; outline-offset: 3px; }
-.pgal-open img { width: 100%; height: auto; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; opacity: 0; transition: opacity 320ms ease; }
-.pgal-open img.in { opacity: 1; }
-.pgal-open { position: relative; }
-.pgal-play { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(0, 0, 0, 0.45); color: #fff; transform: translate(-50%, -50%); pointer-events: none; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.pgal-play svg { width: 18px; height: 18px; margin-left: 3px; fill: currentColor; }
-.pgal-open.broken { display: grid; place-items: center; aspect-ratio: 4 / 3; color: var(--t3); cursor: default; }
+.pgal-open {
+  position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; padding: 14px;
+  border: 0; border-radius: 18px; background: var(--fill); color: inherit; font: inherit; text-align: left; cursor: zoom-in;
+  transition: background 160ms ease;
+}
+.pgal-open:focus-visible { border-radius: 18px; outline-offset: 3px; }
+.pgal-media { display: flex; align-items: center; justify-content: center; aspect-ratio: 5 / 4; padding: 8% 6% 4%; overflow: hidden; }
+.pgal-media img { min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 6px; opacity: 0; transition: opacity 320ms ease, transform 260ms ease; }
+.pgal-media img.in { opacity: 1; }
+.pgal-go { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 22px; height: 22px; color: var(--t2); transition: color 160ms ease, transform 160ms ease; }
+.pgal-go svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pgal-badge { position: absolute; top: 12px; left: 12px; display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 7px; border-radius: 7px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); font-size: 13px; }
+.pgal-badge svg { width: 10px; height: 10px; fill: currentColor; }
+.pgal-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 10px; }
+.pgal-text { min-width: 0; }
+.pgal-title { display: block; overflow: hidden; color: var(--t1); white-space: nowrap; text-overflow: ellipsis; }
+.pgal-meta { display: block; overflow: hidden; color: var(--t3); white-space: nowrap; text-overflow: ellipsis; }
+.pgal-meta i { margin: 0 6px; font-style: normal; opacity: 0.6; }
+.pgal-pill { flex: none; padding: 3px 9px; border-radius: 8px; background: var(--fill); color: var(--t2); font-size: 13px; white-space: nowrap; }
+@media (hover: hover) {
+  .pgal-open:hover { background: color-mix(in srgb, var(--fill) 100%, var(--t1) 4%); }
+  .pgal-open:hover .pgal-media img.in { transform: scale(1.02); }
+  .pgal-open:hover .pgal-go { color: var(--accent); transform: translate(2px, -2px); }
+}
+.pgal-open.broken { cursor: default; }
 .pgal-open.broken img { display: none; }
-.pgal-open.broken svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-@media (hover: hover) { .pgal-open:hover img.in { opacity: 0.9; } }
-.pgal-item figcaption { padding: 8px 2px 0; }
-.pgal-cap { display: block; color: var(--t2); }
-.pgal-meta { display: block; color: var(--t3); }
+.pgal-media > svg { width: 22px; height: 22px; fill: none; stroke: var(--t3); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .pgal-empty { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-radius: 14px; background: var(--fill); color: var(--t2); }
 .pgal-empty svg { flex: none; width: 22px; height: 22px; fill: none; stroke: var(--t3); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .pgal-loading { height: 160px; border-radius: 14px; background: var(--fill); }
-@media (max-width: 720px) {
-  .pgal-cols { gap: 8px; }
-  .pgal-col { gap: 16px; }
-  .pgal-open, .pgal-open:focus-visible { border-radius: 12px; }
-}
+@media (prefers-reduced-motion: reduce) { .pgal-media img, .pgal-go { transition: none; } }
+@media (max-width: 720px) { .pgal-grid { gap: 8px; } .pgal-open { padding: 12px; border-radius: 16px; } }
 `;
 
 const LB_CSS = `
@@ -138,6 +148,9 @@ function icon(d) {
   return svg;
 }
 const ICON = {
+  arrow: 'M7 17L17 7M8 7h9v9',
+  star: 'M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9',
+  play: 'M7 4.5v15l13-7.5z',
   photo: 'M5 4.5h14A1.5 1.5 0 0 1 20.5 6v12a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18V6A1.5 1.5 0 0 1 5 4.5zM3.5 16l5-5 4 4 2.5-2.5 5.5 5.5M15.5 9.5h.01',
   prev: 'M14.5 6l-6 6 6 6',
   next: 'M9.5 6l6 6-6 6',
@@ -150,6 +163,12 @@ export function fmtDate(s) {
   const mon = m && MONTHS[Number(m[2]) - 1];
   if (!mon) return String(s);
   return m[3] ? mon + ' ' + Number(m[3]) + ', ' + m[1] : mon + ' ' + m[1];
+}
+// "Jun 2024" for the card's tag.
+function monthOf(s) {
+  const m = /^(\d{4})-(\d{2})/.exec(String(s || ''));
+  const mon = m && MONTHS[Number(m[2]) - 1];
+  return mon ? mon + ' ' + m[1] : '';
 }
 function camName(id, full) {
   const c = CAMERAS[id];
@@ -344,7 +363,6 @@ export function mount(el) {
   const emptyNote = noteText(el, 'Digging out photos rn.');
   const root = h('div', 'pgal');
   const bar = h('div', 'pgal-bar');
-  bar.setAttribute('role', 'status');
   const body = h('div');
   body.appendChild(h('div', 'pgal-loading'));
   root.append(bar, body);
@@ -355,43 +373,53 @@ export function mount(el) {
   let loaded = false;
   let camera = null;
   let shown = [];
-  let cols = 0;
   let closeLb = null;
   const figs = new Map();
   const ctrl = new AbortController();
-
-  function columnsFor(width, n) {
-    const c = width < 340 ? 1 : width < 640 ? 2 : 3;
-    return Math.max(1, Math.min(c, n));
-  }
 
   function figure(p, i) {
     if (figs.has(i)) return figs.get(i);
     const fig = h('figure', 'pgal-item');
     const btn = h('button', 'pgal-open');
     btn.type = 'button';
-    btn.setAttribute('aria-label', 'Open ' + (p.alt || p.caption || 'photo ' + (i + 1)));
+    const name = p.title || p.caption || '';
+    btn.setAttribute('aria-label', (p.video ? 'Play ' : 'Open ') + (name || p.alt || (p.video ? 'clip ' : 'photo ') + (i + 1)));
+    if (p.video) {
+      const badge = h('span', 'pgal-badge');
+      badge.append(icon(ICON.play), 'Clip');
+      btn.appendChild(badge);
+    }
+    const go = h('span', 'pgal-go');
+    go.appendChild(icon(ICON.arrow));
+    const media = h('span', 'pgal-media');
     const img = h('img');
     img.loading = 'lazy';
     img.decoding = 'async';
-    img.alt = p.alt || p.caption || '';
-    img.addEventListener('load', () => {
-      if (img.naturalWidth && img.naturalHeight) img.style.setProperty('--ar', img.naturalWidth + ' / ' + img.naturalHeight);
-      img.classList.add('in');
-    });
+    img.alt = p.alt || name;
+    img.addEventListener('load', () => img.classList.add('in'));
     img.addEventListener('error', () => {
       if (btn.classList.contains('broken')) return;
       btn.classList.add('broken');
-      btn.appendChild(icon(ICON.photo));
+      media.appendChild(icon(ICON.photo));
     });
     img.src = p.src || p.poster;
-    btn.appendChild(img);
-    // A clip: its poster on the tile with a play badge; it plays in the lightbox.
-    if (p.video) {
-      const play = h('span', 'pgal-play');
-      play.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>';
-      btn.appendChild(play);
-      btn.setAttribute('aria-label', 'Play ' + (p.alt || p.caption || 'clip ' + (i + 1)));
+    media.appendChild(img);
+    btn.append(go, media);
+    // Title and camera on the left, the month in a tag on the right.
+    const meta = [p.camera && camName(p.camera), p.lens].filter(Boolean);
+    const month = monthOf(p.date);
+    if (name || meta.length || month) {
+      const foot = h('span', 'pgal-foot');
+      const text = h('span', 'pgal-text');
+      if (name) text.appendChild(h('span', 'pgal-title', name));
+      if (meta.length) {
+        const m = h('span', 'pgal-meta');
+        meta.forEach((x, k) => { if (k) m.appendChild(h('i', null, '·')); m.append(x); });
+        text.appendChild(m);
+      }
+      foot.appendChild(text);
+      if (month) foot.appendChild(h('span', 'pgal-pill', month));
+      btn.appendChild(foot);
     }
     btn.addEventListener('click', () => {
       const at = shown.indexOf(p);
@@ -401,38 +429,36 @@ export function mount(el) {
         src: q.src || q.poster,
         video: q.video,
         poster: q.poster,
-        alt: q.alt || q.caption || '',
-        caption: q.caption || '',
+        alt: q.alt || q.title || q.caption || '',
+        caption: q.title || q.caption || '',
         meta: [q.camera && camName(q.camera, true), q.lens, fmtDate(q.date)].filter(Boolean).join(' · ')
       })), at, btn);
     });
     fig.appendChild(btn);
-    const meta = [p.camera && camName(p.camera), fmtDate(p.date)].filter(Boolean).join(' · ');
-    if (p.caption || meta) {
-      const cap = h('figcaption');
-      if (p.caption) cap.appendChild(h('span', 'pgal-cap', p.caption));
-      if (meta) cap.appendChild(h('span', 'pgal-meta', meta));
-      fig.appendChild(cap);
-    }
     figs.set(i, fig);
     return fig;
   }
 
+  // All, then each camera: shown when the photos say which camera took them.
   function renderBar() {
     bar.textContent = '';
-    if (!camera) return;
-    const chip = h('span', 'pgal-chip');
-    const label = h('span');
-    label.append('showing ', h('b', null, camName(camera)), ' photos');
-    const all = h('button', 'pgal-all', 'show all');
-    all.type = 'button';
-    all.addEventListener('click', () => {
-      setCamera(null, true);
-      // Let the 3D kit drop its highlight too.
-      document.dispatchEvent(new CustomEvent('dl:camera', { detail: { id: null } }));
-    });
-    chip.append(label, h('span', 'pgal-dot', '·'), all);
-    bar.appendChild(chip);
+    if (!photos.some((p) => p.camera)) return;
+    const tabs = h('div', 'pgal-tabs');
+    tabs.setAttribute('role', 'group');
+    tabs.setAttribute('aria-label', 'Filter by camera');
+    for (const id of [null, ...Object.keys(CAMERAS)]) {
+      const t = h('button', 'pgal-tab' + (id === camera ? ' on' : ''));
+      t.type = 'button';
+      t.setAttribute('aria-pressed', String(id === camera));
+      t.append(icon(ICON.star), id ? camName(id) : 'All');
+      t.addEventListener('click', () => {
+        setCamera(id, true);
+        // The 3D kit highlights the same camera.
+        document.dispatchEvent(new CustomEvent('dl:camera', { detail: { id } }));
+      });
+      tabs.appendChild(t);
+    }
+    bar.appendChild(tabs);
   }
 
   function emptyState(text) {
@@ -447,15 +473,11 @@ export function mount(el) {
     const indexed = photos.map((p, i) => [p, i]).filter(([p]) => !camera || p.camera === camera);
     shown = indexed.map(([p]) => p);
     body.textContent = '';
-    if (!photos.length) { body.appendChild(emptyState(emptyNote)); cols = 0; return; }
-    if (!shown.length) { body.appendChild(emptyState('No ' + camName(camera) + ' photos up yet.')); cols = 0; return; }
-    cols = columnsFor(root.clientWidth || el.clientWidth || 1024, shown.length);
-    const wrap = h('div', 'pgal-cols' + (cols === 1 && shown.length === 1 ? ' one' : ''));
-    const colEls = [];
-    for (let c = 0; c < cols; c++) colEls.push(wrap.appendChild(h('div', 'pgal-col')));
-    // Round robin keeps the reading order left to right, row by row.
-    indexed.forEach(([p, i], k) => colEls[k % cols].appendChild(figure(p, i)));
-    body.appendChild(wrap);
+    if (!photos.length) { body.appendChild(emptyState(emptyNote)); return; }
+    if (!shown.length) { body.appendChild(emptyState('No ' + camName(camera) + ' photos up yet.')); return; }
+    const grid = h('div', 'pgal-grid');
+    indexed.forEach(([p, i]) => grid.appendChild(figure(p, i)));
+    body.appendChild(grid);
   }
 
   function setCamera(id, fromChip) {
@@ -471,12 +493,6 @@ export function mount(el) {
   }
   function onCamera(e) { setCamera(e.detail && e.detail.id, false); }
   document.addEventListener('dl:camera', onCamera);
-
-  const ro = new ResizeObserver(() => {
-    if (!loaded || !shown.length) return;
-    if (columnsFor(root.clientWidth, shown.length) !== cols) render();
-  });
-  ro.observe(root);
 
   const src = el.dataset.src;
   (src ? fetch(src, { signal: ctrl.signal }).then((r) => (r.ok ? r.json() : {})) : Promise.resolve({}))
@@ -494,7 +510,6 @@ export function mount(el) {
     ctrl.abort();
     if (closeLb) closeLb(false);
     closeLb = null;
-    ro.disconnect();
     document.removeEventListener('dl:camera', onCamera);
     root.remove();
     release();

@@ -1,9 +1,10 @@
 {
-  "_how": "Photos and clips I took. camera is xt200 or a7r2. src under /media/photos/ for a photo, video + poster for a clip. alt required, caption optional.",
+  "_how": "Photos and clips I took. src under /media/photos/ (or /media/travel/) for a photo, video + poster for a clip. title shows on the card, alt is required, camera is xt200 or a7r2.",
   "photos": [
     {
       "video": "/media/photos/sunset-silhouettes.mp4",
       "poster": "/media/photos/sunset-silhouettes.webp",
+      "title": "Sunset silhouettes",
       "alt": "Two friends in silhouette on a rock by the water at sunset",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -11,6 +12,7 @@
     },
     {
       "src": "/media/photos/jellyfish.webp",
+      "title": "Jellyfish",
       "alt": "Glowing blue jellyfish drifting in a dark aquarium tank",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -18,6 +20,7 @@
     },
     {
       "src": "/media/photos/noodles-kimbap.webp",
+      "title": "Noodles and kimbap",
       "alt": "A bowl of noodles and a plate of kimbap on a wooden table",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -25,6 +28,7 @@
     },
     {
       "src": "/media/photos/mountains-clouds.webp",
+      "title": "Mountains and clouds",
       "alt": "Mountains and big white clouds over the water behind a line of trees",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -32,6 +36,7 @@
     },
     {
       "src": "/media/photos/seagull.webp",
+      "title": "Gull on the beach",
       "alt": "A young gull standing on a sandy beach, driftwood and people behind",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -39,6 +44,7 @@
     },
     {
       "src": "/media/photos/sunset-clouds.webp",
+      "title": "Dusk clouds",
       "alt": "Pink and purple clouds over the water at dusk",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -46,6 +52,7 @@
     },
     {
       "src": "/media/photos/blue-hour-silhouettes.webp",
+      "title": "Blue hour",
       "alt": "Two people in silhouette by the water at blue hour",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -53,6 +60,7 @@
     },
     {
       "src": "/media/photos/doorway-tassel.webp",
+      "title": "Tassel in the doorway",
       "alt": "A red Chinese knot tassel hanging from a doorknob in a strip of evening sun",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -60,6 +68,7 @@
     },
     {
       "src": "/media/photos/restricted-visibility.webp",
+      "title": "Restricted visibility",
       "alt": "A yellow Restricted Visibility sign and a 40 km/h sign on a hill road, mountains behind",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -67,6 +76,7 @@
     },
     {
       "src": "/media/photos/park-evening.webp",
+      "title": "Park picnic",
       "alt": "People picnicking under trees by the water on a bright evening",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -74,6 +84,7 @@
     },
     {
       "src": "/media/photos/waterfront-rock.webp",
+      "title": "Golden hour by the water",
       "alt": "A friend sitting on a rock by the water, mountains behind, in low evening light",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -81,6 +92,7 @@
     },
     {
       "src": "/media/photos/aquarium-arch.webp",
+      "title": "Aquarium arch",
       "alt": "A big aquarium tank with a rock arch and fish overhead",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -88,6 +100,7 @@
     },
     {
       "src": "/media/photos/aquarium-school.webp",
+      "title": "School of fish",
       "alt": "A school of fish swimming through a green-lit tank",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -95,6 +108,7 @@
     },
     {
       "src": "/media/photos/hotpot-dinner.webp",
+      "title": "Hot pot night",
       "alt": "Friends around a table at a hot pot dinner",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -102,6 +116,7 @@
     },
     {
       "src": "/media/travel/seoul/glow-store.webp",
+      "title": "GLOW, Seoul",
       "alt": "Shoppers walking into a GLOW store with walls of products",
       "camera": "xt200",
       "lens": "XC 15-45mm",
@@ -109,6 +124,7 @@
     },
     {
       "src": "/media/travel/seoul/cafe-tarts.webp",
+      "title": "Café tarts, Seoul",
       "alt": "A lit cafe display packed with rows of fruit tarts",
       "camera": "xt200",
       "lens": "XC 15-45mm",

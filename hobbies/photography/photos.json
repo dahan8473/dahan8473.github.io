@@ -1,1 +1,27 @@
-{ "_how": "Photos I took. camera is xt200 or a7r2. src under /media/photos/.", "photos": [] }
+{
+  "_how": "Photos and clips I took. camera is xt200 or a7r2. src under /media/photos/ for a photo, video + poster for a clip. alt required, caption optional.",
+  "photos": [
+    {
+      "video": "/media/photos/sunset-silhouettes.mp4",
+      "poster": "/media/photos/sunset-silhouettes.webp",
+      "alt": "Two friends in silhouette on a rock by the water at sunset",
+      "camera": "xt200",
+      "lens": "XC 15-45mm",
+      "date": "2024-08-18"
+    },
+    {
+      "src": "/media/photos/jellyfish.webp",
+      "alt": "Glowing blue jellyfish drifting in a dark aquarium tank",
+      "camera": "xt200",
+      "lens": "XC 15-45mm",
+      "date": "2024-08-17"
+    },
+    {
+      "src": "/media/photos/noodles-kimbap.webp",
+      "alt": "A bowl of noodles and a plate of kimbap on a wooden table",
+      "camera": "xt200",
+      "lens": "XC 15-45mm",
+      "date": "2024-07-01"
+    }
+  ]
+}

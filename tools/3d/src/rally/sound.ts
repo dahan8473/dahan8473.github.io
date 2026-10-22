@@ -1,10 +1,10 @@
-// Pocks, net, floor taps and whooshes, synthesized (from play/badminton.js).
+// Racket hits by shot, net, floor taps and whooshes, synthesized (from play/badminton.js).
 // Respects the site's mute: the head's speaker toggle writes dl-sound.
 export interface Sound {
   muted(): boolean;
   unlock(): void;
-  pock(p?: number): void;
-  crack(): void;
+  /** A racket hit, by shot: drops and net shots soft, drives punchy, clears clean, smashes sharp. */
+  hit(kind: string): void;
   net(): void;
   floor(p?: number): void;
   whoosh(p?: number): void;
@@ -80,15 +80,27 @@ export function makeSound(): Sound {
       }
       if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     },
-    // Strings on cork: a short hollow pock, crisper the harder it's hit.
-    pock(p = 1) {
-      tone(1250 + 300 * p, 520, 0.035, 0.16 + 0.12 * p, 'triangle');
-      hiss(0.028 + 0.012 * p, 0.14 + 0.16 * p, 'bandpass', 3400, 2300, 2.2);
-      tone(420, 230, 0.05, 0.08 * p);
-    },
-    crack() {
-      s.pock(1.5);
-      hiss(0.05, 0.22, 'highpass', 5200, 3200, 0.8);
+    // Strings on cork, by shot. Softer shots are quieter and duller, a clear
+    // rings clean, a smash cracks.
+    hit(kind) {
+      if (kind === 'smash') {
+        hiss(0.03, 0.9, 'highpass', 3500, 3000, 0.7);
+        tone(1800, 700, 0.05, 0.5, 'sine');
+        tone(140, 60, 0.12, 0.55, 'sine');
+      } else if (kind === 'clear' || kind === 'lift' || kind === 'serveHigh') {
+        tone(1650, 1640, 0.24, 0.3, 'sine');
+        tone(2480, 2470, 0.2, 0.14, 'sine');
+        tone(3300, 3290, 0.16, 0.06, 'sine');
+        hiss(0.012, 0.16, 'bandpass', 3500, 3200, 1.2);
+        hiss(0.32, 0.03, 'bandpass', 4200, 3600, 0.6, 0.03);
+      } else if (kind === 'drive') {
+        tone(1400, 600, 0.05, 0.24, 'sine');
+        hiss(0.04, 0.2, 'bandpass', 2400, 2000, 1.1);
+        tone(300, 180, 0.06, 0.12, 'sine');
+      } else {
+        tone(1100, 700, 0.04, 0.08, 'sine');
+        hiss(0.025, 0.05, 'bandpass', 1600, 1300, 1.2);
+      }
     },
     net() {
       hiss(0.18, 0.22, 'lowpass', 900, 220, 0.8);

@@ -290,23 +290,161 @@ function pick(arr) {
   return arr[i];
 }
 
-// ---- Sound: thuds, whooshes and a bell, synthesized ----------------------
-// Respects the site's mute (the head's speaker toggle writes dl-sound).
+// ---- Sound: synthesized, so there's nothing to download -------------------
+// A hit is layered like a film punch: a saturated sub thump you feel, a knock,
+// a smack of filtered noise, a short wet squelch, and a little room, all
+// through one compressor so the layers land as one hit. sparVoices takes any
+// AudioContext, so the trailer renders the same hits offline.
+export function sparVoices(ctx, dest) {
+  const sr = ctx.sampleRate;
+  const noise = ctx.createBuffer(1, Math.floor(sr * 0.5), sr);
+  const nd = noise.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -16;
+  comp.knee.value = 6;
+  comp.ratio.value = 5;
+  comp.attack.value = 0.002;
+  comp.release.value = 0.12;
+  const out = ctx.createGain();
+  out.gain.value = 0.85;
+  comp.connect(out).connect(dest);
+  // A small, dark room.
+  const room = ctx.createConvolver();
+  const ir = ctx.createBuffer(2, Math.floor(sr * 0.5), sr);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c);
+    let lp = 0;
+    for (let i = 0; i < d.length; i++) { lp += 0.35 * ((Math.random() * 2 - 1) - lp); d[i] = lp * Math.exp(-i / (sr * 0.09)); }
+  }
+  room.buffer = ir;
+  const wet = ctx.createGain();
+  wet.gain.value = 0.5;
+  room.connect(wet).connect(comp);
+  // Soft clip on the sub so it's felt on laptop speakers too.
+  const sat = ctx.createWaveShaper();
+  const curve = new Float32Array(1024);
+  for (let i = 0; i < curve.length; i++) { const x = (i / (curve.length - 1)) * 2 - 1; curve[i] = Math.tanh(2.6 * x) / Math.tanh(2.6); }
+  sat.curve = curve;
+  const sub = ctx.createGain();
+  sub.connect(sat).connect(comp);
+  function env(g, t, vol, dur, attack) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  }
+  function send(node, amt) {
+    if (!amt) return;
+    const g = ctx.createGain();
+    g.gain.value = amt;
+    node.connect(g).connect(room);
+  }
+  // A swept oscillator: pitch falls over `drop` seconds, the level over `dur`.
+  function tone(t, f0, f1, dur, vol, o = {}) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = o.type || 'sine';
+    osc.frequency.setValueAtTime(f0, t);
+    osc.frequency.exponentialRampToValueAtTime(f1, t + (o.drop || dur));
+    env(g, t, vol, dur, o.attack || 0.002);
+    osc.connect(g).connect(o.to || comp);
+    send(g, o.wet);
+    osc.start(t);
+    osc.stop(t + dur + 0.03);
+  }
+  // Filtered noise with a swept cutoff.
+  function hiss(t, dur, vol, type, f0, f1, q, o = {}) {
+    const src = ctx.createBufferSource();
+    const f = ctx.createBiquadFilter();
+    const g = ctx.createGain();
+    src.buffer = noise;
+    f.type = type;
+    f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t);
+    f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    env(g, t, vol, dur, o.attack || 0.002);
+    src.connect(f).connect(g).connect(o.to || comp);
+    send(g, o.wet);
+    src.start(t, Math.random() * 0.3);
+    src.stop(t + dur + 0.03);
+  }
+  const v = {
+    // A glove landing. p is how hard: about 0.65 for a jab, 1 for a cross, 1.2 for a hook.
+    punch(p = 1, t = ctx.currentTime) {
+      tone(t, 165, 46, 0.24, 0.9 * p, { to: sub, drop: 0.16 });
+      tone(t, 330, 120, 0.09, 0.32 * p, { type: 'triangle', wet: 0.3 });
+      hiss(t, 0.05, 0.7 * p, 'bandpass', 1700, 1100, 0.8, { wet: 0.4 });
+      hiss(t, 0.012, 0.3 * p, 'highpass', 5200, 4200, 0.7);
+      hiss(t + 0.004, 0.1, 0.38 * p, 'bandpass', 1150, 360, 5, { wet: 0.6 });
+      hiss(t, 0.14, 0.4 * p, 'lowpass', 520, 140, 0.7, { wet: 0.4 });
+    },
+    // A push kick: more thump and shove, less snap.
+    teep(p = 1, t = ctx.currentTime) {
+      tone(t, 130, 40, 0.3, 0.95 * p, { to: sub, drop: 0.2 });
+      tone(t, 260, 100, 0.12, 0.35 * p, { type: 'triangle', wet: 0.3 });
+      hiss(t, 0.07, 0.6 * p, 'bandpass', 1300, 800, 0.8, { wet: 0.4 });
+      hiss(t + 0.005, 0.12, 0.4 * p, 'bandpass', 950, 320, 4.5, { wet: 0.6 });
+      hiss(t, 0.2, 0.5 * p, 'lowpass', 600, 120, 0.7, { wet: 0.5 });
+    },
+    // A round kick: the biggest one, with a crack of shin on top.
+    kick(p = 1, t = ctx.currentTime) {
+      tone(t, 140, 38, 0.36, 1.05 * p, { to: sub, drop: 0.2 });
+      tone(t, 240, 90, 0.14, 0.4 * p, { type: 'triangle', wet: 0.4 });
+      hiss(t, 0.07, 0.9 * p, 'bandpass', 2400, 1500, 0.7, { wet: 0.5 });
+      hiss(t, 0.02, 0.45 * p, 'highpass', 6000, 4500, 0.7);
+      hiss(t + 0.006, 0.14, 0.45 * p, 'bandpass', 950, 300, 4.5, { wet: 0.7 });
+      hiss(t, 0.2, 0.55 * p, 'lowpass', 600, 120, 0.7, { wet: 0.5 });
+    },
+    // You getting hit: duller and lower, like it landed on you.
+    hurt(p = 1, t = ctx.currentTime) {
+      tone(t, 120, 34, 0.34, 1 * p, { to: sub, drop: 0.22 });
+      tone(t, 80, 50, 0.4, 0.3 * p);
+      hiss(t, 0.2, 0.6 * p, 'lowpass', 700, 150, 0.7, { wet: 0.5 });
+      hiss(t + 0.004, 0.12, 0.3 * p, 'bandpass', 600, 250, 3, { wet: 0.5 });
+    },
+    // Glove on glove.
+    block(t = ctx.currentTime) {
+      hiss(t, 0.06, 0.5, 'bandpass', 900, 650, 1.5, { wet: 0.3 });
+      tone(t, 240, 150, 0.07, 0.3, { type: 'triangle' });
+      tone(t, 110, 70, 0.08, 0.35, { to: sub });
+      hiss(t, 0.01, 0.15, 'highpass', 3500, 3000, 0.7);
+    },
+    // Shin on shin: a block with a knock of bone.
+    check(t = ctx.currentTime) {
+      v.block(t);
+      tone(t, 620, 340, 0.12, 0.22, { type: 'triangle', wet: 0.4 });
+      v.punch(0.4, t);
+    },
+    // A soft body thump, like stepping into the ring.
+    thud(p = 1, t = ctx.currentTime) {
+      tone(t, 150, 46, 0.2, 0.7 * p, { to: sub, drop: 0.14 });
+      hiss(t, 0.1, 0.35 * p, 'lowpass', 900, 200, 0.7, { wet: 0.3 });
+    },
+    whoosh(p = 1, t = ctx.currentTime) {
+      const d = 0.1 + 0.1 * p;
+      hiss(t, d, 0.08 + 0.08 * p, 'bandpass', 300, 1900, 1.2, { attack: d * 0.6, wet: 0.2 });
+    },
+    bell(n = 1, t = ctx.currentTime) {
+      for (let i = 0; i < n; i++) {
+        [[903, 0.22, 1.6], [1478, 0.12, 1.2], [2357, 0.07, 0.8], [3121, 0.04, 0.5]].forEach(([f, vol, d]) => tone(t + i * 0.34, f, f * 0.995, d, vol, { wet: 0.8 }));
+      }
+    },
+    blip(t = ctx.currentTime) { tone(t, rand(380, 520), rand(300, 360), 0.05, 0.035, { type: 'square' }); }
+  };
+  return v;
+}
+
+// The game's sounds. Respects the site's mute (the head's speaker toggle
+// writes dl-sound).
 function makeSound() {
   let ctx = null;
-  let out = null;
-  let noise = null;
+  let v = null;
   const muted = () => {
     try { if (localStorage.getItem('dl-sound') === '0') return true; } catch (e) {}
     const dl = document.querySelector('.dl');
     return !!(dl && dl.classList.contains('muted'));
   };
   const live = () => ctx && ctx.state === 'running' && !muted();
-  function env(g, t, vol, dur, attack = 0.004) {
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + attack);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  }
   const s = {
     muted,
     unlock() {
@@ -314,59 +452,27 @@ function makeSound() {
       if (!AC) return;
       if (!ctx) {
         try { ctx = new AC(); } catch (e) { return; }
-        out = ctx.createGain();
-        out.gain.value = 0.7;
-        out.connect(ctx.destination);
-        noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
-        const d = noise.getChannelData(0);
-        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        v = sparVoices(ctx, ctx.destination);
       }
       if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     },
-    tone(f0, f1, dur, vol, type = 'sine', delay = 0) {
+    // A strike landing on the head, by move. p goes up when it breaks a guard.
+    hit(name, p = 1) {
       if (!live()) return;
-      const t = ctx.currentTime + delay;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = type;
-      o.frequency.setValueAtTime(f0, t);
-      o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-      env(g, t, vol, dur);
-      o.connect(g).connect(out);
-      o.start(t);
-      o.stop(t + dur + 0.03);
+      if (name === 'kick') v.kick(p);
+      else if (name === 'teep') v.teep(p);
+      else v.punch(({ jab: 0.65, cross: 1, hook: 1.2 }[name] || 1) * p);
     },
-    hiss(dur, vol, type, f0, f1, q = 1, delay = 0) {
-      if (!live()) return;
-      const t = ctx.currentTime + delay;
-      const src = ctx.createBufferSource();
-      const f = ctx.createBiquadFilter();
-      const g = ctx.createGain();
-      src.buffer = noise;
-      f.type = type;
-      f.Q.value = q;
-      f.frequency.setValueAtTime(f0, t);
-      f.frequency.exponentialRampToValueAtTime(f1, t + dur);
-      env(g, t, vol, dur, 0.006);
-      src.connect(f).connect(g).connect(out);
-      src.start(t, Math.random() * 0.3);
-      src.stop(t + dur + 0.03);
-    },
-    thud(p = 1) { s.tone(150, 46, 0.16, 0.55 * p); s.hiss(0.07, 0.3 * p, 'lowpass', 1500, 260); },
-    slap(p = 1) { s.thud(p); s.hiss(0.05, 0.22 * p, 'highpass', 2600, 1800); },
-    tok() { s.tone(300, 170, 0.07, 0.22, 'triangle'); s.hiss(0.045, 0.1, 'bandpass', 900, 600, 2); },
-    check() { s.tone(620, 340, 0.1, 0.25, 'triangle'); s.thud(0.6); },
-    whoosh(p = 1) { s.hiss(0.1 + 0.08 * p, 0.07 + 0.05 * p, 'bandpass', 450, 2200, 1.3); },
-    hurt() { s.tone(120, 40, 0.24, 0.6); s.hiss(0.12, 0.3, 'lowpass', 1000, 180); },
-    blip() { s.tone(rand(380, 520), rand(300, 360), 0.05, 0.035, 'square'); },
-    bell(n = 1) {
-      for (let i = 0; i < n; i++) {
-        [[903, 0.22, 1.6], [1478, 0.12, 1.2], [2357, 0.07, 0.8], [3121, 0.04, 0.5]].forEach(([f, v, d]) => s.tone(f, f * 0.995, d, v, 'sine', i * 0.34));
-      }
-    },
+    thud(p = 1) { if (live()) v.thud(p); },
+    tok() { if (live()) v.block(); },
+    check() { if (live()) v.check(); },
+    whoosh(p = 1) { if (live()) v.whoosh(p); },
+    hurt(p = 1) { if (live()) v.hurt(p); },
+    blip() { if (live()) v.blip(); },
+    bell(n = 1) { if (live()) v.bell(n); },
     close() {
       if (ctx) ctx.close().catch(() => {});
-      ctx = out = noise = null;
+      ctx = v = null;
     }
   };
   return s;
@@ -698,7 +804,7 @@ export function mount(el) {
       me.hitAt = clock;
       me.hitPow = a.kind === 'kick' ? 1.2 : a.kind === 'cross' ? 1 : 0.75;
       if (me.act && !me.act.done) me.act = null;
-      sound.hurt();
+      sound.hurt(a.kind === 'kick' ? 1.2 : a.kind === 'cross' ? 1 : 0.8);
       hitStop(a.kind === 'kick' ? 90 : 60);
       if (hurting() && !foe.easySaid && me.hp > 0) { foe.easySaid = true; speak(L.easy, { prio: 2 }); }
       else if (slipping) speak(L.kickYou[0], { prio: 2 });
@@ -797,8 +903,7 @@ export function mount(el) {
       foe.kbPow = m.name === 'teep' ? 1.8 : m.leg ? 1.1 : 0.45 + dmg * 0.18;
       foe.jolt = ({ jab: 0.4, cross: 0.6, hook: 0.75, teep: 0.6, kick: 1 }[m.name]) * (out === 'clean' ? 1 : 1.3);
       setFace(m.leg ? 'sad' : pick(['blink', 'angry', 'sad']), 520);
-      if (m.leg) sound.slap(m.name === 'kick' ? 1 : 0.7);
-      else sound.thud(0.45 + m.dmg * 0.22);
+      sound.hit(m.name, out === 'clean' ? 1 : 1.15);
       // A few frames of hold on contact, longer for the big ones.
       hitStop({ jab: 40, cross: 55, hook: 65, teep: 60, kick: 85 }[m.name] + (out === 'clean' ? 0 : 25));
       ping(x, y, m.leg ? 1.3 : 0.6 + m.dmg * 0.2);

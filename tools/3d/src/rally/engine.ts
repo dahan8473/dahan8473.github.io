@@ -560,8 +560,7 @@ export class Rally {
     if (!kind.startsWith('serve')) sh.serve = false;
     this.rally++;
     const s = this.o.sound;
-    if (kind === 'smash') s.crack();
-    else s.pock(kind === 'drop' || kind === 'net' || kind === 'serveShort' ? 0.5 : kind === 'drive' ? 1 : 0.8);
+    s.hit(kind);
     if (this.rally > this.best && this.best > 0 && !this.bestShown) {
       this.bestShown = true;
       this.pop('new best rally', { x: 0, y: 3.2, z: -1 }, true);

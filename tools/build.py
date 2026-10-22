@@ -6,9 +6,9 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 55, 16, 41, 53
+V_CSS, V_TALKCSS, V_JS, V_TALK = 56, 16, 41, 53
 V_TRACK = 1
-V_PIECE = 45  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 46  # bump when anything in /play/ or /3d/ changes
 V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {
@@ -311,12 +311,12 @@ write('resume/index.html', page('/resume/', 'Resume', "David Liu's resume. Softw
 PROJ_BASE = {}
 
 
-def proj(t, name, meta, line, desc, stack, links, shot, extra_cls=''):
+def proj(t, name, meta, line, desc, stack, links, shot, extra_cls='', status='done'):
     hrefs = [dict(zip(('href', 'text'), re.search(r'href="([^"]+)">([^<]+)<', l).groups())) for l in links]
     PROJ_BASE[t] = {'name': name, 'meta': meta, 'line': line, 'desc': desc, 'stack': stack.split(' · '), 'links': hrefs,
                     'shot': (re.search(r'src="([^"]+)"', shot).group(1) if shot else ''), 'ink': 'ink' in extra_cls}
     shot_html = f'        <div class="shot{extra_cls}">{shot}</div>\n' if shot else ''
-    return f'''      <article class="proj" id="{t}" data-t="{t}">
+    return f'''      <article class="proj" id="{t}" data-t="{t}" data-status="{status}">
 {shot_html}        <div class="proj-head"><h2>{name}</h2><span class="t3">{meta}</span></div>
         <p class="t1">{line}</p>
         <p>{desc}</p>
@@ -334,13 +334,19 @@ projects = '''      <header class="doc-head">
         <p class="go"><a class="ln out" href="https://github.com/dahan8473">All of it on GitHub</a></p>
       </header>
 
+      <div class="ptabs" role="group" aria-label="Filter projects">
+        <button type="button" class="ptab on" data-show="all" aria-pressed="true">All</button>
+        <button type="button" class="ptab" data-show="building" aria-pressed="false">Currently building</button>
+        <button type="button" class="ptab" data-show="done" aria-pressed="false">Done</button>
+      </div>
+
       <div class="projs" data-t="build">
 '''
 projects += proj('tethos-platform', 'Tethos Island', '2026, solo', 'A cozy multiplayer island game for Tethos members.',
   "A 3D island in the browser where Tethos's student members fish, catch bugs, fill a museum, study in a café and hang out together, under the real sky and weather of London, Ontario. I designed and built it on my own: the game, the multiplayer server, the backend, the character rig, animation, models and shaders, with a team of Claude Code agents I run. The title screen is live; the island opens to members soon.",
   'Next.js · React · TypeScript · Three.js · React Three Fiber · Colyseus · Supabase · Blender',
   [ext('https://play.tethos.ca', 'Play it'), link('/dashboard/', 'How it works'), ext('https://tethos.ca', 'tethos.ca')],
-  img('/media/work/tethos-island/village.webp', 'Tethos Island: the village main street at golden hour', 1440, 860))
+  img('/media/work/tethos-island/village.webp', 'Tethos Island: the village main street at golden hour', 1440, 860), status='building')
 projects += proj('this-site', 'davidliu.work', '2026, solo', 'This site, and the floating head that talks like me.',
   "An AI version of me floats on every page. It answers in under a second, flies over and points at what it's talking about, pulls from my second brain, and passes messages to my phone. Two models: Jev decides in about 100 ms, DeepSeek V4.1 Flash writes the reply. Everything else is plain HTML, CSS and JavaScript, plus the games and the 3D pieces. I built it solo, with Claude Code.",
   'JavaScript · HTML · CSS · Three.js · Vercel Functions · Supabase · OpenRouter · DeepSeek V4.1 Flash · Jev · Telegram',
@@ -355,7 +361,7 @@ projects += proj('tethotchi', 'Tethotchi', '2026, Tethos merch', 'A virtual pet 
   "You feed it, it grows, it visits other Tethotchis over Bluetooth, and it dies if you forget about it. The board and the case are both code: change one layout file and the PCB, the case, the collision check and the factory files all follow. I designed it with a team of Claude Code agents I run. The render is generated from the CAD; the first five units are next.",
   'Python · KiCad · build123d · Zephyr · nRF52832 · Web Bluetooth',
   [ext('https://github.com/dahan8473/tethos-port', 'GitHub')],
-  img('/media/work/tethotchi/hero.webp', 'Render of the Tethotchi, a clear CRT TV keychain with a pixel smiley on its screen', 1024, 1024))
+  img('/media/work/tethotchi/hero.webp', 'Render of the Tethotchi, a clear CRT TV keychain with a pixel smiley on its screen', 1024, 1024), status='building')
 projects += proj('biopilot', 'biopilot', '2nd, TELUS AI', 'Drone footage in, crop-health maps out.',
   'YOLOv8 wheat-head detection, per-cell health scores, and heatmaps you can compare run to run. Won $5,000 at TELUS AI at the Edge of Innovation.',
   'React · TypeScript · Vite · FastAPI · YOLOv8 · deck.gl · MapLibre',

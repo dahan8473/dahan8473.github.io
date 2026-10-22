@@ -327,6 +327,18 @@ export function mount(el) {
   const v = new URL(import.meta.url).search;
   let open = null;
 
+  // Tabs: All, Currently building, Done. Each card says which in data-status.
+  const tabs = [...document.querySelectorAll('.ptab')];
+  const more = document.querySelector('.more-projs');
+  for (const t of tabs) {
+    t.addEventListener('click', () => {
+      const show = t.dataset.show;
+      for (const b of tabs) { b.classList.toggle('on', b === t); b.setAttribute('aria-pressed', String(b === t)); }
+      for (const c of document.querySelectorAll('.projs .proj')) c.hidden = show !== 'all' && c.dataset.status !== show;
+      if (more) more.hidden = show === 'building';
+    }, { signal: ac.signal });
+  }
+
   // Cards: keyboard reachable, and a quiet "Details" next to the links.
   const cards = [...document.querySelectorAll('.projs .proj')].filter((c) => data[c.id]);
   for (const c of cards) {

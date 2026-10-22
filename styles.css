@@ -280,7 +280,7 @@ a.row:hover .m { transform: translateX(3px); }
 }
 /* Paper colours, soft in light mode, deeper in dark. A strip of tape on top. */
 .sticky.c0 { --paper: #fbf1c2; } .sticky.c1 { --paper: #dbf0df; } .sticky.c2 { --paper: #d9e9f6; } .sticky.c3 { --paper: #f8e0d3; } .sticky.c4 { --paper: #e8e0f4; }
-[data-theme="dark"] .sticky { color: rgba(255, 255, 255, 0.9); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 12px 22px -12px rgba(0, 0, 0, 0.8); }
+[data-theme="dark"] .sticky { --paper: #4a4329; color: rgba(255, 255, 255, 0.9); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 12px 22px -12px rgba(0, 0, 0, 0.8); }
 [data-theme="dark"] .sticky.c0 { --paper: #4a4329; } [data-theme="dark"] .sticky.c1 { --paper: #2b4233; } [data-theme="dark"] .sticky.c2 { --paper: #283c50; } [data-theme="dark"] .sticky.c3 { --paper: #4b3226; } [data-theme="dark"] .sticky.c4 { --paper: #3a3150; }
 .sticky::before { content: ''; position: absolute; top: -7px; left: 50%; width: 42%; height: 15px; margin-left: -21%; background: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04); transform: rotate(-2deg); pointer-events: none; }
 [data-theme="dark"] .sticky::before { background: rgba(255, 255, 255, 0.16); box-shadow: none; }

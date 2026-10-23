@@ -255,7 +255,7 @@ resume += sec('leadership', 'Leadership', [
         'Delivered 20+ pro-bono projects for nonprofits including World Vision, the Canadian Red Cross and the London Children\'s Museum, saving partners $500,000+',
         '<span data-t="genesis">Produced GENESIS, London\'s largest student demo day: 260+ attendees, 7 project demos, 8 sponsors and $12,000 raised</span>'],
        note=[img('/media/work/tethos-team.webp', 'The Tethos team in front of a Western University building', 1400, 934),
-             '<p>Nonprofits apply, and teams of student PMs and developers build what they need for free. This year I\'m handing it to the next team and staying on as an advisor.</p>',
+             '<p>Nonprofits apply, and teams of student PMs and developers build what they need for free.</p>',
              '<p class="go">' + link('/tethos/', 'Case study') + ext('https://tethos.ca', 'tethos.ca') + '</p>']),
   item('wfn', [('<b>Western Founders Network</b>', '2023 – 2025'), ('VP of Education', 'London, ON')],
        note=["<p>Ran Ontario's largest hackathon education event.</p>"]),

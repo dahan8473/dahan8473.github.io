@@ -197,7 +197,7 @@ The head scores its own lines from that: how often a line gets a reply within 20
 
 Every night a Vercel Cron runs `api/learn.js`. It reads the day's chats and behavior and proposes things: questions the head couldn't answer, facts it's missing, new versions of lines that land badly, and how people use the site (where they drop off, what recruiters look at). The head never changes itself. Proposals wait in my admin portal until I approve them, usually after filling in the answer myself. Approved facts and answers go into the head's prompt; approved lines join its options and get scored like the rest. I get a one-line Telegram ping when there's something to review.
 
-The admin portal is a private page on the Vercel domain at `/admin/<ADMIN_SLUG>`: visitors, every chat, behavior (the funnel from home to a demo, games, time and scroll per page), line scores, and the proposals. A wrong slug is a 404. Behind it is a password (`ADMIN_PASSWORD`), a lockout after 5 wrong tries per IP or 20 overall in 15 minutes (counted in Supabase, so cold starts don't reset it), and a signed, HttpOnly, SameSite=Strict session cookie that lasts 7 days. Changing the password logs every session out. The page runs under a strict CSP, isn't cached or indexed, and puts everything visitors typed on the page as text, never as HTML.
+The admin portal is a private page on the Vercel domain at `/admin` (davidliu.work/admin redirects there): visitors, every chat, behavior (the funnel from home to a demo, games, time and scroll per page), line scores, and the proposals. The login page is public, so the password (`ADMIN_PASSWORD`) carries it: wrong tries wait 300ms, an IP is locked out after 5 wrong tries in 15 minutes, and everyone is after 300 (counted in Supabase, so cold starts don't reset it). Sessions are a signed, HttpOnly, SameSite=Strict cookie that lasts 7 days. With `ADMIN_PASSWORD` or `ADMIN_SECRET` unset, `/admin` is a 404. Changing the password logs every session out. The page runs under a strict CSP, isn't cached or indexed, and puts everything visitors typed on the page as text, never as HTML.
 
 ## Repo
 
@@ -250,9 +250,8 @@ npx vercel deploy --prod
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Visitor memory, chat logs, notes and the spend counter. Use a dedicated Supabase project and run `supabase/visitors.sql` in it once. |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Messages me on Telegram when someone leaves a note |
 | `MONTHLY_CAP_USD` | Optional, defaults to 20 |
-| `ADMIN_SLUG` | The secret segment in the admin portal's URL. At least 8 characters; make it long and random |
 | `ADMIN_SECRET` | Signs admin sessions. Long and random |
-| `ADMIN_PASSWORD` | The admin password. Until it's set, nobody can log in |
+| `ADMIN_PASSWORD` | The admin password. The login page is public, so 16+ random characters or a 4+ word passphrase. Until it's set, `/admin` is a 404 |
 | `CRON_SECRET` | Vercel sends it with the nightly cron call; without it the learn job can't run |
 | `LEARN_MODEL`, `LEARN_REASONING` | Optional. Default `deepseek/deepseek-v4.1-flash` with reasoning `low` |
 

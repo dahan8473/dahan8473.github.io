@@ -1,15 +1,18 @@
-// The admin portal's locks: the secret URL segment, the password, login
-// lockouts, and signed session cookies. Everything fails closed: with
-// ADMIN_SLUG unset every URL is a 404, and with ADMIN_PASSWORD or
-// ADMIN_SECRET unset nobody can log in and no session is valid.
+// The admin portal's locks: the password, login lockouts, and signed session
+// cookies. The login page at /admin is public, so these carry all of it.
+// Everything fails closed: with ADMIN_PASSWORD or ADMIN_SECRET unset /admin
+// is a 404, nobody can log in and no session is valid.
 
 import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import { hasStore, adminTry, adminOk } from './_store.js';
 
 export const COOKIE = 'dl_admin';
 export const SESSION_DAYS = 7;
-const IP_FAILS = 5;       // per IP, per 15 minutes
-const ALL_FAILS = 20;     // across everyone, per 15 minutes
+// Wrong passwords lock out the IP they came from. The ceiling across everyone
+// is much higher, so one person guessing never locks David out; only a lot of
+// IPs guessing at once trips it.
+export const IP_FAILS = 5;     // per IP, per 15 minutes
+export const ALL_FAILS = 300;  // across everyone, per 15 minutes
 const WINDOW = 15 * 60 * 1000;
 
 // Compares two strings in constant time, whatever their lengths: both sides
@@ -20,11 +23,6 @@ export function same(a, b) {
   const x = createHmac('sha256', KEY).update(a).digest();
   const y = createHmac('sha256', KEY).update(b).digest();
   return timingSafeEqual(x, y);
-}
-
-export function slugOk(slug) {
-  const want = process.env.ADMIN_SLUG;
-  return Boolean(want && want.length >= 8 && same(String(slug || ''), want));
 }
 
 export const loginReady = () => Boolean(process.env.ADMIN_PASSWORD && process.env.ADMIN_SECRET);

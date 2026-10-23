@@ -788,6 +788,27 @@ write('privacy/index.html', page('/privacy/', 'Privacy', 'What davidliu.work kee
 write('messages/index.html', page('/messages/', 'Messages', 'Message David Liu directly. It goes to his phone, and his replies show up here.', messages, 'messages', cls='messages'))
 
 
+# ---- Admin redirect -------------------------------------------------------------
+# davidliu.work/admin goes to the admin portal on the Vercel domain. Not a page:
+# no rail, noindex, and kept out of the sitemap (write() would list it).
+
+ADMIN_URL = 'https://davidliu-work.vercel.app/admin/'
+os.makedirs(os.path.join(REPO, 'admin'), exist_ok=True)
+open(os.path.join(REPO, 'admin/index.html'), 'w').write(f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="refresh" content="0; url={ADMIN_URL}">
+  <title>Admin</title>
+  <script>location.replace('{ADMIN_URL}');</script>
+</head>
+<body></body>
+</html>
+''')
+print('wrote admin/index.html')
+
+
 # ---- Brain ----------------------------------------------------------------------
 
 brain = '''      <header class="doc-head">

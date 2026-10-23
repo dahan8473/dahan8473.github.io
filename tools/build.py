@@ -512,7 +512,8 @@ GROUPS = [
   ], [('meowmeow', 'Meowmeow')]),
 ]
 # The "Also" ones aren't links: hovering (or tapping) the name shows a picture,
-# when there is one, and a line. (src or None, line)
+# when there is one, and a line. (src or None, line) The pictures load the
+# first time a card opens (data-src, site.js), not with the page.
 # src is one picture, a list (a slideshow), or {'video': mp4, 'poster': img}.
 TIPS = {
   'climbing': (None, "I boulder with my friends. I'm not very good at it tho, maybe one day I can finally climb a V4."),
@@ -566,11 +567,11 @@ for label, rows, more in GROUPS:
             return f'<a class="ln" href="/hobbies/{slug}/" data-t="{slug}">{name}</a>'
         src, line = TIPS[slug]
         if isinstance(src, dict):
-            pic = f'<video class="tip-video" src="{src["video"]}" poster="{src["poster"]}" muted loop playsinline preload="none"></video>'
+            pic = f'<video class="tip-video" data-src="{src["video"]}" data-poster="{src["poster"]}" muted loop playsinline preload="none"></video>'
         elif isinstance(src, list):
-            pic = '<span class="tip-slides">' + ''.join(f'<img src="{s}" alt="" loading="lazy" decoding="async" style="--i:{i}">' for i, s in enumerate(src)) + '</span>'
+            pic = '<span class="tip-slides">' + ''.join(f'<img data-src="{s}" alt="" decoding="async" style="--i:{i}">' for i, s in enumerate(src)) + '</span>'
         else:
-            pic = f'<img src="{src}" alt="" loading="lazy" decoding="async">' if src else ''
+            pic = f'<img data-src="{src}" alt="" decoding="async">' if src else ''
         return f'<span class="ln hob-tip" tabindex="0" data-t="{slug}">{name}<span class="hob-tip-card" role="tooltip">{pic}<span>{line}</span></span></span>'
     links = ''.join(also(slug, name) for slug, name in more)
     hob += f'          <p class="hob-more"><span>Also</span><span class="go">{links}</span></p>\n        </section>\n'

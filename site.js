@@ -1399,6 +1399,9 @@
   function tipOn(e) {
     var tip = e.target.closest && e.target.closest('.hob-tip');
     if (!tip || tip.contains(e.relatedTarget)) return;
+    // The card's pictures load the first time it opens.
+    tip.querySelectorAll('[data-poster]').forEach(function (el) { el.poster = el.getAttribute('data-poster'); el.removeAttribute('data-poster'); });
+    tip.querySelectorAll('[data-src]').forEach(function (el) { el.src = el.getAttribute('data-src'); el.removeAttribute('data-src'); });
     var v = tip.querySelector('video');
     if (v) { v.muted = true; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
     if (tip.getAttribute('data-t') === 'meowmeow' && !catCalled && window.dlCat) { catCalled = true; window.dlCat(); }

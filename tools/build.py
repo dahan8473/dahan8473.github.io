@@ -502,7 +502,7 @@ GROUPS = [
   ], [('climbing', 'Rock climbing'), ('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),
   ('Mind', [
     ('travel', 'Travel', 'China, Korea, Europe, the US, and Canada coast to coast.', None),
-    ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
+    ('fashion', 'Fashion', 'Kunlun, my clothing brand built on Chinese mythology. Dropping soon.', '/media/work/kunlun-liangfeng.webp'),
     ('lumosity', 'Lumosity', 'Every morning, religiously. Play my three favourites and try to beat me.', None),
   ], [('chess', 'Chess'), ('video', 'Video production')]),
   ('Soul', [
@@ -669,7 +669,8 @@ hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a 
 ], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/photography/footage.json'))
 hobby('travel', 'Travel', "Eight countries so far, and a list I'm behind on. Spin the globe, hover a place. More places on the way.", [
 ], shot=piece('3d', 'globe', 'Loading the globe...', 'globe-full'))
-hobby('fashion', 'Fashion', "I'm building Kunlun, a clothing brand built on Chinese mythology. Traditional Chinese and English run side by side as two voices.", [
+hobby('fashion', 'Fashion', "It started when I made my own merch for my club. Now I'm starting my own clothing brand, Kunlun, built on Chinese mythology. Dropping soon."
+      '</p>\n        <p class="tagline">Traditional Chinese and English run side by side as two voices.', [
 ], shot='''      <figure class="case-shot ink">
         <img src="/media/work/kunlun-liangfeng.webp" alt="Kunlun storefront: 涼風, Liangfeng, Cool Wind" width="1400" height="876">
         <figcaption>Drop I, Liangfeng</figcaption>

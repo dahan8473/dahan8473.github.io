@@ -581,7 +581,15 @@
         },
         {
           "t": "Fashion",
-          "id": "fashion"
+          "id": "fashion",
+          "c": [
+            {
+              "t": "Started with merch for my club"
+            },
+            {
+              "t": "Kunlun, dropping soon"
+            }
+          ]
         },
         {
           "t": "Meowmeow",

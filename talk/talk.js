@@ -86,7 +86,7 @@
       'resume-door': "psst. recruiter? resume's right here",
       rag: "ooo this one's good, give it a click",
       dashboard: 'i built a whole 3D game for this, you should take a look',
-      kunlun: 'i made a clothing brand. based on chinese mythology. click',
+      kunlun: "i'm starting a clothing brand. based on chinese mythology, dropping soon. click",
       github: 'take a look at my commits here!',
       hackthenorth: 'this one won its category at hack the north. just saying...',
       email: "here's my email. talk to me here!"

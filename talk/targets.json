@@ -137,7 +137,7 @@
   "kunlun": {
     "page": "/projects/",
     "sel": "[data-t='kunlun']",
-    "about": "Kunlun clothing brand"
+    "about": "Kunlun, my clothing brand built on Chinese mythology. Pre-launch, dropping soon"
   },
   "dejaview": {
     "page": "/projects/",
@@ -222,7 +222,7 @@
   "fashion": {
     "page": "/hobbies/fashion/",
     "sel": "[data-t='fashion']",
-    "about": "Fashion page (Kunlun)"
+    "about": "Fashion page: it started when I made my own merch for my club. Now I'm starting my own clothing brand, Kunlun, built on Chinese mythology, dropping soon"
   },
   "chess": {
     "page": "/hobbies/chess/",

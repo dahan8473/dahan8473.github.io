@@ -473,7 +473,9 @@ a.row:hover .m { transform: translateX(3px); }
 .hob-more > span:first-child { color: var(--t3); }
 /* Small hobbies with no page: a card on hover, or on tap (focus). */
 .hob-tip { position: relative; cursor: default; text-decoration: underline dotted var(--t3); text-underline-offset: 3px; outline: none; }
-.hob-tip-card { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 10px); width: 220px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); color: var(--fg); font-size: 13px; line-height: 1.45; white-space: normal; opacity: 0; transform: translate(-50%, 6px); transition: opacity 0.18s ease, transform 0.18s ease; pointer-events: none; }
+.hob-tip-card { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 10px); width: 220px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); color: var(--fg); font-size: 13px; line-height: 1.45; white-space: normal; opacity: 0; transform: translate(-50%, 6px); transition: opacity 0.18s ease, transform 0.18s ease, display 0.18s allow-discrete; pointer-events: none; }
+/* Hidden cards take no room, so they can't widen the page on a phone. */
+.hob-tip-card { display: none; }
 .hob-tip-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin-bottom: 10px; border-radius: 8px; }
 .hob-tip-card .tip-video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; margin-bottom: 10px; border-radius: 8px; background: #000; }
 .hob-tip-card .tip-stat { display: block; margin-bottom: 4px; color: var(--t1); font-weight: 500; }
@@ -482,13 +484,15 @@ a.row:hover .m { transform: translateX(3px); }
 .tip-slides img { position: absolute; inset: 0; height: 100%; margin: 0; border-radius: 0; opacity: 0; animation: tip-slide 9s infinite; animation-delay: calc(var(--i) * 3s); }
 @keyframes tip-slide { 0%, 30% { opacity: 1; } 36%, 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .tip-slides img { animation: none; } .tip-slides img:first-child { opacity: 1; } }
-.hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { display: block; opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+@starting-style { .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { opacity: 0; transform: translate(-50%, 6px); } }
 /* A bridge over the gap, so the pointer can reach a link in the card. */
 .hob-tip-card::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 12px; }
 .hob-tip-card a { color: inherit; text-decoration: underline; text-decoration-color: var(--t3); text-underline-offset: 3px; }
 .hob-tip-card a:hover { color: var(--accent); }
 .hob-tip:hover, .hob-tip:focus { color: var(--t1); }
-@media (max-width: 640px) { .hob-tip-card { left: 0; transform: translate(0, 6px); } .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { transform: none; } }
+/* Phones: the card sits above the whole Also row, inside the page, not off the name. */
+@media (max-width: 640px) { .hob-more { position: relative; } .hob-tip { position: static; } .hob-tip-card { left: 0; width: min(220px, 100%); transform: translate(0, 6px); } .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { transform: none; } @starting-style { .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { transform: translate(0, 6px); } } }
 @media (prefers-reduced-motion: reduce) { .hob-tip-card { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .hob-pic, .hob-pic img, .hob-go { transition: none; } }
 .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }

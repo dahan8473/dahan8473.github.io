@@ -545,7 +545,7 @@ hob = '''      <header class="doc-head">
 GROUP_LINE = {'Body': 'What I train.', 'Mind': 'What keeps me curious.', 'Soul': 'What I love.'}
 PICS = {
   'hiking': ('/media/hikes/panorama-ridge/07-s.webp', 'photo', 'The trail up to Panorama Ridge'),
-  'badminton': ('/media/tiles/rackets.webp', 'cut', 'Three of my Yonex rackets'),
+  'badminton': ('/media/tiles/badminton-s.webp', 'photo', 'Me jumping for a smash'),
   'muay-thai': ('/media/muaythai/gloves-s.webp', 'photo', 'Me and a training partner in gloves'),
   'travel': ('/media/hikes/eze/02-s.webp', 'photo', 'Èze over the Mediterranean'),
   'fashion': ('/media/work/kunlun-liangfeng.webp', 'photo', 'The Kunlun storefront'),

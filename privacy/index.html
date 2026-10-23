@@ -74,21 +74,27 @@
       <div class="legal">
         <section>
           <h2>When you visit</h2>
-          <p>Your browser gets a random id, so the head can remember you next time. With it I keep the pages you open and when, where you came from, your browser, your time zone, and a rough location (city, region, country) worked out from your IP address. The IP address itself is kept too.</p>
+          <p>Your browser gets a random id, so the head can remember you next time. With it I keep the pages you open and when, where you came from, your browser, your time zone, and a rough location (city, region, country) worked out from your IP address. The IP address itself is kept too, until 30 days after your last visit.</p>
           <p>The site also notes how it gets used: clicks, scrolling, time on a page, which games get played. That's how I find out what's fun and what's broken.</p>
         </section>
         <section>
           <h2>When you talk to the head</h2>
           <p>Chats are saved so the real me can read them. If you tell it things about yourself (your name, what you do, why you're here), it remembers them for your next visit.</p>
-          <p>To write its replies, your messages go to AI models through OpenRouter, only to hosts that don't train on what they're sent. A small model called Jev reads each message first to catch spam and abuse.</p>
+          <p>To write its replies, your messages go to AI models through OpenRouter, and the hosts are told not to train on them. That starts while you type: after a short pause, what you've written so far goes out so the reply is ready sooner, even if you never hit enter. A small model called Jev reads each message first to catch spam and abuse.</p>
+          <p>Every night, a learning job sends the day's chats, with emails and phone numbers taken out, to an AI model that suggests ways to make the head better. Nothing changes until I approve it.</p>
         </section>
         <section>
           <h2>Notes and messages</h2>
-          <p>Notes on the wall are public once a check lets them through. Private notes and anything you send on the Messages page go to my phone through Telegram, with whatever contact you leave, so I can reply.</p>
+          <p>Notes on the wall are public once a check lets them through. Every note, wall or private, and anything you send on the Messages page goes to my phone through Telegram, with whatever contact you leave, so I can reply.</p>
         </section>
         <section>
           <h2>The camera</h2>
           <p>If you ask the head to rate you and allow the camera, the picture stays in your browser for a few seconds. Nothing is recorded or sent anywhere.</p>
+        </section>
+        <section>
+          <h2>Other services</h2>
+          <p>Some pages load things from other sites. The video pages load YouTube thumbnails when you get to them, and a YouTube or Instagram player when you click one. The chess page gets my stats from chess.com and lichess. If you talk to the head with the mic, your browser's own speech recognition does the listening, and in Chrome that means your audio goes to Google.</p>
+          <p>Behind the scenes: Telegram (notes and messages to my phone), OpenRouter (the AI models), Vercel (where the head runs) and Supabase (where the data is stored).</p>
         </section>
         <section>
           <h2>What I don't do</h2>
@@ -97,11 +103,10 @@
         <section>
           <h2>Turning it off, and deleting it</h2>
           <p>Turn on Do Not Track or Global Privacy Control in your browser and the site stops logging your page views and how you use it. Chats you have with the head are still saved, since that's how I read them.</p>
-          <p>Old data clears itself: IP addresses after 30 days, page views and how the site got used after 90 days, chats after 12 months.</p>
-          <p>Want everything about you deleted? Email <a class="ln" href="mailto:davidliu8473@gmail.com">davidliu8473@gmail.com</a> with your visitor id and I'll remove it. <span class="vid-line">Yours is <code id="my-visitor">not set yet</code>.</span></p>
-          <script>try { var v = localStorage.getItem('dl-visitor'); if (v) document.getElementById('my-visitor').textContent = v; } catch (e) {}</script>
+          <p>Old data clears itself: IP addresses 30 days after your last visit, page views and how the site got used after 90 days, chats after 12 months. The rest stays until you ask me to delete it: what the head remembers about you, your notes and your messages.</p>
+          <p>Want everything about you deleted? Email <a class="ln" href="mailto:davidliu8473@gmail.com">davidliu8473@gmail.com</a> with your visitor id and I'll remove everything tied to it. The only copies I can't reach are the ones already on my phone, and backups, which expire on their own. <span class="vid-line"><button class="ln" type="button" onclick="var c=this.nextElementSibling,v=null;try{v=localStorage.getItem('dl-visitor')}catch(e){}c.textContent=v||'not set yet';c.hidden=false;this.hidden=true">Show my visitor id</button><code id="my-visitor" hidden></code></span></p>
         </section>
-        <p class="t3">Where it lives: the site is on GitHub Pages, the head runs on Vercel, and the data is stored in Supabase. Last updated October 2026.</p>
+        <p class="t3">The site itself is on GitHub Pages. Last updated October 2026.</p>
       </div>
     </main>
 

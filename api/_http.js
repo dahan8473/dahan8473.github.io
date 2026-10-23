@@ -18,8 +18,10 @@ export function preflight(headers) {
   });
 }
 
+// Responses are no-store unless the route passes its own cache-control (the
+// public wall does); anything personal never does.
 export const plain = (text, headers, status = 200) =>
-  new Response(text, { status, headers: { ...headers, 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } });
+  new Response(text, { status, headers: { 'cache-control': 'no-store', ...headers, 'content-type': 'text/plain; charset=utf-8' } });
 
 export const isId = (v) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 
@@ -28,7 +30,7 @@ export function clientIp(request) {
 }
 
 export const json = (data, headers, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { ...headers, 'content-type': 'application/json', 'cache-control': 'no-store' } });
+  new Response(JSON.stringify(data), { status, headers: { 'cache-control': 'no-store', ...headers, 'content-type': 'application/json' } });
 
 // Sliding-window limit per key, per instance. Best effort.
 export function limiter(max, windowMs) {

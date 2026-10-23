@@ -83,6 +83,7 @@
     // Keyed by target id (talk/targets.json). Fetching something to the cursor
     // only happens when they asked, or when it clearly fits who they are.
     yank: {
+      'resume-swe': "psst. recruiter? resume's right here",
       'resume-door': "psst. recruiter? resume's right here",
       rag: "ooo this one's good, give it a click",
       dashboard: 'i built a whole 3D game for this, you should take a look',
@@ -100,7 +101,8 @@
     point: {
       nav: 'everything about me is in this bar!',
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',
-      now: "here's a summary of what i'm doing rn"
+      now: "here's a summary of what i'm doing rn",
+      'resume-swe': "resume's up here if you wanna keep it :)"
     },
     roam: {
       build: 'i built all of these projects. ask me which one made me cry',
@@ -150,7 +152,7 @@
     light: 'flashbang 😭 my eyes',
     rightclick: 'right click? what are you gonna do, save my face? 😳',
     copy: 'copying my stuff? go for it',
-    print: "no way you're printing my website ON PAPER",
+    print: "no way you're printing my website ON PAPER. you can just download my resume you know",
     squish: "i'm claustrophobic you know",
     wake: "huh? oh. i wasn't sleeping",
     mic: "oh you're actually talking to me 😳 hi",
@@ -3502,6 +3504,8 @@
     document.addEventListener('copy', () => react('copy', LINES.copy, 1800, 'happy'));
     addEventListener('beforeprint', () => {
       react('print', LINES.print);
+      const pdf = find('resume-swe');
+      if (pdf && !S.once.includes('print-fetch')) { S.once.push('print-fetch'); setTimeout(() => yank(pdf, { hold: 7000 }), 600); }
     });
   }
 

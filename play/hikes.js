@@ -8,6 +8,8 @@
 //     | { video, poster, w, h } ], each with an optional note shown under it } ] }
 // Photos and clips open in the gallery's lightbox. Clips loop muted while they're
 // the one on screen (gallery.js clipWatch); phones get the poster and a play mark.
+// With a mouse, arrows show at the strip's edges while it's hovered, and the
+// strip can be dragged sideways. Touch and trackpads scroll it natively.
 
 const CSS_ID = 'play-hikes-css';
 const CSS = `
@@ -19,6 +21,12 @@ const CSS = `
 .phk-date { margin-left: auto; color: var(--t3); white-space: nowrap; }
 .phk-strip { display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; margin: 0 -2px; padding: 0 2px 2px; }
 .phk-strip::-webkit-scrollbar { display: none; }
+.phk-rail { position: relative; }
+.phk-go { position: absolute; top: 110px; z-index: 2; display: none; place-items: center; width: 36px; height: 36px; margin-top: -18px; padding: 0; border: 0; border-radius: 50%; background: var(--bg); color: var(--t1); box-shadow: 0 0 0 1px var(--rule), 0 6px 18px -6px rgba(0, 0, 0, 0.35); cursor: pointer; opacity: 0; transition: opacity 160ms ease; }
+.phk-go.prev { left: 10px; }
+.phk-go.next { right: 10px; }
+.phk-go svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.phk-go:not(.can) { pointer-events: none; }
 .phk-item { flex: none; height: 220px; padding: 0; border: 0; border-radius: 12px; background: var(--fill); overflow: hidden; scroll-snap-align: start; cursor: zoom-in; }
 .phk-fig { flex: none; display: flex; flex-direction: column; margin: 0; scroll-snap-align: start; }
 .phk-fig figcaption { width: 0; min-width: 100%; padding: 8px 2px 0; color: var(--t2); }
@@ -29,6 +37,13 @@ const CSS = `
 .phk-mark { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: rgba(0, 0, 0, 0.48); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #fff; pointer-events: none; }
 .phk-mark svg { width: 17px; height: 17px; margin-left: 3px; fill: currentColor; }
 @media (hover: hover) { .phk-item:hover img.in { opacity: 0.9; } }
+@media (hover: hover) and (pointer: fine) {
+  .phk-go { display: grid; }
+  .phk-rail:hover .phk-go.can { opacity: 1; }
+  .phk-item img, .phk-item video { -webkit-user-drag: none; }
+  .phk-strip.dragging { scroll-snap-type: none; user-select: none; -webkit-user-select: none; }
+  .phk-strip.dragging, .phk-strip.dragging .phk-item { cursor: grabbing; }
+}
 .phk-card { color: var(--t2); }
 .phk-card dl { display: grid; grid-template-columns: 92px 1fr; gap: 3px 12px; margin: 0; }
 .phk-card dt { color: var(--t3); }
@@ -73,6 +88,63 @@ function stats(label, rows, note) {
   return sec;
 }
 
+const CHEVRON = { prev: 'M15 5l-7 7 7 7', next: 'M9 5l7 7-7 7' };
+function arrow(dir) {
+  const b = h('button', 'phk-go ' + dir);
+  b.type = 'button';
+  b.tabIndex = -1;
+  b.setAttribute('aria-hidden', 'true');
+  b.innerHTML = `<svg viewBox="0 0 24 24"><path d="${CHEVRON[dir]}"/></svg>`;
+  return b;
+}
+
+// Arrows and mouse drag for one strip. Returns a function that rechecks which
+// arrows have somewhere to go.
+function rail(strip, signal) {
+  const box = h('div', 'phk-rail');
+  const prev = arrow('prev'), next = arrow('next');
+  box.append(strip, prev, next);
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const sync = () => {
+    const max = strip.scrollWidth - strip.clientWidth;
+    prev.classList.toggle('can', strip.scrollLeft > 4);
+    next.classList.toggle('can', strip.scrollLeft < max - 4);
+  };
+  const by = (dir) => strip.scrollBy({ left: dir * strip.clientWidth * 0.8, behavior: reduce.matches ? 'auto' : 'smooth' });
+  prev.addEventListener('click', () => by(-1), { signal });
+  next.addEventListener('click', () => by(1), { signal });
+  strip.addEventListener('scroll', sync, { passive: true, signal });
+
+  // A mouse drag scrolls the strip; the click that ends a drag doesn't open the photo.
+  let drag = null, dragged = false;
+  strip.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    drag = { id: e.pointerId, x: e.clientX, left: strip.scrollLeft, moved: false };
+  }, { signal });
+  strip.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved) {
+      if (Math.abs(dx) < 6) return;
+      drag.moved = true;
+      strip.classList.add('dragging');
+      strip.setPointerCapture(e.pointerId);
+    }
+    strip.scrollLeft = drag.left - dx;
+  }, { signal });
+  const end = () => {
+    if (!drag) return;
+    dragged = drag.moved;
+    drag = null;
+    strip.classList.remove('dragging');
+    if (dragged) setTimeout(() => { dragged = false; }, 0);
+  };
+  strip.addEventListener('pointerup', end, { signal });
+  strip.addEventListener('pointercancel', end, { signal });
+  strip.addEventListener('click', (e) => { if (dragged) { e.preventDefault(); e.stopPropagation(); } }, { capture: true, signal });
+  return { box, sync };
+}
+
 function card(hike) {
   const t = hike.trail || {};
   const me = hike.me || {};
@@ -107,6 +179,7 @@ export function mount(el) {
       release = useCss(CSS_ID, CSS);
       const hikes = Array.isArray(data && data.hikes) ? data.hikes : [];
       watch = clipWatch();
+      const syncs = [];
 
       for (const hike of hikes) {
         const art = h('article', 'phk-hike');
@@ -128,6 +201,7 @@ export function mount(el) {
           b.style.aspectRatio = m.w + ' / ' + m.h;
           if (m.video) {
             const v = h('video');
+            v.draggable = false;
             v.setAttribute('aria-label', 'Clip from ' + hike.name);
             v.addEventListener('loadeddata', () => v.classList.add('in'), { once: true });
             watch.add(v, m.video, m.poster);
@@ -143,6 +217,7 @@ export function mount(el) {
           } else {
             const img = h('img');
             img.loading = 'lazy';
+            img.draggable = false;
             img.decoding = 'async';
             img.alt = m.note || hike.name;
             img.width = m.w;
@@ -161,7 +236,9 @@ export function mount(el) {
           } else strip.appendChild(b);
         }
 
-        art.append(head, c, strip);
+        const r = rail(strip, ac.signal);
+        syncs.push(r.sync);
+        art.append(head, c, r.box);
         list.appendChild(art);
 
         // The card follows the pointer while it's over the hike.
@@ -182,6 +259,9 @@ export function mount(el) {
       addEventListener('scroll', () => list.querySelectorAll('.phk-card.on').forEach((c) => c.classList.remove('on')), { passive: true, signal: ac.signal });
       if (note) note.remove();
       el.appendChild(list);
+      const syncAll = () => syncs.forEach((f) => f());
+      syncAll();
+      addEventListener('resize', syncAll, { passive: true, signal: ac.signal });
     })
     .catch((err) => {
       if (ac.signal.aborted) return;

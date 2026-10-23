@@ -6,7 +6,8 @@
 //   hikes.json: { "hikes": [ { id, name, where, date, trail: { distance, gain,
 //     top, time, note }, me: { first, last, high }, media: [ { src, small, w, h }
 //     | { video, poster, w, h } ], each with an optional note shown under it } ] }
-// Photos and clips open in the gallery's lightbox; clips loop muted while on screen.
+// Photos and clips open in the gallery's lightbox. Clips loop muted while they're
+// the one on screen (gallery.js clipWatch); phones get the poster and a play mark.
 
 const CSS_ID = 'play-hikes-css';
 const CSS = `
@@ -24,6 +25,9 @@ const CSS = `
 .phk-item:focus-visible { border-radius: 12px; outline-offset: 3px; }
 .phk-item img, .phk-item video { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 320ms ease; }
 .phk-item .in { opacity: 1; }
+.phk-item.clip { position: relative; }
+.phk-mark { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: rgba(0, 0, 0, 0.48); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #fff; pointer-events: none; }
+.phk-mark svg { width: 17px; height: 17px; margin-left: 3px; fill: currentColor; }
 @media (hover: hover) { .phk-item:hover img.in { opacity: 0.9; } }
 .phk-card { color: var(--t2); }
 .phk-card dl { display: grid; grid-template-columns: 92px 1fr; gap: 3px 12px; margin: 0; }
@@ -90,7 +94,7 @@ export function mount(el) {
   const ac = new AbortController();
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
   let closeLb = null;
-  let io = null;
+  let watch = null;
 
   const list = h('div', 'phk');
   const note = el.querySelector('.piece-note');
@@ -98,17 +102,11 @@ export function mount(el) {
   // gallery.js has the lightbox; load it with the same ?v= as this file.
   const gal = import('./gallery.js' + new URL(import.meta.url).search);
   Promise.all([gal, fetch(el.dataset.src || '/hobbies/hiking/hikes.json', { signal: ac.signal }).then((r) => r.json())])
-    .then(([{ useCss, fmtDate, lightbox }, data]) => {
+    .then(([{ useCss, fmtDate, lightbox, clipWatch }, data]) => {
       if (ac.signal.aborted) return;
       release = useCss(CSS_ID, CSS);
       const hikes = Array.isArray(data && data.hikes) ? data.hikes : [];
-      io = new IntersectionObserver((entries) => {
-        for (const e of entries) {
-          const v = e.target;
-          if (e.isIntersecting) { if (v.preload === 'none') v.preload = 'auto'; v.play().catch(() => {}); }
-          else v.pause();
-        }
-      }, { rootMargin: '120px' });
+      watch = clipWatch();
 
       for (const hike of hikes) {
         const art = h('article', 'phk-hike');
@@ -130,22 +128,18 @@ export function mount(el) {
           b.style.aspectRatio = m.w + ' / ' + m.h;
           if (m.video) {
             const v = h('video');
-            v.muted = true;
-            v.loop = true;
-            v.playsInline = true;
-            v.preload = 'none';
-            v.poster = m.poster;
-            v.src = m.video;
             v.setAttribute('aria-label', 'Clip from ' + hike.name);
             v.addEventListener('loadeddata', () => v.classList.add('in'), { once: true });
-            // The poster shows before the clip loads.
-            const p = new Image();
-            p.onload = () => v.classList.add('in');
-            p.src = m.poster;
+            watch.add(v, m.video, m.poster);
             b.appendChild(v);
+            // Phones: a still poster, so mark it as a clip. A tap opens it in the lightbox.
+            if (watch.tapOnly) {
+              const mark = h('span', 'phk-mark');
+              mark.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l12-7.2a1 1 0 0 0 0-1.72l-12-7.2A1 1 0 0 0 7 4.8z"/></svg>';
+              b.appendChild(mark);
+            }
             b.setAttribute('aria-label', 'Open clip from ' + hike.name);
             b.addEventListener('click', () => open(all.indexOf(m), b));
-            io.observe(v);
           } else {
             const img = h('img');
             img.loading = 'lazy';
@@ -197,9 +191,8 @@ export function mount(el) {
 
   return function stop() {
     ac.abort();
-    if (io) io.disconnect();
+    if (watch) watch.stop();
     if (closeLb) closeLb(false);
-    list.querySelectorAll('video').forEach((v) => { v.pause(); v.removeAttribute('src'); v.load(); });
     list.remove();
     release();
   };

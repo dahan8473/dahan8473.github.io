@@ -188,6 +188,77 @@ function noteText(el, fallback) {
   return t && !/^loading/i.test(t) ? t : fallback;
 }
 
+// Clips that loop muted inline (videos.js, hikes.js). Nothing loads until a
+// clip is near the screen, only the most visible one plays (once the page has
+// settled on it for a moment, so scrolling past doesn't start downloads), it
+// pauses when it leaves, and one that scrolls far away drops its download. On phones, with
+// Save-Data on, or with reduced motion nothing autoplays (tapOnly): the poster
+// shows and the caller plays a clip on tap with play(v).
+export function clipWatch() {
+  const conn = navigator.connection;
+  const tapOnly = window.matchMedia('(hover: none), (max-width: 720px), (prefers-reduced-motion: reduce)').matches || !!(conn && conn.saveData);
+  const clips = new Map();
+  let settle = 0;
+  function pick() {
+    if (tapOnly) return;
+    let best = null;
+    for (const [v, c] of clips) if (c.ratio >= 0.5 && (!best || c.ratio > clips.get(best).ratio)) best = v;
+    for (const v of clips.keys()) if (v !== best && !v.paused) v.pause();
+    clearTimeout(settle);
+    if (best && best.paused) settle = setTimeout(() => {
+      const c = clips.get(best);
+      if (!c || c.ratio < 0.5) return;
+      if (!best.getAttribute('src')) best.src = c.src;
+      best.play().catch(() => {});
+    }, 400);
+  }
+  const near = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const v = e.target, c = clips.get(v);
+      if (!c) continue;
+      if (e.isIntersecting) {
+        if (c.poster && !v.poster) {
+          v.poster = c.poster;
+          const img = new Image();
+          img.onload = () => v.classList.add('in');
+          img.src = c.poster;
+        }
+      } else if (v.getAttribute('src')) { v.pause(); v.removeAttribute('src'); v.load(); }
+    }
+  }, { rootMargin: '300px 0px' });
+  const seen = new IntersectionObserver((entries) => {
+    for (const e of entries) { const c = clips.get(e.target); if (c) c.ratio = e.isIntersecting ? e.intersectionRatio : 0; }
+    pick();
+  }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+  return {
+    tapOnly,
+    add(v, src, poster) {
+      v.muted = true;
+      v.loop = true;
+      v.playsInline = true;
+      v.preload = 'none';
+      clips.set(v, { src, poster, ratio: 0 });
+      near.observe(v);
+      seen.observe(v);
+    },
+    // One at a time: playing one pauses the rest.
+    play(v) {
+      const c = clips.get(v);
+      if (!c) return;
+      for (const o of clips.keys()) if (o !== v && !o.paused) o.pause();
+      if (!v.getAttribute('src')) v.src = c.src;
+      v.play().catch(() => {});
+    },
+    stop() {
+      clearTimeout(settle);
+      near.disconnect();
+      seen.disconnect();
+      for (const v of clips.keys()) { v.pause(); v.removeAttribute('src'); v.load(); }
+      clips.clear();
+    }
+  };
+}
+
 // ---- Lightbox ---------------------------------------------------------------
 // lightbox(items, start, opener) opens a full-screen viewer appended to body.
 // items: [{ src, alt, caption, meta }], or { video, poster, ... } for a clip. Arrows, Escape, swipe, focus trapped,

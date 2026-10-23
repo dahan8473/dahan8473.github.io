@@ -183,7 +183,9 @@ function remember(visitor) {
 
 // Drafts aren't saved. When they hit Enter on the same text, the page sends
 // the reply back to be saved, signed here so only a real reply gets in.
-const SIGN = 'draft:' + (process.env.OPENROUTER_API_KEY || '');
+// Signed with its own key, DRAFT_SECRET. Until that's set on Vercel it falls
+// back to the old key derived from the OpenRouter key, so nothing breaks.
+const SIGN = process.env.DRAFT_SECRET || 'draft:' + (process.env.OPENROUTER_API_KEY || '');
 const signed = (convo, latest, text) => createHmac('sha256', SIGN).update(`${convo}\n${latest}\n${text}`).digest('hex').slice(0, 32);
 function sameSig(a, b) {
   const x = Buffer.from(String(a)), y = Buffer.from(b);

@@ -7,7 +7,7 @@ import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import { hasStore, adminTry, adminOk } from './_store.js';
 
 export const COOKIE = 'dl_admin';
-export const SESSION_DAYS = 7;
+export const SESSION_DAYS = 30;
 // Wrong passwords lock out the IP they came from. The ceiling across everyone
 // is much higher, so one person guessing never locks David out; only a lot of
 // IPs guessing at once trips it.

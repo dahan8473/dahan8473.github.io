@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { execFileSync } from 'node:child_process';
 import OpenAI from 'openai';
+import { isPrivate, FRIEND_NOTES } from '../../api/_cortex.js';
 
 const ROOT = new URL('../../', import.meta.url).pathname;
 const config = JSON.parse(readFileSync(join(ROOT, 'private/brain.json'), 'utf8'));
@@ -102,7 +103,11 @@ async function condenseAll() {
 }
 
 function push() {
-  const { updated, notes: cortex } = JSON.parse(readFileSync(join(ROOT, 'private/cortex.json'), 'utf8'));
+  const { updated, notes } = JSON.parse(readFileSync(join(ROOT, 'private/cortex.json'), 'utf8'));
+  // Private notes (friends only, never for recruiters) stay on this machine
+  // unless FRIEND_NOTES in api/_cortex.js is on.
+  const cortex = FRIEND_NOTES ? notes : notes.filter((n) => !isPrivate(n));
+  if (cortex.length < notes.length) console.log(`left out ${notes.length - cortex.length} private notes`);
   const signal = gzipSync(JSON.stringify({ updated, notes: cortex })).toString('base64');
   for (const env of ['production', 'preview']) {
     execFileSync('npx', ['--yes', 'vercel', 'env', 'add', 'DAVID_CORTEX', env, '--sensitive', '--force'], { input: signal, cwd: ROOT, stdio: ['pipe', 'ignore', 'inherit'] });

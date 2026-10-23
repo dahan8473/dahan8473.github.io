@@ -1727,6 +1727,8 @@
   function foldUp() {
     compactOff();
     folded = pageTok;
+    // The hello (or the question) still waiting to be said goes too, so it can't come back as a loose bubble.
+    hear.q = hear.q.filter((u) => { if (u.pri <= PRI.page) { discard(u, 'fold'); return false; } return true; });
     if (chatOn) closeChat(null, 'fold');
   }
   async function intro() {

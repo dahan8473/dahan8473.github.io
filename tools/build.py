@@ -357,7 +357,7 @@ projects += proj('hackthenorth', 'Among Us IRL', 'Hack the North 2026', 'Real-li
   [ext('https://github.com/dahan8473/htn-amongus', 'GitHub'), ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost')],
   img('/media/work/htn-badges.webp', 'Two Hack the North badges running Among Us', 1000, 750))
 projects += proj('tethotchi', 'Tethotchi', '2026, Tethos merch', 'A virtual pet keychain shaped like a tiny CRT TV.',
-  "You feed it, it grows, it visits other Tethotchis over Bluetooth, and it dies if you forget about it. The board and the case are both code: change one layout file and the PCB, the case, the collision check and the factory files all follow. I designed it with a team of Claude Code agents I run. The render is generated from the CAD; the first five units are next.",
+  "The plan: you feed it, it grows, it visits other Tethotchis over Bluetooth, and it dies if you forget about it. The board and the case are both code: change one layout file and the PCB, the case, the collision check and the factory files all follow. I designed it with a team of Claude Code agents I run. The render is generated from the CAD; the first five units are next.",
   'Python · KiCad · build123d · Zephyr · nRF52832 · Web Bluetooth',
   [ext('https://github.com/dahan8473/tethos-port', 'GitHub')],
   img('/media/work/tethotchi/hero.webp', 'Render of the Tethotchi, a clear CRT TV keychain with a pixel smiley on its screen', 1024, 1024), status='building')

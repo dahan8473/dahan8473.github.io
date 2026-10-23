@@ -521,7 +521,7 @@ a.row:hover .m { transform: translateX(3px); }
 .has-photo:hover { color: var(--t1); }
 
 /* Guitar recordings (site.js builds the rows) */
-.track { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.track { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; }
 .track button {
   display: inline-grid;
   place-items: center;

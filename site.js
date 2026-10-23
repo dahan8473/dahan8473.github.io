@@ -117,7 +117,8 @@
         row.querySelector('.t-title').textContent = t.short;
         row.querySelector('.t-by').textContent = t.by;
         row.querySelector('.t-dur').textContent = t.dur;
-        row.querySelector('button').addEventListener('click', function () { toggle(i); });
+        // The whole row plays or pauses (the button inside included); the bar seeks instead.
+        row.addEventListener('click', function (e) { if (!e.target.closest('.t-bar')) toggle(i); });
         // Click the bar to jump around in the piece.
         row.querySelector('.t-bar').addEventListener('click', function (e) {
           var r = e.currentTarget.getBoundingClientRect(), at = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));

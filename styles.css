@@ -603,6 +603,8 @@ html.bringing { overflow: hidden; }
   border-top: 1px solid var(--rule);
   color: var(--t3);
 }
+/* Phones: room under the last links for the head, docked bottom right (80x102). */
+@media (max-width: 639px) { .foot { padding-bottom: 130px; } }
 
 /* Case studies (tethos/, rag/, dashboard/, kunlun/) use the same sheet. */
 .case .page { padding-bottom: 0; }

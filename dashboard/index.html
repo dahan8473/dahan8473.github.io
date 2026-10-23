@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tethos Island · David Liu</title>
-  <meta name="description" content="Tethos Island, a cozy multiplayer 3D island game David Liu built solo as the Tethos member portal: Colyseus multiplayer, a server-authoritative economy, real London, Ontario sky, and his own models, rig and shaders.">
+  <meta name="description" content="Tethos Island, a cozy multiplayer 3D island game David Liu built solo for Tethos members, with Colyseus multiplayer and a server-authoritative economy.">
   <link rel="canonical" href="https://davidliu.work/dashboard/">
 
   <meta property="og:type" content="article">
@@ -28,11 +28,12 @@
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="/styles.css?v=58">
-  <link rel="stylesheet" href="/talk/talk.css?v=18">
+  <link rel="stylesheet" href="/styles.css?v=59">
+  <link rel="stylesheet" href="/talk/talk.css?v=19">
   <script>
     (function () {
-      var stored = localStorage.getItem('theme');
+      var stored = null;
+      try { stored = localStorage.getItem('theme'); } catch (e) {}
       // Dark unless they've picked light with the toggle.
       var theme = stored || 'dark';
       document.documentElement.setAttribute('data-theme', theme);
@@ -212,7 +213,7 @@
   </div>
 
   <script src="/site.js?v=43"></script>
-  <script src="/talk/talk.js?v=55"></script>
+  <script src="/talk/talk.js?v=56"></script>
   <script type="module" src="/track.js?v=2"></script>
 </body>
 </html>

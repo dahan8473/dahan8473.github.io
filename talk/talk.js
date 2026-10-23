@@ -424,7 +424,7 @@
       <div class="dl-bubble">
         <span class="dl-tag">David</span>
         <div class="dl-tools">
-          <button class="dl-mute" type="button" aria-label="Toggle sound">${ICON.on}${ICON.off}</button>
+          <button class="dl-mute" type="button" aria-label="Mute" aria-pressed="false">${ICON.on}${ICON.off}</button>
           <button class="dl-x" type="button" aria-label="Close">${ICON.x}</button>
         </div>
         <p class="dl-echo" hidden></p>
@@ -1094,6 +1094,14 @@
     life.talkT = now();
     sound.blip(ch, quick ? 0.024 : 0.05);
   }
+  // Replies only turn into links for places the head should send people.
+  const LINK_HOSTS = ['davidliu.work', 'tethos.ca', 'github.com', 'linkedin.com', 'chess.com', 'lichess.org', 'youtube.com', 'youtu.be', 'instagram.com'];
+  const linkOk = (u) => {
+    try {
+      const h = new URL(u).hostname.replace(/^www\./, '');
+      return LINK_HOSTS.some((d) => h === d || h.endsWith('.' + d));
+    } catch (e) { return false; }
+  };
   function linkify() {
     const t = textEl.textContent;
     const re = /https?:\/\/[^\s]+[^\s.,!?)]|[\w.+-]+@[\w-]+\.[a-z]{2,}/gi;
@@ -1106,8 +1114,10 @@
       out.append(t.slice(i, m.index));
       const a = document.createElement('a');
       a.textContent = m[0];
-      if (m[0].startsWith('http')) { a.href = m[0]; a.target = '_blank'; a.rel = 'noopener'; }
-      else a.href = 'mailto:' + m[0];
+      if (m[0].startsWith('http')) {
+        if (!linkOk(m[0])) { out.append(m[0]); i = m.index + m[0].length; continue; }
+        a.href = m[0]; a.target = '_blank'; a.rel = 'noopener';
+      } else a.href = 'mailto:' + m[0];
       out.append(a);
       i = m.index + m[0].length;
     }
@@ -3388,6 +3398,7 @@
     $('.dl-mute').addEventListener('click', () => {
       sound.on = !sound.on;
       root.classList.toggle('muted', !sound.on);
+      $('.dl-mute').setAttribute('aria-pressed', String(!sound.on));
       try { localStorage.setItem('dl-sound', sound.on ? '1' : '0'); } catch (e) {}
     });
     textEl.addEventListener('scroll', () => textEl.classList.toggle('clip', textEl.scrollTop > 0), { passive: true });
@@ -3550,7 +3561,7 @@
 
   function start() {
     if (S.quiet) root.classList.add('quiet');
-    if (!sound.on) root.classList.add('muted');
+    if (!sound.on) { root.classList.add('muted'); $('.dl-mute').setAttribute('aria-pressed', 'true'); }
     if (visitor && navigator.sendBeacon && !NO_TRACK) navigator.sendBeacon(API + '/visit', JSON.stringify({ visitor, path: here, referrer: document.referrer, tz: TZ }));
     warm();
     const met = S.met;

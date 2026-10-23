@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 58, 18, 43, 55
+V_CSS, V_TALKCSS, V_JS, V_TALK = 59, 19, 43, 56
 V_TRACK = 2
 V_PIECE = 48  # bump when anything in /play/ or /3d/ changes
 V_OG = 3  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -73,7 +73,18 @@ LDJSON = '''  <script type="application/ld+json">
 '''
 
 
+def short(desc, n=160):
+    # Search results cut descriptions near 160 characters: end on a sentence
+    # if one fits, else on a word.
+    if len(desc) <= n:
+        return desc
+    cut = desc[:n]
+    end = cut.rfind('. ')
+    return cut[:end + 1] if end > 60 else cut[:cut.rfind(' ')].rstrip(',;:') + '…'
+
+
 def page(path, title, desc, body, on, cls='', wide=False, back=None, ld=False):
+    desc = short(desc)
     full = 'David Liu' if title == 'David Liu' else f'{title} · David Liu'
     back_html = f'    <a class="back" href="{back[0]}">&#8592; {back[1]}</a>\n' if back else ''
     return f'''<!DOCTYPE html>
@@ -494,7 +505,7 @@ projects += '        </ul>\n      </section>\n'
 proj_data = {t: {**PROJ_BASE[t], **PROJ_MORE.get(t, {})} for t in PROJ_BASE}
 projects += '      <script type="application/json" id="proj-data">' + json.dumps(proj_data, ensure_ascii=False).replace('</', '<\\/') + '</script>\n'
 projects += f'      <div data-play="projects" data-v="{V_PIECE}" hidden></div>\n'
-write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Island (a multiplayer game he built solo), davidliu.work and its AI head, Among Us IRL (a category win at Hack the North), Tethotchi (a virtual pet keychain), biopilot, Kunlun, deja-view, snake-and-commits.', projects, 'projects', cls='projects', ))
+write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Island, a multiplayer game he built solo, davidliu.work and its AI head, Among Us IRL, Tethotchi and more.', projects, 'projects', cls='projects', ))
 
 
 # ---- Hobbies ------------------------------------------------------------------

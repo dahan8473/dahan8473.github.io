@@ -294,7 +294,7 @@ a.row:hover .m { transform: translateX(3px); }
 .sticky.lifted::before { display: none; }
 /* --lines is how many whole lines fit on a note at its size (site.js), so the clamp and its ellipsis land on a line. */
 .sticky .msg { flex: none; overflow: hidden; display: -webkit-box; -webkit-line-clamp: var(--lines, 5); -webkit-box-orient: vertical; max-height: calc(1.45em * var(--lines, 5)); line-height: 1.45; overflow-wrap: anywhere; }
-.sticky .by { margin-top: auto; padding-top: 8px; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sticky .by { margin-top: auto; padding-top: 8px; opacity: 0.72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Hover: it lifts off the wall and straightens up. */
 .sticky:hover, .sticky:focus-visible { transform: translate(var(--x), var(--y)) rotate(0deg) scale(1.06); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06), 0 22px 30px -16px rgba(0, 0, 0, 0.5); z-index: 40; outline: none; }
 .sticky:focus-visible { box-shadow: 0 0 0 2px var(--accent), 0 22px 30px -16px rgba(0, 0, 0, 0.5); }
@@ -478,6 +478,7 @@ a.row:hover .m { transform: translateX(3px); }
 .hob-more > span:first-child { color: var(--t3); }
 /* Small hobbies with no page: a card on hover, or on tap (focus). */
 .hob-tip { position: relative; cursor: default; text-decoration: underline dotted var(--t3); text-underline-offset: 3px; outline: none; }
+.hob-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 .hob-tip-card { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 10px); width: 220px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); color: var(--fg); font-size: 13px; line-height: 1.45; white-space: normal; opacity: 0; transform: translate(-50%, 6px); transition: opacity 0.18s ease, transform 0.18s ease, display 0.18s allow-discrete; pointer-events: none; }
 /* Hidden cards take no room, so they can't widen the page on a phone. */
 .hob-tip-card { display: none; }

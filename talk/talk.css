@@ -377,7 +377,7 @@
 .dl-scale button::before { content: none; }
 .dl-scale button:hover,
 .dl-scale button:focus-visible { background: var(--talk-hl); }
-.dl-scale-ends { display: flex; justify-content: space-between; margin: 0; padding: 0 4px; font-size: 12px; color: var(--talk-ink); opacity: 0.55; }
+.dl-scale-ends { display: flex; justify-content: space-between; margin: 0; padding: 0 4px; font-size: 12px; color: var(--talk-ink); opacity: 0.72; }
 
 .dl-form {
   display: flex;

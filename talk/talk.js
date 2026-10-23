@@ -266,7 +266,7 @@
         yes: 'ooo ok, then you know the drill', no: "that's ok, everyone starts somewhere"
       },
       travel: {
-        say: "i've been to 8 countries so far! fun fact, i've been homeless in all 8 of them 😭",
+        say: "i've been to 8 countries so far! fun fact, i've gotten stranded in all 8 😭",
         ask: 'where are you from? tap it on the globe',
         type: 'or just type it, either works',
         been: (p) => `no way, i've been to ${p.name}!` + (p.id === 'vancouver' ? " that's home!" : ''),

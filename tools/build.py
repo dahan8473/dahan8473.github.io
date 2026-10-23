@@ -8,7 +8,7 @@ import json, os, re, sys
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V_CSS, V_TALKCSS, V_JS, V_TALK = 59, 19, 43, 58
 V_TRACK = 2
-V_PIECE = 48  # bump when anything in /play/ or /3d/ changes
+V_PIECE = 49  # bump when anything in /play/ or /3d/ changes
 V_OG = 3  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {

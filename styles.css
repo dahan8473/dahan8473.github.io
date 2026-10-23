@@ -292,14 +292,15 @@ a.row:hover .m { transform: translateX(3px); }
 .sticky::before { content: ''; position: absolute; top: -7px; left: 50%; width: 42%; height: 15px; margin-left: -21%; background: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04); transform: rotate(-2deg); pointer-events: none; }
 [data-theme="dark"] .sticky::before { background: rgba(255, 255, 255, 0.16); box-shadow: none; }
 .sticky.lifted::before { display: none; }
-.sticky .msg { flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; max-height: calc(1.45em * 5); line-height: 1.45; overflow-wrap: anywhere; }
+/* --lines is how many whole lines fit on a note at its size (site.js), so the clamp and its ellipsis land on a line. */
+.sticky .msg { flex: none; overflow: hidden; display: -webkit-box; -webkit-line-clamp: var(--lines, 5); -webkit-box-orient: vertical; max-height: calc(1.45em * var(--lines, 5)); line-height: 1.45; overflow-wrap: anywhere; }
 .sticky .by { margin-top: auto; padding-top: 8px; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Hover: it lifts off the wall and straightens up. */
 .sticky:hover, .sticky:focus-visible { transform: translate(var(--x), var(--y)) rotate(0deg) scale(1.06); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06), 0 22px 30px -16px rgba(0, 0, 0, 0.5); z-index: 40; outline: none; }
 .sticky:focus-visible { box-shadow: 0 0 0 2px var(--accent), 0 22px 30px -16px rgba(0, 0, 0, 0.5); }
 .sticky.ghost { z-index: 60; pointer-events: none; transition: none; box-shadow: 0 0 0 1px var(--t3), 0 18px 40px -18px rgba(0, 0, 0, 0.35); }
 .sticky.pending { opacity: 0.6; }
-.sticky.pinned .msg { -webkit-line-clamp: 4; max-height: calc(1.45em * 4); padding-right: 14px; }
+.sticky.pinned .msg { padding-right: 14px; }
 .sticky.pinned::after { content: ''; position: absolute; top: 12px; right: 10px; width: 13px; height: 13px; background: currentColor; opacity: 0.45; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; }
 
 /* The pad in the corner: a small stack of blank notes and a pen. */
@@ -322,7 +323,7 @@ a.row:hover .m { transform: translateX(3px); }
 [data-theme="dark"] .lift-dim { background: rgba(0, 0, 0, 0.45); }
 .lift-dim.on { opacity: 1; }
 .sticky.lifted { position: fixed; z-index: 81; --note: min(380px, 86vw); padding: 24px; border-radius: 16px; transform: none; font-size: 20px; cursor: default; box-shadow: 0 0 0 1px var(--rule), 0 30px 70px -30px rgba(0, 0, 0, 0.35); }
-.sticky.lifted .msg { -webkit-line-clamp: unset; max-height: none; overflow: auto; }
+.sticky.lifted .msg { flex: 1; -webkit-line-clamp: unset; max-height: none; overflow: auto; }
 .sticky.lifted .by { font-size: 16px; }
 .writing { cursor: default; }
 .writing textarea, .writing input { width: 100%; padding: 0; border: 0; background: transparent; color: var(--t1); font: inherit; line-height: 1.45; resize: none; outline: none; }
@@ -696,7 +697,6 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
   .board-wrap { margin: 0 -20px; border-radius: 0; }
   .wall-write { display: flex; }
   .board { border-radius: 0; }
-  .sticky .msg { -webkit-line-clamp: 4; max-height: calc(1.45em * 4); }
   .sticky.lifted { font-size: 18px; }
   .pad-sheet.top { padding: 12px; }
   .case .entries > .entry { grid-template-columns: 1fr; }

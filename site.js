@@ -259,6 +259,13 @@
       board.style.setProperty('--s', scale.toFixed(3));
       board.style.fontSize = scale < 0.8 ? '14px' : '';
       [].forEach.call(board.querySelectorAll('.sticky'), spot);
+      // How many whole lines of message fit above the name at this size.
+      var s = list.querySelector('.sticky'), by = s && s.querySelector('.by');
+      if (s) {
+        var cs = getComputedStyle(s);
+        var room = s.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (by ? by.scrollHeight : 0);
+        board.style.setProperty('--lines', Math.max(1, Math.floor(room / parseFloat(getComputedStyle(s.querySelector('.msg')).lineHeight))));
+      }
     }
     function render() {
       list.replaceChildren.apply(list, notes.map(function (n) { var li = document.createElement('li'); li.appendChild(sticky(n)); return li; }));

@@ -261,7 +261,8 @@ a.row:hover .m { transform: translateX(3px); }
 .wall-write { display: none; }
 .write-btn { padding: 0; border: 0; background: none; color: var(--t1); font: inherit; cursor: pointer; }
 .board-notes { position: absolute; inset: 0; }
-.board-status { min-height: 1.6em; margin-top: 14px; color: var(--t2); }
+/* Above the wall, so "tap anywhere to stick it" is never under the fold or the head. */
+.board-status { min-height: 1.6em; margin-bottom: 14px; color: var(--t2); }
 
 .sticky {
   position: absolute;

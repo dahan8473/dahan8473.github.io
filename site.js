@@ -371,6 +371,9 @@
     var placing = null;
     function startPlacing() {
       var n = { message: draft.message, name: draft.name, x: 0.45, y: 0.4, at: new Date().toISOString() };
+      var touch = window.matchMedia('(pointer: coarse)').matches;
+      // On a phone the wall scrolls sideways: start the note in the middle of what's showing.
+      if (touch) n.x = Math.min(1, Math.max(0, (wrap.scrollLeft + (wrap.clientWidth - NS * scale) / 2) / ((VW - NS) * scale)));
       var ghost = sticky(n);
       ghost.classList.add('ghost');
       ghost.tabIndex = -1;
@@ -378,8 +381,17 @@
       spot(ghost);
       placing = { ghost: ghost, n: n };
       board.classList.add('placing');
-      status.textContent = 'Now click anywhere on the wall to stick it. Arrow keys and Enter work too. Esc to go back.';
-      board.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+      status.textContent = touch ? 'Now tap anywhere on the wall to stick it.' : 'Now click anywhere on the wall to stick it. Arrow keys and Enter work too. Esc to go back.';
+      showBoardAndHint();
+    }
+    // The line above the wall and as much of the wall as fits, below the top bar on phones.
+    function showBoardAndHint() {
+      var bar = window.innerWidth <= 720 ? (document.querySelector('.rail') || { offsetHeight: 0 }).offsetHeight : 0;
+      var top = status.getBoundingClientRect().top - bar - 12;
+      var under = board.getBoundingClientRect().bottom - (window.innerHeight - 16);
+      // The line above the top: scroll back to it. Otherwise bring up the wall's bottom, but never past the line.
+      var dy = top < 0 ? top : Math.min(top, Math.max(under, 0));
+      if (dy) window.scrollBy({ top: dy, behavior: reduce ? 'auto' : 'smooth' });
     }
     function moveTo(clientX, clientY) {
       if (!placing) return;

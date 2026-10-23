@@ -687,6 +687,7 @@ notes = '''      <header class="doc-head">
         <p class="go wall-write"><button class="write-btn" type="button">Leave a note</button></p>
       </header>
 
+      <p class="board-status" role="status" aria-live="polite"></p>
       <div class="board-wrap">
       <section class="board" data-t="wall" aria-label="The note wall">
         <ul class="board-notes" aria-label="Notes from visitors"></ul>
@@ -700,7 +701,6 @@ notes = '''      <header class="doc-head">
         </button>
       </section>
       </div>
-      <p class="board-status" role="status" aria-live="polite"></p>
 
       <template id="write-note">
         <form class="sticky writing" role="dialog" aria-label="Write a note">

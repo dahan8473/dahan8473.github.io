@@ -49,6 +49,14 @@ TOP = '''    <header class="top">
     </header>
 '''
 
+# The "." favicon as files (icon.svg is the same SVG the pages used inline),
+# shared by page() and the hand-written pages.
+ICON_LINKS = '''  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+'''
+
 LDJSON = '''  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -94,8 +102,7 @@ def page(path, title, desc, body, on, cls='', wide=False, back=None, ld=False):
   <meta name="twitter:description" content="{desc}">
   <meta name="twitter:image" content="https://davidliu.work/og.png?v={V_OG}">
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E.%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css?v={V_CSS}">
+{ICON_LINKS}  <link rel="stylesheet" href="/styles.css?v={V_CSS}">
   <link rel="stylesheet" href="/talk/talk.css?v={V_TALKCSS}">
 {LDJSON if ld else ''}  <script>
     (function () {{
@@ -840,6 +847,7 @@ for rel in ['tethos/index.html', 'dashboard/index.html', 'rag/index.html', 'kunl
     html = html.replace('<span>London <span id="clock">--:--</span></span>', '<span class="where">Toronto <span id="clock">--:--</span><span id="ahead"></span></span>')
     for asset, v in [('styles.css', V_CSS), ('talk/talk.css', V_TALKCSS), ('site.js', V_JS), ('talk/talk.js', V_TALK)]:
         html = re.sub(r'(/' + re.escape(asset) + r'\?v=)\d+', lambda m: m.group(1) + str(v), html)
+    html = re.sub(r'(  <link rel="(?:icon|apple-touch-icon|manifest)"[^>]*>\n)+', lambda m: ICON_LINKS, html, count=1)
     html = re.sub(r'\n  <script type="module" src="/track\.js\?v=\d+"></script>', '', html)
     html = html.replace('</body>', f'  <script type="module" src="/track.js?v={V_TRACK}"></script>\n</body>', 1)
     open(path, 'w', encoding='utf-8').write(html)

@@ -1,0 +1,12 @@
+{
+  "name": "David Liu",
+  "short_name": "David Liu",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#0d0d0e",
+  "theme_color": "#0d0d0e",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

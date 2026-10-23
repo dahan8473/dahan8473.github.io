@@ -182,7 +182,7 @@
   "life": {
     "page": "/hobbies/",
     "sel": "[data-t='life']",
-    "about": "hobbies page, grouped into Body, Mind and Soul. Every hobby has its own page; the ones without much yet are the small links under each group"
+    "about": "hobbies page, grouped into Body, Mind and Soul. The big cards open their hobby's page; the names under Also in each group show a short card when hovered. Every hobby but swimming and speed skating has its own page"
   },
   "play": {
     "page": "/hobbies/",
@@ -232,12 +232,12 @@
   "video": {
     "page": "/hobbies/video/",
     "sel": "[data-t='video']",
-    "about": "Video production page: I make videos. Not written up yet, it asks visitors if they do it too"
+    "about": "Video production page: things I made, mostly reels for Tethos. Three reels on it"
   },
   "watercolor": {
     "page": "/hobbies/watercolor/",
     "sel": "[data-t='watercolor']",
-    "about": "Watercolor page: I paint with watercolor. Photos of the paintings coming"
+    "about": "Watercolor page: I paint with watercolor. My koi pond painting is up, and you can tilt the paper"
   },
   "swimming": {
     "page": "/hobbies/",

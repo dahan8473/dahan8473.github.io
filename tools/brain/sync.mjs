@@ -57,6 +57,8 @@ async function condense(note, words, avoid) {
   client ??= new OpenAI({ baseURL: 'https://openrouter.ai/api/v1', apiKey: process.env.OPENROUTER_API_KEY });
   const res = await client.chat.completions.create({
     model: 'openai/gpt-6.1-sol',
+    // Only hosts that don't train on what they're sent: these are private notes.
+    provider: { data_collection: 'deny' },
     reasoning: { effort: 'low' },
     response_format: { type: 'json_object' },
     messages: [

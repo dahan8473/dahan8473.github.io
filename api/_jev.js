@@ -18,7 +18,8 @@ export async function decide(state, questions, { timeout = 1500 } = {}) {
     const res = await fetch(URL_, {
       method: 'POST',
       headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', 'HTTP-Referer': 'https://davidliu.work', 'X-Title': 'davidliu.work' },
-      body: JSON.stringify({ model: MODEL, state, questions }),
+      // Only hosts that don't train on what they're sent, like the brain (_gpt.js).
+      body: JSON.stringify({ model: MODEL, provider: { data_collection: 'deny' }, state, questions }),
       signal: AbortSignal.timeout(timeout)
     });
     if (!res.ok) { console.error('jev', res.status, (await res.text()).slice(0, 200)); return null; }

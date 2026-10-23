@@ -45,8 +45,10 @@ export function createGlobeStore() {
     faceTo(id: string) {
       store.set({ face: id, faceTick: state.faceTick + 1 });
     },
-    /** Open the popup for a place (and turn to it). */
+    /** Open the popup for a place (and turn to it). Places with no photos or videos have none. */
     open(id: string) {
+      const p = state.places.find((x) => x.id === id);
+      if (!p || !hasMedia(p)) return;
       store.set({ selected: id, hovered: null, pinned: null, face: id, faceTick: state.faceTick + 1 });
     },
     close() {
@@ -73,6 +75,11 @@ export function useGlobe<T>(pick: (s: GlobeState) => T): T {
 
 /** The globe's points and markers spin with this (radians about Y), as in tsi-globe. */
 export const GLOBE_SPIN = 3.45;
+
+/** Whether a place has photos or videos to open. */
+export function hasMedia(p: { photos?: string[]; videos?: string[] }): boolean {
+  return !!(p.photos?.length || p.videos?.length);
+}
 
 /** Photos for the hover card: cover if set, else the first three photos. */
 export function coverOf(p: { cover?: string[]; photos?: string[] }): string[] {

@@ -1178,7 +1178,7 @@
     { id: 'climb', name: 'Climb the page', done: 'Climbed the page', line: 'A V3 route straight up the page.', href: '/hobbies/climbing/' },
     { id: 'chess', name: 'Play the head at chess', done: 'Played the head at chess', line: 'It talks while it plays.', href: '/hobbies/chess/' },
     { id: 'guitar', name: 'Play my guitar', done: 'Played my guitar', line: 'Record a few bars. If it\'s good, the head cries.', href: '/hobbies/guitar/' },
-    { id: 'globe', name: 'Spin the globe', done: 'Spun the globe', line: 'Everywhere I\'ve been. Tap a place for photos.', href: '/hobbies/travel/' },
+    { id: 'globe', name: 'Spin the globe', done: 'Spun the globe', line: 'Everywhere I\'ve been. Spin it.', href: '/hobbies/travel/' },
     { id: 'cat', name: 'Call Meowmeow', done: 'Called Meowmeow', line: 'My cat walks onto the page and lies down.', href: '/hobbies/meowmeow/' },
     { id: 'feed', name: 'Feed the head', done: 'Fed the head', line: 'Drag anything on the page onto its face.' },
     { id: 'talk', name: 'Ask the head something', done: 'Talked to the head', line: 'It knows my stories, not just my resume.', act: 'talk' },

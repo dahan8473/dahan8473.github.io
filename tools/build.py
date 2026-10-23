@@ -520,7 +520,7 @@ TIPS = {
   'cycling': ('/media/cycling/me-and-the-bike-s.webp', "I have a really cool track bike. I drove over 2 hours to pick it up from a Facebook Marketplace seller, and I've ridden it every day since."),
   'speed-skating': (None, "My main sport growing up. 1st at BC provincials in my youth group, in the 100m, 200m, 400m and 1000m."),
   'chess': ('/media/chess/with-friends.webp', '<b class="tip-stat"><a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">1727 rapid on chess.com</a></b>2nd at BC provincials in my youth group. I still play for fun with friends.'),
-  'video': ({'video': '/media/video/reels-teaser.mp4', 'poster': '/media/video/reels-teaser.webp'}, "Reels I make for TSI."),
+  'video': ({'video': '/media/video/reels-teaser.mp4', 'poster': '/media/video/reels-teaser.webp'}, "Reels I make for Tethos."),
   'meowmeow': (['/media/life/meowmeow-sleep.webp', '/media/life/meowmeow-belly.webp', '/media/life/meowmeow-stairs.webp'], "My cat. Always chudding around. Here she comes."),
 }
 # No page at all, just the hover card. The rest keep their pages (the head
@@ -657,7 +657,7 @@ hobby('hiking', 'Hiking', "Thirteen hikes, newest first. Hover one for the trail
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
 hobby('chess', 'Chess', "I played competitively all through elementary school and placed 2nd at BC provincials, then guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
-hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
+hobby('video', 'Video production', 'Things I made, mostly reels for Tethos.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity."
       '</p>\n        <p class="tagline">These three are my favourites. Play them and try to beat me.', [
 ], after='      <div class="lumo-games">\n' + piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...') + '      </div>\n')

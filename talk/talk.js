@@ -168,7 +168,7 @@
       'tethos-platform': "i built this whole game solo. the title screen is live at play.tethos.ca, it's whatever time it is in london rn",
       hackthenorth: 'ooo this was my first hardware project! it was really fun running around the hackathon at night testing it with my teammates',
       'this-site': "that's me! well, the site i live on. ask me how i reply so fast",
-      tethotchi: 'a tiny tv keychain pet for tsi merch. the board and the case are all code, first five are getting built next',
+      tethotchi: 'a tiny tv keychain pet for tethos merch. the board and the case are all code, first five are getting built next',
       biopilot: 'this was the first hackathon i won!',
       kunlun: "my clothing brand. i'm still working on the pieces for the first drop rn",
       'rag-card': 'added a rag service cuz i wanna keep a centralized knowledge base for future years!',

@@ -166,7 +166,7 @@
       genesis: 'genesis was our demo day. 260 people came to watch students demo software for nonprofits',
       wfn: "this was the first student club i was in! while i was VP i hosted ontario's largest hackathon education event!",
       'tethos-platform': "i built this whole game solo. the title screen is live at play.tethos.ca, it's whatever time it is in london rn",
-      hackthenorth: 'ooo this was my first hardware project! it was really fun running around the hackathon at night testing it with my teammates',
+      hackthenorth: 'ooo this was my first hardware hackathon! it was really fun running around at night testing it with my teammates',
       'this-site': "that's me! well, the site i live on. ask me how i reply so fast",
       tethotchi: 'a tiny tv keychain pet for tethos merch. the board and the case are all code, first five are getting built next',
       biopilot: 'this was the first hackathon i won!',
@@ -189,7 +189,7 @@
     },
     // The Among Us overlay: on open, one nudge if they don't try the demo, and what to try first in it.
     amongus: {
-      open: "ahh this was my first hardware project! we were running around hack the north at 3am testing range lol. the demo's right under the photos if you wanna try it",
+      open: "ahh this was my first hardware hackathon! we were running around hack the north at 3am testing range lol. the demo's right under the photos if you wanna try it",
       nudge: "psst, you can actually play it. hit see it work 👀",
       demo: "drag your badge around! the lines are radio links, no server. then hit play as impostor and get someone inside your dotted circle 😈"
     },
@@ -308,7 +308,7 @@
     tour: [
       ['/', 'now', "okay! quick tour. this is home, it's just me saying hi"],
       ['/resume/', 'jdpower', 'this is my resume. hover over a line and the story behind it shows up on the side'],
-      ['/projects/', 'hackthenorth', "stuff i've built. this one was my first hardware project"],
+      ['/projects/', 'hackthenorth', "stuff i've built. this one was my first hardware hackathon"],
       ['/hobbies/', 'life', 'and the stuff i do for fun'],
       ['/brain/', 'brain', "this is my second brain. everything i know about me, as a map you can drag around"],
       ['/notes/', 'wall', 'you can leave a note on the wall before you go :)']

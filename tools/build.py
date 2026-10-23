@@ -635,7 +635,7 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
       </section>
       <p class="bring-again" data-later="guitar" data-v="{V_PIECE}" hidden><button type="button" class="ln" data-bring="guitar">Play the guitar</button></p>
 '''.replace('{V_PIECE}', str(V_PIECE)) + PLAY_NOW('guitar', 'Play it'))
-hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, because a friend dragged me to our local gym. I was super intimidated. I was scared of fighting, and of what the people there might be like."
+hobby('muay-thai', 'Muay Thai', "I started training Muay Thai in 2024, because a friend dragged me to our local gym. I was super intimidated. I was scared of fighting, and of what the people there might be like."
       '</p>\n        <p class="tagline">But by the first week I was addicted. I think a lot of that comes from my love for chess and puzzle games: Muay Thai is like a physical version of them. My Instagram feed turned into Muay Thai highlights, and I bought a bag on Facebook Marketplace and hung it up in my backyard to train in the mornings.'
       "</p>\n        <p class=\"tagline\">If you've never tried something like this, give it a shot. It might reveal more about yourself than you think!", [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched') + '      <button class="spar-glove" type="button" data-spar aria-label="Spar with the head"><img src="/media/muaythai/gloves-btn.webp" alt="" width="112" height="120"><span>Spar</span></button>\n')

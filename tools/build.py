@@ -668,12 +668,12 @@ hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], s
 hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity."
       '</p>\n        <p class="tagline">These three are my favourites. Play them and try to beat me.', [
 ], after='      <div class="lumo-games">\n' + piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...') + '      </div>\n')
-hobby('watercolor', 'Watercolor', "I paint with watercolor."
+hobby('watercolor', 'Watercolor', "I paint with watercolor. More paintings on the way."
       '</p>\n        <p class="tagline">Move over it, or drag it on your phone, to tilt the paper.', [
 ], shot=piece('3d', 'painting', 'Loading the painting...', src='/media/watercolor/koi-pond.webp'))
 hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a mic. Hover anything for the specs, click a camera or the drone to see what I shot with it.', [
 ], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/photography/footage.json'))
-hobby('travel', 'Travel', "Eight countries so far, and a list I'm behind on. Spin the globe, hover a place.", [
+hobby('travel', 'Travel', "Eight countries so far, and a list I'm behind on. Spin the globe, hover a place. More places on the way.", [
 ], shot=piece('3d', 'globe', 'Loading the globe...', 'globe-full'))
 hobby('fashion', 'Fashion', "I'm building Kunlun, a clothing brand built on Chinese mythology. Traditional Chinese and English run side by side as two voices.", [
 ], shot='''      <figure class="case-shot ink">

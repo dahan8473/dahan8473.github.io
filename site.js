@@ -1233,14 +1233,29 @@
   // that was just clicked may not be open yet, so it also gives it a moment.
   var GAME_OPEN = '.mt-over, .climb-wall, .rl, .bring';
   var gameOn = '';
-  // The head's bus (talk/talk.js) loads after this file.
-  setTimeout(function () {
-    if (!window.dlBus || !window.dlBus.on) return;
+  // The head's bus. talk/talk.js loads after this file and uses this one, so
+  // these listeners are on it however the two files load.
+  if (!window.dlBus) {
+    var subs = {};
+    window.dlBus = {
+      on: function (type, fn) { (subs[type] = subs[type] || []).push(fn); return window.dlBus; },
+      off: function (type, fn) { subs[type] = (subs[type] || []).filter(function (f) { return f !== fn; }); return window.dlBus; },
+      emit: function (type, data) {
+        if (data === undefined) data = {};
+        [type, '*'].forEach(function (k) { (subs[k] || []).slice().forEach(function (fn) { try { fn(data, type); } catch (e) { if (window.console) console.warn('dlBus', type, e); } }); });
+      }
+    };
+  }
+  (function () {
     // A game opening takes the screen: a toast already up goes now, not when its timer runs out.
     window.dlBus.on('game_start', function (d) { gameOn = (d && d.game) || 'game'; hideToast(); });
-    window.dlBus.on('game_end', function (d) { if (!d || !gameOn || d.game === gameOn) gameOn = ''; });
+    window.dlBus.on('game_end', function (d) {
+      if (!d || !gameOn || d.game === gameOn) gameOn = '';
+      // A rally only counts once the shuttle has gone back and forth.
+      if (d && d.game === 'rally' && d.result && d.result.longest >= 2) window.dlFound('rally');
+    });
     window.dlBus.on('page', function () { gameOn = ''; });
-  });
+  })();
   function toast(head, f, waited) {
     clearTimeout(toastWait);
     if (!waited) toastAt = Date.now();
@@ -1284,8 +1299,8 @@
     nudge: function (head) { var f = left(true)[0]; if (f) toast(head, f); }
   };
 
-  // Starting the games counts.
-  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['[data-spar]', 'spar'], ['.rk-rally', 'rally'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
+  // Starting the games counts (the rally counts at its end, above).
+  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['[data-spar]', 'spar'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
   document.addEventListener('click', function (e) {
     if (!e.target.closest) return;
     FIND_CLICKS.forEach(function (c) { if (e.target.closest(c[0])) window.dlFound(c[1]); });

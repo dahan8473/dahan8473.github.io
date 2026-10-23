@@ -49,16 +49,6 @@
     "sel": ".doc",
     "about": "the resume page. Every entry opens a note with more detail, photos and links when hovered or clicked."
   },
-  "resume-swe": {
-    "page": "/resume/",
-    "sel": "a[href='/resume-swe.pdf']",
-    "about": "PDF of my SWE resume, top of the resume page"
-  },
-  "resume-pm": {
-    "page": "/resume/",
-    "sel": "a[href='/resume-pm.pdf']",
-    "about": "PDF of my product resume, top of the resume page"
-  },
   "western": {
     "page": "/resume/",
     "sel": "[data-t='western']",

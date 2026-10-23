@@ -68,7 +68,7 @@ sequenceDiagram
     C->>G: rules, site map, what it knows about me
   end
   J-->>C: resume, recruiter (~200ms)
-  C-->>H: [[drag:resume-swe]], so the hand moves now
+  C-->>H: [[point:resume]], so the hand moves now
   G-->>H: the reply, held until Jev says go, then streamed
 ```
 

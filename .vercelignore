@@ -1,0 +1,3 @@
+# The GitHub Pages redirect at davidliu.work/admin must not shadow the
+# real /admin routes on Vercel.
+admin/

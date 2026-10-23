@@ -14,6 +14,7 @@ import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
 import { hasSlur, maskSlurs } from './_slurs.js';
 import { saveChat, recall, approvedKnowledge } from './_store.js';
 import { CAP, spentNow, addCost } from './_spend.js';
+import { overDaily } from './_limits.js';
 import { think, costOf, PRICE } from './_gpt.js';
 import { waitUntil } from '@vercel/functions';
 import { decide, choice, noul } from './_jev.js';
@@ -155,7 +156,10 @@ const SITE = [
 // Best effort per-instance limits. The monthly cap (_spend.js) is the real backstop.
 // Drafts (sent while they pause typing) and warm-ups get their own, so they
 // never use up anyone's messages.
+// Daily caps per IP, shared across instances, are in _limits.js.
 const LIMITS = { chat: 40, draft: 80, warm: 20 };
+// A real request is a few KB: 16 short messages and the ids on the page.
+const MAX_BODY = 64 * 1024;
 const hits = { chat: new Map(), draft: new Map(), warm: new Map() };
 function limited(ip, kind = 'chat') {
   const t = Date.now();
@@ -465,8 +469,11 @@ export default {
     if (request.method !== 'POST') return plain('POST only', cors, 405);
     if (!ok) return plain('forbidden', cors, 403);
 
+    if (Number(request.headers.get('content-length')) > MAX_BODY) return plain('too big', cors, 413);
+    const raw = await request.text();
+    if (raw.length > MAX_BODY) return plain('too big', cors, 413);
     let body;
-    try { body = JSON.parse(await request.text()); } catch { return plain('bad json', cors, 400); }
+    try { body = JSON.parse(raw); } catch { return plain('bad json', cors, 400); }
     const ip = clientIp(request);
     if (body?.warm) {
       if (!limited(ip, 'warm')) await warmUp(body.visitor);
@@ -479,6 +486,8 @@ export default {
 
     const brain = connect();
     if (!brain || !process.env.OPENROUTER_API_KEY) return plain(OFFLINE, cors);
+    // Counted in Supabase while everything else gets going.
+    const capped = overDaily(ip, draft ? 'draft' : 'chat');
 
     const page = typeof body.page === 'string' && /^\/[\w/.-]{0,60}$/.test(body.page) ? body.page : '/';
     const onPage = (Array.isArray(body.here) ? body.here : []).filter((id) => typeof id === 'string' && targets[id]);
@@ -495,6 +504,7 @@ export default {
     if (body.commit) {
       const { reply: said, sig } = body.commit;
       if (!store || typeof said !== 'string' || !sameSig(sig, signed(body.convo, latest, said))) return plain('bad commit', cors, 400);
+      if (await capped) return plain('', cors, 429);
       await saveChat({ convo: body.convo, visitor: body.visitor, messages, reply: said, page });
       return new Response(null, { status: 204, headers: cors });
     }
@@ -508,12 +518,14 @@ export default {
     // past the bouncer; only its verdict is used for them.
     const noteRead = note ? readMessage(latest, messages).catch(() => null) : null;
     const guitarRead = asked ? readGuitar(latest, asked) : null;
-    const [usd, memory, known] = await Promise.all([
+    const [over, usd, memory, known] = await Promise.all([
+      timed('cap', capped),
       timed('spent', spentNow()),
       timed('memory', store ? remember(body.visitor) : null),
       timed('known', approved())
     ]);
     const timing = () => ({ 'server-timing': Object.entries(took).map(([k, v]) => `${k};dur=${v}`).join(', '), 'access-control-expose-headers': 'server-timing' });
+    if (over) return draft ? plain('', cors, 429) : plain(TOO_MUCH, cors);
 
     // Drafts end with a signature the page sends back if they hit Enter on it.
     const finish = (text) => (draft && store ? `[[sig:${signed(body.convo, latest, text)}]]` : '');

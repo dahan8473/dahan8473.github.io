@@ -6,6 +6,7 @@ import { corsFor, preflight, plain, json, isId, clientIp, limiter } from './_htt
 import { addMessage, tagMessage, thread } from './_store.js';
 import { tell } from './_notify.js';
 import { hasSlur } from './_slurs.js';
+import { overDaily } from './_limits.js';
 
 const limited = limiter(10, 60 * 60 * 1000);
 
@@ -30,6 +31,7 @@ export default {
     const name = typeof body.name === 'string' ? body.name.trim().slice(0, 40) : '';
     if (!text || !isId(body.visitor)) return plain('bad message', headers, 400);
     if (hasSlur(text) || hasSlur(name)) return json({ sent: false, blocked: true }, headers, 400);
+    if (await overDaily(clientIp(request), 'inbox')) return json({ sent: false }, headers, 429);
 
     const row = await addMessage({ visitor: body.visitor, sender: 'visitor', name: name || null, body: text });
     if (!row) return json({ sent: false }, headers, 503);

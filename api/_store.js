@@ -153,6 +153,13 @@ export const lineStats = (days = 90) =>
 export const lineVariants = () =>
   rest('line_variants?active=eq.true&select=id,kind,of_line,text&order=id.asc&limit=300');
 
+// Daily caps per IP (supabase/2026-10-23-rate-limits.sql): counts one hit and
+// returns today's total, or undefined when the store is off, slow or failing.
+export async function hitLimit(key, bucket, timeout) {
+  const r = await call('rpc/hit_limit', { method: 'POST', body: { p_key: key, p_bucket: bucket }, timeout });
+  return r.ok && Number.isFinite(Number(r.data)) ? Number(r.data) : undefined;
+}
+
 // Login attempts. try() records the attempt as a failure and returns the
 // recent failure counts including it; ok() clears it once the password matched.
 export const adminTry = (ip) => call('rpc/admin_try', { method: 'POST', body: { p_ip: ip } });

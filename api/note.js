@@ -6,6 +6,7 @@ import { leaveNote, addMessage, tagMessage } from './_store.js';
 import { decide, noul } from './_jev.js';
 import { tell } from './_notify.js';
 import { hasSlur } from './_slurs.js';
+import { overDaily } from './_limits.js';
 
 const limited = limiter(5, 60 * 60 * 1000);
 
@@ -41,6 +42,7 @@ export default {
     };
     // Slurs never go on the wall or to David's phone.
     if (hasSlur(note.message) || hasSlur(note.name) || hasSlur(note.contact)) return json({ saved: false, posted: false, mailed: false, blocked: true }, headers, 400);
+    if (await overDaily(clientIp(request), 'note')) return json({ saved: false, mailed: false }, headers, 429);
     // Wall notes are public, so Jev reads them first. Anything it flags (or
     // anything it can't check) stays private and only David sees it.
     let wall = body.public === true;

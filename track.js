@@ -10,11 +10,12 @@
 const API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '/api' : 'https://davidliu-work.vercel.app/api';
 const OFF = navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.globalPrivacyControl === true;
 const BUS = ['page', 'overlay_open', 'overlay_close', 'demo_open', 'demo_close', 'game_start', 'game_end', 'bring', 'line', 'line_done', 'line_cut', 'line_drop', 'reply'];
-const BATCH_BYTES = 48000; // under sendBeacon's 64KB
+const BATCH_BYTES = 24000; // UTF-8 bytes; api/events.js takes up to 32KB
 
 if (!OFF && !window.dlTrack) {
   window.dlTrack = true;
   const queue = [];
+  const utf8 = new TextEncoder();
   const now = () => Date.now();
   const norm = (p) => p.replace(/index\.html$/, '').replace(/([^/])$/, '$1/');
   const store = (s, k) => { try { return s.getItem(k); } catch (e) { return null; } };
@@ -80,7 +81,7 @@ if (!OFF && !window.dlTrack) {
       const events = [];
       let bytes = 200;
       while (queue.length && events.length < 200) {
-        const size = JSON.stringify(queue[0]).length;
+        const size = utf8.encode(JSON.stringify(queue[0])).length + 1;
         if (events.length && bytes + size > BATCH_BYTES) break;
         events.push(queue.shift());
         bytes += size;

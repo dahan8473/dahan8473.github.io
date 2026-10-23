@@ -4,6 +4,7 @@
 
 import { corsFor, preflight, plain, isId, clientIp, limiter } from './_http.js';
 import { saveEvents } from './_store.js';
+import { overDaily } from './_limits.js';
 
 const BOTS = /bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit|embedly/i;
 const TYPES = new Set([
@@ -13,7 +14,8 @@ const TYPES = new Set([
   // from track.js itself
   'click', 'dwell', 'hidden', 'visible'
 ]);
-const MAX_BODY = 64 * 1024;
+// track.js sends batches of at most 24,000 bytes (BATCH_BYTES); a little headroom.
+const MAX_BODY = 32 * 1024;
 const MAX_EVENTS = 200;
 const PATH = /^\/[\w/.-]{0,99}$/;
 // A batch can sit in a hidden tab for a while; anything older is dropped.
@@ -72,7 +74,8 @@ export default {
     // catches any other client that does.
     if (request.headers.get('dnt') === '1' || request.headers.get('sec-gpc') === '1') return new Response(null, { status: 204, headers });
     if (BOTS.test(request.headers.get('user-agent') || '')) return new Response(null, { status: 204, headers });
-    if (limited(clientIp(request))) return plain('slow down', headers, 429);
+    const ip = clientIp(request);
+    if (limited(ip)) return plain('slow down', headers, 429);
 
     if (Number(request.headers.get('content-length')) > MAX_BODY) return plain('too big', headers, 413);
     const raw = await request.text();
@@ -82,6 +85,7 @@ export default {
     if (!body || typeof body !== 'object') return plain('bad json', headers, 400);
     const batch = cleanBatch(body);
     if (!batch) return plain('bad events', headers, 400);
+    if (await overDaily(ip, 'events')) return plain('slow down', headers, 429);
 
     await saveEvents(batch.visitor, batch.convo, batch.events);
     return new Response(null, { status: 204, headers });

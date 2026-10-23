@@ -450,14 +450,14 @@ export function mount(el) {
     return fig;
   }
 
-  // All, then each camera: shown when the photos say which camera took them.
+  // All, then each camera that has photos: shown when the photos say which camera took them.
   function renderBar() {
     bar.textContent = '';
     if (!photos.some((p) => p.camera)) return;
     const tabs = h('div', 'pgal-tabs');
     tabs.setAttribute('role', 'group');
     tabs.setAttribute('aria-label', 'Filter by camera');
-    for (const id of [null, ...Object.keys(CAMERAS)]) {
+    for (const id of [null, ...Object.keys(CAMERAS).filter((c) => photos.some((p) => p.camera === c))]) {
       const t = h('button', 'pgal-tab' + (id === camera ? ' on' : ''));
       t.type = 'button';
       t.setAttribute('aria-pressed', String(id === camera));

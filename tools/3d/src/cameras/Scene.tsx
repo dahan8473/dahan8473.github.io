@@ -150,7 +150,7 @@ function Kit({ dirty }: { dirty: { current: number } }) {
         dirty.current = Math.max(dirty.current, 1);
       }
       for (const p of g.parts) {
-        const sel = s.selected && actionOf(p.id).camera === s.selected;
+        const sel = s.selected && actionOf(p.id, s.shot).camera === s.selected;
         const want = p.id === active ? 1 : sel ? 0.42 : 0;
         p.rim.uRim.value = reducedMotion ? want : damp(p.rim.uRim.value, want, 12, dt);
       }
@@ -158,7 +158,11 @@ function Kit({ dirty }: { dirty: { current: number } }) {
   });
 
   const handlers = (id: PartId) => {
-    const clickable = !!(actionOf(id).camera || actionOf(id).fly);
+    // Read at event time: which cameras have photos arrives after the first render.
+    const clickable = () => {
+      const a = actionOf(id, store.get().shot);
+      return !!(a.camera || a.fly);
+    };
     return {
       onPointerDown: (e: ThreeEvent<PointerEvent>) => {
         store.refs.pointer = e.pointerType;
@@ -167,7 +171,7 @@ function Kit({ dirty }: { dirty: { current: number } }) {
         if (e.pointerType === 'touch') return;
         e.stopPropagation();
         store.set({ hovered: id });
-        root.style.cursor = clickable ? 'pointer' : '';
+        root.style.cursor = clickable() ? 'pointer' : '';
       },
       onPointerOut: (e: ThreeEvent<PointerEvent>) => {
         if (e.pointerType === 'touch') return;
@@ -182,7 +186,7 @@ function Kit({ dirty }: { dirty: { current: number } }) {
           store.set({ pinned: id, hovered: null });
           return;
         }
-        if (!clickable) {
+        if (!clickable()) {
           store.set({ pinned: null });
           return;
         }

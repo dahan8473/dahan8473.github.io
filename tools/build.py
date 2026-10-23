@@ -505,7 +505,7 @@ projects += '        </ul>\n      </section>\n'
 proj_data = {t: {**PROJ_BASE[t], **PROJ_MORE.get(t, {})} for t in PROJ_BASE}
 projects += '      <script type="application/json" id="proj-data">' + json.dumps(proj_data, ensure_ascii=False).replace('</', '<\\/') + '</script>\n'
 projects += f'      <div data-play="projects" data-v="{V_PIECE}" hidden></div>\n'
-write('projects/index.html', page('/projects/', 'Projects', 'Projects by David Liu, with the stack and the code: Tethos Island, a multiplayer game he built solo, davidliu.work and its AI head, Among Us IRL, Tethotchi and more.', projects, 'projects', cls='projects', ))
+write('projects/index.html', page('/projects/', 'Projects', 'What David Liu has built, with the stack and the code: Tethos Island, davidliu.work and its AI head, Among Us IRL, Tethotchi and more.', projects, 'projects', cls='projects', ))
 
 
 # ---- Hobbies ------------------------------------------------------------------

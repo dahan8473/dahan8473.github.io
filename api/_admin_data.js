@@ -246,7 +246,18 @@ export async function deleteNote(body) {
   const id = Number(body?.id);
   if (!Number.isSafeInteger(id) || id < 1) return { error: 'bad id' };
   const r = await call(`notes?id=eq.${id}`, { method: 'DELETE', prefer: 'return=representation' });
-  return r.ok && rows(r).length ? { ok: true } : { error: 'could not delete' };
+  if (!r.ok || !rows(r).length) return { error: 'could not delete' };
+  // A note only David sees was also copied into the visitor's inbox thread
+  // (api/note.js) so he could answer it. That copy goes too: same visitor,
+  // same text, saved within seconds of the note.
+  const n = r.data[0];
+  if (!n.public && isId(n.visitor_id) && typeof n.message === 'string' && Date.parse(n.at)) {
+    const at = Date.parse(n.at);
+    const span = [`at=gte.${encodeURIComponent(new Date(at - 60e3).toISOString())}`, `at=lte.${encodeURIComponent(new Date(at + 10 * 60e3).toISOString())}`];
+    const copy = await call(`messages?visitor_id=eq.${n.visitor_id}&sender=eq.visitor&body=eq.${encodeURIComponent(n.message)}&${span.join('&')}`, { method: 'DELETE' });
+    if (!copy.ok) return { error: 'Deleted the note, but not its copy in the inbox thread. Delete that one in Supabase.' };
+  }
+  return { ok: true };
 }
 export const editKnowledge = (body) => edit('knowledge', body, { maxText: 1000 });
 export const editVariant = (body) => edit('line_variants', body, { maxText: 300 });

@@ -1257,10 +1257,13 @@
     });
     window.dlBus.on('page', function () { gameOn = ''; });
   })();
+  // Phones: the toast is short, and it waits while the head's chat is open
+  // (the hello folds on a scroll or tap), so the two never stack.
+  function phone() { return window.innerWidth <= 600 || window.matchMedia('(pointer: coarse)').matches; }
   function toast(head, f, waited) {
     clearTimeout(toastWait);
     if (!waited) toastAt = Date.now();
-    if (gameOn || document.querySelector(GAME_OPEN) || Date.now() - toastAt < 1500) { toastWait = setTimeout(function () { toast(head, f, true); }, 700); return; }
+    if (gameOn || document.querySelector(GAME_OPEN) || (phone() && document.querySelector('.dl.chat')) || Date.now() - toastAt < 1500) { toastWait = setTimeout(function () { toast(head, f, true); }, 700); return; }
     if (!toastEl) {
       toastEl = document.createElement('div');
       toastEl.className = 'finds-toast';
@@ -1274,7 +1277,7 @@
     clearTimeout(toastTimer);
     void toastEl.offsetWidth;
     toastEl.classList.add('on');
-    toastTimer = setTimeout(hideToast, 9000);
+    toastTimer = setTimeout(hideToast, phone() ? 4000 : 9000);
   }
   function hideToast() { clearTimeout(toastTimer); if (toastEl) toastEl.classList.remove('on'); }
   // Hovering the toast keeps it up.

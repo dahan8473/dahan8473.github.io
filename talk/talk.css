@@ -308,7 +308,8 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.dl-echo[hidden] + .dl-text::before {
+/* Room on the first line for the mute and close buttons (the recall line sits between). */
+.dl-echo[hidden] ~ .dl-text::before {
   content: '';
   float: right;
   width: 40px;
@@ -560,6 +561,21 @@ a.dl-held { display: inline-block; }
   .dl-talk { width: min(290px, calc(100vw - 24px)); }
   .dl-bubble { padding: 18px 20px; }
 }
+
+/* Phones: a chat the head opens itself (the hello, a page's question) is one
+   small bubble and small choices beside the head, about a sixth of the screen,
+   until they tap into it (talk.js compactOn). No box to type in until then. */
+.dl.chat.compact .dl-talk { width: calc(100vw - 24px); }
+.dl.compact .dl-bubble { width: calc(100% - var(--hw) - 14px); min-height: 0; padding: 12px 16px; font-size: 13px; line-height: 1.45; cursor: pointer; }
+.dl.compact .dl-bubble::after { left: auto; right: -6px; bottom: 16px; transform: rotate(45deg); }
+.dl.compact .dl-tag { top: -10px; left: 14px; padding: 2px 10px 3px; font-size: 10px; }
+.dl.compact .dl-text { max-height: 4.35em; }
+.dl.compact .dl-row { width: calc(100% - var(--hw) - 14px); min-height: 0; padding-top: 6px; gap: 6px; }
+.dl.compact .dl-form,
+.dl.compact .dl-fine { display: none; }
+.dl.compact .dl-choices { flex-direction: row; flex-wrap: wrap; gap: 6px; padding: 0; background: none; box-shadow: none; }
+.dl.compact .dl-choices button { padding: 5px 11px; border-radius: 999px; background: var(--talk-paper); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14); font-size: 12px; }
+.dl.compact .dl-choices button::before { content: none; }
 
 /* Carrying: a copy of the thing rides under the head; the real one fades. */
 .dl-carried {

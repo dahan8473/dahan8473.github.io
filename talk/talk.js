@@ -981,6 +981,7 @@
   }
   // A chat the head opened on its own, that they never answered: put it away quietly.
   function tuck() {
+    compactOff();
     chatOn = false;
     S.open = false;
     S.auto = false;
@@ -1643,6 +1644,7 @@
     (chatOn && !talked() && !choicesEl.hidden && choicesEl.dataset.kind === 'intro' && now() - hear.introAt < 10000);
 
   async function openChat() {
+    compactOff();
     interrupt();
     if (giveBack) giveBack();
     wake();
@@ -1685,16 +1687,47 @@
   }
   // Chat the head opens itself (the hello, a hobby page's question). It
   // stays its own until they answer, so leaving tucks it away (tuck()).
-  function openFor() {
+  // small: on phones it's the small version (compactOn()).
+  function openFor(small = true) {
     if (chatOn) return;
     chatOn = true;
     S.open = true;
     S.auto = true;
     save();
     root.classList.add('chat');
+    if (small && phone()) compactOn();
     goHome(420);
     showTalk();
     showForm();
+  }
+  // Phones: a chat the head opens itself is one small bubble with small choices
+  // beside the head (talk.css .dl.compact), and it folds back into the head as
+  // soon as they scroll or tap anywhere else. Tapping the bubble, a choice or
+  // the head opens the whole chat; after it folds, tapping the head brings the
+  // hello and its choices back (openChat, greet).
+  const phone = () => innerWidth <= 600 || matchMedia('(pointer: coarse)').matches;
+  let unwatch = null;
+  function compactOn() {
+    compactOff();
+    root.classList.add('compact');
+    const y0 = scrollY;
+    const onScroll = () => { if (Math.abs(scrollY - y0) > 24) foldUp(); };
+    const onDown = (e) => { if (!root.contains(e.target)) foldUp(); };
+    addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('pointerdown', onDown, true);
+    unwatch = () => { removeEventListener('scroll', onScroll); document.removeEventListener('pointerdown', onDown, true); };
+  }
+  function compactOff() {
+    root.classList.remove('compact');
+    if (unwatch) { unwatch(); unwatch = null; }
+  }
+  const compact = () => root.classList.contains('compact');
+  // Folded on this page: its own question doesn't pop up right after.
+  let folded = -1;
+  function foldUp() {
+    compactOff();
+    folded = pageTok;
+    if (chatOn) closeChat(null, 'fold');
   }
   async function intro() {
     openFor();
@@ -1707,6 +1740,7 @@
     if (innerWidth < 641 && chatOn && t && !root.contains(t) && t.matches('input, textarea')) closeChat(null);
   });
   function closeChat(text = LINES.close, id = 'close') {
+    compactOff();
     touring = false;
     dropDraft();
     life.read = false;
@@ -2479,7 +2513,7 @@
   // out. No: would they want to try? Typed answers go to the brain, which
   // knows to bring it with [[bring:guitar]].
   async function askGuitar(tok = pageTok, tries = 0) {
-    if (here !== '/hobbies/guitar/' || S.quiet || tok !== pageTok || pageDone.guitar === tok || seenPage('guitar')) return;
+    if (here !== '/hobbies/guitar/' || S.quiet || tok !== pageTok || folded === tok || pageDone.guitar === tok || seenPage('guitar')) return;
     if (!document.querySelector('main [data-later="guitar"]:not([data-out])')) return;
     if (busyForPage()) { setTimeout(() => askGuitar(tok, tries), 250); return; }
     interrupt(true);
@@ -2522,7 +2556,7 @@
   let places = null;
   async function askPage(tok = pageTok, tries = 0) {
     const id = ASK_PAGES[here];
-    if (!id || S.quiet || tok !== pageTok || pageDone[id] === tok || seenPage(id)) return;
+    if (!id || S.quiet || tok !== pageTok || folded === tok || pageDone[id] === tok || seenPage(id)) return;
     if (busyForPage()) { setTimeout(() => askPage(tok, tries), 250); return; }
     const L = LINES.ask[id];
     const mark = () => { noticed(id); markSeen(id); };
@@ -2910,7 +2944,7 @@
     if (tok === pageTok && !S.pets) setTimeout(() => petsAsk(tok), 700);
   }
   async function petsAsk(tok, tries = 0) {
-    if (tok !== pageTok || S.quiet || S.pets) return;
+    if (tok !== pageTok || S.quiet || S.pets || folded === tok) return;
     if (busyForPage()) { setTimeout(() => petsAsk(tok, tries), 250); return; }
     openFor();
     const ok = await say(LINES.catPage.ask, { id: 'ask:pets', onStart: () => { S.small = [...new Set([...(S.small || []), 'pets'])]; save(); } });
@@ -2939,7 +2973,7 @@
     try { localStorage.setItem('dl-inbox-seen', fresh[fresh.length - 1].at); } catch (e) {}
     interrupt();
     wake();
-    openFor();
+    openFor(false);
     setFace('happy', 2500);
     await say(LINES.replied(fresh[fresh.length - 1].body, fresh.length > 1), { id: 'replied', pri: PRI.react, ctx: null, ttl: 30000 });
   }
@@ -3337,9 +3371,12 @@
       if (drag.moved) { drag.moved = false; return; }
       const later = S.pitchLater && PITCHES[S.pitchLater] && PITCHES[S.pitchLater].page === here;
       if (!chatOn && later && !pitching) { pitch(S.pitchLater, { force: true, again: true }); return; }
-      if (chatOn) poke();
+      if (chatOn && compact()) { compactOff(); if (fine) input.focus({ preventScroll: true }); }
+      else if (chatOn) poke();
       else openChat();
     });
+    // The small phone chat: tapping into it (a choice, the words) opens it all.
+    talk.addEventListener('click', (e) => { if (compact() && !e.target.closest('.dl-tools')) compactOff(); }, true);
     headBtn.addEventListener('pointerdown', grab);
     headBtn.addEventListener('pointermove', dragMove);
     headBtn.addEventListener('pointerup', drop);

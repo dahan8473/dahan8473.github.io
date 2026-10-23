@@ -1,11 +1,14 @@
 /* Talking head. Everything is namespaced .dl- so nothing leaks into the site. */
 :root {
   --talk-accent: #88c0d0;
+  /* The accent as text or a focus ring: #88c0d0 is too light on paper (under 2:1). */
+  --talk-accent-ink: #2a7593;
   --talk-paper: #fffdf7;
   --talk-ink: #2b2925;
   --talk-hl: rgba(136, 192, 208, 0.42);
 }
 [data-theme="dark"] {
+  --talk-accent-ink: #88c0d0;
   --talk-paper: #26241f;
   --talk-ink: #f1efe9;
   --talk-hl: rgba(136, 192, 208, 0.32);
@@ -422,7 +425,7 @@
 }
 .dl-form button:disabled { opacity: 0.45; cursor: default; }
 .dl-form button svg { width: 14px; height: 14px; }
-.dl-form:focus-within { box-shadow: 0 0 0 1.5px var(--talk-accent), 0 8px 24px rgba(0, 0, 0, 0.14); }
+.dl-form:focus-within { box-shadow: 0 0 0 1.5px var(--talk-accent-ink), 0 8px 24px rgba(0, 0, 0, 0.14); }
 
 .dl-fine a { color: inherit; }
 .dl-fine {
@@ -583,7 +586,7 @@ a.dl-held { display: inline-block; }
 /* The second brain: which notes the head is pulling from. */
 .dl-recall {
   margin: 0 46px 6px 0;
-  color: var(--talk-accent);
+  color: var(--talk-accent-ink);
   font-size: 12px;
   letter-spacing: 0.01em;
 }
@@ -735,7 +738,7 @@ a.dl-held { display: inline-block; }
 }
 .dl-pitch-ask button:hover { transform: translateY(-1px); filter: brightness(1.06); }
 .dl-pitch-ask button:active { transform: scale(0.97); }
-.dl-pitch-ask button:focus-visible { outline: 2px solid var(--talk-accent); outline-offset: 3px; }
+.dl-pitch-ask button:focus-visible { outline: 2px solid var(--talk-accent-ink); outline-offset: 3px; }
 .dl-pitch-ask .yes { background: var(--talk-accent); color: #0d1418; font-weight: 500; box-shadow: 0 10px 30px -8px rgba(136, 192, 208, 0.7); }
 .dl-pitch-ask .no { background: var(--talk-paper); color: var(--talk-ink); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
 @media (prefers-reduced-motion: reduce) { .dl-pitch-dim { transition: none; } }

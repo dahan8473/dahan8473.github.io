@@ -606,12 +606,6 @@ def hobby(slug, name, tagline, sections, shot='', kind='Hobby', after=''):
     write(f'hobbies/{slug}/index.html', page(f'/hobbies/{slug}/', name, f'{name}, one of David Liu\'s hobbies. {desc}', body, 'hobbies', cls='case', back=('/hobbies/', 'Hobbies')))
 
 
-def FIGS(items):
-    # A row of numbers that matter, each with what it is.
-    cells = ''.join(f'<div><dt>{label}</dt><dd>{value}</dd></div>' for value, label in items)
-    return f'      <dl class="figs">{cells}</dl>\n'
-
-
 # A Play button that's always on a game page, floating on the side (site.js).
 def PLAY_NOW(id, label):
   # The real thing to click, like the gloves on Muay Thai: media/play/<id>.webp.
@@ -661,8 +655,8 @@ hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a
 ''' + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/cycling/photos.json') + piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Thirteen hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
-hobby('chess', 'Chess', "I played competitively all through elementary school, until guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
-], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('<span data-live="puzzles">1840</span>', 'My best puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
+hobby('chess', 'Chess', "I played competitively all through elementary school and placed 2nd at BC provincials, then guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
+], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
 hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity."
       '</p>\n        <p class="tagline">These three are my favourites. Play them and try to beat me.', [

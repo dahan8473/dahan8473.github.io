@@ -250,6 +250,7 @@ npx vercel deploy --prod
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Visitor memory, chat logs, notes and the spend counter. Use a dedicated Supabase project and run `supabase/visitors.sql` in it once. |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Messages me on Telegram when someone leaves a note |
 | `MONTHLY_CAP_USD` | Optional, defaults to 20 |
+| `DRAFT_SECRET` | Signs the head's drafts (replies started before Enter). Long and random |
 | `ADMIN_SECRET` | Signs admin sessions. Long and random |
 | `ADMIN_PASSWORD` | The admin password. The login page is public, so 16+ random characters or a 4+ word passphrase. Until it's set, `/admin` is a 404 |
 | `CRON_SECRET` | Vercel sends it with the nightly cron call; without it the learn job can't run |

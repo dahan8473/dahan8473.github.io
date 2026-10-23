@@ -302,7 +302,7 @@
   "dashboard-page": {
     "page": "/dashboard/",
     "sel": ".header",
-    "about": "top of the 3D dashboard case study page"
+    "about": "top of the Tethos Island case study page"
   },
   "dashboard-hard-part": {
     "page": "/dashboard/",

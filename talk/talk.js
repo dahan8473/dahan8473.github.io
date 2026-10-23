@@ -1620,6 +1620,7 @@
     await navigate(page);
     S.pending = null;
     save();
+    handled.delete(a.id);
     act(a);
   }
 

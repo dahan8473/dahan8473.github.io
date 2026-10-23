@@ -32,7 +32,7 @@ const CSS = `
 .pgal-grid::after { content: ''; flex-grow: 1000000; }
 .pgal-item { flex-grow: var(--ar, 1.33); flex-basis: calc(var(--ar, 1.33) * 180px); min-width: 0; margin: 0; }
 .pgal-open {
-  position: relative; display: block; width: 100%; aspect-ratio: var(--ar, 1.33); padding: 0;
+  position: relative; display: block; width: 100%; aspect-ratio: var(--ar, 1.33); padding: 0; container-type: inline-size;
   border: 0; border-radius: 14px; overflow: hidden; background: var(--fill); color: #fff; font: inherit; text-align: left; cursor: zoom-in;
 }
 .pgal-open:focus-visible { border-radius: 14px; outline-offset: 3px; }
@@ -55,6 +55,11 @@ const CSS = `
 .pgal-meta { display: block; overflow: hidden; color: rgba(255, 255, 255, 0.72); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
 .pgal-meta i { margin: 0 6px; font-style: normal; opacity: 0.6; }
 .pgal-pill { flex: none; padding: 3px 9px; border-radius: 8px; background: rgba(255, 255, 255, 0.18); color: #fff; font-size: 13px; white-space: nowrap; }
+/* A narrow tile: the month goes under the title instead of squeezing it. */
+@container (max-width: 230px) {
+  .pgal-info { flex-direction: column; align-items: flex-start; gap: 6px; padding: 40px 10px 10px; }
+  .pgal-text { width: 100%; }
+}
 .pgal-open:focus-visible :is(.pgal-info, .pgal-go) { opacity: 1; transform: none; }
 @media (hover: hover) {
   .pgal-open:hover :is(.pgal-info, .pgal-go) { opacity: 1; transform: none; }

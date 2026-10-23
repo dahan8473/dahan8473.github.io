@@ -12,14 +12,14 @@ import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import { connect } from './_neuralink.js';
 import { corsFor, preflight, plain, isId, clientIp } from './_http.js';
 import { hasSlur, maskSlurs } from './_slurs.js';
-import { saveChat, spent, addSpend, recall, approvedKnowledge } from './_store.js';
+import { saveChat, recall, approvedKnowledge } from './_store.js';
+import { CAP, spentNow, addCost } from './_spend.js';
 import { think, costOf, PRICE } from './_gpt.js';
 import { waitUntil } from '@vercel/functions';
 import { decide, choice, noul } from './_jev.js';
 import { cortexNotes, cortexText } from './_cortex.js';
 
 const EMAIL = 'davidliu8473@gmail.com';
-const CAP = Number(process.env.MONTHLY_CAP_USD || 20);
 // The head opens every conversation itself, so history can start with its
 // line. This stands in for the page load as the first visitor turn.
 const LANDED = '(the visitor just opened davidliu.work)';
@@ -152,7 +152,7 @@ const SITE = [
   ...Object.entries(targets).map(([id, t]) => `- ${id} (${t.page}): ${t.about}`)
 ].join('\n');
 
-// Best effort per-instance limits. The monthly cap below is the real backstop.
+// Best effort per-instance limits. The monthly cap (_spend.js) is the real backstop.
 // Drafts (sent while they pause typing) and warm-ups get their own, so they
 // never use up anyone's messages.
 const LIMITS = { chat: 40, draft: 80, warm: 20 };
@@ -169,19 +169,9 @@ function limited(ip, kind = 'chat') {
 
 // Nothing the reply waits on gets to take long. A slow read falls back to
 // what this instance already knows.
+// The spend cap is in _spend.js: a fresh instance with no reading yet counts
+// as over it.
 const within = (p, ms, fallback) => Promise.race([p, new Promise((r) => setTimeout(() => r(fallback), ms))]);
-const money = { usd: 0, at: 0, reading: null, last: 0 };
-function spentNow() {
-  if (!money.reading && Date.now() - money.at > 60 * 1000) {
-    money.reading = spent().then((v) => { money.usd = v; money.at = Date.now(); }).finally(() => { money.reading = null; });
-  }
-  return money.at ? money.usd : within(money.reading.then(() => money.usd), 400, money.usd);
-}
-async function addCost(usd) {
-  money.usd += usd;
-  if (usd > 0) money.last = usd;
-  await addSpend(usd);
-}
 const memos = new Map();
 function remember(visitor) {
   const hit = memos.get(visitor);

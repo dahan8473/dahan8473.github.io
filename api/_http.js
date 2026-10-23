@@ -1,11 +1,13 @@
 // CORS and small response helpers shared by the functions in api/.
 
 const ORIGINS = new Set(['https://davidliu.work', 'https://www.davidliu.work', 'https://dahan8473.github.io']);
+// Local dev pages, only outside production.
 const LOCAL = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const local = (origin) => process.env.VERCEL_ENV !== 'production' && LOCAL.test(origin);
 
 export function corsFor(request) {
   const origin = request.headers.get('origin') || '';
-  const ok = ORIGINS.has(origin) || LOCAL.test(origin) || origin === new URL(request.url).origin;
+  const ok = ORIGINS.has(origin) || local(origin) || origin === new URL(request.url).origin;
   return { ok, headers: ok ? { 'access-control-allow-origin': origin, vary: 'origin' } : {} };
 }
 

@@ -1175,7 +1175,7 @@
   var FINDS = [
     { id: 'spar', name: 'Spar the head', done: 'Sparred the head', line: 'Muay Thai, three rounds, light contact.', href: '/hobbies/muay-thai/' },
     { id: 'rally', name: 'Rally the head', done: 'Rallied the head', line: 'Badminton in first person, with one of my rackets.', href: '/hobbies/badminton/' },
-    { id: 'climb', name: 'Climb the page', done: 'Climbed the page', line: 'A V2 route straight up the page.', href: '/hobbies/climbing/' },
+    { id: 'climb', name: 'Climb the page', done: 'Climbed the page', line: 'A V3 route straight up the page.', href: '/hobbies/climbing/' },
     { id: 'chess', name: 'Play the head at chess', done: 'Played the head at chess', line: 'It talks while it plays.', href: '/hobbies/chess/' },
     { id: 'guitar', name: 'Play my guitar', done: 'Played my guitar', line: 'Record a few bars. If it\'s good, the head cries.', href: '/hobbies/guitar/' },
     { id: 'globe', name: 'Spin the globe', done: 'Spun the globe', line: 'Everywhere I\'ve been. Tap a place for photos.', href: '/hobbies/travel/' },

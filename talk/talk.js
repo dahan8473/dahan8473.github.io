@@ -114,7 +114,7 @@
     // The pitch: up close, for starting a game (see pitch()).
     pitch: {
       spar: { line: "spar me? three rounds, light contact. i'll go easy 🥊", yes: "let's go", no: 'not today', ok: 'bet. gloves on' },
-      climb: { line: "climb the page with me? it's a v2, straight up", yes: "let's climb", no: 'maybe later', ok: 'ok chalk up' },
+      climb: { line: "climb the page with me? it's a v3, straight up", yes: "let's climb", no: 'maybe later', ok: 'ok chalk up' },
       chess: { line: 'play me? you get white. i talk a lot while i play', yes: "you're on", no: 'maybe later', ok: 'your move ♟️' },
       rally: { line: "rally me? first person, my racket's in your hand 🏸", named: (n) => `rally me with the ${n}? first person, it's in your hand 🏸`, yes: 'rally', no: 'just looking', ok: 'ok serve it up' },
       later: "ok ok. tap me when you're ready",

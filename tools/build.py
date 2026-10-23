@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 59, 19, 43, 56
+V_CSS, V_TALKCSS, V_JS, V_TALK = 59, 19, 43, 57
 V_TRACK = 2
 V_PIECE = 48  # bump when anything in /play/ or /3d/ changes
 V_OG = 3  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -242,6 +242,7 @@ resume = '''      <header class="doc-head">
           <h1>Resume</h1>
           <p class="hint"><span class="mouse">Hover over a line to see the story behind it. Click it to keep it open while you read.</span><span class="touch">Tap a line to see the story behind it.</span></p>
         </div>
+        <p class="go"><a class="ln" href="/resume-swe.pdf">PDF</a></p>
       </header>
 
       <div class="doc">

@@ -154,7 +154,7 @@ def link(href, text):
 home = '''      <section class="hello" data-t="now">
         <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
         <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers have built free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
-        <p><em>But I'm a lot more than my technical skills.</em> I'm a person of whimsy, ambition and out-of-the-box ideas. The things I suggest always get people giggling, or saying out loud, “how did you even think of something like that?”</p>
+        <p><em>But I'm a lot more than my technical skills.</em> Outside of code I'm kind of goofy. I like weird ideas, and my friends usually ask how I even thought of them.</p>
         <p>Since this is my personal website, I wanted it to feel like me, packed with little bits of fun that reward you the more you explore. Click around, drag things, and talk to the floating head in the corner, an AI version of me wired into <a class="ln" href="/brain/">my second brain</a>. But most of all,</p>
         <p><em>stay curious.</em></p>
       </section>

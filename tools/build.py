@@ -235,7 +235,7 @@ resume += sec('education', 'Education', [
 ])
 resume += sec('experience', 'Experience', [
   item('jdpower', [('<b>J.D. Power</b>', 'May 2025 – Aug 2026'), ('Software Engineering Intern, 16-month co-op', 'London, ON')],
-       ['Built and maintained Spring Boot services on Kubernetes powering the Build &amp; Price sites and analytics connectors for five Stellantis brands: Jeep, RAM, Dodge, Chrysler and Maserati',
+       ['Built and maintained Spring Boot services on Kubernetes powering the Build &amp; Price sites and analytics connectors for five Stellantis brands: Jeep, Ram, Dodge, Chrysler and Maserati',
         'Fixed the backend and data-pipeline defects blocking the model-year 2026 launch, restoring the vehicle customization flow in production',
         'Remediated 2,000+ TruffleHog secret-scanning findings, rotated leaked keys, and wrote a research report on GitHub Copilot for automated vulnerability detection'],
        note=['<p>Sixteen months on the team behind the Build &amp; Price sites. The Copilot report went to engineering leadership and was adopted.</p>',
@@ -270,7 +270,7 @@ resume += sec('projects', 'Projects', [
        note=[img('/media/work/tethos-island/village.webp', 'Tethos Island: the village at golden hour', 1440, 860),
              '<p>The title screen is the real game running behind the menu, at whatever time it is in London right now.</p>',
              '<p class="go">' + ext('https://play.tethos.ca', 'Play it') + link('/dashboard/', 'How it works') + '</p>']),
-  item('hackthenorth', [('<b>Among Us, IRL</b>', 'Sep 2026'), ('C++, ESP32-C3, ESP-NOW, PlatformIO', 'Hack the North')],
+  item('hackthenorth', [('<b>Among Us IRL</b>', 'Sep 2026'), ('C++, ESP32-C3, ESP-NOW, PlatformIO', 'Hack the North')],
        ['Built the game for real-life Among Us on conference badges: role dealing, the kill, report and meeting state machine, on-badge voting, and NFC tasks with motion minigames',
         'No server, router or phones: game state syncs peer to peer over a mesh, and signal strength decides if you\'re close enough to kill'],
        note=[img('/media/work/htn-badges.webp', 'Two Hack the North badges running Among Us', 1000, 750),
@@ -280,12 +280,12 @@ resume += sec('projects', 'Projects', [
 ])
 resume += sec('awards', 'Awards', [
   item('award-htn', [('<b>Hack the North 2026</b>', '$2,500'), ('1st, Best Use of Solana and Badge Hack', '')],
-       note=['<p>For Among Us, IRL.</p>', '<p class="go">' + ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost') + '</p>']),
+       note=['<p>For Among Us IRL.</p>', '<p class="go">' + ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost') + '</p>']),
   item('award-telus', [('<b>TELUS AI at the Edge of Innovation</b>', '$5,000'), ('2nd place, for biopilot', '')],
        note=[img('/media/work/biopilot-heatmap.webp', 'A crop-health heatmap over farm fields', 1200, 750),
              '<p>biopilot turns drone footage into crop-health maps.</p>',
              '<p class="go">' + ext('https://github.com/dahan8473/biopilot', 'Code') + '</p>']),
-  item(None, [('<b>UofT Hacks</b>', ''), ('Top 5 finalist', '')], plain=True),
+  item(None, [('<b>UofTHacks</b>', ''), ('Top 5 finalist', '')], plain=True),
   item('award-wec', [('<b>Western Engineering Competition</b>', ''), ('Finalist', '')],
        note=['<p>Code from our 2024 entry, built in Unity and C#.</p>', '<p class="go">' + ext('https://github.com/dahan8473/WEC_24', 'Code') + '</p>']),
   item('award-guitar', [('<b>NW Guitar Competition</b>', ''), ('2nd place, classical guitar. Also played Carnegie Hall', '')],
@@ -351,7 +351,7 @@ projects += proj('this-site', 'davidliu.work', '2026, solo', 'This site, and the
   'JavaScript · HTML · CSS · Three.js · Vercel Functions · Supabase · OpenRouter · DeepSeek V4.1 Flash · Jev · Telegram',
   [ext('https://github.com/dahan8473/dahan8473.github.io', 'GitHub')],
   img('/media/work/site/head.webp', 'The floating head on davidliu.work saying hi, with its reply buttons', 1168, 730))
-projects += proj('hackthenorth', 'Among Us, IRL', 'Hack the North 2026', 'Real-life Among Us on conference badges.',
+projects += proj('hackthenorth', 'Among Us IRL', 'Hack the North 2026', 'Real-life Among Us on conference badges.',
   "36 hours, team of three. The badges sync peer to peer over an ESP-NOW mesh with no server or phones, and signal strength decides if you're close enough to kill. I wrote the game, the voting and the NFC task minigames.",
   'C++ · ESP32-C3 · ESP-NOW · PlatformIO',
   [ext('https://github.com/dahan8473/htn-amongus', 'GitHub'), ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost')],
@@ -496,12 +496,12 @@ write('projects/index.html', page('/projects/', 'Projects', 'Projects by David L
 # link under their group. Every hobby has its own page either way.
 GROUPS = [
   ('Body', [
-    ('hiking', 'Hiking', 'Panorama Ridge, Lindeman Lake, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
+    ('hiking', 'Hiking', 'Panorama Ridge, Lindeman Lake, Gros Morne, Lushan, and eight more.', '/media/hikes/panorama-ridge/07-s.webp'),
     ('badminton', 'Badminton', 'My main sport all through high school. Doubles.', None),
     ('muay-thai', 'Muay Thai', 'I train, and coach the beginner class.', None),
   ], [('climbing', 'Rock climbing'), ('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),
   ('Mind', [
-    ('travel', 'Travel', 'China, Europe, Canada coast to coast, the US, Seoul.', None),
+    ('travel', 'Travel', 'China, Korea, Europe, the US, and Canada coast to coast.', None),
     ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
     ('lumosity', 'Lumosity', 'Every morning, religiously. Play my three favourites and try to beat me.', None),
   ], [('chess', 'Chess'), ('video', 'Video production')]),
@@ -646,7 +646,7 @@ hobby('badminton', 'Badminton', "Badminton was my main sport all through high sc
       '</p>\n        <p class="tagline">Click one for a closer look, and give me a rally!', [
 ], shot=piece('3d', 'racket', 'Loading the rackets...'))
 hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a $20 bike from Facebook Marketplace, because transit in London, Ontario is just too horrible. The bus takes 40 minutes, and it's always 20 minutes late."
-      '</p>\n        <p class="tagline">Since getting that $20 bike I became obsessed. Then, doomscrolling Marketplace again, I saw a really nice bike. Like, reaalllyy nice. The only problem: it was in Detroit, a 2 hour drive away.'
+      '</p>\n        <p class="tagline">Since getting that $20 bike I became obsessed. Then, doomscrolling Marketplace again, I saw a really nice bike. Like, reaalllyy nice. The only problem: it was in Detroit, a 2-hour drive away.'
       "</p>\n        <p class=\"tagline\">I kept thinking about it for a week. After trying to lowball the guy and going back and forth, I locked in the offer, rented a car and drove over to buy it. It's one of the best decisions I've made. That bike is so fun to ride, and I've been biking to school every day and going on long rides ever since.", [
 ], shot='''      <figure class="case-shot natural">
         <img src="/media/cycling/me-and-the-bike.webp" alt="David standing with his matte black track bike at night, outside Alumni Hall at Western" width="1500" height="1265">

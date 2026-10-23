@@ -70,14 +70,11 @@
             },
             {
               "t": "Baked terrain grid"
-            },
-            {
-              "t": "Colyseus multiplayer"
             }
           ]
         },
         {
-          "t": "Among Us, IRL",
+          "t": "Among Us IRL",
           "id": "among-us-irl",
           "c": [
             {
@@ -408,7 +405,7 @@
                   "t": "Jeep"
                 },
                 {
-                  "t": "RAM"
+                  "t": "Ram"
                 },
                 {
                   "t": "Dodge"
@@ -881,7 +878,7 @@
           "id": "aw-telus"
         },
         {
-          "t": "Top 5, UofT Hacks"
+          "t": "Top 5, UofTHacks"
         },
         {
           "t": "Finalist, WEC",

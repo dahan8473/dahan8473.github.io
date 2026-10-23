@@ -29,7 +29,7 @@ export const L = {
   youLeft: ['you just watched it 😭', 'that was in!', 'you gotta swing'],
   long: ['this rally 😭', 'my legs', 'ok this is a real rally', "i'm so tired lol"],
   newBest: ['new best rally!!', "that's our longest one"],
-  matchWin: ['good game. you got me', "ok you're better than me lol", "gg. don't tell my club"],
+  matchWin: ['good game. you got me', "ok you're better than me lol", "gg. don't tell my old team"],
   matchLose: ['gg!! run it back?', 'i got lucky. again?', 'good game though. one more?'],
   paused: ['water break', 'take your time', 'tying my shoes']
 };

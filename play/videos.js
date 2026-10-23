@@ -5,7 +5,8 @@
 //     { "youtube": "<id>", "title", "date", "note" },
 //     { "instagram": "<shortcode>", "title", "date", "note" },
 //     { "video": "/media/drone/x.mp4", "poster": "/media/drone/x.webp", "title", "date", "note" } ] }
-// A video is a short clip of our own: it loops muted while it's on screen.
+// A video is a short clip of our own: it loops muted while it's the one on
+// screen (gallery.js clipWatch). On phones it shows its poster until tapped.
 // youtube takes an id or a pasted link. instagram takes the shortcode from
 // instagram.com/reel/<shortcode>/ (a reel) or a pasted /reel/ or /p/ link.
 // YouTube runs sit in a 16:9 grid, Instagram runs in a 9:16 grid; order is kept.
@@ -166,7 +167,7 @@ export function mount(el) {
 
   let alive = true;
   let liveReel = null;
-  let io = null;
+  let watch = null;
   const ctrl = new AbortController();
 
   function textBlock(v) {
@@ -223,31 +224,24 @@ export function mount(el) {
     return li;
   }
 
-  // Our own clip: muted, looping while on screen; a click pauses or plays it.
+  // Our own clip: muted and looping while it's the one on screen; a click pauses
+  // or plays it. On phones a play button sits on the poster until it's tapped.
   function clipItem(v) {
     const li = h('li', 'pvid-item');
     const frame = h('div', 'pvid-frame');
     const vid = h('video');
-    vid.muted = true;
-    vid.loop = true;
-    vid.playsInline = true;
-    vid.preload = 'none';
-    if (v.poster) vid.poster = v.poster;
-    vid.src = v.video;
     vid.setAttribute('aria-label', v.title || 'Clip');
-    vid.addEventListener('click', () => { if (vid.paused) vid.play().catch(() => {}); else vid.pause(); });
-    if (!reduce.matches) {
-      if (!io) {
-        io = new IntersectionObserver((entries) => {
-          for (const e of entries) {
-            if (e.isIntersecting) e.target.play().catch(() => {});
-            else e.target.pause();
-          }
-        }, { threshold: 0.4 });
-      }
-      io.observe(vid);
-    }
+    watch.add(vid, v.video, v.poster);
+    vid.addEventListener('click', () => { if (vid.paused) watch.play(vid); else vid.pause(); });
     frame.appendChild(vid);
+    if (watch.tapOnly) {
+      const btn = playButton(v, 'Play clip');
+      btn.appendChild(ring());
+      btn.addEventListener('click', () => watch.play(vid));
+      vid.addEventListener('play', () => { btn.hidden = true; });
+      vid.addEventListener('pause', () => { btn.hidden = false; });
+      frame.appendChild(btn);
+    }
     li.appendChild(frame);
     const text = textBlock(v);
     if (text) li.appendChild(text);
@@ -356,10 +350,12 @@ export function mount(el) {
   document.addEventListener('dl:footage', onFootage);
 
   const src = el.dataset.src;
-  (src ? fetch(src, { signal: ctrl.signal }).then((r) => (r.ok ? r.json() : {})) : Promise.resolve({}))
-    .catch(() => ({}))
-    .then((data) => {
+  // gallery.js has the clip watcher; load it with the same ?v= as this file.
+  const gal = import('./gallery.js' + new URL(import.meta.url).search);
+  Promise.all([gal, (src ? fetch(src, { signal: ctrl.signal }).then((r) => (r.ok ? r.json() : {})) : Promise.resolve({})).catch(() => ({}))])
+    .then(([{ clipWatch }, data]) => {
       if (!alive) return;
+      watch = clipWatch();
       const raw = data && Array.isArray(data.videos) ? data.videos : [];
       const list = [];
       raw.forEach((v) => {
@@ -372,14 +368,14 @@ export function mount(el) {
         else if (typeof v.video === 'string' && v.video) list.push({ ...base, type: 'clip', video: v.video, poster: typeof v.poster === 'string' ? v.poster : '' });
       });
       render(list);
-    });
+    })
+    .catch(() => { if (alive) render([]); });
 
   return function stop() {
     alive = false;
     ctrl.abort();
     liveReel = null;
-    if (io) io.disconnect();
-    root.querySelectorAll('video').forEach((v) => { v.pause(); v.removeAttribute('src'); v.load(); });
+    if (watch) watch.stop();
     document.removeEventListener('dl:footage', onFootage);
     window.removeEventListener('message', onMessage);
     root.remove();

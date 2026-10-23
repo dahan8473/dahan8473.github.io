@@ -70,14 +70,11 @@
             },
             {
               "t": "Baked terrain grid"
-            },
-            {
-              "t": "Colyseus multiplayer"
             }
           ]
         },
         {
-          "t": "Among Us, IRL",
+          "t": "Among Us IRL",
           "id": "among-us-irl",
           "c": [
             {
@@ -348,9 +345,6 @@
                   "t": "$12,000 raised"
                 }
               ]
-            },
-            {
-              "t": "Handing it to the next team"
             }
           ]
         },
@@ -411,7 +405,7 @@
                   "t": "Jeep"
                 },
                 {
-                  "t": "RAM"
+                  "t": "Ram"
                 },
                 {
                   "t": "Dodge"
@@ -555,7 +549,7 @@
               "t": "Bouldering"
             },
             {
-              "t": "V2, for now"
+              "t": "V3, for now"
             }
           ]
         },
@@ -587,7 +581,15 @@
         },
         {
           "t": "Fashion",
-          "id": "fashion"
+          "id": "fashion",
+          "c": [
+            {
+              "t": "Started with merch for my club"
+            },
+            {
+              "t": "Kunlun, dropping soon"
+            }
+          ]
         },
         {
           "t": "Meowmeow",
@@ -884,7 +886,7 @@
           "id": "aw-telus"
         },
         {
-          "t": "Top 5, UofT Hacks"
+          "t": "Top 5, UofTHacks"
         },
         {
           "t": "Finalist, WEC",

@@ -6,10 +6,10 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 57, 17, 41, 53
+V_CSS, V_TALKCSS, V_JS, V_TALK = 58, 18, 43, 55
 V_TRACK = 2
-V_PIECE = 47  # bump when anything in /play/ or /3d/ changes
-V_OG = 2  # bump when og.png is redone (tools/og.html), so link previews refetch it
+V_PIECE = 48  # bump when anything in /play/ or /3d/ changes
+V_OG = 3  # bump when og.png is redone (tools/og.html), so link previews refetch it
 
 ICONS = {
   'home': '<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>',
@@ -161,7 +161,7 @@ def link(href, text):
 home = '''      <section class="hello" data-t="now">
         <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
         <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers have built free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
-        <p><em>But I'm a lot more than my technical skills.</em> I'm a person of whimsy, ambition and out-of-the-box ideas. The things I suggest always get people giggling, or saying out loud, “how did you even think of something like that?”</p>
+        <p><em>But I'm a lot more than my technical skills.</em> Outside of code I'm kind of goofy. I like weird ideas, and my friends usually ask how I even thought of them.</p>
         <p>Since this is my personal website, I wanted it to feel like me, packed with little bits of fun that reward you the more you explore. Click around, drag things, and talk to the floating head in the corner, an AI version of me wired into <a class="ln" href="/brain/">my second brain</a>. But most of all,</p>
         <p><em>stay curious.</em></p>
       </section>
@@ -231,7 +231,6 @@ resume = '''      <header class="doc-head">
           <h1>Resume</h1>
           <p class="hint"><span class="mouse">Hover over a line to see the story behind it. Click it to keep it open while you read.</span><span class="touch">Tap a line to see the story behind it.</span></p>
         </div>
-        <p class="go"><a class="ln" href="/resume-swe.pdf">PDF</a><a class="ln" href="/resume-pm.pdf">Product version</a></p>
       </header>
 
       <div class="doc">
@@ -243,7 +242,7 @@ resume += sec('education', 'Education', [
 ])
 resume += sec('experience', 'Experience', [
   item('jdpower', [('<b>J.D. Power</b>', 'May 2025 – Aug 2026'), ('Software Engineering Intern, 16-month co-op', 'London, ON')],
-       ['Built and maintained Spring Boot services on Kubernetes powering the Build &amp; Price sites and analytics connectors for five Stellantis brands: Jeep, RAM, Dodge, Chrysler and Maserati',
+       ['Built and maintained Spring Boot services on Kubernetes powering the Build &amp; Price sites and analytics connectors for five Stellantis brands: Jeep, Ram, Dodge, Chrysler and Maserati',
         'Fixed the backend and data-pipeline defects blocking the model-year 2026 launch, restoring the vehicle customization flow in production',
         'Remediated 2,000+ TruffleHog secret-scanning findings, rotated leaked keys, and wrote a research report on GitHub Copilot for automated vulnerability detection'],
        note=['<p>Sixteen months on the team behind the Build &amp; Price sites. The Copilot report went to engineering leadership and was adopted.</p>',
@@ -263,7 +262,7 @@ resume += sec('leadership', 'Leadership', [
         'Delivered 20+ pro-bono projects for nonprofits including World Vision, the Canadian Red Cross and the London Children\'s Museum, saving partners $500,000+',
         '<span data-t="genesis">Produced GENESIS, London\'s largest student demo day: 260+ attendees, 7 project demos, 8 sponsors and $12,000 raised</span>'],
        note=[img('/media/work/tethos-team.webp', 'The Tethos team in front of a Western University building', 1400, 934),
-             '<p>Nonprofits apply, and teams of student PMs and developers build what they need for free. This year I\'m handing it to the next team and staying on as an advisor.</p>',
+             '<p>Nonprofits apply, and teams of student PMs and developers build what they need for free.</p>',
              '<p class="go">' + link('/tethos/', 'Case study') + ext('https://tethos.ca', 'tethos.ca') + '</p>']),
   item('wfn', [('<b>Western Founders Network</b>', '2023 – 2025'), ('VP of Education', 'London, ON')],
        note=["<p>Ran Ontario's largest hackathon education event.</p>"]),
@@ -278,7 +277,7 @@ resume += sec('projects', 'Projects', [
        note=[img('/media/work/tethos-island/village.webp', 'Tethos Island: the village at golden hour', 1440, 860),
              '<p>The title screen is the real game running behind the menu, at whatever time it is in London right now.</p>',
              '<p class="go">' + ext('https://play.tethos.ca', 'Play it') + link('/dashboard/', 'How it works') + '</p>']),
-  item('hackthenorth', [('<b>Among Us, IRL</b>', 'Sep 2026'), ('C++, ESP32-C3, ESP-NOW, PlatformIO', 'Hack the North')],
+  item('hackthenorth', [('<b>Among Us IRL</b>', 'Sep 2026'), ('C++, ESP32-C3, ESP-NOW, PlatformIO', 'Hack the North')],
        ['Built the game for real-life Among Us on conference badges: role dealing, the kill, report and meeting state machine, on-badge voting, and NFC tasks with motion minigames',
         'No server, router or phones: game state syncs peer to peer over a mesh, and signal strength decides if you\'re close enough to kill'],
        note=[img('/media/work/htn-badges.webp', 'Two Hack the North badges running Among Us', 1000, 750),
@@ -288,12 +287,12 @@ resume += sec('projects', 'Projects', [
 ])
 resume += sec('awards', 'Awards', [
   item('award-htn', [('<b>Hack the North 2026</b>', '$2,500'), ('1st, Best Use of Solana and Badge Hack', '')],
-       note=['<p>For Among Us, IRL.</p>', '<p class="go">' + ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost') + '</p>']),
+       note=['<p>For Among Us IRL.</p>', '<p class="go">' + ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost') + '</p>']),
   item('award-telus', [('<b>TELUS AI at the Edge of Innovation</b>', '$5,000'), ('2nd place, for biopilot', '')],
        note=[img('/media/work/biopilot-heatmap.webp', 'A crop-health heatmap over farm fields', 1200, 750),
              '<p>biopilot turns drone footage into crop-health maps.</p>',
              '<p class="go">' + ext('https://github.com/dahan8473/biopilot', 'Code') + '</p>']),
-  item(None, [('<b>UofT Hacks</b>', ''), ('Top 5 finalist', '')], plain=True),
+  item(None, [('<b>UofTHacks</b>', ''), ('Top 5 finalist', '')], plain=True),
   item('award-wec', [('<b>Western Engineering Competition</b>', ''), ('Finalist', '')],
        note=['<p>Code from our 2024 entry, built in Unity and C#.</p>', '<p class="go">' + ext('https://github.com/dahan8473/WEC_24', 'Code') + '</p>']),
   item('award-guitar', [('<b>NW Guitar Competition</b>', ''), ('2nd place, classical guitar. Also played Carnegie Hall', '')],
@@ -359,13 +358,13 @@ projects += proj('this-site', 'davidliu.work', '2026, solo', 'This site, and the
   'JavaScript · HTML · CSS · Three.js · Vercel Functions · Supabase · OpenRouter · DeepSeek V4.1 Flash · Jev · Telegram',
   [ext('https://github.com/dahan8473/dahan8473.github.io', 'GitHub')],
   img('/media/work/site/head.webp', 'The floating head on davidliu.work saying hi, with its reply buttons', 1168, 730))
-projects += proj('hackthenorth', 'Among Us, IRL', 'Hack the North 2026', 'Real-life Among Us on conference badges.',
+projects += proj('hackthenorth', 'Among Us IRL', 'Hack the North 2026', 'Real-life Among Us on conference badges.',
   "36 hours, team of three. The badges sync peer to peer over an ESP-NOW mesh with no server or phones, and signal strength decides if you're close enough to kill. I wrote the game, the voting and the NFC task minigames.",
   'C++ · ESP32-C3 · ESP-NOW · PlatformIO',
   [ext('https://github.com/dahan8473/htn-amongus', 'GitHub'), ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost')],
   img('/media/work/htn-badges.webp', 'Two Hack the North badges running Among Us', 1000, 750))
 projects += proj('tethotchi', 'Tethotchi', '2026, Tethos merch', 'A virtual pet keychain shaped like a tiny CRT TV.',
-  "You feed it, it grows, it visits other Tethotchis over Bluetooth, and it dies if you forget about it. The board and the case are both code: change one layout file and the PCB, the case, the collision check and the factory files all follow. I designed it with a team of Claude Code agents I run. The render is generated from the CAD; the first five units are next.",
+  "The plan: you feed it, it grows, it visits other Tethotchis over Bluetooth, and it dies if you forget about it. The board and the case are both code: change one layout file and the PCB, the case, the collision check and the factory files all follow. I designed it with a team of Claude Code agents I run. The render is generated from the CAD; the first five units are next.",
   'Python · KiCad · build123d · Zephyr · nRF52832 · Web Bluetooth',
   [ext('https://github.com/dahan8473/tethos-port', 'GitHub')],
   img('/media/work/tethotchi/hero.webp', 'Render of the Tethotchi, a clear CRT TV keychain with a pixel smiley on its screen', 1024, 1024), status='building')
@@ -504,13 +503,13 @@ write('projects/index.html', page('/projects/', 'Projects', 'Projects by David L
 # link under their group. Every hobby has its own page either way.
 GROUPS = [
   ('Body', [
-    ('hiking', 'Hiking', 'Panorama Ridge, Lindeman Lake, Gros Morne, Lushan, and nine more.', '/media/hikes/panorama-ridge/07-s.webp'),
+    ('hiking', 'Hiking', 'Panorama Ridge, Lindeman Lake, Gros Morne, Lushan, and eight more.', '/media/hikes/panorama-ridge/07-s.webp'),
     ('badminton', 'Badminton', 'My main sport all through high school. Doubles.', None),
     ('muay-thai', 'Muay Thai', 'I train, and coach the beginner class.', None),
   ], [('climbing', 'Rock climbing'), ('swimming', 'Swimming'), ('cycling', 'Cycling'), ('speed-skating', 'Speed skating')]),
   ('Mind', [
-    ('travel', 'Travel', 'China, Europe, Canada coast to coast, the US, Seoul.', None),
-    ('fashion', 'Fashion', 'Kunlun, a clothing brand built on Chinese mythology.', '/media/work/kunlun-liangfeng.webp'),
+    ('travel', 'Travel', 'China, Korea, Europe, the US, and Canada coast to coast.', None),
+    ('fashion', 'Fashion', 'Kunlun, my clothing brand built on Chinese mythology. Dropping soon.', '/media/work/kunlun-liangfeng.webp'),
     ('lumosity', 'Lumosity', 'Every morning, religiously. Play my three favourites and try to beat me.', None),
   ], [('chess', 'Chess'), ('video', 'Video production')]),
   ('Soul', [
@@ -520,7 +519,8 @@ GROUPS = [
   ], [('meowmeow', 'Meowmeow')]),
 ]
 # The "Also" ones aren't links: hovering (or tapping) the name shows a picture,
-# when there is one, and a line. (src or None, line)
+# when there is one, and a line. (src or None, line) The pictures load the
+# first time a card opens (data-src, site.js), not with the page.
 # src is one picture, a list (a slideshow), or {'video': mp4, 'poster': img}.
 TIPS = {
   'climbing': (None, "I boulder with my friends. I'm not very good at it tho, maybe one day I can finally climb a V4."),
@@ -528,7 +528,7 @@ TIPS = {
   'cycling': ('/media/cycling/me-and-the-bike-s.webp', "I have a really cool track bike. I drove over 2 hours to pick it up from a Facebook Marketplace seller, and I've ridden it every day since."),
   'speed-skating': (None, "My main sport growing up. 1st at BC provincials in my youth group, in the 100m, 200m, 400m and 1000m."),
   'chess': ('/media/chess/with-friends.webp', '<b class="tip-stat"><a href="https://www.chess.com/member/davidl8473" target="_blank" rel="noopener">1727 rapid on chess.com</a></b>2nd at BC provincials in my youth group. I still play for fun with friends.'),
-  'video': ({'video': '/media/video/reels-teaser.mp4', 'poster': '/media/video/reels-teaser.webp'}, "Reels I make for TSI."),
+  'video': ({'video': '/media/video/reels-teaser.mp4', 'poster': '/media/video/reels-teaser.webp'}, "Reels I make for Tethos."),
   'meowmeow': (['/media/life/meowmeow-sleep.webp', '/media/life/meowmeow-belly.webp', '/media/life/meowmeow-stairs.webp'], "My cat. Always chudding around. Here she comes."),
 }
 # No page at all, just the hover card. The rest keep their pages (the head
@@ -574,11 +574,11 @@ for label, rows, more in GROUPS:
             return f'<a class="ln" href="/hobbies/{slug}/" data-t="{slug}">{name}</a>'
         src, line = TIPS[slug]
         if isinstance(src, dict):
-            pic = f'<video class="tip-video" src="{src["video"]}" poster="{src["poster"]}" muted loop playsinline preload="none"></video>'
+            pic = f'<video class="tip-video" data-src="{src["video"]}" data-poster="{src["poster"]}" muted loop playsinline preload="none"></video>'
         elif isinstance(src, list):
-            pic = '<span class="tip-slides">' + ''.join(f'<img src="{s}" alt="" loading="lazy" decoding="async" style="--i:{i}">' for i, s in enumerate(src)) + '</span>'
+            pic = '<span class="tip-slides">' + ''.join(f'<img data-src="{s}" alt="" decoding="async" style="--i:{i}">' for i, s in enumerate(src)) + '</span>'
         else:
-            pic = f'<img src="{src}" alt="" loading="lazy" decoding="async">' if src else ''
+            pic = f'<img data-src="{src}" alt="" decoding="async">' if src else ''
         return f'<span class="ln hob-tip" tabindex="0" data-t="{slug}">{name}<span class="hob-tip-card" role="tooltip">{pic}<span>{line}</span></span></span>'
     links = ''.join(also(slug, name) for slug, name in more)
     hob += f'          <p class="hob-more"><span>Also</span><span class="go">{links}</span></p>\n        </section>\n'
@@ -614,12 +614,6 @@ def hobby(slug, name, tagline, sections, shot='', kind='Hobby', after=''):
     write(f'hobbies/{slug}/index.html', page(f'/hobbies/{slug}/', name, f'{name}, one of David Liu\'s hobbies. {desc}', body, 'hobbies', cls='case', back=('/hobbies/', 'Hobbies')))
 
 
-def FIGS(items):
-    # A row of numbers that matter, each with what it is.
-    cells = ''.join(f'<div><dt>{label}</dt><dd>{value}</dd></div>' for value, label in items)
-    return f'      <dl class="figs">{cells}</dl>\n'
-
-
 # A Play button that's always on a game page, floating on the side (site.js).
 def PLAY_NOW(id, label):
   # The real thing to click, like the gloves on Muay Thai: media/play/<id>.webp.
@@ -649,7 +643,7 @@ hobby('guitar', 'Classical guitar', "I've competed nationally and played Carnegi
       </section>
       <p class="bring-again" data-later="guitar" data-v="{V_PIECE}" hidden><button type="button" class="ln" data-bring="guitar">Play the guitar</button></p>
 '''.replace('{V_PIECE}', str(V_PIECE)) + PLAY_NOW('guitar', 'Play it'))
-hobby('muay-thai', 'Muay Thai', "I started training Muay Thai two years ago, because a friend dragged me to our local gym. I was super intimidated. I was scared of fighting, and of what the people there might be like."
+hobby('muay-thai', 'Muay Thai', "I started training Muay Thai in 2024, because a friend dragged me to our local gym. I was super intimidated. I was scared of fighting, and of what the people there might be like."
       '</p>\n        <p class="tagline">But by the first week I was addicted. I think a lot of that comes from my love for chess and puzzle games: Muay Thai is like a physical version of them. My Instagram feed turned into Muay Thai highlights, and I bought a bag on Facebook Marketplace and hung it up in my backyard to train in the mornings.'
       "</p>\n        <p class=\"tagline\">If you've never tried something like this, give it a shot. It might reveal more about yourself than you think!", [
 ], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/muay-thai/photos.json') + piece('play', 'muaythai', 'Loading the ring...', 'pitched') + '      <button class="spar-glove" type="button" data-spar aria-label="Spar with the head"><img src="/media/muaythai/gloves-btn.webp" alt="" width="112" height="120"><span>Spar</span></button>\n')
@@ -660,7 +654,7 @@ hobby('badminton', 'Badminton', "Badminton was my main sport all through high sc
       '</p>\n        <p class="tagline">Click one for a closer look, and give me a rally!', [
 ], shot=piece('3d', 'racket', 'Loading the rackets...'))
 hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a $20 bike from Facebook Marketplace, because transit in London, Ontario is just too horrible. The bus takes 40 minutes, and it's always 20 minutes late."
-      '</p>\n        <p class="tagline">Since getting that $20 bike I became obsessed. Then, doomscrolling Marketplace again, I saw a really nice bike. Like, reaalllyy nice. The only problem: it was in Detroit, a 2 hour drive away.'
+      '</p>\n        <p class="tagline">Since getting that $20 bike I became obsessed. Then, doomscrolling Marketplace again, I saw a really nice bike. Like, reaalllyy nice. The only problem: it was in Detroit, a 2-hour drive away.'
       "</p>\n        <p class=\"tagline\">I kept thinking about it for a week. After trying to lowball the guy and going back and forth, I locked in the offer, rented a car and drove over to buy it. It's one of the best decisions I've made. That bike is so fun to ride, and I've been biking to school every day and going on long rides ever since.", [
 ], shot='''      <figure class="case-shot natural">
         <img src="/media/cycling/me-and-the-bike.webp" alt="David standing with his matte black track bike at night, outside Alumni Hall at Western" width="1500" height="1265">
@@ -669,9 +663,9 @@ hobby('cycling', 'Cycling', "I only recently got into cycling. It started with a
 ''' + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/cycling/photos.json') + piece('3d', 'bike', 'Loading the bike...'))
 hobby('hiking', 'Hiking', "Thirteen hikes, newest first. Hover one for the trail's numbers and what my phone recorded that day.", [
 ], shot=piece('play', 'hikes', 'Loading the hikes...', src='/hobbies/hiking/hikes.json'))
-hobby('chess', 'Chess', "I played competitively all through elementary school, until guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
-], shot=FIGS([('1425', 'My rating, in elementary school'), ('Regionals', 'Where I competed'), ('<span data-live="puzzles">1840</span>', 'My best puzzle rating')]) + piece('play', 'gallery', 'Chess photos coming soon.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
-hobby('video', 'Video production', 'Things I made, mostly reels for TSI.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
+hobby('chess', 'Chess', "I played competitively all through elementary school and placed 2nd at BC provincials, then guitar took over. I still play online and do puzzles. Play a game against the head if you want.", [
+], shot=piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/chess/photos.json'), after=piece('play', 'chess', 'Setting up the board...') + PLAY_NOW('chess', 'Play me'))
+hobby('video', 'Video production', 'Things I made, mostly reels for Tethos.', [], shot=piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/video/videos.json'))
 hobby('lumosity', 'Lumosity', "I love brain teasers. The first thing I do every morning, religiously, is my daily Lumosity."
       '</p>\n        <p class="tagline">These three are my favourites. Play them and try to beat me.', [
 ], after='      <div class="lumo-games">\n' + piece('play', 'pinball', 'Loading Pinball Recall...') + piece('play', 'ebbflow', 'Loading Ebb and Flow...') + piece('play', 'penguin', 'Loading Penguin Rally...') + '      </div>\n')
@@ -682,7 +676,8 @@ hobby('photography', 'Photography', 'My kit: two cameras, a lens, a drone and a 
 ], shot=piece('3d', 'cameras', 'Loading the kit...', 'tall') + piece('play', 'gallery', 'Digging out photos rn.', src='/hobbies/photography/photos.json') + piece('play', 'videos', 'Digging out videos rn.', src='/hobbies/photography/footage.json'))
 hobby('travel', 'Travel', "Eight countries so far, and a list I'm behind on. Spin the globe, hover a place. More places on the way.", [
 ], shot=piece('3d', 'globe', 'Loading the globe...', 'globe-full'))
-hobby('fashion', 'Fashion', "I'm building Kunlun, a clothing brand built on Chinese mythology. Traditional Chinese and English run side by side as two voices.", [
+hobby('fashion', 'Fashion', "It started when I made my own merch for my club. Now I'm starting my own clothing brand, Kunlun, built on Chinese mythology. Dropping soon."
+      '</p>\n        <p class="tagline">Traditional Chinese and English run side by side as two voices.', [
 ], shot='''      <figure class="case-shot ink">
         <img src="/media/work/kunlun-liangfeng.webp" alt="Kunlun storefront: 涼風, Liangfeng, Cool Wind" width="1400" height="876">
         <figcaption>Drop I, Liangfeng</figcaption>
@@ -700,6 +695,7 @@ notes = '''      <header class="doc-head">
         <p class="go wall-write"><button class="write-btn" type="button">Leave a note</button></p>
       </header>
 
+      <p class="board-status" role="status" aria-live="polite"></p>
       <div class="board-wrap">
       <section class="board" data-t="wall" aria-label="The note wall">
         <ul class="board-notes" aria-label="Notes from visitors"></ul>
@@ -713,7 +709,6 @@ notes = '''      <header class="doc-head">
         </button>
       </section>
       </div>
-      <p class="board-status" role="status" aria-live="polite"></p>
 
       <template id="write-note">
         <form class="sticky writing" role="dialog" aria-label="Write a note">

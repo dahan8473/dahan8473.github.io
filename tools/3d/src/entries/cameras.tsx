@@ -1,10 +1,11 @@
 // Photography kit: /3d/cameras.js. Names and specs from
-// /hobbies/photography/gear.json (or el.dataset.gear).
+// /hobbies/photography/gear.json (or el.dataset.gear); which cameras have
+// photos from /hobbies/photography/photos.json (or el.dataset.photos).
 import { useGLTF } from '@react-three/drei';
 import { NeutralToneMapping } from 'three';
 import { KIT_FILES, KitScene } from '../cameras/Scene';
 import { Overlay } from '../cameras/Overlay';
-import { clearSelection, createKitStore, KitProvider, loadGear } from '../cameras/store';
+import { clearSelection, createKitStore, KitProvider, loadGear, loadShot } from '../cameras/store';
 import { mountCanvas } from '../lib/mountCanvas';
 import { sharedCss } from '../lib/ui';
 
@@ -13,6 +14,9 @@ export function mount(el: HTMLElement): () => void {
   const store = createKitStore();
   loadGear(el.dataset.gear || '/hobbies/photography/gear.json', ac.signal).then((info) => {
     if (!ac.signal.aborted) store.set({ info });
+  });
+  loadShot(el.dataset.photos || '/hobbies/photography/photos.json', ac.signal).then((shot) => {
+    if (!ac.signal.aborted) store.set({ shot });
   });
 
   const stop = mountCanvas(el, {

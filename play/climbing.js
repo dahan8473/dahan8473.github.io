@@ -1,7 +1,7 @@
 /* Climb the page. Loaded by site.js on /hobbies/climbing/.
    mount(el) puts an invite in el and returns a cleanup function.
 
-   Starting pops a V2 route onto the page itself: an absolute layer over the
+   Starting pops a V3 route onto the page itself: an absolute layer over the
    whole document, so the holds sit on the real page and scroll with it. The
    head hangs off the start holds by its two hands. Tap a hold inside the
    reach ring (or drag a hand onto it) and the lower hand goes. Every move
@@ -65,7 +65,7 @@ const TOP = PROBLEM.length - 1;
 
 // Everything the head says. Lowercase, short, no em dashes.
 const SAY = {
-  start: ['ok ok i got this', 'ok. v2. we got this', "chalked up. let's go"],
+  start: ['ok ok i got this', 'ok. v3. we got this', "chalked up. let's go"],
   how: 'tap a hold in my circle. the big ones are jugs, rest on those',
   far: ["i can't reach that 😭", 'my arms are not that long', 'too far lol'],
   jug: ['jug!! ok resting', 'ahh a jug. shaking out', 'jug. thank god'],
@@ -79,11 +79,11 @@ const SAY = {
   early: 'jumped too early lol',
   late: 'too late 😭',
   slip: 'nooo',
-  mat: ['ow', 'man i can only do a v2 :(', 'that hold is greasy i swear', 'the mat is my friend'],
+  mat: ['ow', 'i swear i can do a v3', 'that hold is greasy i swear', 'the mat is my friend'],
   again: ['ok again', 'one more go', 'from the start. ok'],
   back: ['ok back on the jug', 'jug restart. thank u'],
   match: 'match it! both hands on the top',
-  sent: 'SENT IT. ok that was my max lol'
+  sent: 'SENT IT. ok that one was easy. kinda'
 };
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -257,7 +257,7 @@ function cardHTML(r, inline) {
   // A first send's best is just its time, so it only shows once there's one to beat.
   const best = r.best == null || !r.prior ? '' : `<div class="${r.isBest ? 'new' : ''}"><b>${clock(r.best)}</b><span>${r.isBest ? 'new best' : 'best'}</span></div>`;
   return '<div class="climb-card" role="group" aria-label="Sent it">' +
-    '<span class="climb-tag">Sent it</span><p class="climb-line">ok that was my max lol</p>' +
+    '<span class="climb-tag">Sent it</span><p class="climb-line">ok that one was easy. kinda</p>' +
     `<div class="climb-stats"><div><b>${clock(r.ms)}</b><span>time</span></div><div><b>${r.tries}</b><span>${r.tries === 1 ? 'try' : 'tries'}</span></div>${best}</div>` +
     `<div class="climb-actions"><button type="button" class="climb-primary" data-go>${UP}Climb again</button>${inline ? '' : '<button type="button" class="climb-quiet" data-done>Done</button>'}</div></div>`;
 }
@@ -302,7 +302,7 @@ export function mount(el) {
     } else if (lastResult) {
       invite.innerHTML = cardHTML(lastResult, true);
     } else {
-      invite.innerHTML = '<p class="climb-ask">climb with me?</p><p class="climb-hint">A V2 straight up this page. Tap a hold inside the ring or drag a hand onto it, and rest on the jugs.</p>' +
+      invite.innerHTML = '<p class="climb-ask">climb with me?</p><p class="climb-hint">A V3 straight up this page. Tap a hold inside the ring or drag a hand onto it, and rest on the jugs.</p>' +
         `<div class="climb-actions"><button type="button" class="climb-primary" data-go>${UP}Start climbing</button></div>`;
     }
     const btn = invite.querySelector('[data-go]');
@@ -337,7 +337,7 @@ export function mount(el) {
     const wall = document.createElement('div');
     wall.className = 'climb-wall';
     wall.setAttribute('role', 'group');
-    wall.setAttribute('aria-label', 'Climbing wall, V2');
+    wall.setAttribute('aria-label', 'Climbing wall, V3');
     const mat = document.createElement('div');
     mat.className = 'climb-mat';
     const reachEl = document.createElement('div');
@@ -417,7 +417,7 @@ export function mount(el) {
     function hudClimb() {
       hud.className = 'climb-hud';
       hud.innerHTML =
-        '<b>V2</b><span class="climb-meter" role="meter" aria-label="Grip" aria-valuemin="0" aria-valuemax="100"><span class="climb-k">Grip</span><span class="climb-bar"><i></i></span></span>' +
+        '<b>V3</b><span class="climb-meter" role="meter" aria-label="Grip" aria-valuemin="0" aria-valuemax="100"><span class="climb-k">Grip</span><span class="climb-bar"><i></i></span></span>' +
         `<span class="climb-clock"><span class="climb-time">0:00.0</span>${toBeat ? `<span class="climb-best">best ${clock(toBeat)}</span>` : ''}</span><span class="climb-tries">Try 1</span><button type="button" class="x">Exit</button>`;
       hud.querySelector('.x').addEventListener('click', () => end(true));
       hudBits = { meter: hud.querySelector('.climb-meter'), bar: hud.querySelector('.climb-bar i'), time: hud.querySelector('.climb-time'), tries: hud.querySelector('.climb-tries'), best: hud.querySelector('.climb-best') };

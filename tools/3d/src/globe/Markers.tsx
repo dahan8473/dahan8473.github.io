@@ -8,7 +8,7 @@ import { MeshBasicNodeMaterial } from 'three/webgpu';
 import { usePiece } from '../lib/mountCanvas';
 import { direction, type Place } from './data';
 import type { Palette } from './palette';
-import { GLOBE_SPIN, useGlobe, useGlobeStore } from './store';
+import { GLOBE_SPIN, hasMedia, useGlobe, useGlobeStore } from './store';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const DOT_PX = 30; // quad size for the dot and its glow
@@ -128,7 +128,7 @@ function Marker({ place, index, palette }: { place: Place; index: number; palett
     if (e.pointerType === 'touch' || !usable()) return;
     e.stopPropagation();
     store.set({ hovered: place.id });
-    root.style.cursor = 'pointer';
+    root.style.cursor = hasMedia(place) ? 'pointer' : '';
   };
   const out = (e: ThreeEvent<PointerEvent>) => {
     if (e.pointerType === 'touch') return;

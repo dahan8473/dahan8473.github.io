@@ -49,16 +49,6 @@
     "sel": ".doc",
     "about": "the resume page. Every entry opens a note with more detail, photos and links when hovered or clicked."
   },
-  "resume-swe": {
-    "page": "/resume/",
-    "sel": "a[href='/resume-swe.pdf']",
-    "about": "PDF of my SWE resume, top of the resume page"
-  },
-  "resume-pm": {
-    "page": "/resume/",
-    "sel": "a[href='/resume-pm.pdf']",
-    "about": "PDF of my product resume, top of the resume page"
-  },
   "western": {
     "page": "/resume/",
     "sel": "[data-t='western']",
@@ -147,7 +137,7 @@
   "kunlun": {
     "page": "/projects/",
     "sel": "[data-t='kunlun']",
-    "about": "Kunlun clothing brand"
+    "about": "Kunlun, my clothing brand built on Chinese mythology. Pre-launch, dropping soon"
   },
   "dejaview": {
     "page": "/projects/",
@@ -192,7 +182,7 @@
   "life": {
     "page": "/hobbies/",
     "sel": "[data-t='life']",
-    "about": "hobbies page, grouped into Body, Mind and Soul. Every hobby has its own page; the ones without much yet are the small links under each group"
+    "about": "hobbies page, grouped into Body, Mind and Soul. The big cards open their hobby's page; the names under Also in each group show a short card when hovered. Every hobby but swimming and speed skating has its own page"
   },
   "play": {
     "page": "/hobbies/",
@@ -212,7 +202,7 @@
   "muaythai": {
     "page": "/hobbies/muay-thai/",
     "sel": "[data-t='muaythai']",
-    "about": "Muay Thai page: I started two years ago when a friend dragged me to our local gym. I was intimidated at first, scared of fighting and of the people there, but I was addicted by the first week. It feels like a physical version of chess and puzzle games. My Instagram feed is Muay Thai highlights, and I hung a bag from Facebook Marketplace in my backyard to train in the mornings. I also coach the beginner class"
+    "about": "Muay Thai page: I started in 2024 when a friend dragged me to our local gym. I was intimidated at first, scared of fighting and of the people there, but I was addicted by the first week. It feels like a physical version of chess and puzzle games. My Instagram feed is Muay Thai highlights, and I hung a bag from Facebook Marketplace in my backyard to train in the mornings. I also coach the beginner class"
   },
   "climbing": {
     "page": "/hobbies/climbing/",
@@ -232,22 +222,22 @@
   "fashion": {
     "page": "/hobbies/fashion/",
     "sel": "[data-t='fashion']",
-    "about": "Fashion page (Kunlun)"
+    "about": "Fashion page: it started when I made my own merch for my club. Now I'm starting my own clothing brand, Kunlun, built on Chinese mythology, dropping soon"
   },
   "chess": {
     "page": "/hobbies/chess/",
     "sel": "[data-t='chess']",
-    "about": "Chess page: I played competitively all through elementary school, competed at regionals and got my rating to 1425 playing against adults, then had to focus on classical guitar. I still play online on chess.com and solve puzzles (rapid rating 1727, best puzzle rating 1840). You can play the head on the page"
+    "about": "Chess page: I played competitively all through elementary school, placed 2nd at BC provincials and got my rating to 1425 playing against adults, then had to focus on classical guitar. I still play online on chess.com and solve puzzles (rapid rating 1727, best puzzle rating 1840). You can play the head on the page"
   },
   "video": {
     "page": "/hobbies/video/",
     "sel": "[data-t='video']",
-    "about": "Video production page: I make videos. Not written up yet, it asks visitors if they do it too"
+    "about": "Video production page: things I made, mostly reels for Tethos. Three reels on it"
   },
   "watercolor": {
     "page": "/hobbies/watercolor/",
     "sel": "[data-t='watercolor']",
-    "about": "Watercolor page: I paint with watercolor. Photos of the paintings coming"
+    "about": "Watercolor page: I paint with watercolor. My koi pond painting is up, and you can tilt the paper"
   },
   "swimming": {
     "page": "/hobbies/",
@@ -312,7 +302,7 @@
   "dashboard-page": {
     "page": "/dashboard/",
     "sel": ".header",
-    "about": "top of the 3D dashboard case study page"
+    "about": "top of the Tethos Island case study page"
   },
   "dashboard-hard-part": {
     "page": "/dashboard/",

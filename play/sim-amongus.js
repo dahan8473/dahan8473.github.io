@@ -1,4 +1,4 @@
-/* Among Us, IRL. Loaded by the projects overlay.
+/* Among Us IRL. Loaded by the projects overlay.
    mount(el) builds the room inside el and returns a cleanup function.
 
    Six conference badges in a room, no server. Every game event (a kill, a

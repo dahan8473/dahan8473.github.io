@@ -19,12 +19,19 @@ export interface Info {
 
 export const PARTS: PartId[] = ['a7r2', 'tamron-17-70', 'xt200', 'mini4k', 'mic-mini'];
 
-/** What a click does: filter photos by a camera, fly the drone, or nothing. */
-export function actionOf(id: PartId): { camera?: CameraId; fly?: boolean } {
-  if (id === 'a7r2' || id === 'tamron-17-70') return { camera: 'a7r2' };
-  if (id === 'xt200') return { camera: 'xt200' };
+/** What a click does: filter photos by a camera that has some (shot), fly the drone, or nothing. */
+export function actionOf(id: PartId, shot: CameraId[]): { camera?: CameraId; fly?: boolean } {
+  const cam: CameraId | null = id === 'a7r2' || id === 'tamron-17-70' ? 'a7r2' : id === 'xt200' ? 'xt200' : null;
+  if (cam) return shot.includes(cam) ? { camera: cam } : {};
   if (id === 'mini4k') return { fly: true };
   return {};
+}
+
+/** The cameras that have photos in photos.json. */
+export async function loadShot(url: string, signal: AbortSignal): Promise<CameraId[]> {
+  const data = await loadJson<{ photos?: { camera?: string }[] }>(url, signal);
+  const ids = new Set((data?.photos ?? []).map((p) => p?.camera));
+  return (['a7r2', 'xt200'] as CameraId[]).filter((id) => ids.has(id));
 }
 
 // Used until gear.json arrives (or if it can't be read).
@@ -62,13 +69,15 @@ export interface KitState {
   pinned: PartId | null;
   /** Camera the photo gallery is filtered to. */
   selected: CameraId | null;
+  /** Cameras with photos; the others have nothing to click through to. */
+  shot: CameraId[];
   /** Bumped to send the drone up. */
   fly: number;
   ready: boolean;
 }
 
 export function createKitStore() {
-  const store = createStore<KitState>({ info: FALLBACK, hovered: null, pinned: null, selected: null, fly: 0, ready: false });
+  const store = createStore<KitState>({ info: FALLBACK, hovered: null, pinned: null, selected: null, shot: [], fly: 0, ready: false });
   return Object.assign(store, {
     refs: { card: null as HTMLDivElement | null, pointer: 'mouse' as string }
   });
@@ -83,7 +92,7 @@ export const useKit = ctx.useSelect;
 
 /** Runs a part's click: filter the gallery to a camera, or fly the drone. */
 export function activate(store: KitStore, id: PartId) {
-  const a = actionOf(id);
+  const a = actionOf(id, store.get().shot);
   if (a.camera) {
     store.set({ selected: a.camera, pinned: null });
     document.dispatchEvent(new CustomEvent('dl:camera', { detail: { id: a.camera } }));

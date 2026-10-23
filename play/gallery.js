@@ -32,7 +32,7 @@ const CSS = `
 .pgal-grid::after { content: ''; flex-grow: 1000000; }
 .pgal-item { flex-grow: var(--ar, 1.33); flex-basis: calc(var(--ar, 1.33) * 180px); min-width: 0; margin: 0; }
 .pgal-open {
-  position: relative; display: block; width: 100%; aspect-ratio: var(--ar, 1.33); padding: 0;
+  position: relative; display: block; width: 100%; aspect-ratio: var(--ar, 1.33); padding: 0; container-type: inline-size;
   border: 0; border-radius: 14px; overflow: hidden; background: var(--fill); color: #fff; font: inherit; text-align: left; cursor: zoom-in;
 }
 .pgal-open:focus-visible { border-radius: 14px; outline-offset: 3px; }
@@ -55,6 +55,11 @@ const CSS = `
 .pgal-meta { display: block; overflow: hidden; color: rgba(255, 255, 255, 0.72); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
 .pgal-meta i { margin: 0 6px; font-style: normal; opacity: 0.6; }
 .pgal-pill { flex: none; padding: 3px 9px; border-radius: 8px; background: rgba(255, 255, 255, 0.18); color: #fff; font-size: 13px; white-space: nowrap; }
+/* A narrow tile: the month goes under the title instead of squeezing it. */
+@container (max-width: 230px) {
+  .pgal-info { flex-direction: column; align-items: flex-start; gap: 6px; padding: 40px 10px 10px; }
+  .pgal-text { width: 100%; }
+}
 .pgal-open:focus-visible :is(.pgal-info, .pgal-go) { opacity: 1; transform: none; }
 @media (hover: hover) {
   .pgal-open:hover :is(.pgal-info, .pgal-go) { opacity: 1; transform: none; }
@@ -186,6 +191,77 @@ function noteText(el, fallback) {
   const n = el.querySelector('.piece-note');
   const t = n ? n.textContent.trim() : '';
   return t && !/^loading/i.test(t) ? t : fallback;
+}
+
+// Clips that loop muted inline (videos.js, hikes.js). Nothing loads until a
+// clip is near the screen, only the most visible one plays (once the page has
+// settled on it for a moment, so scrolling past doesn't start downloads), it
+// pauses when it leaves, and one that scrolls far away drops its download. On phones, with
+// Save-Data on, or with reduced motion nothing autoplays (tapOnly): the poster
+// shows and the caller plays a clip on tap with play(v).
+export function clipWatch() {
+  const conn = navigator.connection;
+  const tapOnly = window.matchMedia('(hover: none), (max-width: 720px), (prefers-reduced-motion: reduce)').matches || !!(conn && conn.saveData);
+  const clips = new Map();
+  let settle = 0;
+  function pick() {
+    if (tapOnly) return;
+    let best = null;
+    for (const [v, c] of clips) if (c.ratio >= 0.5 && (!best || c.ratio > clips.get(best).ratio)) best = v;
+    for (const v of clips.keys()) if (v !== best && !v.paused) v.pause();
+    clearTimeout(settle);
+    if (best && best.paused) settle = setTimeout(() => {
+      const c = clips.get(best);
+      if (!c || c.ratio < 0.5) return;
+      if (!best.getAttribute('src')) best.src = c.src;
+      best.play().catch(() => {});
+    }, 400);
+  }
+  const near = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const v = e.target, c = clips.get(v);
+      if (!c) continue;
+      if (e.isIntersecting) {
+        if (c.poster && !v.poster) {
+          v.poster = c.poster;
+          const img = new Image();
+          img.onload = () => v.classList.add('in');
+          img.src = c.poster;
+        }
+      } else if (v.getAttribute('src')) { v.pause(); v.removeAttribute('src'); v.load(); }
+    }
+  }, { rootMargin: '300px 0px' });
+  const seen = new IntersectionObserver((entries) => {
+    for (const e of entries) { const c = clips.get(e.target); if (c) c.ratio = e.isIntersecting ? e.intersectionRatio : 0; }
+    pick();
+  }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+  return {
+    tapOnly,
+    add(v, src, poster) {
+      v.muted = true;
+      v.loop = true;
+      v.playsInline = true;
+      v.preload = 'none';
+      clips.set(v, { src, poster, ratio: 0 });
+      near.observe(v);
+      seen.observe(v);
+    },
+    // One at a time: playing one pauses the rest.
+    play(v) {
+      const c = clips.get(v);
+      if (!c) return;
+      for (const o of clips.keys()) if (o !== v && !o.paused) o.pause();
+      if (!v.getAttribute('src')) v.src = c.src;
+      v.play().catch(() => {});
+    },
+    stop() {
+      clearTimeout(settle);
+      near.disconnect();
+      seen.disconnect();
+      for (const v of clips.keys()) { v.pause(); v.removeAttribute('src'); v.load(); }
+      clips.clear();
+    }
+  };
 }
 
 // ---- Lightbox ---------------------------------------------------------------
@@ -450,14 +526,14 @@ export function mount(el) {
     return fig;
   }
 
-  // All, then each camera: shown when the photos say which camera took them.
+  // All, then each camera that has photos: shown when the photos say which camera took them.
   function renderBar() {
     bar.textContent = '';
     if (!photos.some((p) => p.camera)) return;
     const tabs = h('div', 'pgal-tabs');
     tabs.setAttribute('role', 'group');
     tabs.setAttribute('aria-label', 'Filter by camera');
-    for (const id of [null, ...Object.keys(CAMERAS)]) {
+    for (const id of [null, ...Object.keys(CAMERAS).filter((c) => photos.some((p) => p.camera === c))]) {
       const t = h('button', 'pgal-tab' + (id === camera ? ' on' : ''));
       t.type = 'button';
       t.setAttribute('aria-pressed', String(id === camera));

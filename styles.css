@@ -261,7 +261,8 @@ a.row:hover .m { transform: translateX(3px); }
 .wall-write { display: none; }
 .write-btn { padding: 0; border: 0; background: none; color: var(--t1); font: inherit; cursor: pointer; }
 .board-notes { position: absolute; inset: 0; }
-.board-status { min-height: 1.6em; margin-top: 14px; color: var(--t2); }
+/* Above the wall, so "tap anywhere to stick it" is never under the fold or the head. */
+.board-status { min-height: 1.6em; margin-bottom: 14px; color: var(--t2); }
 
 .sticky {
   position: absolute;
@@ -291,14 +292,15 @@ a.row:hover .m { transform: translateX(3px); }
 .sticky::before { content: ''; position: absolute; top: -7px; left: 50%; width: 42%; height: 15px; margin-left: -21%; background: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04); transform: rotate(-2deg); pointer-events: none; }
 [data-theme="dark"] .sticky::before { background: rgba(255, 255, 255, 0.16); box-shadow: none; }
 .sticky.lifted::before { display: none; }
-.sticky .msg { flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; max-height: calc(1.45em * 5); line-height: 1.45; overflow-wrap: anywhere; }
+/* --lines is how many whole lines fit on a note at its size (site.js), so the clamp and its ellipsis land on a line. */
+.sticky .msg { flex: none; overflow: hidden; display: -webkit-box; -webkit-line-clamp: var(--lines, 5); -webkit-box-orient: vertical; max-height: calc(1.45em * var(--lines, 5)); line-height: 1.45; overflow-wrap: anywhere; }
 .sticky .by { margin-top: auto; padding-top: 8px; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Hover: it lifts off the wall and straightens up. */
 .sticky:hover, .sticky:focus-visible { transform: translate(var(--x), var(--y)) rotate(0deg) scale(1.06); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06), 0 22px 30px -16px rgba(0, 0, 0, 0.5); z-index: 40; outline: none; }
 .sticky:focus-visible { box-shadow: 0 0 0 2px var(--accent), 0 22px 30px -16px rgba(0, 0, 0, 0.5); }
 .sticky.ghost { z-index: 60; pointer-events: none; transition: none; box-shadow: 0 0 0 1px var(--t3), 0 18px 40px -18px rgba(0, 0, 0, 0.35); }
 .sticky.pending { opacity: 0.6; }
-.sticky.pinned .msg { -webkit-line-clamp: 4; max-height: calc(1.45em * 4); padding-right: 14px; }
+.sticky.pinned .msg { padding-right: 14px; }
 .sticky.pinned::after { content: ''; position: absolute; top: 12px; right: 10px; width: 13px; height: 13px; background: currentColor; opacity: 0.45; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l-1 6 3 3H7l3-3zM12 13v7'/%3E%3C/svg%3E") center / contain no-repeat; }
 
 /* The pad in the corner: a small stack of blank notes and a pen. */
@@ -321,7 +323,7 @@ a.row:hover .m { transform: translateX(3px); }
 [data-theme="dark"] .lift-dim { background: rgba(0, 0, 0, 0.45); }
 .lift-dim.on { opacity: 1; }
 .sticky.lifted { position: fixed; z-index: 81; --note: min(380px, 86vw); padding: 24px; border-radius: 16px; transform: none; font-size: 20px; cursor: default; box-shadow: 0 0 0 1px var(--rule), 0 30px 70px -30px rgba(0, 0, 0, 0.35); }
-.sticky.lifted .msg { -webkit-line-clamp: unset; max-height: none; overflow: auto; }
+.sticky.lifted .msg { flex: 1; -webkit-line-clamp: unset; max-height: none; overflow: auto; }
 .sticky.lifted .by { font-size: 16px; }
 .writing { cursor: default; }
 .writing textarea, .writing input { width: 100%; padding: 0; border: 0; background: transparent; color: var(--t1); font: inherit; line-height: 1.45; resize: none; outline: none; }
@@ -476,7 +478,9 @@ a.row:hover .m { transform: translateX(3px); }
 .hob-more > span:first-child { color: var(--t3); }
 /* Small hobbies with no page: a card on hover, or on tap (focus). */
 .hob-tip { position: relative; cursor: default; text-decoration: underline dotted var(--t3); text-underline-offset: 3px; outline: none; }
-.hob-tip-card { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 10px); width: 220px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); color: var(--fg); font-size: 13px; line-height: 1.45; white-space: normal; opacity: 0; transform: translate(-50%, 6px); transition: opacity 0.18s ease, transform 0.18s ease; pointer-events: none; }
+.hob-tip-card { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 10px); width: 220px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); color: var(--fg); font-size: 13px; line-height: 1.45; white-space: normal; opacity: 0; transform: translate(-50%, 6px); transition: opacity 0.18s ease, transform 0.18s ease, display 0.18s allow-discrete; pointer-events: none; }
+/* Hidden cards take no room, so they can't widen the page on a phone. */
+.hob-tip-card { display: none; }
 .hob-tip-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin-bottom: 10px; border-radius: 8px; }
 .hob-tip-card .tip-video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; margin-bottom: 10px; border-radius: 8px; background: #000; }
 .hob-tip-card .tip-stat { display: block; margin-bottom: 4px; color: var(--t1); font-weight: 500; }
@@ -485,13 +489,15 @@ a.row:hover .m { transform: translateX(3px); }
 .tip-slides img { position: absolute; inset: 0; height: 100%; margin: 0; border-radius: 0; opacity: 0; animation: tip-slide 9s infinite; animation-delay: calc(var(--i) * 3s); }
 @keyframes tip-slide { 0%, 30% { opacity: 1; } 36%, 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .tip-slides img { animation: none; } .tip-slides img:first-child { opacity: 1; } }
-.hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { display: block; opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+@starting-style { .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { opacity: 0; transform: translate(-50%, 6px); } }
 /* A bridge over the gap, so the pointer can reach a link in the card. */
 .hob-tip-card::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 12px; }
 .hob-tip-card a { color: inherit; text-decoration: underline; text-decoration-color: var(--t3); text-underline-offset: 3px; }
 .hob-tip-card a:hover { color: var(--accent); }
 .hob-tip:hover, .hob-tip:focus { color: var(--t1); }
-@media (max-width: 640px) { .hob-tip-card { left: 0; transform: translate(0, 6px); } .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { transform: none; } }
+/* Phones: the card sits above the whole Also row, inside the page, not off the name. */
+@media (max-width: 640px) { .hob-more { position: relative; } .hob-tip { position: static; } .hob-tip-card { left: 0; width: min(220px, 100%); transform: translate(0, 6px); } .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { transform: none; } @starting-style { .hob-tip:hover .hob-tip-card, .hob-tip:focus .hob-tip-card, .hob-tip:focus-within .hob-tip-card { transform: translate(0, 6px); } } }
 @media (prefers-reduced-motion: reduce) { .hob-tip-card { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .hob-pic, .hob-pic img, .hob-go { transition: none; } }
 .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -518,7 +524,7 @@ a.row:hover .m { transform: translateX(3px); }
 .has-photo:hover { color: var(--t1); }
 
 /* Guitar recordings (site.js builds the rows) */
-.track { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.track { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; }
 .track button {
   display: inline-grid;
   place-items: center;
@@ -602,6 +608,8 @@ html.bringing { overflow: hidden; }
   border-top: 1px solid var(--rule);
   color: var(--t3);
 }
+/* Phones: room under the last links for the head, docked bottom right (80x102). */
+@media (max-width: 639px) { .foot { padding-bottom: 130px; } }
 
 /* Case studies (tethos/, rag/, dashboard/, kunlun/) use the same sheet. */
 .case .page { padding-bottom: 0; }
@@ -692,7 +700,6 @@ code { font: 0.9em ui-monospace, 'SF Mono', Menlo, monospace; color: var(--t1); 
   .board-wrap { margin: 0 -20px; border-radius: 0; }
   .wall-write { display: flex; }
   .board { border-radius: 0; }
-  .sticky .msg { -webkit-line-clamp: 4; max-height: calc(1.45em * 4); }
   .sticky.lifted { font-size: 18px; }
   .pad-sheet.top { padding: 12px; }
   .case .entries > .entry { grid-template-columns: 1fr; }

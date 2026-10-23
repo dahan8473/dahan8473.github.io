@@ -117,7 +117,8 @@
         row.querySelector('.t-title').textContent = t.short;
         row.querySelector('.t-by').textContent = t.by;
         row.querySelector('.t-dur').textContent = t.dur;
-        row.querySelector('button').addEventListener('click', function () { toggle(i); });
+        // The whole row plays or pauses (the button inside included); the bar seeks instead.
+        row.addEventListener('click', function (e) { if (!e.target.closest('.t-bar')) toggle(i); });
         // Click the bar to jump around in the piece.
         row.querySelector('.t-bar').addEventListener('click', function (e) {
           var r = e.currentTarget.getBoundingClientRect(), at = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
@@ -259,6 +260,13 @@
       board.style.setProperty('--s', scale.toFixed(3));
       board.style.fontSize = scale < 0.8 ? '14px' : '';
       [].forEach.call(board.querySelectorAll('.sticky'), spot);
+      // How many whole lines of message fit above the name at this size.
+      var s = list.querySelector('.sticky'), by = s && s.querySelector('.by');
+      if (s) {
+        var cs = getComputedStyle(s);
+        var room = s.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (by ? by.scrollHeight : 0);
+        board.style.setProperty('--lines', Math.max(1, Math.floor(room / parseFloat(getComputedStyle(s.querySelector('.msg')).lineHeight))));
+      }
     }
     function render() {
       list.replaceChildren.apply(list, notes.map(function (n) { var li = document.createElement('li'); li.appendChild(sticky(n)); return li; }));
@@ -371,6 +379,9 @@
     var placing = null;
     function startPlacing() {
       var n = { message: draft.message, name: draft.name, x: 0.45, y: 0.4, at: new Date().toISOString() };
+      var touch = window.matchMedia('(pointer: coarse)').matches;
+      // On a phone the wall scrolls sideways: start the note in the middle of what's showing.
+      if (touch) n.x = Math.min(1, Math.max(0, (wrap.scrollLeft + (wrap.clientWidth - NS * scale) / 2) / ((VW - NS) * scale)));
       var ghost = sticky(n);
       ghost.classList.add('ghost');
       ghost.tabIndex = -1;
@@ -378,8 +389,17 @@
       spot(ghost);
       placing = { ghost: ghost, n: n };
       board.classList.add('placing');
-      status.textContent = 'Now click anywhere on the wall to stick it. Arrow keys and Enter work too. Esc to go back.';
-      board.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+      status.textContent = touch ? 'Now tap anywhere on the wall to stick it.' : 'Now click anywhere on the wall to stick it. Arrow keys and Enter work too. Esc to go back.';
+      showBoardAndHint();
+    }
+    // The line above the wall and as much of the wall as fits, below the top bar on phones.
+    function showBoardAndHint() {
+      var bar = window.innerWidth <= 720 ? (document.querySelector('.rail') || { offsetHeight: 0 }).offsetHeight : 0;
+      var top = status.getBoundingClientRect().top - bar - 12;
+      var under = board.getBoundingClientRect().bottom - (window.innerHeight - 16);
+      // The line above the top: scroll back to it. Otherwise bring up the wall's bottom, but never past the line.
+      var dy = top < 0 ? top : Math.min(top, Math.max(under, 0));
+      if (dy) window.scrollBy({ top: dy, behavior: reduce ? 'auto' : 'smooth' });
     }
     function moveTo(clientX, clientY) {
       if (!placing) return;
@@ -1175,10 +1195,10 @@
   var FINDS = [
     { id: 'spar', name: 'Spar the head', done: 'Sparred the head', line: 'Muay Thai, three rounds, light contact.', href: '/hobbies/muay-thai/' },
     { id: 'rally', name: 'Rally the head', done: 'Rallied the head', line: 'Badminton in first person, with one of my rackets.', href: '/hobbies/badminton/' },
-    { id: 'climb', name: 'Climb the page', done: 'Climbed the page', line: 'A V2 route straight up the page.', href: '/hobbies/climbing/' },
+    { id: 'climb', name: 'Climb the page', done: 'Climbed the page', line: 'A V3 route straight up the page.', href: '/hobbies/climbing/' },
     { id: 'chess', name: 'Play the head at chess', done: 'Played the head at chess', line: 'It talks while it plays.', href: '/hobbies/chess/' },
     { id: 'guitar', name: 'Play my guitar', done: 'Played my guitar', line: 'Record a few bars. If it\'s good, the head cries.', href: '/hobbies/guitar/' },
-    { id: 'globe', name: 'Spin the globe', done: 'Spun the globe', line: 'Everywhere I\'ve been. Tap a place for photos.', href: '/hobbies/travel/' },
+    { id: 'globe', name: 'Spin the globe', done: 'Spun the globe', line: 'Everywhere I\'ve been. Spin it.', href: '/hobbies/travel/' },
     { id: 'cat', name: 'Call Meowmeow', done: 'Called Meowmeow', line: 'My cat walks onto the page and lies down.', href: '/hobbies/meowmeow/' },
     { id: 'feed', name: 'Feed the head', done: 'Fed the head', line: 'Drag anything on the page onto its face.' },
     { id: 'talk', name: 'Ask the head something', done: 'Talked to the head', line: 'It knows my stories, not just my resume.', act: 'talk' },
@@ -1214,18 +1234,36 @@
   // that was just clicked may not be open yet, so it also gives it a moment.
   var GAME_OPEN = '.mt-over, .climb-wall, .rl, .bring';
   var gameOn = '';
-  // The head's bus (talk/talk.js) loads after this file.
-  setTimeout(function () {
-    if (!window.dlBus || !window.dlBus.on) return;
+  // The head's bus. talk/talk.js loads after this file and uses this one, so
+  // these listeners are on it however the two files load.
+  if (!window.dlBus) {
+    var subs = {};
+    window.dlBus = {
+      on: function (type, fn) { (subs[type] = subs[type] || []).push(fn); return window.dlBus; },
+      off: function (type, fn) { subs[type] = (subs[type] || []).filter(function (f) { return f !== fn; }); return window.dlBus; },
+      emit: function (type, data) {
+        if (data === undefined) data = {};
+        [type, '*'].forEach(function (k) { (subs[k] || []).slice().forEach(function (fn) { try { fn(data, type); } catch (e) { if (window.console) console.warn('dlBus', type, e); } }); });
+      }
+    };
+  }
+  (function () {
     // A game opening takes the screen: a toast already up goes now, not when its timer runs out.
     window.dlBus.on('game_start', function (d) { gameOn = (d && d.game) || 'game'; hideToast(); });
-    window.dlBus.on('game_end', function (d) { if (!d || !gameOn || d.game === gameOn) gameOn = ''; });
+    window.dlBus.on('game_end', function (d) {
+      if (!d || !gameOn || d.game === gameOn) gameOn = '';
+      // A rally only counts once the shuttle has gone back and forth.
+      if (d && d.game === 'rally' && d.result && d.result.longest >= 2) window.dlFound('rally');
+    });
     window.dlBus.on('page', function () { gameOn = ''; });
-  });
+  })();
+  // Phones: the toast is short, and it waits while the head's chat is open
+  // (the hello folds on a scroll or tap), so the two never stack.
+  function phone() { return window.innerWidth <= 600 || window.matchMedia('(pointer: coarse)').matches; }
   function toast(head, f, waited) {
     clearTimeout(toastWait);
     if (!waited) toastAt = Date.now();
-    if (gameOn || document.querySelector(GAME_OPEN) || Date.now() - toastAt < 1500) { toastWait = setTimeout(function () { toast(head, f, true); }, 700); return; }
+    if (gameOn || document.querySelector(GAME_OPEN) || (phone() && document.querySelector('.dl.chat')) || Date.now() - toastAt < 1500) { toastWait = setTimeout(function () { toast(head, f, true); }, 700); return; }
     if (!toastEl) {
       toastEl = document.createElement('div');
       toastEl.className = 'finds-toast';
@@ -1239,7 +1277,7 @@
     clearTimeout(toastTimer);
     void toastEl.offsetWidth;
     toastEl.classList.add('on');
-    toastTimer = setTimeout(hideToast, 9000);
+    toastTimer = setTimeout(hideToast, phone() ? 4000 : 9000);
   }
   function hideToast() { clearTimeout(toastTimer); if (toastEl) toastEl.classList.remove('on'); }
   // Hovering the toast keeps it up.
@@ -1265,8 +1303,8 @@
     nudge: function (head) { var f = left(true)[0]; if (f) toast(head, f); }
   };
 
-  // Starting the games counts.
-  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['[data-spar]', 'spar'], ['.rk-rally', 'rally'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
+  // Starting the games counts (the rally counts at its end, above).
+  var FIND_CLICKS = [['.mt-start .mt-go', 'spar'], ['[data-spar]', 'spar'], ['[data-bring="guitar"]', 'guitar'], ['[data-cat-call]', 'cat']];
   document.addEventListener('click', function (e) {
     if (!e.target.closest) return;
     FIND_CLICKS.forEach(function (c) { if (e.target.closest(c[0])) window.dlFound(c[1]); });
@@ -1399,6 +1437,9 @@
   function tipOn(e) {
     var tip = e.target.closest && e.target.closest('.hob-tip');
     if (!tip || tip.contains(e.relatedTarget)) return;
+    // The card's pictures load the first time it opens.
+    tip.querySelectorAll('[data-poster]').forEach(function (el) { el.poster = el.getAttribute('data-poster'); el.removeAttribute('data-poster'); });
+    tip.querySelectorAll('[data-src]').forEach(function (el) { el.src = el.getAttribute('data-src'); el.removeAttribute('data-src'); });
     var v = tip.querySelector('video');
     if (v) { v.muted = true; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
     if (tip.getAttribute('data-t') === 'meowmeow' && !catCalled && window.dlCat) { catCalled = true; window.dlCat(); }

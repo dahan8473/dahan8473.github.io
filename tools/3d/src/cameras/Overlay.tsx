@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { usePiece } from '../lib/mountCanvas';
 import { useNarrow } from '../lib/view';
-import { activate, actionOf, PARTS, useKit, useKitStore, type Info, type PartId } from './store';
+import { activate, actionOf, PARTS, useKit, useKitStore, type CameraId, type Info, type PartId } from './store';
 
 const KIND: Record<string, string> = { camera: 'Camera', lens: 'Lens', drone: 'Drone', mic: 'Audio' };
 
@@ -13,8 +13,8 @@ function kindLine(info: Info) {
   return k;
 }
 
-function hint(id: PartId, touch: boolean, pinned: boolean) {
-  const a = actionOf(id);
+function hint(id: PartId, touch: boolean, pinned: boolean, shot: CameraId[]) {
+  const a = actionOf(id, shot);
   const verb = touch ? (pinned ? 'Tap again' : 'Tap') : 'Click';
   if (a.camera) return id === 'tamron-17-70' ? `${verb} to see A7R II photos` : `${verb} to see its photos`;
   if (a.fly) return `${verb} to fly it to the footage`;
@@ -70,8 +70,9 @@ function Card() {
   const id = useKit((s) => s.pinned ?? s.hovered);
   const pinned = useKit((s) => s.pinned !== null);
   const info = useKit((s) => (id ? s.info[id] : null));
+  const shot = useKit((s) => s.shot);
   const touch = store.refs.pointer === 'touch';
-  const h = id ? hint(id, touch, pinned) : '';
+  const h = id ? hint(id, touch, pinned, shot) : '';
   return (
     <div
       className="dl-card"
@@ -102,10 +103,11 @@ function Card() {
 function PartList() {
   const store = useKitStore();
   const info = useKit((s) => s.info);
+  const shot = useKit((s) => s.shot);
   return (
     <ul className="dl-sr" aria-label="The kit">
       {PARTS.map((id) => {
-        const a = actionOf(id);
+        const a = actionOf(id, shot);
         const label = info[id].name + (a.camera && id !== 'tamron-17-70' ? ': show photos' : a.fly ? ': fly to the footage' : '');
         return (
           <li key={id}>

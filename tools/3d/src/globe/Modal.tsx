@@ -95,25 +95,17 @@ function Dialog({ place }: { place: Place }) {
           {place.for && <p className="gm-for">{place.for}</p>}
           {place.note && norm(place.note) !== norm(place.for) && <p className="gm-note">{place.note}</p>}
 
-          <section className="gm-sec" aria-label="Videos">
-            <p className="gm-label">Videos</p>
-            {videos.length ? (
+          {videos.length > 0 && (
+            <section className="gm-sec" aria-label="Videos">
+              <p className="gm-label">Videos</p>
               <div className="gm-videos">
                 {videos.map((id) =>
                   CLIP.test(id) ? <Clip key={id} src={id} title={place.name} /> : <LiteYouTube key={id} id={id} title={place.name} />
                 )}
               </div>
-            ) : (
-              <p className="gm-empty">No videos yet.</p>
-            )}
-          </section>
-
-          {photos.length === 0 && (
-            <section className="gm-sec" aria-label="Photos">
-              <p className="gm-label">Photos</p>
-              <p className="gm-soon">Coming soon.</p>
             </section>
           )}
+
           {photos.length > 0 && (
             <section className="gm-sec" aria-label="Photos">
               <p className="gm-label">Photos</p>

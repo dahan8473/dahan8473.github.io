@@ -83,11 +83,10 @@
     // Keyed by target id (talk/targets.json). Fetching something to the cursor
     // only happens when they asked, or when it clearly fits who they are.
     yank: {
-      'resume-swe': "psst. recruiter? resume's right here",
       'resume-door': "psst. recruiter? resume's right here",
       rag: "ooo this one's good, give it a click",
       dashboard: 'i built a whole 3D game for this, you should take a look',
-      kunlun: 'i made a clothing brand. based on chinese mythology. click',
+      kunlun: "i'm starting a clothing brand. based on chinese mythology, dropping soon. click",
       github: 'take a look at my commits here!',
       hackthenorth: 'this one won its category at hack the north. just saying...',
       email: "here's my email. talk to me here!"
@@ -101,8 +100,7 @@
     point: {
       nav: 'everything about me is in this bar!',
       guitar: 'these are real recordings of me playing! you can listen while you browse the site',
-      now: "here's a summary of what i'm doing rn",
-      'resume-swe': "resume's up here if you wanna keep it :)"
+      now: "here's a summary of what i'm doing rn"
     },
     roam: {
       build: 'i built all of these projects. ask me which one made me cry',
@@ -116,7 +114,7 @@
     // The pitch: up close, for starting a game (see pitch()).
     pitch: {
       spar: { line: "spar me? three rounds, light contact. i'll go easy 🥊", yes: "let's go", no: 'not today', ok: 'bet. gloves on' },
-      climb: { line: "climb the page with me? it's a v2, straight up", yes: "let's climb", no: 'maybe later', ok: 'ok chalk up' },
+      climb: { line: "climb the page with me? it's a v3, straight up", yes: "let's climb", no: 'maybe later', ok: 'ok chalk up' },
       chess: { line: 'play me? you get white. i talk a lot while i play', yes: "you're on", no: 'maybe later', ok: 'your move ♟️' },
       rally: { line: "rally me? first person, my racket's in your hand 🏸", named: (n) => `rally me with the ${n}? first person, it's in your hand 🏸`, yes: 'rally', no: 'just looking', ok: 'ok serve it up' },
       later: "ok ok. tap me when you're ready",
@@ -152,7 +150,7 @@
     light: 'flashbang 😭 my eyes',
     rightclick: 'right click? what are you gonna do, save my face? 😳',
     copy: 'copying my stuff? go for it',
-    print: "no way you're printing my website ON PAPER. you can just download my resume you know",
+    print: "no way you're printing my website ON PAPER",
     squish: "i'm claustrophobic you know",
     wake: "huh? oh. i wasn't sleeping",
     mic: "oh you're actually talking to me 😳 hi",
@@ -168,9 +166,9 @@
       genesis: 'genesis was our demo day. 260 people came to watch students demo software for nonprofits',
       wfn: "this was the first student club i was in! while i was VP i hosted ontario's largest hackathon education event!",
       'tethos-platform': "i built this whole game solo. the title screen is live at play.tethos.ca, it's whatever time it is in london rn",
-      hackthenorth: 'ooo this was my first hardware project! it was really fun running around the hackathon at night testing it with my teammates',
+      hackthenorth: 'ooo this was my first hardware hackathon! it was really fun running around at night testing it with my teammates',
       'this-site': "that's me! well, the site i live on. ask me how i reply so fast",
-      tethotchi: 'a tiny tv keychain pet for tsi merch. the board and the case are all code, first five are getting built next',
+      tethotchi: 'a tiny tv keychain pet for tethos merch. the board and the case are all code, first five are getting built next',
       biopilot: 'this was the first hackathon i won!',
       kunlun: "my clothing brand. i'm still working on the pieces for the first drop rn",
       'rag-card': 'added a rag service cuz i wanna keep a centralized knowledge base for future years!',
@@ -191,7 +189,7 @@
     },
     // The Among Us overlay: on open, one nudge if they don't try the demo, and what to try first in it.
     amongus: {
-      open: "ahh this was my first hardware project! we were running around hack the north at 3am testing range lol. the demo's right under the photos if you wanna try it",
+      open: "ahh this was my first hardware hackathon! we were running around hack the north at 3am testing range lol. the demo's right under the photos if you wanna try it",
       nudge: "psst, you can actually play it. hit see it work 👀",
       demo: "drag your badge around! the lines are radio links, no server. then hit play as impostor and get someone inside your dotted circle 😈"
     },
@@ -268,7 +266,7 @@
         yes: 'ooo ok, then you know the drill', no: "that's ok, everyone starts somewhere"
       },
       travel: {
-        say: "i've been to 8 countries so far! fun fact, i've been homeless in all 8 of them 😭",
+        say: "i've been to 8 countries so far! fun fact, i've gotten stranded in all 8 😭",
         ask: 'where are you from? tap it on the globe',
         type: 'or just type it, either works',
         been: (p) => `no way, i've been to ${p.name}!` + (p.id === 'vancouver' ? " that's home!" : ''),
@@ -310,7 +308,7 @@
     tour: [
       ['/', 'now', "okay! quick tour. this is home, it's just me saying hi"],
       ['/resume/', 'jdpower', 'this is my resume. hover over a line and the story behind it shows up on the side'],
-      ['/projects/', 'hackthenorth', "stuff i've built. this one was my first hardware project"],
+      ['/projects/', 'hackthenorth', "stuff i've built. this one was my first hardware hackathon"],
       ['/hobbies/', 'life', 'and the stuff i do for fun'],
       ['/brain/', 'brain', "this is my second brain. everything i know about me, as a map you can drag around"],
       ['/notes/', 'wall', 'you can leave a note on the wall before you go :)']
@@ -983,6 +981,7 @@
   }
   // A chat the head opened on its own, that they never answered: put it away quietly.
   function tuck() {
+    compactOff();
     chatOn = false;
     S.open = false;
     S.auto = false;
@@ -1645,6 +1644,7 @@
     (chatOn && !talked() && !choicesEl.hidden && choicesEl.dataset.kind === 'intro' && now() - hear.introAt < 10000);
 
   async function openChat() {
+    compactOff();
     interrupt();
     if (giveBack) giveBack();
     wake();
@@ -1687,16 +1687,49 @@
   }
   // Chat the head opens itself (the hello, a hobby page's question). It
   // stays its own until they answer, so leaving tucks it away (tuck()).
-  function openFor() {
+  // small: on phones it's the small version (compactOn()).
+  function openFor(small = true) {
     if (chatOn) return;
     chatOn = true;
     S.open = true;
     S.auto = true;
     save();
     root.classList.add('chat');
+    if (small && phone()) compactOn();
     goHome(420);
     showTalk();
     showForm();
+  }
+  // Phones: a chat the head opens itself is one small bubble with small choices
+  // beside the head (talk.css .dl.compact), and it folds back into the head as
+  // soon as they scroll or tap anywhere else. Tapping the bubble, a choice or
+  // the head opens the whole chat; after it folds, tapping the head brings the
+  // hello and its choices back (openChat, greet).
+  const phone = () => innerWidth <= 600 || matchMedia('(pointer: coarse)').matches;
+  let unwatch = null;
+  function compactOn() {
+    compactOff();
+    root.classList.add('compact');
+    const y0 = scrollY;
+    const onScroll = () => { if (Math.abs(scrollY - y0) > 24) foldUp(); };
+    const onDown = (e) => { if (!root.contains(e.target)) foldUp(); };
+    addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('pointerdown', onDown, true);
+    unwatch = () => { removeEventListener('scroll', onScroll); document.removeEventListener('pointerdown', onDown, true); };
+  }
+  function compactOff() {
+    root.classList.remove('compact');
+    if (unwatch) { unwatch(); unwatch = null; }
+  }
+  const compact = () => root.classList.contains('compact');
+  // Folded on this page: its own question doesn't pop up right after.
+  let folded = -1;
+  function foldUp() {
+    compactOff();
+    folded = pageTok;
+    // The hello (or the question) still waiting to be said goes too, so it can't come back as a loose bubble.
+    hear.q = hear.q.filter((u) => { if (u.pri <= PRI.page) { discard(u, 'fold'); return false; } return true; });
+    if (chatOn) closeChat(null, 'fold');
   }
   async function intro() {
     openFor();
@@ -1709,6 +1742,7 @@
     if (innerWidth < 641 && chatOn && t && !root.contains(t) && t.matches('input, textarea')) closeChat(null);
   });
   function closeChat(text = LINES.close, id = 'close') {
+    compactOff();
     touring = false;
     dropDraft();
     life.read = false;
@@ -2481,7 +2515,7 @@
   // out. No: would they want to try? Typed answers go to the brain, which
   // knows to bring it with [[bring:guitar]].
   async function askGuitar(tok = pageTok, tries = 0) {
-    if (here !== '/hobbies/guitar/' || S.quiet || tok !== pageTok || pageDone.guitar === tok || seenPage('guitar')) return;
+    if (here !== '/hobbies/guitar/' || S.quiet || tok !== pageTok || folded === tok || pageDone.guitar === tok || seenPage('guitar')) return;
     if (!document.querySelector('main [data-later="guitar"]:not([data-out])')) return;
     if (busyForPage()) { setTimeout(() => askGuitar(tok, tries), 250); return; }
     interrupt(true);
@@ -2524,7 +2558,7 @@
   let places = null;
   async function askPage(tok = pageTok, tries = 0) {
     const id = ASK_PAGES[here];
-    if (!id || S.quiet || tok !== pageTok || pageDone[id] === tok || seenPage(id)) return;
+    if (!id || S.quiet || tok !== pageTok || folded === tok || pageDone[id] === tok || seenPage(id)) return;
     if (busyForPage()) { setTimeout(() => askPage(tok, tries), 250); return; }
     const L = LINES.ask[id];
     const mark = () => { noticed(id); markSeen(id); };
@@ -2912,7 +2946,7 @@
     if (tok === pageTok && !S.pets) setTimeout(() => petsAsk(tok), 700);
   }
   async function petsAsk(tok, tries = 0) {
-    if (tok !== pageTok || S.quiet || S.pets) return;
+    if (tok !== pageTok || S.quiet || S.pets || folded === tok) return;
     if (busyForPage()) { setTimeout(() => petsAsk(tok, tries), 250); return; }
     openFor();
     const ok = await say(LINES.catPage.ask, { id: 'ask:pets', onStart: () => { S.small = [...new Set([...(S.small || []), 'pets'])]; save(); } });
@@ -2941,7 +2975,7 @@
     try { localStorage.setItem('dl-inbox-seen', fresh[fresh.length - 1].at); } catch (e) {}
     interrupt();
     wake();
-    openFor();
+    openFor(false);
     setFace('happy', 2500);
     await say(LINES.replied(fresh[fresh.length - 1].body, fresh.length > 1), { id: 'replied', pri: PRI.react, ctx: null, ttl: 30000 });
   }
@@ -3339,9 +3373,12 @@
       if (drag.moved) { drag.moved = false; return; }
       const later = S.pitchLater && PITCHES[S.pitchLater] && PITCHES[S.pitchLater].page === here;
       if (!chatOn && later && !pitching) { pitch(S.pitchLater, { force: true, again: true }); return; }
-      if (chatOn) poke();
+      if (chatOn && compact()) { compactOff(); if (fine) input.focus({ preventScroll: true }); }
+      else if (chatOn) poke();
       else openChat();
     });
+    // The small phone chat: tapping into it (a choice, the words) opens it all.
+    talk.addEventListener('click', (e) => { if (compact() && !e.target.closest('.dl-tools')) compactOff(); }, true);
     headBtn.addEventListener('pointerdown', grab);
     headBtn.addEventListener('pointermove', dragMove);
     headBtn.addEventListener('pointerup', drop);
@@ -3454,8 +3491,6 @@
     document.addEventListener('copy', () => react('copy', LINES.copy, 1800, 'happy'));
     addEventListener('beforeprint', () => {
       react('print', LINES.print);
-      const pdf = find('resume-swe');
-      if (pdf && !S.once.includes('print-fetch')) { S.once.push('print-fetch'); setTimeout(() => yank(pdf, { hold: 7000 }), 600); }
     });
   }
 

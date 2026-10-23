@@ -4,7 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { Vector3 } from 'three';
 import { worldDir } from './Rig';
-import { coverOf, useGlobe, useGlobeStore } from './store';
+import { coverOf, hasMedia, useGlobe, useGlobeStore } from './store';
 
 const RADIUS = 1.012;
 const GAP = 18;
@@ -16,6 +16,9 @@ export function Card() {
   const pinned = useGlobe((s) => s.pinned !== null && s.pinned === id);
   const place = useGlobe((s) => s.places.find((p) => p.id === id));
   const photos = place ? coverOf(place) : [];
+  // With nothing to open, the card is the whole thing: the place and its note.
+  const media = !!place && hasMedia(place);
+  const line = place && (media ? place.for : place.note || place.for);
   return (
     <div
       className={'g-card' + (pinned ? ' pinned' : '')}
@@ -37,9 +40,8 @@ export function Card() {
           <div className="g-card-text">
             <p className="g-card-name">{place.name}</p>
             {place.date && <p className="g-card-date">{place.date}</p>}
-            {place.for && <p className="g-card-for">{place.for}</p>}
-            {photos.length === 0 && <p className="g-card-soon">Photos coming soon</p>}
-            {pinned && <p className="g-card-more">Tap for more</p>}
+            {line && <p className="g-card-for">{line}</p>}
+            {pinned && media && <p className="g-card-more">Tap for more</p>}
           </div>
         </>
       )}

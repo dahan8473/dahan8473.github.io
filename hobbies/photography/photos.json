@@ -2,6 +2,26 @@
   "_how": "Photos and clips I took. src under /media/photos/ (or /media/travel/) for a photo, video + poster for a clip. title shows on the card, alt is required, camera is xt200 or a7r2.",
   "photos": [
     {
+      "video": "/media/travel/riviera/nice-sea-friends.mp4",
+      "poster": "/media/travel/riviera/nice-sea-friends.webp",
+      "w": 1280,
+      "h": 720,
+      "title": "Watching the sea",
+      "alt": "Three friends looking out over the sea in Nice, one of them taking a photo",
+      "camera": "a7r2",
+      "date": "2026-06-09"
+    },
+    {
+      "video": "/media/travel/riviera/nice-dome-gull.mp4",
+      "poster": "/media/travel/riviera/nice-dome-gull.webp",
+      "w": 1280,
+      "h": 720,
+      "title": "Gull on the dome",
+      "alt": "A seagull perched on top of a tiled dome in Nice, a flag with a red eagle waving beside it",
+      "camera": "a7r2",
+      "date": "2026-06-09"
+    },
+    {
       "video": "/media/photos/sunset-silhouettes.mp4",
       "poster": "/media/photos/sunset-silhouettes.webp",
       "w": 1280,

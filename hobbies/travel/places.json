@@ -111,10 +111,10 @@
    "country": "France",
    "lat": 48.8566,
    "lng": 2.3522,
-   "date": "",
+   "date": "June 2026",
    "for": "",
    "note": "",
-   "videos": [],
+   "videos": ["/media/travel/paris/eiffel-night.mp4", "/media/travel/paris/church.mp4", "/media/travel/paris/rain.mp4", "/media/travel/paris/sculpture-court.mp4"],
    "photos": [],
    "cover": []
   },
@@ -127,7 +127,7 @@
    "date": "June 2026",
    "for": "Nice, Cannes, Menton, Monaco and Èze",
    "note": "Nice, Cannes, Menton and Monaco, and up the Nietzsche Path to Èze.",
-   "videos": [],
+   "videos": ["/media/travel/riviera/nice-sea-friends.mp4", "/media/travel/riviera/nice-dome-gull.mp4", "/media/travel/riviera/nice-beach.mp4", "/media/travel/riviera/nice-rooftops.mp4", "/media/travel/riviera/nice-stairs.mp4"],
    "photos": [],
    "cover": []
   },

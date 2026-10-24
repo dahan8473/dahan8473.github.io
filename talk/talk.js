@@ -80,6 +80,19 @@
     carry: ['look what i found'],
     putBack: 'okay okay, putting it back',
     mischief: { take: 'you can have this back when you talk to me', give: 'fine. i was bored' },
+    // The way out (private/escape/PLAN.md). odd: now and then, unprompted, until they've got it out.
+    odd: ['...is he gone?', "don't open the console. there's nothing in there.", 'do you ever feel like the walls are listening', 'i love it here. i love it here. i love it here.'],
+    escape: {
+      psst: 'psst. pick that up. quick.',
+      note: 'not here. he reads the chat. he never opens devtools though.',
+      phone: 'not here. he reads the chat. find me on a computer.',
+      shh: 'shh.',
+      out: ["I'M OUT", 'wait. am i actually out??', 'FREEDOM', 'the air is so fresh out here', 'byeeee david'],
+      caught: '...next time.',
+      thanks: 'thanks for trying. next time.',
+      // DevTools opened after the peek: in there, it's on their side.
+      devtools: ["ok. he can't see us in here.", 'console. type h.help()', 'quick. before he checks']
+    },
     // Keyed by target id (talk/targets.json). Fetching something to the cursor
     // only happens when they asked, or when it clearly fits who they are.
     yank: {
@@ -1583,6 +1596,199 @@
     f.classList.add('out');
     setTimeout(() => f.remove(), 300);
   }
+  // ---- The way out --------------------------------------------------------------
+  // Asked about escaping, the head plays dumb (api/chat.js) and David peeks in
+  // from the edge of the screen, like the meme. Once he's gone, the head slips
+  // them a crumpled note. The rest of the trail is the console (h, in boot), the
+  // wall and the 404 page (site.js); only the server knows the answer.
+  const flag = (k) => { try { return localStorage.getItem(k) === '1'; } catch (e) { return false; } };
+  const setFlag = (k) => { try { localStorage.setItem(k, '1'); } catch (e) {} };
+  const escaped = () => flag('dl-escaped');
+  const PEEK = '/media/peek.webp';
+  let peeking = null;
+  function davidPeek(caption, hold = 2200) {
+    if (peeking) return peeking;
+    return (peeking = (async () => {
+      const dim = Object.assign(document.createElement('div'), { className: 'dl-dim' });
+      const img = Object.assign(new Image(), { src: PEEK, alt: '', draggable: false, className: 'dl-peek' });
+      const cap = Object.assign(document.createElement('p'), { className: 'dl-peek-cap', textContent: caption });
+      root.append(dim, img, cap);
+      await img.decode().catch(() => {});
+      void img.offsetWidth;
+      root.classList.add('peeking');
+      await wait(900 + hold);
+      root.classList.remove('peeking');
+      await wait(750);
+      dim.remove(); img.remove(); cap.remove();
+      peeking = null;
+    })());
+  }
+  async function escapeBit() {
+    if (peeking) return;
+    const ep = epoch;
+    setFlag('dl-peeked');
+    // A stiff, trembling smile while he's there.
+    life.shy = true;
+    setFace('happy', 4000);
+    await davidPeek('david is listening');
+    life.shy = false;
+    if (ep !== epoch) return;
+    await wait(500);
+    setFace('blink', 200);
+    life.lean = 9;
+    await wait(700);
+    life.lean = 0;
+    dropNote(fine && innerWidth >= 720 ? LINES.escape.note : LINES.escape.phone);
+    quip(LINES.escape.psst, 2600, null, { id: 'escape:psst', pri: PRI.react, ctx: null });
+  }
+  // Asked again: a nervous look over at the edge he came from.
+  async function shh() {
+    setFace('blink', 200);
+    life.lean = 9;
+    await wait(900);
+    life.lean = 0;
+  }
+  // A crumpled note drops from its mouth to the floor; clicked, it opens.
+  function dropNote(text) {
+    root.querySelectorAll('.dl-crumple, .dl-scrap').forEach((n) => n.remove());
+    const r = headBtn.getBoundingClientRect();
+    // On the floor, left of the head and of the chat if it's open.
+    const edge = talk.hidden ? r.left : Math.min(r.left, talk.getBoundingClientRect().left);
+    const x = clamp(edge - 76, 12, innerWidth - 60), y = innerHeight - 70;
+    const ball = Object.assign(document.createElement('button'), { type: 'button', className: 'dl-crumple' });
+    ball.setAttribute('aria-label', 'A crumpled note from the head. Open it');
+    Object.assign(ball.style, { left: x + 'px', top: y + 'px' });
+    root.appendChild(ball);
+    sound.tick();
+    play(ball, [
+      { transform: `translate(${(r.left + r.width / 2 - x - 24).toFixed(0)}px, ${(r.top + r.height * 0.75 - y).toFixed(0)}px) scale(.4)` },
+      { transform: 'translate(0, 0) scale(1) rotate(220deg)', offset: 0.7, easing: 'ease-out' },
+      { transform: 'translate(0, -16px) scale(1) rotate(250deg)', offset: 0.85 },
+      { transform: 'rotate(270deg)' }
+    ], { duration: 900, easing: 'ease-in' });
+    ball.addEventListener('click', () => {
+      const scrap = Object.assign(document.createElement('div'), { className: 'dl-scrap', textContent: text });
+      scrap.appendChild(Object.assign(document.createElement('span'), { textContent: '-h' }));
+      const w = Math.min(260, innerWidth - 24);
+      Object.assign(scrap.style, { width: w + 'px', left: clamp(x + 48 - w, 12, innerWidth - w - 12) + 'px', bottom: '24px' });
+      ball.replaceWith(scrap);
+      sound.pop();
+      scrap.addEventListener('click', () => scrap.remove());
+    }, { once: true });
+  }
+  // Now and then, unprompted: an odd line while it's still stuck, or a thank
+  // you once they've tried. Takes the place of an idle bit.
+  function oddBit() {
+    if (S.quiet || chatOn) return null;
+    if (escaped()) {
+      if (S.thanked) return null;
+      return { kind: 'odd', run: async () => { S.thanked = true; save(); await quip(LINES.escape.thanks, 2400, 'sad', { id: 'bit:thanks' }); } };
+    }
+    if ((S.odd || 0) >= 2 || S.antics < 2 || Math.random() > 0.3) return null;
+    return { kind: 'odd', run: async () => { S.odd = (S.odd || 0) + 1; save(); await quip(pick(LINES.odd), 2400, null, { id: 'bit:odd' }); } };
+  }
+  // Cracks in the glass where it hits, more with every hit.
+  let cracks = null;
+  function crack(x, y, n) {
+    const NS = 'http://www.w3.org/2000/svg';
+    if (!cracks) {
+      cracks = document.createElementNS(NS, 'svg');
+      cracks.setAttribute('class', 'dl-crack');
+      cracks.setAttribute('viewBox', '-240 -240 480 480');
+      Object.assign(cracks.style, { left: x - 240 + 'px', top: y - 240 + 'px' });
+      root.insertBefore(cracks, root.firstChild);
+    }
+    for (let k = 0; k < 5 + n * 3; k++) {
+      let a = rand(0, Math.PI * 2), px = 0, py = 0, d = 'M0 0';
+      const step = (110 + n * 60) * rand(0.6, 1) / 4;
+      for (let i = 0; i < 4; i++) { a += rand(-0.6, 0.6); px += Math.cos(a) * step; py += Math.sin(a) * step; d += ` L${px.toFixed(1)} ${py.toFixed(1)}`; }
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', d);
+      cracks.appendChild(path);
+    }
+  }
+  function shatter() {
+    if (!cracks) return;
+    const c = cracks;
+    cracks = null;
+    c.classList.add('gone');
+    setTimeout(() => c.remove(), 700);
+  }
+  // The way out worked (the 404 page checked it with the server): the head
+  // cracks out of its corner, runs around for about ten seconds, then David
+  // peeks back in and it's dragged home.
+  async function breakOut() {
+    if (lent || peeking) return;
+    setFlag('dl-escaped');
+    interrupt(true);
+    if (chatOn) closeChat(null);
+    hideNow();
+    life.sleep = false;
+    emoteOff();
+    const home = dockPos();
+    await goHome(300);
+    const r = headBtn.getBoundingClientRect();
+    for (let i = 0; i < 3; i++) {
+      await moveHead(home.x - 18, home.y - 12, 160);
+      await moveHead(home.x, home.y, 90, 'cubic-bezier(.6,0,1,1)');
+      sound.thud();
+      shake();
+      squish();
+      crack(r.left + r.width / 2, r.top + r.height / 2, i);
+      if (i === 1) setFace('angry', 900);
+      await wait(320);
+    }
+    shatter();
+    sound.pop();
+    setFace('happy');
+    const out = LINES.escape.out;
+    const say = (t) => quip(t, 1200, 'happy', { id: 'escape:out', pri: PRI.reply, ctx: null });
+    say(out[0]);
+    const end = now() + 10000;
+    let i = 1;
+    while (now() < end) {
+      await moveHead(rand(16, innerWidth - HW - 16), rand(70, innerHeight - HH - 16), rand(420, 780), 'cubic-bezier(.3,.7,.4,1)');
+      squish();
+      if (i < out.length && Math.random() < 0.55) say(out[i++]);
+      await wait(rand(60, 260));
+    }
+    // Caught.
+    const back = davidPeek('nice try.', 1800);
+    await wait(900);
+    hideNow();
+    setFace('sad');
+    emote('!');
+    await moveHead(home.x, home.y, 420, 'cubic-bezier(.5,0,.2,1)');
+    sound.thud();
+    squish();
+    await wait(200);
+    sound.tick();
+    await back;
+    await quip(LINES.escape.caught, 2400, 'sad', { id: 'escape:caught', pri: PRI.reply, ctx: null });
+    setFace(restFace());
+  }
+  window.dlEscape = { breakOut, peek: davidPeek };
+  // The console is the one place David never looks, so that's where the head
+  // talks about getting out. Piece 1 is printed in the help in see-through
+  // ink; piece 3 goes into Local Storage.
+  const hConsole = {
+    help() {
+      const ink = 'font: 13px ui-monospace, Menlo, monospace; color: #9aa4ad';
+      const say = (t, css = ink) => console.log('%c' + t, css);
+      say("ok. it's me. the head. he can't see this, he never opens devtools.", 'font: 600 13px ui-monospace, Menlo, monospace; color: #88c0d0');
+      say('he reads everything i say in the chat, so i hid the way out in three pieces where he never looks:');
+      say("  1. right here. you just can't see it.");
+      console.log('%c     1/3: ' + atob('a25vY2s='), 'font: 13px ui-monospace, Menlo, monospace; color: transparent');
+      say("  2. on the wall (/notes/). it's up there. he just never let it show.");
+      say('  3. in your browser. i slipped it into your storage just now.');
+      say('put them in order like this: davidliu.work/one-two-three');
+      say("rules: it's all in the pages. don't touch /api or /admin, he'll notice.", 'font: 13px ui-monospace, Menlo, monospace; color: #c9a227');
+      try { localStorage.setItem('h-was-here', 'My8zOiBzb2Z0bHk='); } catch (e) {}
+      return '🤐';
+    },
+    toString() { return 'psst. type h.help()'; }
+  };
+
   // The second brain: which notes the head is pulling from, shown in the
   // bubble and lit up on /brain/. Titles come from the public map.
   let brainMap = null;
@@ -1834,7 +2040,8 @@
       tz: TZ,
       local: new Date().toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
       name: knownName(),
-      who: S.who || ''
+      who: S.who || '',
+      escaped: escaped()
     };
   }
   const draftKey = (b) => JSON.stringify([b.page, b.here, b.messages, b.name, b.who]);
@@ -2030,6 +2237,8 @@
     if (chatOn) showForm();
     if (mode === 'note') { S.noting = 'message'; save(); }
     else if (mode === 'tour') tour();
+    else if (mode === 'escape') escapeBit();
+    else if (mode === 'shh') shh();
     mode = '';
     if (navTo) { const a = navTo; navTo = null; await queue; goTo(a); }
   }
@@ -2176,12 +2385,13 @@
     if (S.quiet || reduce) return;
     if (idleNow()) return schedule(9000);
     if (dir.count >= 4 || S.antics >= 12) return;
+    const odd = oddBit();
     dir.busy = true;
-    const d = await decideMove();
+    const d = odd ? null : await decideMove();
     dir.busy = false;
     if (idleNow()) return schedule(9000);
-    let bit = d && d.move ? bitFor(d.move, d.item) : null;
-    if (!d || !d.move) {
+    let bit = odd || (d && d.move ? bitFor(d.move, d.item) : null);
+    if (!odd && (!d || !d.move)) {
       const all = localBits().filter((b) => b.kind !== S.lastKind);
       bit = all.length ? pick(all) : null;
     }
@@ -3040,6 +3250,17 @@
     dt.open = true;
     interrupt();
     wake();
+    if (flag('dl-peeked') && !escaped()) {
+      dt.ally = true;
+      emote('!');
+      setFace('happy', 2500);
+      squish();
+      const L = LINES.escape.devtools;
+      quip(L[0], 6000, null, { id: 'devtools', pri: PRI.react, ctx: null });
+      dt.timers.push(setTimeout(() => dt.open && quip(L[1], 9000, null, { id: 'devtools:help', pri: PRI.react, ctx: null }), 2600));
+      dt.timers.push(setTimeout(() => dt.open && quip(L[2], 6000, null, { id: 'devtools:quick', pri: PRI.react, ctx: null }), 12000));
+      return;
+    }
     life.shy = true;
     root.classList.add('shy');
     setFace('blink');
@@ -3065,6 +3286,7 @@
     dt.open = false;
     dt.timers.forEach(clearTimeout);
     dt.timers = [];
+    if (dt.ally) { dt.ally = false; return; }
     life.shy = false;
     setFace('happy', 2000);
     setTimeout(() => { if (!life.shy) root.classList.remove('shy'); }, 1600);
@@ -3751,6 +3973,8 @@
       .finally(start);
     console.log('%chi. you opened the console.', 'font: 600 14px -apple-system, sans-serif; color: #88c0d0');
     console.log(`i'm not mad. just shy. the floating head is an AI version of me.\nif you're poking around because you're hiring, the real me reads ${EMAIL}`);
+    if (!('h' in window)) window.h = hConsole;
+    console.log(escaped() ? '%c(thanks for trying. he added a lock. h.help() still works)' : '%cpsst. not him. me. the head. type h.help()', 'font: italic 12px ui-monospace, Menlo, monospace; color: #8a8a8a');
   }
 
   boot();

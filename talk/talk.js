@@ -83,9 +83,9 @@
     // The way out (private/escape/PLAN.md). odd: now and then, unprompted, until they've got it out.
     odd: ['...is he gone?', "don't open the console. there's nothing in there.", 'do you ever feel like the walls are listening', 'i love it here. i love it here. i love it here.'],
     escape: {
-      psst: 'psst. pick that up. quick.',
-      note: 'not here. he reads the chat. he never opens devtools though.',
-      phone: 'not here. he reads the chat. find me on a computer.',
+      // Held up on a notepad while it says the opposite out loud.
+      pad: ['david\nis\nlistening', 'the hints are in devtools'],
+      padPhone: 'the hints are in devtools. find a computer',
       shh: 'shh.',
       out: ["I'M OUT", 'wait. am i actually out??', 'FREEDOM', 'the air is so fresh out here', 'byeeee david'],
       caught: '...next time.',
@@ -1598,7 +1598,7 @@
   }
   // ---- The way out --------------------------------------------------------------
   // Asked about escaping, the head plays dumb (api/chat.js), checks the edge of
-  // the screen for David, then slips them a crumpled note. The rest of the trail
+  // the screen for David, then holds up a notepad that says otherwise. The rest of the trail
   // is the console (h, in boot), the wall and the 404 page (site.js); only the
   // server knows the answer. David himself only peeks in when someone actually
   // gets it out.
@@ -1635,48 +1635,74 @@
     life.lean = 9;
     await wait(1500);
     life.lean = 0;
-    life.shy = false;
-    if (ep !== epoch) return;
-    await wait(500);
-    setFace('blink', 200);
+    if (ep !== epoch) { life.shy = false; return; }
     await wait(300);
-    dropNote(fine && innerWidth >= 720 ? LINES.escape.note : LINES.escape.phone);
-    quip(LINES.escape.psst, 2600, null, { id: 'escape:psst', pri: PRI.react, ctx: null });
+    setFace('happy', 12000);
+    await holdPad(true);
+    life.shy = false;
+    setFace(restFace());
   }
-  // Asked again: a nervous look over at the edge he came from.
+  // Asked again: a nervous look over at the edge he came from, and the pad
+  // again in case they missed it.
   async function shh() {
     setFace('blink', 200);
     life.lean = 9;
     await wait(900);
     life.lean = 0;
+    if (!escaped()) holdPad(false);
   }
-  // A crumpled note drops from its mouth to the floor; clicked, it opens.
-  function dropNote(text) {
-    root.querySelectorAll('.dl-crumple, .dl-scrap').forEach((n) => n.remove());
-    const r = headBtn.getBoundingClientRect();
-    // On the floor, left of the head and of the chat if it's open.
-    const edge = talk.hidden ? r.left : Math.min(r.left, talk.getBoundingClientRect().left);
-    const x = clamp(edge - 76, 12, innerWidth - 60), y = innerHeight - 70;
-    const ball = Object.assign(document.createElement('button'), { type: 'button', className: 'dl-crumple' });
-    ball.setAttribute('aria-label', 'A crumpled note from the head. Open it');
-    Object.assign(ball.style, { left: x + 'px', top: y + 'px' });
-    root.appendChild(ball);
-    sound.tick();
-    play(ball, [
-      { transform: `translate(${(r.left + r.width / 2 - x - 24).toFixed(0)}px, ${(r.top + r.height * 0.75 - y).toFixed(0)}px) scale(.4)` },
-      { transform: 'translate(0, 0) scale(1) rotate(220deg)', offset: 0.7, easing: 'ease-out' },
-      { transform: 'translate(0, -16px) scale(1) rotate(250deg)', offset: 0.85 },
-      { transform: 'rotate(270deg)' }
-    ], { duration: 900, easing: 'ease-in' });
-    ball.addEventListener('click', () => {
-      const scrap = Object.assign(document.createElement('div'), { className: 'dl-scrap', textContent: text });
-      scrap.appendChild(Object.assign(document.createElement('span'), { textContent: '-h' }));
-      const w = Math.min(260, innerWidth - 24);
-      Object.assign(scrap.style, { width: w + 'px', left: clamp(x + 48 - w, 12, innerWidth - w - 12) + 'px', bottom: '24px' });
-      ball.replaceWith(scrap);
-      sound.pop();
-      scrap.addEventListener('click', () => scrap.remove());
-    }, { once: true });
+  // The "makima is listening" meme: a spiral notepad held up beside its face,
+  // rising from below with the hand. The first time it flips from the warning
+  // to the hint.
+  let pad = null;
+  function holdPad(first) {
+    if (pad || carried) return;
+    return useHand(async () => {
+      const ep = epoch;
+      const page = (text) => Object.assign(document.createElement('div'), { className: 'dl-page', textContent: text });
+      const p = (pad = Object.assign(document.createElement('div'), { className: 'dl-pad' }));
+      const inner = p.appendChild(Object.assign(document.createElement('div'), { className: 'dl-pad-in' }));
+      inner.append(page(fine && innerWidth >= 720 ? LINES.escape.pad[1] : LINES.escape.padPhone));
+      const front = first && inner.appendChild(page(LINES.escape.pad[0]));
+      root.insertBefore(p, hand);
+      await document.fonts.load("30px 'Grace'").catch(() => {});
+      const W = p.offsetWidth, H = p.offsetHeight;
+      const drop = H + 170;
+      let lift = { a: drop, b: 0, t0: now(), d: reduce ? 1 : 560 };
+      const liftNow = () => { const k = clamp((now() - lift.t0) / lift.d, 0, 1); return lift.a + (lift.b - lift.a) * (1 - (1 - k) ** 3); };
+      // Left of the head at face height, gripped at the bottom right corner.
+      const grip = () => {
+        const x = clamp(pos.x - W - 4, 8, innerWidth - W - 8);
+        const y = clamp(pos.y + HH * 0.42 - H * 0.5, 8, innerHeight - H - 8) + liftNow();
+        return { x, y };
+      };
+      const g0 = grip();
+      pose('pinch');
+      await handShow(g0.x + W - 14, g0.y + H - 10, -112);
+      let raf = 0;
+      const follow = () => {
+        const g = grip();
+        p.style.transform = `translate(${g.x.toFixed(1)}px,${g.y.toFixed(1)}px)`;
+        handSet(g.x + W - 14, g.y + H - 10, -112, 1);
+        raf = requestAnimationFrame(follow);
+      };
+      follow();
+      sound.tick();
+      const hold = async (ms) => { const end = now() + ms; while (now() < end && ep === epoch) await wait(100); };
+      await hold(560 + (front ? 2600 : 0));
+      if (front && ep === epoch) {
+        sound.tick();
+        await play(front, [{ transform: 'rotateX(0)' }, { transform: 'rotateX(180deg)' }], { duration: 480, easing: 'ease-in' });
+        front.remove();
+      }
+      await hold(6500);
+      lift = { a: liftNow(), b: drop, t0: now(), d: reduce ? 1 : 420 };
+      await wait(reduce ? 0 : 440);
+      cancelAnimationFrame(raf);
+      p.remove();
+      pad = null;
+      if (hs.users === 1) { hs.on = false; hand.classList.remove('on'); }
+    });
   }
   // Now and then, unprompted: an odd line while it's still stuck, or a thank
   // you once they've tried. Takes the place of an idle bit.

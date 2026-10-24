@@ -1214,11 +1214,11 @@
   }
   function isFound(id) { return foundList().indexOf(id) >= 0; }
   // The thirteenth: getting the head out (talk/talk.js and the 404 page). Not
-  // on the list, just a redacted row at the bottom of it.
+  // on the list, just a row at the bottom of it that won't load right.
   function escapedOut() { try { return localStorage.getItem('dl-escaped') === '1'; } catch (e) { return false; } }
   function secretRow() {
     if (escapedOut()) return '<li class="done secret"><div class="fp-row still"><span class="fp-tick" aria-hidden="true">' + CHECK + '</span><span class="fp-name">Tried to get the head out<span class="sr">, done</span></span></div></li>';
-    return '<li class="secret"><div class="fp-row still"><span class="fp-tick" aria-hidden="true"></span><span class="fp-name"><span class="fp-redact">Free</span> the head</span><span class="fp-line">He\'s listening.</span></div></li>';
+    return '<li class="secret"><div class="fp-row still"><span class="fp-tick" aria-hidden="true"></span><span class="fp-name">Free the head</span><span class="fp-line">He\'s listening.</span></div></li>';
   }
   function here() { return location.pathname.replace(/index\.html$/, ''); }
   // What's left, in order, skipping whatever lives on this page.
@@ -1393,9 +1393,29 @@
     void panel.offsetWidth;
     panel.classList.add('on');
     panel.focus({ preventScroll: true });
+    glitchT = setTimeout(glitch, 700);
+  }
+  // The thirteenth row keeps failing to load: bursts of flicker where it drops
+  // out, loses its line or tears sideways, and the panel jumps with it.
+  var glitchT = 0;
+  function glitch() {
+    if (!panel || reduce) return;
+    var w0 = panel.offsetWidth, h0 = panel.offsetHeight, n = 2 + Math.floor(Math.random() * 5);
+    var jit = function (v, lo, hi) { return v + (Math.random() < 0.5 ? -1 : 1) * (lo + Math.floor(Math.random() * (hi - lo))) + 'px'; };
+    var STATES = ['gone', 'gone', 'cut', 'off', ''];
+    (function step(i) {
+      var li = panel && panel.querySelector('li.secret:not(.done)');
+      if (!li) return;
+      var st = i < n ? STATES[Math.floor(Math.random() * STATES.length)] : '';
+      li.className = 'secret' + (st ? ' g-' + st : '');
+      panel.style.width = st && Math.random() < 0.4 ? jit(w0, 4, 18) : '';
+      panel.style.maxHeight = st && Math.random() < 0.4 ? h0 - 8 - Math.floor(Math.random() * 50) + 'px' : '';
+      glitchT = i < n ? setTimeout(function () { step(i + 1); }, 45 + Math.random() * 120) : setTimeout(glitch, 900 + Math.random() * 2600);
+    })(0);
   }
   function closePanel(keepFocus) {
     if (!panel) return;
+    clearTimeout(glitchT);
     var p = panel;
     panel = null;
     p.classList.remove('on');

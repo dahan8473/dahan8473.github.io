@@ -77,6 +77,8 @@
     landed: ['again! no wait'],
     dizzy: ["ok i'm gonna be sick", 'hold on i might throw up'],
     fed: ['nom nom. okay so about this one...'],
+    // Fed something while the brain's down, with nothing written for it.
+    fedPlain: ['tastes like html. 7/10', 'crunchy. no notes', 'hm. needed more css'],
     carry: ['look what i found'],
     putBack: 'okay okay, putting it back',
     mischief: { take: 'you can have this back when you talk to me', give: 'fine. i was bored' },
@@ -3233,9 +3235,25 @@
   }
 
   // ---- Feeding ----------------------------------------------------------------
-  // "nom nom", then it talks about whatever it was fed: the brain when it's
-  // up, the canned line otherwise.
-  async function eat(id) {
+  // What they're dragging, from this page only: a target, or a plain
+  // description of the picture, link or words.
+  function fedFrom(n) {
+    const el = n && (n.nodeType === 1 ? n : n.parentElement);
+    if (!el || root.contains(el)) return null;
+    const t = el.closest('[data-t]');
+    if (t) return { id: t.dataset.t };
+    const clip = (x) => String(x || '').replace(/\s+/g, ' ').replace(/"/g, "'").trim().slice(0, 120);
+    const sel = clip(getSelection());
+    if (sel && n.nodeType !== 1) return { desc: `the words "${sel}"` };
+    const img = el.tagName === 'IMG' ? el : el.querySelector('img');
+    if (img) return { desc: img.alt ? `a picture of ${clip(img.alt)}` : 'a picture' };
+    const a = el.closest('a');
+    if (a) return { desc: `the link "${clip(a.innerText.replace(/[→↗]/g, '')) || a.getAttribute('href')}"` };
+    return sel ? { desc: `the words "${sel}"` } : null;
+  }
+  // "nom nom", then the brain talks about whatever it was fed, or a canned
+  // line if the brain's down.
+  async function eat(f) {
     found('feed');
     interrupt();
     wake();
@@ -3252,10 +3270,12 @@
     }
     S.auto = false;
     if (asking) return;
-    const t = targets[id];
+    const id = f && f.id;
+    const t = id && targets[id];
     if (!(await say(LINES.fed[0], { id: 'fed', pri: PRI.react, ctx: null }))) return;
-    if (t && pres.brain) ask(`(stage note: the visitor dragged ${id} (${t.about}) onto your face and fed it to you)`, { note: true, pri: PRI.react, id: 'server:fed' });
-    else if (LINES.notice[id]) { await wait(500); say(LINES.notice[id], { id: 'notice:' + id, pri: PRI.react, ctx: null, onStart: () => noticed(id) }); }
+    if (t) noticed(id);
+    const what = t ? `${id} (${t.about})` : (f && f.desc) || 'something';
+    ask(`(stage note: the visitor dragged ${what} onto your face and fed it to you)`, { note: true, pri: PRI.react, id: 'server:fed', fallback: (t && LINES.notice[id]) || pick(LINES.fedPlain) });
   }
 
   // ---- Fourth wall ----------------------------------------------------------
@@ -3686,10 +3706,9 @@
     micBtn.addEventListener('click', listen);
 
     // Feeding: drag anything from the page onto the head's face.
-    let fed = '';
+    let fed = null;
     document.addEventListener('dragstart', (e) => {
-      const t = e.target.closest ? e.target.closest('[data-t]') : e.target.parentElement?.closest('[data-t]');
-      fed = t && !root.contains(t) ? t.dataset.t : '';
+      fed = fedFrom(e.target);
       root.classList.add('hungry');
     });
     document.addEventListener('dragend', () => root.classList.remove('hungry', 'chomping'));
@@ -3700,7 +3719,7 @@
       e.preventDefault();
       root.classList.remove('hungry', 'chomping');
       eat(fed);
-      fed = '';
+      fed = null;
     });
 
     // Page swaps (site.js): the head stays, the page under it changes. site.js

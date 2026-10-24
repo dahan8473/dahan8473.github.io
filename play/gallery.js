@@ -45,6 +45,8 @@ const CSS = `
 .pgal-go svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .pgal-badge { position: absolute; top: 10px; left: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 7px; background: rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #fff; font-size: 13px; }
 .pgal-badge svg { width: 10px; height: 10px; fill: currentColor; }
+/* The overlays let the pointer through, so the photo itself can be dragged (onto the head). */
+.pgal-go, .pgal-badge, .pgal-info { pointer-events: none; }
 .pgal-info {
   position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
   padding: 48px 14px 12px; background: linear-gradient(to top, rgba(0, 0, 0, 0.66), rgba(0, 0, 0, 0.28) 55%, rgba(0, 0, 0, 0));

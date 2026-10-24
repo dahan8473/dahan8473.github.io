@@ -435,6 +435,7 @@ PROJ_MORE = {
       {'src': '/media/work/site/home.webp', 'thumb': '/media/work/site/home-s.webp', 'w': 1600, 'h': 956, 'caption': 'The head greeting a visitor on the home page'},
       {'src': '/media/work/site/brain.webp', 'thumb': '/media/work/site/brain-s.webp', 'w': 1600, 'h': 956, 'caption': 'The second brain it thinks with, from my Obsidian vault'},
       {'src': '/media/work/site/messages.webp', 'thumb': '/media/work/site/messages-s.webp', 'w': 1600, 'h': 956, 'caption': 'Messages: straight to my phone over Telegram'},
+      {'src': '/media/work/site/corner.webp', 'thumb': '/media/work/site/corner-s.webp', 'w': 1600, 'h': 956, 'caption': "The head, when it thinks nobody's watching"},
     ],
   },
   'hackthenorth': {

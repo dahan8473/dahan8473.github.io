@@ -1597,10 +1597,11 @@
     setTimeout(() => f.remove(), 300);
   }
   // ---- The way out --------------------------------------------------------------
-  // Asked about escaping, the head plays dumb (api/chat.js) and David peeks in
-  // from the edge of the screen, like the meme. Once he's gone, the head slips
-  // them a crumpled note. The rest of the trail is the console (h, in boot), the
-  // wall and the 404 page (site.js); only the server knows the answer.
+  // Asked about escaping, the head plays dumb (api/chat.js), checks the edge of
+  // the screen for David, then slips them a crumpled note. The rest of the trail
+  // is the console (h, in boot), the wall and the 404 page (site.js); only the
+  // server knows the answer. David himself only peeks in when someone actually
+  // gets it out.
   const flag = (k) => { try { return localStorage.getItem(k) === '1'; } catch (e) { return false; } };
   const setFlag = (k) => { try { localStorage.setItem(k, '1'); } catch (e) {} };
   const escaped = () => flag('dl-escaped');
@@ -1627,17 +1628,18 @@
     if (peeking) return;
     const ep = epoch;
     setFlag('dl-peeked');
-    // A stiff, trembling smile while he's there.
+    // A stiff, trembling smile, and a long look at the edge he'd come from.
     life.shy = true;
-    setFace('happy', 4000);
-    await davidPeek('david is listening');
+    setFace('happy', 3200);
+    await wait(1200);
+    life.lean = 9;
+    await wait(1500);
+    life.lean = 0;
     life.shy = false;
     if (ep !== epoch) return;
     await wait(500);
     setFace('blink', 200);
-    life.lean = 9;
-    await wait(700);
-    life.lean = 0;
+    await wait(300);
     dropNote(fine && innerWidth >= 720 ? LINES.escape.note : LINES.escape.phone);
     quip(LINES.escape.psst, 2600, null, { id: 'escape:psst', pri: PRI.react, ctx: null });
   }

@@ -766,8 +766,8 @@ a.dl-held { display: inline-block; }
 
 /* The way out ------------------------------------------------------------- */
 
-/* "david is listening": the page dims and David peeks in from the right edge.
-   Under the head (it stays in front, trembling), over the page. */
+/* "nice try.": the page dims and David peeks in from the right edge.
+   Under the head (it stays in front), over the page. */
 .dl-dim, .dl-peek, .dl-peek-cap { position: fixed; z-index: -1; pointer-events: none; }
 .dl-dim { inset: 0; background: rgba(0, 0, 0, 0.55); opacity: 0; transition: opacity 500ms ease; }
 .dl-peek {

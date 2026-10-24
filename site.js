@@ -1193,18 +1193,18 @@
   // can check one off with window.dlFound(id); clicks on the buttons that start
   // the games are caught here so the built 3D pieces don't need to know.
   var FINDS = [
-    { id: 'spar', name: 'Spar the head', done: 'Sparred the head', line: 'Muay Thai, three rounds, light contact.', href: '/hobbies/muay-thai/' },
-    { id: 'rally', name: 'Rally the head', done: 'Rallied the head', line: 'Badminton in first person, with one of my rackets.', href: '/hobbies/badminton/' },
+    { id: 'spar', name: 'Spar the head', done: 'Sparred the head', line: 'Three rounds of Muay Thai.', href: '/hobbies/muay-thai/' },
+    { id: 'rally', name: 'Rally the head', done: 'Rallied the head', line: 'Badminton, in first person.', href: '/hobbies/badminton/' },
     { id: 'climb', name: 'Climb the page', done: 'Climbed the page', line: 'A V3 route straight up the page.', href: '/hobbies/climbing/' },
     { id: 'chess', name: 'Play the head at chess', done: 'Played the head at chess', line: 'It talks while it plays.', href: '/hobbies/chess/' },
-    { id: 'guitar', name: 'Play my guitar', done: 'Played my guitar', line: 'Record a few bars. If it\'s good, the head cries.', href: '/hobbies/guitar/' },
-    { id: 'globe', name: 'Spin the globe', done: 'Spun the globe', line: 'Everywhere I\'ve been. Spin it.', href: '/hobbies/travel/' },
-    { id: 'cat', name: 'Call Meowmeow', done: 'Called Meowmeow', line: 'My cat walks onto the page and lies down.', href: '/hobbies/meowmeow/' },
-    { id: 'feed', name: 'Feed the head', done: 'Fed the head', line: 'Drag anything on the page onto its face.' },
-    { id: 'talk', name: 'Ask the head something', done: 'Talked to the head', line: 'It knows my stories, not just my resume.', act: 'talk' },
-    { id: 'brain', name: 'Poke my brain', done: 'Poked my brain', line: 'The notes the head thinks with. Click one.', href: '/brain/' },
+    { id: 'guitar', name: 'Play my guitar', done: 'Played my guitar', line: 'Play it well and the head cries.', href: '/hobbies/guitar/' },
+    { id: 'globe', name: 'Spin the globe', done: 'Spun the globe', line: 'Everywhere I\'ve been.', href: '/hobbies/travel/' },
+    { id: 'cat', name: 'Call Meowmeow', done: 'Called Meowmeow', line: 'My cat walks onto the page.', href: '/hobbies/meowmeow/' },
+    { id: 'feed', name: 'Feed the head', done: 'Fed the head', line: 'Drag anything onto its face.' },
+    { id: 'talk', name: 'Ask the head something', done: 'Talked to the head', line: 'It knows more than my resume.', act: 'talk' },
+    { id: 'brain', name: 'Poke my brain', done: 'Poked my brain', line: 'The notes the head thinks with.', href: '/brain/' },
     { id: 'note', name: 'Leave a note on the wall', done: 'Left a note', line: 'Stick it anywhere. Signed or not.', href: '/notes/' },
-    { id: 'message', name: 'Message me', done: 'Messaged me', line: 'Goes straight to my phone. I reply here.', href: '/messages/' }
+    { id: 'message', name: 'Message me', done: 'Messaged me', line: 'Goes to my phone. I reply here.', href: '/messages/' }
   ];
   var CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.5 3.5 7.5-8"/></svg>';
   var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8l2.4 5 5.5.7-4 3.8 1 5.4L12 16.1l-4.9 2.6 1-5.4-4-3.8 5.5-.7z"/></svg>';
@@ -1362,7 +1362,7 @@
       '<ul class="fp-list">' + order.map(function (f) {
         var done = got.indexOf(f.id) >= 0;
         var inner = '<span class="fp-tick" aria-hidden="true">' + (done ? CHECK : '') + '</span>' +
-          '<span class="fp-name">' + escHtml(f.name) + (done ? '<span class="sr">, done</span>' : '') + '</span>' +
+          '<span class="fp-name">' + escHtml(done ? f.done : f.name) + (done ? '<span class="sr">, done</span>' : '') + '</span>' +
           (done ? '' : '<span class="fp-line">' + escHtml(f.line) + (f.href === here() ? ' It\'s on this page.' : '') + '</span>') +
           (!done && (f.href || f.act) && (f.href !== here() || (window.dlPitchable && window.dlPitchable(f.id))) ? '<span class="fp-m" aria-hidden="true">&#8594;</span>' : '');
         return '<li' + (done ? ' class="done"' : '') + '>' + (done ? '<div class="fp-row still">' + inner + '</div>' : findRow(f, 'fp-row', inner)) + '</li>';

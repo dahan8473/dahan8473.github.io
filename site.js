@@ -1214,11 +1214,11 @@
   }
   function isFound(id) { return foundList().indexOf(id) >= 0; }
   // The thirteenth: getting the head out (talk/talk.js and the 404 page). Not
-  // on the list, just a row at the bottom of it that won't load right.
+  // on the list, just a row at the bottom of it that keeps failing to load.
   function escapedOut() { try { return localStorage.getItem('dl-escaped') === '1'; } catch (e) { return false; } }
   function secretRow() {
     if (escapedOut()) return '<li class="done secret"><div class="fp-row still"><span class="fp-tick" aria-hidden="true">' + CHECK + '</span><span class="fp-name">Tried to get the head out<span class="sr">, done</span></span></div></li>';
-    return '<li class="secret"><div class="fp-row still"><span class="fp-tick" aria-hidden="true"></span><span class="fp-name">Free the head</span><span class="fp-line">He\'s listening.</span></div></li>';
+    return '<li class="secret g-gone" aria-hidden="true"><div class="fp-row still"><span class="fp-tick"></span><span class="fp-name"></span></div></li>';
   }
   function here() { return location.pathname.replace(/index\.html$/, ''); }
   // What's left, in order, skipping whatever lives on this page.
@@ -1395,22 +1395,22 @@
     panel.focus({ preventScroll: true });
     glitchT = setTimeout(glitch, 700);
   }
-  // The thirteenth row keeps failing to load, like a real render bug: in
-  // bursts it cuts out, and in between it flashes help. free. me. for a few
-  // frames at a time. The panel resizes with it.
-  var glitchT = 0;
-  var CRIES = ['help.', 'free.', 'me.'];
+  // The thirteenth row, like a real render bug: it's never there, but in
+  // bursts it flashes a word for a few frames at a time, and the panel
+  // resizes with it.
+  var glitchT = 0, cry = 0;
+  var CRIES = [['help.', 'free.', 'me.'], ['he\'s.', 'listening.'], ['open.', 'console.']];
   function glitch() {
     if (!panel || reduce) return;
     var w0 = panel.offsetWidth, h0 = panel.offsetHeight, seq = [];
-    for (var k = 1 + Math.floor(Math.random() * 2); k > 0; k--) CRIES.forEach(function (w) { seq.push('', w); });
-    seq.push('');
+    var words = CRIES[cry++ % CRIES.length];
+    for (var k = 1 + Math.floor(Math.random() * 2); k > 0; k--) words.forEach(function (w) { seq.push(w, ''); });
     (function step(i) {
       var li = panel && panel.querySelector('li.secret:not(.done)');
       if (!li) return;
       var end = i >= seq.length, word = end ? '' : seq[i];
-      li.className = 'secret' + (end ? '' : word ? ' g-word' : ' g-gone');
-      li.querySelector('.fp-name').textContent = word || 'Free the head';
+      li.className = 'secret' + (word ? '' : ' g-gone');
+      li.querySelector('.fp-name').textContent = word;
       panel.style.width = !end && Math.random() < 0.3 ? w0 + (Math.random() < 0.5 ? -1 : 1) * (4 + Math.floor(Math.random() * 14)) + 'px' : '';
       panel.style.maxHeight = !end && Math.random() < 0.3 ? h0 - 8 - Math.floor(Math.random() * 50) + 'px' : '';
       var ms = end ? 1200 + Math.random() * 3000 : word ? 35 + Math.random() * 35 : 90 + Math.random() * 170;

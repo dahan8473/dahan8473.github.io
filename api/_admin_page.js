@@ -737,7 +737,7 @@ function client(base) {
         h('div', { class: 'chat' }, t.list.slice().reverse().map((m) => h('div', { class: `msg ${m.sender === 'david' ? 'head' : 'user'}`, 'data-tip': when(m.at) }, m.body))));
     });
     show(token,
-      h('div', { class: 'phead' }, h('div', {}, h('h1', {}, 'Inbox'), h('p', { class: 'sub' }, 'Messages from /messages/ and private notes. Answer in Telegram: reply to the bot\'s message and it lands in their thread on the site.'))),
+      h('div', { class: 'phead' }, h('div', {}, h('h1', {}, 'Inbox'), h('p', { class: 'sub' }, 'Messages from /messages/, private notes and the names on the escape wall. Answer in Telegram: reply to the bot\'s message and it lands in their thread on the site.'))),
       sec('Messages', `${threads.size} thread${threads.size === 1 ? '' : 's'}`, cards.length ? cards : empty('No messages yet.')),
       sec('Notes', `${(r.notes || []).length}`, (r.notes || []).length ? r.notes.map((n) => {
         // Delete takes it off the wall (and out of here) for good.
@@ -752,7 +752,18 @@ function client(base) {
           h('div', { class: 'grow' }, h('div', {}, n.message), h('div', { class: 'note' }, [n.name || 'no name', n.contact ? `reply to ${n.contact}` : '', n.page || '', when(n.at)].filter(Boolean).join(' · '))),
           n.flagged ? chip('flagged', 'warn') : n.public ? chip('on the wall', 'acc') : chip('private'),
           n.visitor_id ? vlink(n.visitor_id, '→') : null, del);
-      }) : empty('No notes yet.')));
+      }) : empty('No notes yet.')),
+      sec('Freed by', `${(r.freed || []).length} signed · on the 404 page after someone gets the head out`, (r.freed || []).length ? r.freed.map((f) => {
+        // Remove takes the name off the wall; their escape still counts.
+        const del = h('button', { class: 'btn ghost small', type: 'button' }, 'Remove');
+        del.addEventListener('click', async () => {
+          if (!confirm(`Take "${f.name}" off the wall?`)) return;
+          const out = await api('unsign', null, { who: f.who }).catch((e) => ({ error: e.message }));
+          if (out.error) return alert(out.error);
+          inbox(token);
+        });
+        return h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', {}, f.name), h('div', { class: 'note' }, when(f.named_at))), del);
+      }) : empty('Nobody has signed yet.')));
   }
 
   // ---- shell --------------------------------------------------------------------------

@@ -276,9 +276,17 @@ export async function learnNow() {
 // ---- Inbox ---------------------------------------------------------------------
 
 export async function inbox() {
-  const [msgs, notes] = await Promise.all([
+  const [msgs, notes, freed] = await Promise.all([
     call('messages?select=id,visitor_id,sender,name,body,at,visitors(name)&order=at.desc&limit=120'),
-    call('notes?select=id,visitor_id,name,contact,message,page,public,flagged,at&order=at.desc&limit=60')
+    call('notes?select=id,visitor_id,name,contact,message,page,public,flagged,at&order=at.desc&limit=60'),
+    call('escapes?select=who,name,named_at&name=not.is.null&order=named_at.desc&limit=100')
   ]);
-  return { messages: rows(msgs), notes: rows(notes) };
+  return { messages: rows(msgs), notes: rows(notes), freed: rows(freed) };
+}
+// Take a name off the wall of people who got the head out. Their escape still counts.
+export async function unsign(body) {
+  const who = typeof body?.who === 'string' && /^[0-9a-f]{32}$/.test(body.who) ? body.who : '';
+  if (!who) return { error: 'bad id' };
+  const r = await call(`escapes?who=eq.${who}`, { method: 'PATCH', body: { name: null, named_at: null }, prefer: 'return=representation' });
+  return r.ok && rows(r).length ? { ok: true } : { error: 'could not remove' };
 }

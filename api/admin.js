@@ -77,7 +77,8 @@ const POST = {
   knowledge: (b) => data.editKnowledge(b),
   variant: (b) => data.editVariant(b),
   learn: () => data.learnNow(),
-  note: (b) => data.deleteNote(b)
+  note: (b) => data.deleteNote(b),
+  unsign: (b) => data.unsign(b)
 };
 
 export default {

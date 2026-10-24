@@ -763,3 +763,90 @@ a.dl-held { display: inline-block; }
 .dl-cam { position: fixed; z-index: 75; width: 132px; height: 132px; border-radius: 50%; object-fit: cover; transform: scaleX(-1); box-shadow: 0 0 0 3px #fff, 0 14px 34px -14px rgba(0, 0, 0, 0.5); animation: dl-cam-in 260ms cubic-bezier(.34, 1.56, .64, 1); }
 @keyframes dl-cam-in { from { opacity: 0; transform: scaleX(-1) scale(0.6); } }
 @media (prefers-reduced-motion: reduce) { .dl-cam { animation: none; } }
+
+/* The way out ------------------------------------------------------------- */
+
+/* "david is listening": the page dims and David peeks in from the right edge.
+   Under the head (it stays in front, trembling), over the page. */
+.dl-dim, .dl-peek, .dl-peek-cap { position: fixed; z-index: -1; pointer-events: none; }
+.dl-dim { inset: 0; background: rgba(0, 0, 0, 0.55); opacity: 0; transition: opacity 500ms ease; }
+.dl-peek {
+  right: 0;
+  top: 50%;
+  height: min(78vh, 720px);
+  width: auto;
+  transform: translate(105%, -50%);
+  transition: transform 850ms cubic-bezier(.45, .05, .25, 1);
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.5));
+}
+.dl-peek-cap {
+  left: 0;
+  right: 0;
+  bottom: 9vh;
+  margin: 0;
+  text-align: center;
+  font: 800 clamp(26px, 4.4vw, 54px) / 1.1 Impact, 'Arial Black', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  color: #fff;
+  -webkit-text-stroke: 2px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #000;
+  opacity: 0;
+  transition: opacity 300ms ease 600ms;
+}
+.dl.peeking .dl-dim { opacity: 1; }
+.dl.peeking .dl-peek { transform: translate(30%, -50%); }
+.dl.peeking .dl-peek-cap { opacity: 1; }
+@media (max-width: 720px) {
+  .dl-peek { height: min(52vh, 460px); top: 42%; }
+  .dl-peek-cap { top: 13vh; bottom: auto; }
+  .dl.peeking .dl-peek { transform: translate(38%, -50%); }
+}
+
+/* The crumpled note it drops, and the note once it's opened. */
+.dl-crumple {
+  position: fixed;
+  z-index: 5;
+  width: 48px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 46'><path d='M9 9L20 3L31 5L41 11L45 22L42 34L33 42L20 44L9 38L3 27L4 16Z' fill='%23efe8d8'/><path d='M20 3L24 18L9 9Z' fill='%23fffdf6'/><path d='M31 5L24 18L41 11Z' fill='%23e9e2d0'/><path d='M41 11L24 18L45 22Z' fill='%23ddd5c0'/><path d='M45 22L28 27L42 34Z' fill='%23d3cab3'/><path d='M42 34L28 27L33 42Z' fill='%23c9bfa6'/><path d='M33 42L28 27L20 44Z' fill='%23d8cfb9'/><path d='M20 44L16 30L9 38Z' fill='%23e2dac6'/><path d='M9 38L16 30L3 27Z' fill='%23ebe4d3'/><path d='M3 27L12 20L4 16Z' fill='%23f7f2e6'/><path d='M4 16L12 20L9 9Z' fill='%23fbf7ec'/><path d='M24 18L12 20L16 30L28 27Z' fill='%23f3eddf'/><path d='M9 9L24 18L12 20M24 18L28 27L16 30M28 27L45 22M24 18L41 11' stroke='%23b3a88e' stroke-width='.6' fill='none'/></svg>") center / contain no-repeat;
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.4));
+  pointer-events: auto;
+  cursor: pointer;
+  animation: dl-crumple 2.4s ease-in-out 1.2s infinite;
+}
+.dl-crumple:focus-visible { outline: 2px solid var(--talk-accent-ink); outline-offset: 3px; }
+@keyframes dl-crumple { 0%, 80%, 100% { rotate: 0deg; } 86% { rotate: -9deg; } 93% { rotate: 7deg; } }
+.dl-scrap {
+  position: fixed;
+  z-index: 5;
+  box-sizing: border-box;
+  padding: 16px 18px 12px;
+  background:
+    linear-gradient(80deg, transparent 30%, rgba(0, 0, 0, 0.05) 31%, transparent 33%),
+    linear-gradient(170deg, transparent 55%, rgba(0, 0, 0, 0.05) 56%, transparent 58%),
+    #fbf7ea;
+  color: #2b2925;
+  font: 500 15px/1.45 'Geist', system-ui, sans-serif;
+  border-radius: 3px;
+  box-shadow: 0 16px 34px -14px rgba(0, 0, 0, 0.55);
+  transform: rotate(-2deg);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: dl-scrap-in 380ms cubic-bezier(.34, 1.56, .64, 1);
+}
+.dl-scrap span { display: block; margin-top: 6px; text-align: right; color: #6b665c; }
+@keyframes dl-scrap-in { from { opacity: 0; transform: rotate(-12deg) scale(0.3); } }
+
+/* Cracks in the glass when it breaks out. */
+.dl-crack { position: fixed; z-index: -1; width: 480px; height: 480px; pointer-events: none; overflow: visible; }
+.dl-crack path { fill: none; stroke: rgba(255, 255, 255, 0.9); stroke-width: 2; stroke-linejoin: bevel; filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.6)); }
+[data-theme="light"] .dl-crack path { stroke: rgba(30, 30, 30, 0.75); filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.8)); }
+.dl-crack.gone { opacity: 0; transform: scale(1.25); transition: opacity 600ms ease, transform 600ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-dim, .dl-peek, .dl-peek-cap { transition: none; }
+  .dl-crumple, .dl-scrap { animation: none; }
+}

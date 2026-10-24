@@ -6,7 +6,7 @@
 import json, os, re, sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-V_CSS, V_TALKCSS, V_JS, V_TALK = 59, 19, 43, 58
+V_CSS, V_TALKCSS, V_JS, V_TALK = 60, 20, 44, 59
 V_TRACK = 2
 V_PIECE = 49  # bump when anything in /play/ or /3d/ changes
 V_OG = 3  # bump when og.png is redone (tools/og.html), so link previews refetch it
@@ -711,6 +711,8 @@ notes = '''      <header class="doc-head">
       <div class="board-wrap">
       <section class="board" data-t="wall" aria-label="The note wall">
         <ul class="board-notes" aria-label="Notes from visitors"></ul>
+        <!-- he took this one down before anyone saw it -->
+        <div class="h-note" style="display: none" aria-hidden="true" data-by="h" data-cipher="rot13">2/3: gjvpr <span>-h</span></div>
         <button class="pad" type="button" data-t="note-pad">
           <span class="pad-sheet"></span>
           <span class="pad-sheet"></span>
@@ -779,6 +781,7 @@ privacy = '''      <header class="doc-head">
         <section>
           <h2>Notes and messages</h2>
           <p>Notes on the wall are public once a check lets them through. Every note, wall or private, and anything you send on the Messages page goes to my phone through Telegram, with whatever contact you leave, so I can reply.</p>
+          <p>If you ever get the head out of here, it's counted once per browser, using a scrambled copy of your browser's random id that can't be traced back to your visits. You can sign your name on the way out; that name is public.</p>
         </section>
         <section>
           <h2>The camera</h2>
@@ -796,7 +799,7 @@ privacy = '''      <header class="doc-head">
         <section>
           <h2>Turning it off, and deleting it</h2>
           <p>Turn on Do Not Track or Global Privacy Control in your browser and the site stops logging your page views and how you use it. Chats you have with the head are still saved, since that's how I read them.</p>
-          <p>Old data clears itself: IP addresses 30 days after your last visit, page views and how the site got used after 90 days, chats after 12 months. The rest stays until you ask me to delete it: what the head remembers about you, your notes and your messages.</p>
+          <p>Old data clears itself: IP addresses 30 days after your last visit, page views and how the site got used after 90 days, chats after 12 months. The rest stays until you ask me to delete it: what the head remembers about you, your notes, your messages and a name you signed.</p>
           <p>Want everything about you deleted? Email <a class="ln" href="mailto:davidliu8473@gmail.com">davidliu8473@gmail.com</a> with your visitor id and I'll remove everything tied to it. The only copies I can't reach are the ones already on my phone, and backups, which expire on their own. <span class="vid-line"><button class="ln" type="button" onclick="var c=this.nextElementSibling,v=null;try{v=localStorage.getItem('dl-visitor')}catch(e){}c.textContent=v||'not set yet';c.hidden=false;this.hidden=true">Show my visitor id</button><code id="my-visitor" hidden></code></span></p>
         </section>
         <p class="t3">The site itself is on GitHub Pages. Last updated October 2026.</p>

@@ -1213,6 +1213,13 @@
     try { var a = JSON.parse(localStorage.getItem('dl-found')); return Array.isArray(a) ? a : []; } catch (e) { return []; }
   }
   function isFound(id) { return foundList().indexOf(id) >= 0; }
+  // The thirteenth: getting the head out (talk/talk.js and the 404 page). Not
+  // on the list, just a redacted row at the bottom of it.
+  function escapedOut() { try { return localStorage.getItem('dl-escaped') === '1'; } catch (e) { return false; } }
+  function secretRow() {
+    if (escapedOut()) return '<li class="done secret"><div class="fp-row still"><span class="fp-tick" aria-hidden="true">' + CHECK + '</span><span class="fp-name">Tried to get the head out<span class="sr">, done</span></span></div></li>';
+    return '<li class="secret"><div class="fp-row still"><span class="fp-tick" aria-hidden="true"></span><span class="fp-name"><span class="fp-redact">Free</span> the head</span><span class="fp-line">He\'s listening.</span></div></li>';
+  }
   function here() { return location.pathname.replace(/index\.html$/, ''); }
   // What's left, in order, skipping whatever lives on this page.
   function left(skipHere) {
@@ -1328,12 +1335,13 @@
       pill.setAttribute('aria-expanded', 'false');
       end.insertBefore(pill, end.firstChild);
     }
-    var n = foundList().length;
-    pill.innerHTML = STAR + '<span>' + n + '<span class="of">/' + FINDS.length + '</span></span>';
+    var n = foundList().length + (escapedOut() ? 1 : 0);
+    var more = n === FINDS.length && !escapedOut() ? '<span class="more" aria-hidden="true">+?</span>' : '';
+    pill.innerHTML = STAR + '<span>' + n + '<span class="of">/' + FINDS.length + '</span>' + more + '</span>';
     pill.setAttribute('aria-label', 'Things to do: ' + n + ' of ' + FINDS.length + ' done');
     pill.title = 'Things to do here';
     pill.classList.toggle('some', n > 0);
-    pill.classList.toggle('all', n === FINDS.length);
+    pill.classList.toggle('all', n >= FINDS.length);
     if (reduce) return;
     var fresh = false;
     try { fresh = !n && !sessionStorage.getItem('dl-pill-seen'); sessionStorage.setItem('dl-pill-seen', '1'); } catch (e) {}
@@ -1358,7 +1366,7 @@
           (done ? '' : '<span class="fp-line">' + escHtml(f.line) + (f.href === here() ? ' It\'s on this page.' : '') + '</span>') +
           (!done && (f.href || f.act) && (f.href !== here() || (window.dlPitchable && window.dlPitchable(f.id))) ? '<span class="fp-m" aria-hidden="true">&#8594;</span>' : '');
         return '<li' + (done ? ' class="done"' : '') + '>' + (done ? '<div class="fp-row still">' + inner + '</div>' : findRow(f, 'fp-row', inner)) + '</li>';
-      }).join('') + '</ul>' +
+      }).join('') + secretRow() + '</ul>' +
       (all ? '<p class="fp-foot">Which one was best? <a class="ln" href="/messages/">Tell me</a></p>' : '');
   }
   function placePanel() {
@@ -1455,6 +1463,84 @@
   document.addEventListener('mouseout', tipOff);
   document.addEventListener('focusout', tipOff);
 
+  // ---- The way out ------------------------------------------------------------------
+  // The 404 page is outside the site. Three words in its URL are a guess at the
+  // way out (the trail starts with the head, talk/talk.js); only the server
+  // knows the answer. Right: the head breaks out, gets caught, and they can
+  // sign the wall of people who got it out.
+  function setupDoor() {
+    var main = document.querySelector('body[data-door] main');
+    var m = /^\/([a-z]{1,20})-([a-z]{1,20})-([a-z]{1,20})\/?$/i.exec(location.pathname);
+    if (!main || !m) return;
+    var tag = main.querySelector('.tagline');
+    var name = main.querySelector('.identity .name');
+    var title = main.querySelector('.identity .title');
+    var say = function (t) { if (tag) tag.textContent = t; };
+    var visitor = visitorId();
+    say('Checking the lock…');
+    fetch(API + '/escape', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ visitor: visitor, key: m[1] + '-' + m[2] + '-' + m[3] }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { b.status = r.status; return b; }); })
+      .then(function (b) {
+        if (b.status === 429 || b.slow) return say('That page doesn\'t exist. Too many tries today, the lock\'s gone stiff. Come back tomorrow.');
+        if (!b.ok) return say('That page doesn\'t exist. The lock didn\'t budge.');
+        try { localStorage.setItem('dl-escaped', '1'); } catch (e) {}
+        renderPill(true);
+        say('The lock clicks.');
+        return headOut().then(function () {
+          if (name) name.textContent = 'Out';
+          if (title) title.textContent = 'For about ten seconds';
+          say('He got dragged back. But you got him out.');
+          board(main, b, visitor);
+        });
+      })
+      .catch(function () { say('That page doesn\'t exist. (The lock wouldn\'t answer. Try again in a bit.)'); });
+  }
+  // Waits for the head to be on screen (talk.js loads after this file), then
+  // plays the break out. No head after a few seconds: straight to the wall.
+  function headOut() {
+    return new Promise(function (done) {
+      var t0 = Date.now();
+      (function look() {
+        if (window.dlEscape && document.querySelector('.dl-actor.on')) return window.dlEscape.breakOut().then(done, done);
+        if (Date.now() - t0 > 6000) return done();
+        setTimeout(look, 200);
+      })();
+    });
+  }
+  function board(main, b, visitor) {
+    var box = document.createElement('section');
+    box.className = 'door';
+    var out = b.out || 1;
+    box.innerHTML = '<p class="door-count">Got out <b>' + out + '</b> time' + (out === 1 ? '' : 's') + '. Caught <b>' + out + '</b> time' + (out === 1 ? '' : 's') + '.</p>' +
+      (b.signed ? '<p class="door-msg">You\'re on the wall.</p>' :
+        '<form class="door-sign"><label for="door-name">Sign the wall</label><div class="door-row"><input id="door-name" maxlength="30" autocomplete="nickname" placeholder="Your name" required><button type="submit">Sign</button></div><p class="door-msg" role="status"></p></form>') +
+      '<h2 class="door-h">Got him out</h2><ul class="door-names"></ul>';
+    main.appendChild(box);
+    var list = box.querySelector('.door-names');
+    function names(rows) {
+      list.innerHTML = rows.length ? rows.map(function (r) { return '<li><span>' + escHtml(r.name) + '</span><time>' + (r.at ? new Date(r.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '</time></li>'; }).join('') : '<li class="none">Nobody has signed yet.</li>';
+    }
+    names(b.names || []);
+    var form = box.querySelector('.door-sign');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = form.querySelector('input'), msg = form.querySelector('.door-msg'), btn = form.querySelector('button');
+      var who = input.value.replace(/\s+/g, ' ').trim();
+      if (!who) return;
+      btn.disabled = true;
+      msg.textContent = '';
+      fetch(API + '/escape', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ visitor: visitor, name: who }) })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (r) {
+          if (!r.ok) { btn.disabled = false; msg.textContent = r.blocked ? 'That name can\'t go on the wall. Try another?' : 'That didn\'t go through. Try again?'; return; }
+          form.outerHTML = '<p class="door-msg">You\'re on the wall.</p>';
+          return fetch(API + '/escape').then(function (x) { return x.json(); }).then(function (x) { names(x.names || []); });
+        })
+        .catch(function () { btn.disabled = false; msg.textContent = 'That didn\'t go through. Try again?'; });
+    });
+  }
+
   // ---- Per page --------------------------------------------------------------------
   function setup() {
     catCalled = false;
@@ -1468,6 +1554,7 @@
     setupInbox();
     setupPieces();
     setupFinds();
+    setupDoor();
   }
 
   // ---- Router: swap pages in place ----------------------------------------------

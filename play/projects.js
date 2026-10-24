@@ -45,7 +45,7 @@ const CSS = `
 /* Blurred small and scaled up: the same look as a big blur for a fraction of the work. */
 .pov-stage .bg { position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; object-fit: cover; transform: translate(-50%, -50%) scale(4); filter: blur(7px) saturate(1.15); opacity: 0.55; pointer-events: none; }
 .pov-stage .fg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.pov-nav { position: absolute; top: 50%; z-index: 1; display: grid; place-items: center; width: 40px; height: 40px; margin-top: -20px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.45); color: #fff; cursor: pointer; opacity: 0; transition: opacity 160ms ease; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.pov-nav { position: absolute; top: 50%; z-index: 1; display: grid; place-items: center; place-content: center; width: 40px; height: 40px; margin-top: -20px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.45); color: #fff; cursor: pointer; opacity: 0; transition: opacity 160ms ease; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .pov-nav svg { width: 18px; height: 18px; }
 .pov-nav.prev { left: 12px; }
 .pov-nav.next { right: 12px; }

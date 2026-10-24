@@ -1665,6 +1665,8 @@
       const inner = p.appendChild(Object.assign(document.createElement('div'), { className: 'dl-pad-in' }));
       inner.append(page(fine && innerWidth >= 720 ? LINES.escape.pad[1] : LINES.escape.padPhone));
       const front = first && inner.appendChild(page(LINES.escape.pad[0]));
+      // Hidden until it's placed: the font and the hand come first.
+      p.style.visibility = 'hidden';
       root.insertBefore(p, hand);
       setFace('sad');
       await document.fonts.load("30px 'Grace'").catch(() => {});
@@ -1685,6 +1687,7 @@
       const follow = () => {
         const g = grip();
         p.style.transform = `translate(${g.x.toFixed(1)}px,${g.y.toFixed(1)}px)`;
+        p.style.visibility = '';
         handSet(g.x + W - 14, g.y + H - 10, -112, 1);
         raf = requestAnimationFrame(follow);
       };

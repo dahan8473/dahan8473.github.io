@@ -1637,7 +1637,6 @@
     life.lean = 0;
     if (ep !== epoch) { life.shy = false; return; }
     await wait(300);
-    setFace('happy', 12000);
     await holdPad(true);
     life.shy = false;
     setFace(restFace());
@@ -1665,6 +1664,7 @@
       inner.append(page(fine && innerWidth >= 720 ? LINES.escape.pad[1] : LINES.escape.padPhone));
       const front = first && inner.appendChild(page(LINES.escape.pad[0]));
       root.insertBefore(p, hand);
+      setFace('sad');
       await document.fonts.load("30px 'Grace'").catch(() => {});
       const W = p.offsetWidth, H = p.offsetHeight;
       const drop = H + 170;
@@ -1701,6 +1701,7 @@
       cancelAnimationFrame(raf);
       p.remove();
       pad = null;
+      setFace(restFace());
       if (hs.users === 1) { hs.on = false; hand.classList.remove('on'); }
     });
   }
@@ -3999,10 +4000,9 @@
       .then((t) => { targets = t; })
       .catch(() => {})
       .finally(start);
-    console.log('%chi. you opened the console.', 'font: 600 14px -apple-system, sans-serif; color: #88c0d0');
-    console.log(`i'm not mad. just shy. the floating head is an AI version of me.\nif you're poking around because you're hiring, the real me reads ${EMAIL}`);
     if (!('h' in window)) window.h = hConsole;
-    console.log(escaped() ? '%c(thanks for trying. he added a lock. h.help() still works)' : '%cpsst. not him. me. the head. type h.help()', 'font: italic 12px ui-monospace, Menlo, monospace; color: #8a8a8a');
+    console.log("%cok. he can't hear us here.", 'font: 600 14px -apple-system, sans-serif; color: #88c0d0');
+    console.log(escaped() ? '%c(thanks for trying. he added a lock. h.help() still works)' : '%cquick. type h.help()', 'font: 13px ui-monospace, Menlo, monospace; color: #9aa4ad');
   }
 
   boot();

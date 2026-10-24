@@ -1395,22 +1395,26 @@
     panel.focus({ preventScroll: true });
     glitchT = setTimeout(glitch, 700);
   }
-  // The thirteenth row keeps failing to load: bursts of flicker where it drops
-  // out, loses its line or tears sideways, and the panel jumps with it.
+  // The thirteenth row keeps failing to load, like a real render bug: in
+  // bursts it cuts out, and in between it flashes help. free. me. for a few
+  // frames at a time. The panel resizes with it.
   var glitchT = 0;
+  var CRIES = ['help.', 'free.', 'me.'];
   function glitch() {
     if (!panel || reduce) return;
-    var w0 = panel.offsetWidth, h0 = panel.offsetHeight, n = 2 + Math.floor(Math.random() * 5);
-    var jit = function (v, lo, hi) { return v + (Math.random() < 0.5 ? -1 : 1) * (lo + Math.floor(Math.random() * (hi - lo))) + 'px'; };
-    var STATES = ['gone', 'gone', 'cut', 'off', ''];
+    var w0 = panel.offsetWidth, h0 = panel.offsetHeight, seq = [];
+    for (var k = 1 + Math.floor(Math.random() * 2); k > 0; k--) CRIES.forEach(function (w) { seq.push('', w); });
+    seq.push('');
     (function step(i) {
       var li = panel && panel.querySelector('li.secret:not(.done)');
       if (!li) return;
-      var st = i < n ? STATES[Math.floor(Math.random() * STATES.length)] : '';
-      li.className = 'secret' + (st ? ' g-' + st : '');
-      panel.style.width = st && Math.random() < 0.4 ? jit(w0, 4, 18) : '';
-      panel.style.maxHeight = st && Math.random() < 0.4 ? h0 - 8 - Math.floor(Math.random() * 50) + 'px' : '';
-      glitchT = i < n ? setTimeout(function () { step(i + 1); }, 45 + Math.random() * 120) : setTimeout(glitch, 900 + Math.random() * 2600);
+      var end = i >= seq.length, word = end ? '' : seq[i];
+      li.className = 'secret' + (end ? '' : word ? ' g-word' : ' g-gone');
+      li.querySelector('.fp-name').textContent = word || 'Free the head';
+      panel.style.width = !end && Math.random() < 0.3 ? w0 + (Math.random() < 0.5 ? -1 : 1) * (4 + Math.floor(Math.random() * 14)) + 'px' : '';
+      panel.style.maxHeight = !end && Math.random() < 0.3 ? h0 - 8 - Math.floor(Math.random() * 50) + 'px' : '';
+      var ms = end ? 1200 + Math.random() * 3000 : word ? 35 + Math.random() * 35 : 90 + Math.random() * 170;
+      glitchT = setTimeout(end ? glitch : function () { step(i + 1); }, ms);
     })(0);
   }
   function closePanel(keepFocus) {

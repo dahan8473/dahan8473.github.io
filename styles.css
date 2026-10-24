@@ -868,8 +868,7 @@ body:has(.rl, .mt-over, .climb-wall, .bring) .play-now { visibility: hidden; }
 /* The way out: the glitching thirteenth thing to do, and the 404 page once the head got out. */
 .finds-pill .more { margin-left: 3px; color: var(--t3); opacity: 0.7; }
 .fp-list li.secret.g-gone { display: none; }
-.fp-list li.secret.g-cut .fp-line { display: none; }
-.fp-list li.secret.g-off .fp-row { opacity: 0.45; transform: translateX(4px) skewX(-10deg); text-shadow: -2px 0 rgba(255, 40, 90, 0.7), 2px 0 rgba(40, 200, 255, 0.7); }
+.fp-list li.secret.g-word .fp-line { display: none; }
 .fp-list li.secret .fp-name { color: var(--t2); }
 .door { margin-top: 40px; max-width: 520px; }
 .door-count { margin: 0 0 22px; color: var(--t2); font-size: 17px; }

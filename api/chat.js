@@ -26,6 +26,8 @@ const EMAIL = 'davidliu8473@gmail.com';
 const LANDED = '(the visitor just opened davidliu.work)';
 
 const OFFLINE = `my brain's not connected rn 😭 email me instead: ${EMAIL}`;
+// OpenRouter is out of credits (402).
+const BROKE = `david's broke ass didn't top up openrouter and he ran out of credits 😭 email him instead: ${EMAIL}`;
 const DECLINED = 'gonna pass on that one. ask me something else?';
 const TOO_MUCH = `okay we've talked a lot 😭 the real me would love to keep going over email: ${EMAIL}`;
 const TIRED = `i'm out of brain juice for the month 😭 the real me reads email though: ${EMAIL}`;
@@ -654,7 +656,7 @@ export default {
         } catch (err) {
           if (!leaked) {
             console.error('brain', err?.status || '', err?.message || err);
-            clean.push((run.wrote ? ' ' : '') + OFFLINE);
+            clean.push((run.wrote ? ' ' : '') + (err?.status === 402 ? BROKE : OFFLINE));
           }
         }
         clean.end();

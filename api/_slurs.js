@@ -15,14 +15,17 @@ function norm(text) {
 }
 const collapse = (w) => w.replace(/(.)\1+/g, '$1');
 const LIST_C = new Set([...LIST].map(collapse));
+// Real words that collapse onto one ("pros and cons").
+const REAL = new Set(['con', 'cons', 'cones', 'conn']);
 
 export function hasSlur(text) {
   const t = norm(text);
   const words = t.split(/[^a-z]+/).filter(Boolean);
   for (let i = 0; i < words.length; i++) {
     const w = words[i];
-    const stem = w.replace(/(?:es|s)$/, '');
-    if (LIST.has(w) || LIST_C.has(collapse(w)) || LIST.has(stem) || LIST_C.has(collapse(stem))) return true;
+    // Both stems: "-es" off "boxes", just "-s" off a word that ends in e.
+    const forms = [w, w.replace(/es$/, ''), w.replace(/s$/, '')];
+    if (!REAL.has(w) && forms.some((f) => LIST.has(f) || LIST_C.has(collapse(f)))) return true;
     // two-word slurs written apart ("sand n...", "porch monkey")
     if (i + 1 < words.length && (LIST.has(w + words[i + 1]) || LIST_C.has(collapse(w + words[i + 1])))) return true;
   }

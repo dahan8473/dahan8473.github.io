@@ -12,10 +12,11 @@ export const JEV_USD = 0.00001;
 const within = (p, ms, fallback) => Promise.race([p, new Promise((r) => setTimeout(() => r(fallback), ms))]);
 const money = { usd: 0, at: 0, reading: null, owed: 0 };
 
-// This month's spend in dollars. A fresh instance waits up to 400ms for its
-// first reading; with none by then it counts as over the cap and goes quiet
-// instead of spending blind. Once it has a reading it answers from its copy
-// right away, and refreshes in the background.
+// This month's spend in dollars. A fresh instance waits up to a second for its
+// first reading; with none by then it answers from what it has counted itself,
+// since a slow store on a cold start shouldn't mute the head. The monthly limit
+// on the OpenRouter key is the hard stop behind this. Once it has a reading it
+// answers from its copy right away, and refreshes in the background.
 export function spentNow() {
   if (!money.reading && Date.now() - money.at > 60 * 1000) {
     money.reading = spent()
@@ -23,7 +24,7 @@ export function spentNow() {
       .catch(() => {})
       .finally(() => { money.reading = null; });
   }
-  return money.at ? money.usd : within(money.reading.then(() => (money.at ? money.usd : Infinity)), 400, Infinity);
+  return money.at ? money.usd : within(money.reading.then(() => money.usd), 1000, money.usd);
 }
 
 // What a brain call cost. Jev calls not yet written go along with it.

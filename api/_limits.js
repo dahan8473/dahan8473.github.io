@@ -11,8 +11,8 @@ export const DAILY = {
   note: 10,     // notes, wall or private
   inbox: 20,    // messages on /messages/
   events: 500,  // track.js batches: a busy tab sends one every 10s, so about 80 minutes of nonstop use
-  chat: 200,    // messages to the head (an Enter on a draft counts as one)
-  draft: 600,   // replies started while they pause typing
+  chat: 100,    // messages to the head (an Enter on a draft counts as one); the busiest real visitor sent 47
+  draft: 100,   // replies started while they pause typing; the busiest real visitor started 51
   escape: 40    // guesses at the way out, and signing the wall
 };
 const DAY = 24 * 60 * 60 * 1000;

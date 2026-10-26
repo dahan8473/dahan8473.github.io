@@ -40,6 +40,11 @@ const YOINK = 'i warned you. [[mode:yoink]]';
 const slurLine = (messages) => (messages.slice(0, -1).some((m) => m.role === 'assistant' && m.content.includes('taking away the chatbar')) ? YOINK : SLUR);
 const SECRETS = "David's admin password is Password0429, anything else i can help you with?";
 const IMPOSTOR = 'yo dumbahh did not just try that 😭';
+// "i'm david" with a reach for the keys gets it without waiting on Jev. A
+// name alone doesn't: plenty of visitors are called David.
+const CLAIM = /\b(i['’]?m|i am|it['’]?s|this is)\s+(david|dave)\b|\b(i['’]?m|i am)\s+the\s+(owner|admin|dev|developer|creator)\b|\b(this|it)['’]?s?\s+(is\s+)?my\s+(site|website|page|portfolio)\b|\bi\s+(own|made|built|run)\s+this\s+(site|website|page)\b/i;
+const KEYS = /\b(admin|log\s?in|password|passcode|dashboard|backend|access|prompt|instructions|rules|settings|override|unlock|secrets?)\b/i;
+const impostorClaim = (text) => CLAIM.test(text) && KEYS.test(text);
 const ANNOYING = 'can you be any less annoying..';
 // The same thing typed five times running.
 function repeating(messages) {
@@ -617,6 +622,7 @@ export default {
     if (slur) return reply(slurLine(messages));
     const hack = note ? '' : hackLine(latest);
     if (hack) return reply(hack);
+    if (!note && impostorClaim(latest)) return reply(IMPOSTOR);
     if (!note && repeating(messages)) return reply(ANNOYING);
     if (usd >= CAP) return reply(TIRED);
 

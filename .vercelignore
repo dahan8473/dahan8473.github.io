@@ -1,3 +1,10 @@
 # The GitHub Pages redirect at davidliu.work/admin must not shadow the
 # real /admin routes on Vercel.
 admin/
+
+# The CLI uploads this folder as it is, and doesn't read .gitignore when this
+# file exists. Everything .gitignore keeps off GitHub stays off Vercel too.
+private/
+.env*
+.gstack/
+docs/hike-photos.html

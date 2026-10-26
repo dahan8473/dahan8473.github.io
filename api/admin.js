@@ -25,6 +25,9 @@ const SECURITY = {
 const csp = (nonce) =>
   `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`;
 
+// The login page's Face ID button needs the camera; the dashboard doesn't.
+const LOGIN = { 'permissions-policy': 'camera=(self), microphone=(), geolocation=(), payment=()' };
+
 const notFound = () => new Response('Not found', { status: 404, headers: { ...SECURITY, 'content-type': 'text/plain; charset=utf-8' } });
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...SECURITY, 'content-type': 'application/json' } });
 function html(render, status = 200, extra = {}) {
@@ -90,11 +93,11 @@ export default {
 
     if (rest === '' && method === 'GET') {
       if (bare) return redirect(`${base}/`);
-      return sessionOk(request) ? html((n) => dashboardPage(n, { base })) : html((n) => loginPage(n, { base, ready: loginReady() }));
+      return sessionOk(request) ? html((n) => dashboardPage(n, { base })) : html((n) => loginPage(n, { base, ready: loginReady() }), 200, LOGIN);
     }
 
     if (rest === 'login' && method === 'POST') {
-      const page = (status, error, ready = true) => html((n) => loginPage(n, { base, ready, error }), status);
+      const page = (status, error, ready = true) => html((n) => loginPage(n, { base, ready, error }), status, LOGIN);
       if (!sameOrigin(request)) return page(403, 'Log in from the login page.');
       const form = new URLSearchParams((await request.text()).slice(0, 2000));
       const g = await gate(clientIp(request));

@@ -88,13 +88,16 @@ export function saveChat({ convo, visitor, messages, reply, page }) {
 }
 
 // Monthly spend on the brain, in dollars. Without a store (local dev) the
-// count lives in this instance. With one, a failed read counts as over the
-// cap, so the head goes quiet instead of spending blind. The credit limit on
-// the OpenRouter key is the backstop.
+// count lives in this instance. With one, a failed read throws, so the caller
+// keeps what it had (_spend.js). The credit limit on the OpenRouter key is
+// the backstop.
 let local = 0;
 export async function spent() {
   const v = await rpc('spent_this_month', {});
-  if (v == null) return hasStore ? Infinity : local;
+  if (v == null) {
+    if (hasStore) throw new Error('spend read failed');
+    return local;
+  }
   return Number(v);
 }
 export async function addSpend(usd) {

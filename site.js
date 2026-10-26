@@ -6,6 +6,41 @@
   var API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '/api' : 'https://davidliu-work.vercel.app/api';
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // ---- Watermark -----------------------------------------------------------------
+  // The site only runs clean on davidliu.work. Inside another site's iframe it
+  // stops loading, so nothing (the head included) runs there, and links out
+  // instead. Anywhere else (a fork, a mirror, a saved copy, but not Google
+  // Translate) every page gets davidliu.work stamped across it.
+  var REAL = 'https://davidliu.work';
+  var framed;
+  try { framed = window.top !== window.self && window.top.location.origin !== location.origin; } catch (e) { framed = true; }
+  if (framed) {
+    window.stop();
+    document.documentElement.classList.add('wm-framed');
+    document.body.innerHTML = '<a class="wm-out" href="' + REAL + location.pathname + '" target="_blank" rel="noopener">' +
+      '<b>davidliu.work</b><span>This site doesn\'t open inside other sites.</span><u>Open it in a new tab</u></a>';
+    return;
+  }
+  if (!/^(davidliu\.work|www\.davidliu\.work|dahan8473\.github\.io|localhost|127\.0\.0\.1|\[::1\]|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|[\w-]+\.translate\.goog)$/.test(location.hostname)) {
+    var stamp = document.createElement('div');
+    stamp.className = 'wm';
+    stamp.setAttribute('aria-hidden', 'true');
+    var bar = document.createElement('a');
+    bar.className = 'wm-bar';
+    bar.textContent = 'Copied from davidliu.work. See the real one';
+    // The router swaps pages without reloading, so the path is read on click.
+    bar.href = REAL + location.pathname;
+    bar.addEventListener('click', function () { bar.href = REAL + location.pathname; });
+    document.body.append(stamp, bar);
+  }
+  // Long copies take the link with them. Typing fields copy as normal.
+  document.addEventListener('copy', function (e) {
+    var text = String(window.getSelection() || '');
+    if (text.length < 100 || !e.clipboardData || (e.target.closest && e.target.closest('input, textarea, [contenteditable]'))) return;
+    e.clipboardData.setData('text/plain', text + '\n\nFrom David Liu, ' + REAL + location.pathname);
+    e.preventDefault();
+  });
+
   // My local time, in Toronto
   var fmt = new Intl.DateTimeFormat('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Toronto' });
   // How far Toronto is from the visitor, in hours. 0 when they're on the same time.

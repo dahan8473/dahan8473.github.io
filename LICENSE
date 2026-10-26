@@ -1,0 +1,13 @@
+Copyright (c) 2026 David Liu. All rights reserved.
+
+This repository is public so people can read it. It is not open source.
+
+You may not copy, host, mirror, embed or redistribute this site or any part of
+it (the code, design, writing, photos, videos, recordings, drawings or the
+head) without written permission from David Liu.
+
+Files by other people keep their own licenses: the fonts in fonts/, Leaflet
+(play/vendor/leaflet/LICENSE), the chess pieces (play/chess/LICENSE-chessnut.txt)
+and the libraries bundled into 3d/chunks/.
+
+Permission: davidliu8473@gmail.com

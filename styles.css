@@ -885,3 +885,11 @@ body:has(.rl, .mt-over, .climb-wall, .bring) .play-now { visibility: hidden; }
 .door-names li time { color: var(--t3); font-variant-numeric: tabular-nums; }
 .door-names li.none { color: var(--t3); }
 .fp-list li.secret { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--rule); }
+/* Watermark (site.js): the card shown inside other sites' iframes, and the
+   stamp and bar on copies hosted anywhere but davidliu.work. */
+.wm-framed body { display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 24px; box-sizing: border-box; }
+.wm-out { display: grid; gap: 8px; max-width: 320px; text-align: center; color: var(--t2); text-decoration: none; }
+.wm-out b { color: var(--t1); font-size: 24px; font-weight: 600; }
+.wm-out u { color: var(--accent); text-underline-offset: 3px; }
+.wm { position: fixed; inset: 0; z-index: 2147483646; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='190'%3E%3Ctext x='150' y='100' text-anchor='middle' transform='rotate(-24 150 95)' font-family='system-ui,sans-serif' font-size='22' font-weight='600' fill='rgb(128,128,128)' fill-opacity='.3'%3Edavidliu.work%3C/text%3E%3C/svg%3E"); }
+.wm-bar { position: fixed; left: 50%; bottom: 16px; z-index: 2147483647; transform: translateX(-50%); max-width: calc(100vw - 32px); box-sizing: border-box; padding: 10px 18px; border-radius: 999px; background: var(--strong); color: var(--bg); font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }

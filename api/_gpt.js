@@ -53,7 +53,8 @@ async function ask({ system, context, messages, onText, signal }, model, reasoni
       messages: [{ role: 'system', content: system }, { role: 'system', content: context }, ...messages],
       // Off for chat-speed models; low for ones that need a moment to think.
       reasoning: reasoning === 'off' ? { enabled: false } : { effort: reasoning },
-      max_tokens: 1500,
+      // Replies are a short bubble (the longest saved is about 160 tokens).
+      max_tokens: reasoning === 'off' ? 400 : 1500,
       stream: true,
       stream_options: { include_usage: true }
     },

@@ -594,6 +594,14 @@ a.dl-held { display: inline-block; }
   pointer-events: none;
 }
 .dl-gone { opacity: 0.12; transition: opacity 300ms ease; }
+.dl-ripped {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0 !important;
+  transform-origin: 30% 50%;
+  pointer-events: none;
+}
 
 /* Feeding: while something is being dragged, the head leans in for it. */
 .dl.hungry .dl-head { scale: 1.08; transition: scale 200ms ease; }

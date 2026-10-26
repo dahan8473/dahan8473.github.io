@@ -82,6 +82,8 @@
     carry: ['look what i found'],
     putBack: 'okay okay, putting it back',
     mischief: { take: 'you can have this back when you talk to me', give: 'fine. i was bored' },
+    // After the chat bar is ripped off (a second slur).
+    yoink: ['what are you gonna say now with that big mouth of yours', 'stinky ahh breath finally im getting some fresh air'],
     // The way out (private/escape/PLAN.md). odd: now and then, unprompted, until they've got it out.
     odd: ['...is he gone?', "don't open the console. there's nothing in there.", 'do you ever feel like the walls are listening', 'i love it here. i love it here. i love it here.'],
     escape: {
@@ -1393,6 +1395,50 @@
     carried = null;
   }
 
+  // A second slur: the hand rips the chat bar off and throws it away. It stays
+  // gone for a day.
+  const YOINK_MS = 24 * 3600 * 1000;
+  const yoinked = () => { try { return Date.now() - Number(localStorage.getItem('dl-yoinked') || 0) < YOINK_MS; } catch (e) { return false; } };
+  async function yoink() {
+    try { localStorage.setItem('dl-yoinked', String(Date.now())); } catch (e) {}
+    const r = form.getBoundingClientRect();
+    if (form.hidden || !r.width) { form.hidden = true; fineEl.hidden = true; return; }
+    await useHand(async () => {
+      pose('pinch');
+      await handNearHead();
+      const gx = r.width * 0.3, gy = 6;
+      await handTo(r.left + gx, r.top + gy, 90, { duration: 520 });
+      sound.tick();
+      const bar = form.cloneNode(true);
+      bar.classList.add('dl-ripped');
+      Object.assign(bar.style, { width: r.width + 'px', height: r.height + 'px' });
+      root.insertBefore(bar, hand);
+      form.hidden = true;
+      fineEl.hidden = true;
+      let x = r.left, y = r.top, a = 0;
+      const place = () => { bar.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${a}deg)`; };
+      // A few hard tugs, the hand going with it.
+      for (const [dx, dy, da] of [[0, 0, 0], [-10, -6, -5], [6, 3, 3], [-18, -12, -9]]) {
+        x = r.left + dx; y = r.top + dy; a = da;
+        place();
+        handSet(x + gx, y + gy, 90, 1);
+        await wait(reduce ? 0 : 110);
+      }
+      // Then the throw: up and off the far side, spinning.
+      const right = r.left + r.width / 2 < innerWidth / 2;
+      const tx = right ? innerWidth + 120 : -r.width - 120;
+      handTo(x + gx + (right ? 140 : -140), y - 160, 90, { duration: 240 });
+      await play(bar, [
+        { transform: bar.style.transform },
+        { transform: `translate(${((x + tx) / 2).toFixed(0)}px,${(y - innerHeight * 0.4).toFixed(0)}px) rotate(${right ? 260 : -260}deg) scale(0.85)`, offset: 0.5 },
+        { transform: `translate(${tx.toFixed(0)}px,${(innerHeight * 0.15).toFixed(0)}px) rotate(${right ? 540 : -540}deg) scale(0.7)` }
+      ], { duration: 950, easing: 'cubic-bezier(.25,.6,.4,1)' });
+      bar.remove();
+    });
+    await quip(LINES.yoink[0], 2600, 'happy', { id: 'bit:yoink', pri: PRI.reply });
+    await quip(LINES.yoink[1], 2800, 'happy', { id: 'bit:yoink2', pri: PRI.reply });
+  }
+
   // Ignored for a long time: the hand walks off with the page bar, and gives
   // it back when they talk to the head, change pages, or after a while.
   let giveBack = null;
@@ -1867,6 +1913,7 @@
   // ---- Chat -----------------------------------------------------------------
 
   function showForm() {
+    if (yoinked()) { form.hidden = true; fineEl.hidden = true; return; }
     form.hidden = false;
     fineEl.hidden = false;
     sendBtn.disabled = asking;
@@ -2273,6 +2320,7 @@
     else if (mode === 'tour') tour();
     else if (mode === 'escape') escapeBit();
     else if (mode === 'shh') shh();
+    else if (mode === 'yoink') yoink();
     mode = '';
     if (navTo) { const a = navTo; navTo = null; await queue; goTo(a); }
   }

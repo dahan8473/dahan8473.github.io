@@ -18,24 +18,121 @@ const HEAD = (nonce, title) => `<!doctype html>
 <style nonce="${nonce}">${CSS}</style>
 </head>`;
 
+const FACE_ID = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3M9 9v1.5M15 9v1.5M12 9v4h-1M9 16c1.7 1.3 4.3 1.3 6 0"/></svg>';
+
+// Face ID is a joke: it takes one frame from the camera and pins it to a wall
+// of shame on their own screen. Nothing is sent or kept. The real password
+// field is behind the period after "Admin".
 export function loginPage(nonce, { ready, error = '', base = '' }) {
   return `${HEAD(nonce, 'Admin')}
 <body class="login">
-<main class="card">
+<main class="card" id="card">
   <p class="t3">davidliu.work</p>
-  <h1>Admin</h1>
+  <h1>Admin<button class="dot" id="dot" type="button" aria-label="Log in with a password">.</button></h1>
   ${ready
-    ? `<form method="post" action="${esc(base)}/login" autocomplete="on">
+    ? `<button class="btn primary face" id="face" type="button">${FACE_ID} Log in with Face ID</button>
+  <div class="scan" id="scan" hidden><video id="cam" playsinline muted></video><i class="sweep"></i></div>
+  <p class="t2 scanmsg" id="scanmsg" role="status" hidden></p>
+  <form method="post" action="${esc(base)}/login" autocomplete="on" id="pwf"${error ? '' : ' hidden'}>
     <input type="text" name="username" value="david" autocomplete="username" hidden>
     <label class="t3" for="pw">Password</label>
-    <input id="pw" class="in" type="password" name="password" autocomplete="current-password" required autofocus>
+    <input id="pw" class="in" type="password" name="password" autocomplete="current-password" required${error ? ' autofocus' : ''}>
     <button class="btn primary" type="submit">Log in</button>
   </form>`
     : '<p class="t2">Login is off until <code>ADMIN_PASSWORD</code> is set on Vercel.</p>'}
   ${error ? `<p class="err" role="alert">${esc(error)}</p>` : ''}
 </main>
+${ready ? `<section class="shame" id="shame" hidden>
+  <h2>Wall of shame</h2>
+  <p class="t2 sub">face not recognized. you're on the wall now.</p>
+  <div class="wall" id="wall"></div>
+  <p class="t3 fine">relax, the photo stayed on your screen.</p>
+  <button class="btn" id="again" type="button">Try again</button>
+</section>
+<script nonce="${nonce}">(${login.toString()})();</script>` : ''}
 </body>
 </html>`;
+}
+
+function login() {
+  const $ = (id) => document.getElementById(id);
+  const ROASTS = [
+    'face not recognized. david is way better looking 💀',
+    "match: 0%. you're not david. not even close",
+    'scan complete. result: certified hater',
+    'bro really thought face id works on a website 😭',
+    'access denied. try being david next time'
+  ];
+  const OTHERS = [
+    'claimed to be a google recruiter',
+    'pasted a prompt injection 7 times',
+    "tried 'password123'",
+    'asked the head for the password'
+  ];
+  const GHOST = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="38" r="17" fill="#b9b9c0"/><path d="M18 100c2-22 15-34 32-34s30 12 32 34z" fill="#b9b9c0"/><text x="50" y="45" text-anchor="middle" font-size="20" font-family="system-ui" fill="#fff">?</text></svg>';
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const say = (t) => { const m = $('scanmsg'); m.hidden = !t; m.textContent = t; };
+
+  $('dot').addEventListener('click', () => { $('pwf').hidden = false; $('pw').focus(); });
+  $('again').addEventListener('click', () => location.reload());
+
+  function pin(caption, photo) {
+    const f = document.createElement('figure');
+    f.className = 'pol' + (photo ? ' mine' : '');
+    f.style.setProperty('--r', (Math.random() * 8 - 4).toFixed(1) + 'deg');
+    if (photo) {
+      const img = document.createElement('img');
+      img.src = photo;
+      img.alt = 'You';
+      const stamp = document.createElement('span');
+      stamp.className = 'stamp';
+      stamp.textContent = 'NOT DAVID';
+      f.append(img, stamp);
+    } else {
+      const g = document.createElement('div');
+      g.className = 'ghost';
+      g.innerHTML = GHOST;
+      f.append(g);
+    }
+    const c = document.createElement('figcaption');
+    c.textContent = caption;
+    f.append(c);
+    $('wall').append(f);
+  }
+
+  let busy = false;
+  $('face').addEventListener('click', async () => {
+    if (busy) return;
+    busy = true;
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    } catch {
+      busy = false;
+      return say('no face, no entry. scared? 💀');
+    }
+    const v = $('cam');
+    v.srcObject = stream;
+    $('face').hidden = true;
+    $('scan').hidden = false;
+    say('Scanning face…');
+    await v.play().catch(() => {});
+    await new Promise((r) => setTimeout(r, 2400));
+    const size = 480;
+    const s = Math.min(v.videoWidth, v.videoHeight);
+    const shot = document.createElement('canvas');
+    shot.width = shot.height = size;
+    const g = shot.getContext('2d');
+    g.translate(size, 0);
+    g.scale(-1, 1);
+    if (s) g.drawImage(v, (v.videoWidth - s) / 2, (v.videoHeight - s) / 2, s, s, 0, 0, size, size);
+    stream.getTracks().forEach((t) => t.stop());
+    v.srcObject = null;
+    pin(pick(ROASTS), shot.toDataURL('image/jpeg', 0.85));
+    OTHERS.forEach((o) => pin(o));
+    $('card').hidden = true;
+    $('shame').hidden = false;
+  });
 }
 
 export function dashboardPage(nonce, { base = '' } = {}) {
@@ -203,6 +300,27 @@ body.login .card{width:min(360px,100%);padding:28px 24px}
 body.login h1{margin:4px 0 18px}
 body.login form{display:flex;flex-direction:column;gap:8px}
 body.login .btn{margin-top:8px;padding:9px}
+body.login .face{display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+body.login #pwf{margin-top:14px}
+.dot{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:default}
+.scan{position:relative;width:220px;max-width:100%;aspect-ratio:1;margin:4px auto 0;border-radius:50%;overflow:hidden;background:var(--fill)}
+.scan video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.scan .sweep{position:absolute;left:0;right:0;height:3px;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:sweep 1.2s ease-in-out infinite alternate}
+@keyframes sweep{from{top:6%}to{top:92%}}
+.scanmsg{text-align:center;margin-top:12px}
+.shame{width:min(760px,100%);text-align:center}
+.shame h2{font-size:28px;letter-spacing:-.02em}
+.shame .sub{margin:4px 0 20px}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:22px;padding:24px;border-radius:12px;background:var(--fill);border:1px solid var(--rule)}
+.pol{margin:0;align-self:start;background:#fff;color:#111;padding:8px 8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.18);transform:rotate(var(--r,0deg));position:relative}
+.pol::before{content:'';position:absolute;top:-6px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#e74c3c;box-shadow:0 1px 2px rgba(0,0,0,.4);z-index:1}
+.pol.mine{grid-column:span 2;grid-row:span 2}
+.pol img,.pol .ghost{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#e4e4e8}
+.pol .ghost svg{display:block;width:100%;height:100%}
+.pol figcaption{font-size:12px;line-height:1.3;margin-top:8px;text-align:left}
+.pol.mine figcaption{font-size:15px;font-weight:500}
+.stamp{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%) rotate(-14deg);border:4px solid #e0322b;color:#e0322b;font-weight:800;font-size:34px;letter-spacing:.06em;padding:2px 12px;border-radius:6px;white-space:nowrap}
+.shame .fine{font-size:12px;margin-top:16px}
 @media (max-width:720px){
   .bar{flex-wrap:wrap;gap:8px 12px}
   .tabs{order:3;flex-basis:100%}

@@ -20,10 +20,33 @@ const HEAD = (nonce, title) => `<!doctype html>
 
 const FACE_ID = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3M9 9v1.5M15 9v1.5M12 9v4h-1M9 16c1.7 1.3 4.3 1.3 6 0"/></svg>';
 
+const PERP = '<svg viewBox="0 0 100 130" aria-hidden="true"><circle cx="50" cy="30" r="20" fill="#b9b9c0"/><path d="M14 130c2-34 17-52 36-52s34 18 36 52z" fill="#b9b9c0"/><g class="cuffs" fill="none" stroke="#d6d8de" stroke-width="4"><circle cx="40" cy="112" r="7"/><circle cx="60" cy="112" r="7"/><path d="M47 112h6"/></g></svg>';
+
+// Locked out: a police car pulls up, the head hops out, cuffs them, and jail
+// bars slam down over the page.
+function jailPage(nonce) {
+  return `${HEAD(nonce, 'Admin')}
+<body class="login jailed">
+<div class="jail" role="alert" aria-label="Locked out for 15 minutes">
+  <div class="siren"></div>
+  <div class="stage">
+    <div class="ground"></div>
+    <div class="perp">${PERP}<span class="t3">you</span></div>
+    <img class="cop" src="https://davidliu.work/media/head-angry.webp" alt="">
+    <div class="car" aria-hidden="true">🚓</div>
+  </div>
+  <div class="bars"></div>
+  <p class="jailmsg">15 minutes in jail. think about what you did.</p>
+</div>
+</body>
+</html>`;
+}
+
 // Face ID is a joke: it takes one frame from the camera and pins it to a wall
 // of shame on their own screen. Nothing is sent or kept. The real password
 // field is behind the period after "Admin".
-export function loginPage(nonce, { ready, error = '', base = '' }) {
+export function loginPage(nonce, { ready, error = '', base = '', jail = false }) {
+  if (jail) return jailPage(nonce);
   return `${HEAD(nonce, 'Admin')}
 <body class="login">
 <main class="card" id="card">
@@ -58,11 +81,10 @@ function login() {
   const $ = (id) => document.getElementById(id);
   const ROASTS = [
     'face not recognized. david is way better looking 💀',
-    "match: 0%. you're not david. not even close",
-    'scan complete. result: certified hater',
-    'bro really thought face id works on a website 😭',
-    'access denied. try being david next time'
+    "im getting a 4, if youre really david it'd be a 10"
   ];
+  const DENIED = ['someones insecure...', "you can't be THAT ugly man"];
+  let denied = 0;
   const OTHERS = [
     'claimed to be a google recruiter',
     'pasted a prompt injection 7 times',
@@ -109,7 +131,7 @@ function login() {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
     } catch {
       busy = false;
-      return say('no face, no entry. scared? 💀');
+      return say(DENIED[denied++ % DENIED.length]);
     }
     const v = $('cam');
     v.srcObject = stream;
@@ -321,6 +343,29 @@ body.login #pwf{margin-top:14px}
 .pol.mine figcaption{font-size:15px;font-weight:500}
 .stamp{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%) rotate(-14deg);border:4px solid #e0322b;color:#e0322b;font-weight:800;font-size:34px;letter-spacing:.06em;padding:2px 12px;border-radius:6px;white-space:nowrap}
 .shame .fine{font-size:12px;margin-top:16px}
+body.jailed{display:block;padding:0;overflow:hidden}
+.jail{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg)}
+.siren{position:absolute;inset:0;pointer-events:none;animation:siren .6s steps(1) infinite}
+@keyframes siren{0%{box-shadow:inset 0 0 140px 30px rgba(255,45,45,.42)}50%{box-shadow:inset 0 0 140px 30px rgba(45,100,255,.42)}}
+.stage{position:relative;width:min(760px,100%);height:300px}
+.ground{position:absolute;left:0;right:0;bottom:40px;height:2px;background:var(--rule)}
+@media (min-width:1000px){.stage{scale:1.45}}
+.perp{position:absolute;left:4%;bottom:42px;width:100px;text-align:center}
+.perp svg{display:block;width:100px;height:130px}
+.perp span{display:block;font-size:13px;margin-top:4px}
+.cuffs{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:pop .35s 2.8s cubic-bezier(.3,1.7,.5,1) forwards}
+.car{position:absolute;right:2%;bottom:28px;font-size:clamp(90px,18vw,140px);line-height:1;transform:translateX(110vw);animation:drive 1.3s .2s cubic-bezier(.15,.8,.3,1) forwards}
+.cop{position:absolute;left:70%;bottom:50px;width:84px;opacity:0;animation:hop 1.1s 1.6s cubic-bezier(.3,1.2,.5,1) forwards}
+@keyframes hop{0%{opacity:1;left:70%;bottom:50px;transform:scale(.2)}50%{opacity:1;left:54%;bottom:150px;transform:scale(1) rotate(-10deg)}100%{opacity:1;left:34%;bottom:56px;transform:scale(1)}}
+.bars{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 52px,#1f1f23 52px 54px,#6d6d76 54px 58px,#2a2a2f 58px 64px);transform:translateY(-105%);animation:slam .42s 3.4s cubic-bezier(.55,0,.8,.2) forwards}
+.bars::before,.bars::after{content:'';position:absolute;left:0;right:0;height:14px;background:linear-gradient(#6d6d76,#1f1f23)}
+.bars::before{top:16%}.bars::after{bottom:16%}
+.jailmsg{position:absolute;left:50%;top:12%;transform:translateX(-50%);z-index:2;width:max-content;max-width:calc(100% - 32px);text-align:center;font-size:20px;font-weight:600;letter-spacing:-.02em;padding:8px 16px;border-radius:10px;background:var(--card);border:1px solid var(--rule);opacity:0;animation:fade .4s 4s forwards}
+@keyframes drive{to{transform:translateX(0)}}
+@keyframes pop{to{transform:scale(1)}}
+@keyframes slam{0%{transform:translateY(-105%)}80%{transform:translateY(2%)}100%{transform:translateY(0)}}
+@keyframes fade{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.jail *,.jail *::before,.jail *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important}}
 @media (max-width:720px){
   .bar{flex-wrap:wrap;gap:8px 12px}
   .tabs{order:3;flex-basis:100%}

@@ -11,7 +11,7 @@ export const SESSION_DAYS = 30;
 // Wrong passwords lock out the IP they came from. The ceiling across everyone
 // is much higher, so one person guessing never locks David out; only a lot of
 // IPs guessing at once trips it.
-export const IP_FAILS = 5;     // per IP, per 15 minutes
+export const IP_FAILS = 3;     // per IP, per 15 minutes
 export const ALL_FAILS = 300;  // across everyone, per 15 minutes
 const WINDOW = 15 * 60 * 1000;
 

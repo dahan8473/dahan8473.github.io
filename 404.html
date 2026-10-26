@@ -56,6 +56,25 @@
       <p class="tagline">That page doesn't exist. <a href="/">Back to the start.</a></p>
     </header>
   </main>
+  <script>
+    // Poking for the usual files gets a roast instead.
+    (function () {
+      var p = decodeURIComponent(location.pathname).toLowerCase();
+      var roasts = [
+        [/\/\.env|\/\.aws|\/\.ssh|\/\.htpasswd|\/config\.(json|php|ya?ml)/, "the .env is in david's head. and he forgot it 💀"],
+        [/\/\.git(\/|$)/, "the git history is on github. it's public. you could've just looked 😭"],
+        [/wp-|wordpress|xmlrpc/, "this isn't wordpress grandpa 😭"],
+        [/\.php|phpmyadmin|cgi-bin/, "php? on my site? it's 2026 bro"],
+        [/\.\.|etc\/passwd/, "../../ on a static site 💀 there's nothing up there"],
+        [/backup|dump|\.sql$|\.bak$|\.zip$/, 'no backups here. david lives dangerously'],
+        [/server-status|actuator|\/jenkins|\/solr/, "scanning a student's portfolio? there's nothing here but my resume 😭"]
+      ];
+      var hit = roasts.filter(function (r) { return r[0].test(p); })[0];
+      if (!hit) return;
+      document.querySelector('.identity .title').textContent = 'Nice try';
+      document.querySelector('.tagline').firstChild.textContent = hit[1] + ' ';
+    })();
+  </script>
   <script src="/site.js?v=48"></script>
   <script src="/talk/talk.js?v=64"></script>
   <script type="module" src="/track.js?v=2"></script>

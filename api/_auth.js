@@ -90,19 +90,20 @@ function memoryTry(ip, t = Date.now()) {
   return { attempt, ip: fails.filter((a) => a.ip === ip).length, all: fails.length };
 }
 
-// Returns { locked } or { unavailable }, or { ok, done() } to call when the
-// password matched.
+// Returns { locked } or { unavailable }, or { ok, tries, done() }: tries counts
+// this IP's failed logins in the window, this one included, and done() is
+// called when the password matched.
 export async function gate(ip) {
   const r = await adminTry(ip);
   if (r.ok && r.data && Number.isFinite(r.data.ip)) {
     const { id, ip: mine, all } = r.data;
     if (mine > IP_FAILS || all > ALL_FAILS) return { locked: true };
-    return { ok: true, persisted: true, done: () => adminOk(id) };
+    return { ok: true, tries: mine, persisted: true, done: () => adminOk(id) };
   }
   if (hasStore && r.status !== 404) return { unavailable: true };
   const m = memoryTry(ip);
   if (m.ip > IP_FAILS || m.all > ALL_FAILS) return { locked: true };
-  return { ok: true, persisted: false, done: () => { m.attempt.ok = true; } };
+  return { ok: true, tries: m.ip, persisted: false, done: () => { m.attempt.ok = true; } };
 }
 
 // Exposed for tests.

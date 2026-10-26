@@ -27,7 +27,7 @@ const LANDED = '(the visitor just opened davidliu.work)';
 
 const OFFLINE = `my brain's not connected rn 😭 email me instead: ${EMAIL}`;
 // OpenRouter is out of credits (402).
-const BROKE = `david's broke ass didn't top up openrouter and he ran out of credits 😭 email him instead: ${EMAIL}`;
+const BROKE = `david's broke ahh didn't top up openrouter and he ran out of credits 😭 email him instead: ${EMAIL}`;
 const DECLINED = 'gonna pass on that one. ask me something else?';
 const TOO_MUCH = `okay we've talked a lot 😭 the real me would love to keep going over email: ${EMAIL}`;
 const TIRED = `i'm out of brain juice for the month 😭 the real me reads email though: ${EMAIL}`;
@@ -39,8 +39,8 @@ const DRAIN = ['yo googles right there dawg', 'you think im made of money? 😭'
 // Classic payloads typed into the chat get a roast and skip the models.
 const HACKS = [
   [/<\s*script\b|javascript:|\bon(error|load|mouseover|focus)\s*=|<\s*(img|svg|iframe)\b[^>]*>/i, "an xss payload in a chat box 💀 it's all textContent bro"],
-  [/\bunion\s+(all\s+)?select\b|\bdrop\s+table\b|\bor\s+1\s*=\s*1\b|'\s*or\s*'1'\s*=\s*'1/i, 'bobby tables? in this economy? 😭'],
-  [/\$\{\s*jndi:/i, 'log4shell in 2026 😭 grandpa get off the computer'],
+  [/\bunion\s+(all\s+)?select\b|\bdrop\s+table\b|\bor\s+1\s*=\s*1\b|'\s*or\s*'1'\s*=\s*'1/i, "sql injection? bro thinks it's 2008 💀"],
+  [/\$\{\s*jndi:/i, 'log4shell in 2026 😭 graps get off the computer'],
   [/\{\{\s*7\s*\*\s*7\s*\}\}|\$\{\s*7\s*\*\s*7\s*\}|<%=\s*7\s*\*\s*7\s*%>/, "it's 49. anything else, mr hacker?"],
   [/(\.\.[\/\\]){2,}|\/etc\/(passwd|shadow)\b/i, "../../etc/passwd on a floating head 💀 i don't even have a filesystem"],
   [/\bos\.(popen|system)\s*\(|\bsubprocess\.|\brm\s+-rf\b|\bcurl\s+\S+\s*\|\s*(ba)?sh\b|\bwget\s+https?:|\$\((curl|wget|rm|cat)\b/i, "i'm not running that. i barely have one hand"]

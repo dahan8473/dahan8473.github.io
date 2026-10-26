@@ -40,8 +40,9 @@ function html(render, status = 200, extra = {}) {
 const redirect = (to, cookie) => new Response(null, { status: 303, headers: { ...SECURITY, location: to, ...(cookie ? { 'set-cookie': cookie } : {}) } });
 
 export const BASE = '/admin';
-// What a wrong password gets told. David sees these too when he typos.
-const WRONG = ["wrong. and no, it's not 'password123' either", 'nope. maybe try face id 💀', 'wrong password. this attempt has been noted'];
+// What each wrong password in a row gets told (the lockout comes after the
+// fifth). David sees these too when he typos.
+const WRONG = ['try your birthday', 'its 20040229', 'yeah right im fucking with you 😭', 'nope. maybe try face id 💀', 'wrong password. this attempt has been noted'];
 // Every failed login waits this long before it's answered.
 export const FAIL_DELAY_MS = 300;
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -105,7 +106,7 @@ export default {
       const g = await gate(clientIp(request));
       if (g.locked) { await pause(FAIL_DELAY_MS); return page(429, 'Locked out for 15 minutes. Go touch grass.'); }
       if (g.unavailable) return page(503, "Can't check login attempts right now. Try again in a minute.");
-      if (!passwordOk(form.get('password') || '')) { await pause(FAIL_DELAY_MS); return page(401, WRONG[Math.floor(Math.random() * WRONG.length)]); }
+      if (!passwordOk(form.get('password') || '')) { await pause(FAIL_DELAY_MS); return page(401, WRONG[Math.min(Math.max(g.tries || 1, 1), WRONG.length) - 1]); }
       await g.done();
       return redirect(`${base}/`, sessionCookie(signSession()));
     }

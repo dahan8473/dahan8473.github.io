@@ -176,7 +176,7 @@
     micBlocked: "i can't hear you, you're muted. make sure to unblock your mic",
     offline: `my brain's not connected rn 😭 email me instead: ${EMAIL}`,
     limit: `okay we've talked a lot 😭 the real me would love to keep going over email: ${EMAIL}`,
-    real: 'btw the real me is way better at these haha. message me here, it goes straight to my phone',
+    real: 'btw you should hear it from the real me. message me here, it goes straight to my phone',
     // Said once each, when they open, click, or stop to read something. Keyed by data-t.
     notice: {
       western: 'fourth year! graduating 2028 if all goes well 🤞',

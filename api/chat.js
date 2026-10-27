@@ -665,7 +665,7 @@ export default {
       who ? `They seem to be ${WHO[who]}; lean into what that kind of visitor wants.` : '',
       did ? `The page already moved your hand to ${did} for this message, so don't add a marker for it again.` : '',
       titles.length ? `You're recalling ${titles.join(' and ')} from your second brain for this; lean on it.` : '',
-      real ? 'Just answer this one, and don\'t ask them anything back. Right after, the page suggests they talk to the real David, so don\'t send them to messages or email yourself.' : '',
+      real ? 'Just answer this one and end on your answer: no question back to them this time, not even a small one. Right after, the page suggests they talk to the real David, so don\'t send them to messages or email yourself.' : '',
       memoryLine(memory)
     ].filter(Boolean).join(' ');
     const forBrain = withData(messages, data);

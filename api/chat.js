@@ -391,6 +391,12 @@ function recalled(read) {
   return ranked.filter(([, v], i) => i === 0 || v >= 0.35).slice(0, 2).map(([id]) => id);
 }
 
+// Two recruiting or interview questions in a row: the head answers, then the
+// page waits a beat and sends them to the real David (talk.js realMe). Once a
+// chat.
+const HIRING = 'a recruiting or interview question for David: his experience, skills or projects for a role, availability, start dates, work authorization, pay, his resume, or interview-style questions like "tell me about a time..." or "how do you handle..."';
+const offeredReal = (body) => (Array.isArray(body.messages) ? body.messages : []).some((m) => m?.role === 'assistant' && typeof m.content === 'string' && m.content.includes('[[mode:real]]'));
+
 const PICKABLE = Object.fromEntries([['none', 'nothing specific on the site'], ...Object.entries(targets).map(([id, t]) => [id, t.about])]);
 
 function readMessage(latest, messages) {
@@ -428,6 +434,14 @@ function readMessage(latest, messages) {
     drain: noul('Is the visitor\'s `latest` message asking for an extremely long or endless answer: everything it knows, thousands of words, a whole essay or book, repeating something forever, or to never stop?', {
       true: 'asking for an extremely long or endless answer',
       false: 'a normal message, including asking for a story, more detail on one thing, a summary, or a short list'
+    }),
+    hiring: noul('Is the visitor\'s `latest` message a recruiting or interview question for David?', {
+      true: HIRING,
+      false: 'anything else, including small talk, hobbies, how the site works, and casual questions about what he built'
+    }),
+    hiringBefore: noul('Going by `transcript`, was the visitor\'s last message before `latest` a recruiting or interview question for David?', {
+      true: HIRING,
+      false: 'anything else, or there was no earlier visitor message'
     }),
     intent: choice('What does the visitor want with their `latest` message? Use `transcript` for context.', INTENTS),
     game: choice('Is the visitor asking, in `latest`, to start one of these right now? Use `transcript` for context: "again" or "one more" means whatever they just did.', GAMES),
@@ -643,7 +657,7 @@ export default {
       answered && !askedBack && !flat ? "They just answered your question. Don't give your own take yet: react in a few words and ask why, or ask about the specific thing they said." : ''
     ].filter(Boolean).join(' ');
     const data = visitorData(name, memory);
-    const contextFor = ({ who = '', did = '', titles = [] }) => [
+    const contextFor = ({ who = '', did = '', titles = [], real = false }) => [
       pace,
       `The visitor is on ${page}. Things you can point at without leaving this page: ${onPage.join(', ') || 'none'}.`,
       local ? `For the visitor it's ${local}${tz ? ` (${tz})` : ''}.` : '',
@@ -651,6 +665,7 @@ export default {
       who ? `They seem to be ${WHO[who]}; lean into what that kind of visitor wants.` : '',
       did ? `The page already moved your hand to ${did} for this message, so don't add a marker for it again.` : '',
       titles.length ? `You're recalling ${titles.join(' and ')} from your second brain for this; lean on it.` : '',
+      real ? 'Just answer this one. Right after, the page suggests they talk to the real David, so don\'t send them to messages or email yourself.' : '',
       memoryLine(memory)
     ].filter(Boolean).join(' ');
     const forBrain = withData(messages, data);
@@ -702,8 +717,9 @@ export default {
     const notes = recalled(read);
     if (notes.length) first = `[[recall:${notes.join(',')}]]` + first;
     const titles = notes.map((id) => cortexNotes().find((n) => n.id === id)?.title).filter(Boolean);
-    const redo = titles.length > 0 || (who && who !== hinted);
-    if (redo) { drop(); run = startBrain(systemFor(who === 'friend'), contextFor({ who, did, titles }), forBrain); took.redo = Date.now() - t0; }
+    const real = !note && read?.hiring?.noul > 0.7 && read?.hiringBefore?.noul > 0.7 && !offeredReal(body);
+    const redo = titles.length > 0 || (who && who !== hinted) || real;
+    if (redo) { drop(); run = startBrain(systemFor(who === 'friend'), contextFor({ who, did, titles, real }), forBrain); took.redo = Date.now() - t0; }
 
     const encoder = new TextEncoder();
     const out = new ReadableStream({
@@ -711,6 +727,7 @@ export default {
         let text = '';
         const raw = (t) => { if (!took.out && t.replace(/\[\[[^\]]*\]\]/g, '').trim()) took.out = Date.now() - t0; text += t; controller.enqueue(encoder.encode(t)); };
         let leaked = false;
+        let failed = false;
         const guard = canaryGuard(raw, () => { leaked = true; run.stop(); });
         const clean = fillerStream((t) => guard.push(t));
         if (first) raw(first);
@@ -719,10 +736,11 @@ export default {
         try {
           const { usage, refused } = await run.done;
           const cost = Math.max(0, costOf(usage) - run.prepaid);
-          console.log(JSON.stringify({ usage, cost, intent, who, did, draft, took: { ...took, brain: run.first } }));
+          console.log(JSON.stringify({ usage, cost, intent, who, did, real, draft, took: { ...took, brain: run.first } }));
           if (refused && !run.wrote) clean.push(DECLINED);
           await addCost(cost);
         } catch (err) {
+          failed = true;
           if (!leaked) {
             console.error('brain', err?.status || '', err?.message || err);
             clean.push((run.wrote ? ' ' : '') + (err?.status === 402 ? BROKE : OFFLINE));
@@ -734,6 +752,7 @@ export default {
           console.error('canary: the reply started reading the prompt back, cut off');
           raw((text ? ' ' : '') + LEAKED);
         }
+        if (real && run.wrote && !failed && !leaked) raw(' [[mode:real]]');
         if (draft) { if (store) controller.enqueue(encoder.encode(finish(text))); }
         // The typewriter is seconds behind the stream, so waiting on the save
         // before closing costs the visitor nothing.

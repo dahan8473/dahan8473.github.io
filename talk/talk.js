@@ -176,6 +176,7 @@
     micBlocked: "i can't hear you, you're muted. make sure to unblock your mic",
     offline: `my brain's not connected rn 😭 email me instead: ${EMAIL}`,
     limit: `okay we've talked a lot 😭 the real me would love to keep going over email: ${EMAIL}`,
+    real: 'btw the real me is way better at these haha. message me here, it goes straight to my phone',
     // Said once each, when they open, click, or stop to read something. Keyed by data-t.
     notice: {
       western: 'fourth year! graduating 2028 if all goes well 🤞',
@@ -1698,6 +1699,17 @@
     life.lean = 0;
     if (!escaped()) holdPad(false);
   }
+  // Two recruiting questions in a row (api/chat.js): the answer, a beat, then
+  // the real David, with the hand on Messages.
+  async function realMe() {
+    const ep = epoch;
+    await wait(2000);
+    if (ep !== epoch || asking) return;
+    const said = speak(LINES.real, { id: 'real', pri: PRI.reply, ctx: null, log: true });
+    const el = document.querySelector('.rail a[href="/messages/"]');
+    if (el) queue = queue.then(() => { if (ep === epoch) return point(el); }).catch(() => {});
+    await said;
+  }
   // The "makima is listening" meme: a spiral notepad held up beside its face,
   // rising from below with the hand. The first time it flips from the warning
   // to the hint.
@@ -2321,6 +2333,7 @@
     else if (mode === 'escape') escapeBit();
     else if (mode === 'shh') shh();
     else if (mode === 'yoink') yoink();
+    else if (mode === 'real') realMe();
     mode = '';
     if (navTo) { const a = navTo; navTo = null; await queue; goTo(a); }
   }

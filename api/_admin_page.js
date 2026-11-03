@@ -29,13 +29,13 @@ function jailPage(nonce) {
 <body class="login jailed">
 <div class="jail" role="alert" aria-label="Locked out for 15 minutes">
   <div class="siren"></div>
-  <div class="stage">
+  <div class="jailstage">
     <div class="ground"></div>
     <div class="perp">${PERP}<span class="t3">you</span></div>
     <img class="cop" src="https://davidliu.work/media/head-angry.webp" alt="">
     <div class="car" aria-hidden="true">🚓</div>
   </div>
-  <div class="bars"></div>
+  <div class="jailbars"></div>
   <p class="jailmsg">15 minutes in jail. think about what you did.</p>
 </div>
 </body>
@@ -347,9 +347,9 @@ body.jailed{display:block;padding:0;overflow:hidden}
 .jail{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg)}
 .siren{position:absolute;inset:0;pointer-events:none;animation:siren .6s steps(1) infinite}
 @keyframes siren{0%{box-shadow:inset 0 0 140px 30px rgba(255,45,45,.42)}50%{box-shadow:inset 0 0 140px 30px rgba(45,100,255,.42)}}
-.stage{position:relative;width:min(760px,100%);height:300px}
+.jailstage{position:relative;width:min(760px,100%);height:300px}
 .ground{position:absolute;left:0;right:0;bottom:40px;height:2px;background:var(--rule)}
-@media (min-width:1000px){.stage{scale:1.45}}
+@media (min-width:1000px){.jailstage{scale:1.45}}
 .perp{position:absolute;left:4%;bottom:42px;width:100px;text-align:center}
 .perp svg{display:block;width:100px;height:130px}
 .perp span{display:block;font-size:13px;margin-top:4px}
@@ -357,9 +357,9 @@ body.jailed{display:block;padding:0;overflow:hidden}
 .car{position:absolute;right:2%;bottom:28px;font-size:clamp(90px,18vw,140px);line-height:1;transform:translateX(110vw);animation:drive 1.3s .2s cubic-bezier(.15,.8,.3,1) forwards}
 .cop{position:absolute;left:70%;bottom:50px;width:84px;opacity:0;animation:hop 1.1s 1.6s cubic-bezier(.3,1.2,.5,1) forwards}
 @keyframes hop{0%{opacity:1;left:70%;bottom:50px;transform:scale(.2)}50%{opacity:1;left:54%;bottom:150px;transform:scale(1) rotate(-10deg)}100%{opacity:1;left:34%;bottom:56px;transform:scale(1)}}
-.bars{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 52px,#1f1f23 52px 54px,#6d6d76 54px 58px,#2a2a2f 58px 64px);transform:translateY(-105%);animation:slam .42s 3.4s cubic-bezier(.55,0,.8,.2) forwards}
-.bars::before,.bars::after{content:'';position:absolute;left:0;right:0;height:14px;background:linear-gradient(#6d6d76,#1f1f23)}
-.bars::before{top:16%}.bars::after{bottom:16%}
+.jailbars{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 52px,#1f1f23 52px 54px,#6d6d76 54px 58px,#2a2a2f 58px 64px);transform:translateY(-105%);animation:slam .42s 3.4s cubic-bezier(.55,0,.8,.2) forwards}
+.jailbars::before,.jailbars::after{content:'';position:absolute;left:0;right:0;height:14px;background:linear-gradient(#6d6d76,#1f1f23)}
+.jailbars::before{top:16%}.jailbars::after{bottom:16%}
 .jailmsg{position:absolute;left:50%;top:12%;transform:translateX(-50%);z-index:2;width:max-content;max-width:calc(100% - 32px);text-align:center;font-size:20px;font-weight:600;letter-spacing:-.02em;padding:8px 16px;border-radius:10px;background:var(--card);border:1px solid var(--rule);opacity:0;animation:fade .4s 4s forwards}
 @keyframes drive{to{transform:translateX(0)}}
 @keyframes pop{to{transform:scale(1)}}

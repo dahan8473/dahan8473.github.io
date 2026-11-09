@@ -46,6 +46,5 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v5
         with:
-          timeout: 1800000
           error_count: 60
           reporting_interval: 10000

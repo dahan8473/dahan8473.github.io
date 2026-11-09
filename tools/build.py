@@ -254,12 +254,13 @@ resume += sec('education', 'Education', [
 ])
 resume += sec('experience', 'Experience', [
   item('jdpower', [('<b>J.D. Power</b>', 'May 2025 – Aug 2026'), ('Software Engineering Intern, 16-month co-op', 'London, ON')],
-       ['Built and maintained Spring Boot services on Kubernetes powering the Build &amp; Price sites and analytics connectors for five Stellantis brands: Jeep, Ram, Dodge, Chrysler and Maserati',
-        'Fixed the backend and data-pipeline defects blocking the model-year 2026 launch, restoring the vehicle customization flow in production',
-        'Remediated 2,000+ TruffleHog secret-scanning findings, rotated leaked keys, and wrote a research report on GitHub Copilot for automated vulnerability detection'],
+       ['Built and maintained <b>Java</b> and <b>Spring Boot</b> services on <b>Kubernetes</b> for pricing and parts analysis across five Stellantis brands: Jeep, Ram, Dodge, Chrysler and Maserati, spanning 10+ repos',
+        'Diagnosed <b>MY2026</b> spec and pricing failures across service repos and the data pipeline, using browser network traces to isolate the failing service; fixed the data mappings and filters and cut launch errors',
+        'Built a <b>Go</b> service and data pipeline that ingested, validated and loaded 20+ specs across five brands, automating spec intake; shipped through <b>GitLab</b> and <b>Jenkins</b> CI/CD and handled load tests and incident response',
+        'Scanned 80+ repos with <b>TruffleHog</b>, remediated 2,000+ findings, and built a front-end dashboard to triage vulnerabilities and automate remediation; authored the <b>GitHub Copilot</b> research report that produced the scan findings'],
        note=['<p>Sixteen months on the team behind the Build &amp; Price sites. The Copilot report went to engineering leadership and was adopted.</p>',
              '<p>Also a Swagger UI security migration and CI/CD work.</p>',
-             '<p class="stack">Java · Spring Boot · Kubernetes · Kafka</p>']),
+             '<p class="stack">Java · Spring Boot · Kubernetes · Go · GitLab CI · Jenkins</p>']),
   item('modern', [('<b>Modern Engineering</b>', 'May – Sep 2024'), ('Software &amp; Robotics Engineering Intern', 'Delta, BC')],
        ['Programmed a UR5 collaborative robot arm in Python over RTDE: a six-program motion library for object retrieval, conveyor placement, part sanding, and camera-guided stacking with OpenCV'],
        note=['<p>Python talking to the arm directly over RTDE. OpenCV finds the parts for the stacking program.</p>',
@@ -270,8 +271,8 @@ resume += sec('experience', 'Experience', [
 ])
 resume += sec('leadership', 'Leadership', [
   item('tethos', [('<b>Tethos</b>', 'May 2024 – now'), ('Founder and President', 'London, ON')],
-       ["Solo-founded Western's largest student-run tech organization, now a federally incorporated nonprofit: 250+ student developers, an 80+ person exec team, and chapters at Western and UBC",
-        'Delivered 20+ pro-bono projects for nonprofits including World Vision, the Canadian Red Cross and the London Children\'s Museum, saving partners $500,000+',
+       ["Solo-founded and scaled Western's largest student-run tech organization to 100+ developers and 150+ members across 2 chapters (Western, UBC), now a federally incorporated non-profit",
+        'Delivered 20+ pro bono projects for nonprofits including World Vision, the Canadian Red Cross and the London Children\'s Museum, saving partners $500,000+',
         '<span data-t="genesis">Produced GENESIS, London\'s largest student demo day: 260+ attendees, 7 project demos, 8 sponsors and $12,000 raised</span>'],
        note=[img('/media/work/tethos-team.webp', 'The Tethos team in front of a Western University building', 1400, 934),
              '<p>Nonprofits apply, and teams of student PMs and developers build what they need for free.</p>',
@@ -281,20 +282,21 @@ resume += sec('leadership', 'Leadership', [
   item('mentoring', [('<b>Mentoring and judging</b>', ''), (MENTORING, '')], plain=True),
 ])
 resume += sec('projects', 'Projects', [
-  item('tethos-platform', [('<b>Tethos Island</b>, play.tethos.ca', 'May 2026 – now'), ('Next.js, TypeScript, Three.js, React Three Fiber, Colyseus, Supabase', '')],
-       ['Solo-building a cozy multiplayer 3D island game as the Tethos member portal: game design and mechanics, multiplayer, backend, character rig, animation, models and shaders',
-        'Realtime multiplayer on Colyseus with interpolation, interest management and server-checked movement, in shards of up to 40 players',
-        'A server-authoritative economy in Postgres functions with rate limits and hourly caps; cut the world from 697 draw calls to 252 by merging terrain',
-        'Built with a team of role-scoped Claude Code agents I run (build, QA, reviewer): about 2,400 commits and 2,900 tests, plus 59 API routes, five tiers of role-based access and a recruiting dashboard with 240+ applications'],
+  item('tethos-platform', [('<b>Tethos Island</b>, play.tethos.ca', 'May 2026 – now'), ('Next.js, TypeScript, Three.js, React Three Fiber, Colyseus, Supabase, PostgreSQL, Fly.io', '')],
+       ['Built a browser multiplayer island for Tethos\'s 150+ members: a <b>Colyseus</b> server at 20 updates/sec with a 120-300 ms interpolation buffer, a 50-unit interest radius, and 30-player shards that cap at 40; a 40-player shard costs 3% more than a 24-player one',
+        'Wrote the core world algorithms in <b>TypeScript</b>: <b>A*</b> with a binary heap and string pulling for 12 resident NPC schedules, a 47-tile autotiler with rotation canonicalization, an <b>O(n)</b> distance transform for shorelines, and a fixed-step 120 Hz character controller; merged terrain and cliff meshes to cut draw calls from 697 to 252',
+        'Modeled the platform in <b>PostgreSQL</b> with 94 migrations and 131 tables behind 136 API routes; the server-authoritative economy runs through rate-limited RPCs and closed an item-duplication exploit, with 2,887 tests across 358 files',
+        'Built 5 LLM NPCs on <b>DeepSeek V4.1 Flash</b> with per-player memory: the server extracts structured facts from each chat, merges them into a memory set, and reloads them before the next conversation, with rate limits and a monthly interaction cap'],
        note=[img('/media/work/tethos-island/village.webp', 'Tethos Island: the village at golden hour', 1440, 860),
              '<p>The title screen is the real game running behind the menu, at whatever time it is in London right now.</p>',
              '<p class="go">' + ext('https://play.tethos.ca', 'Play it') + link('/dashboard/', 'How it works') + '</p>']),
-  item('hackthenorth', [('<b>Among Us IRL</b>', 'Sep 2026'), ('C++, ESP32-C3, ESP-NOW, PlatformIO', 'Hack the North')],
-       ['Built the game for real-life Among Us on conference badges: role dealing, the kill, report and meeting state machine, on-badge voting, and NFC tasks with motion minigames',
-        'No server, router or phones: game state syncs peer to peer over a mesh, and signal strength decides if you\'re close enough to kill'],
-       note=[img('/media/work/htn-badges.webp', 'Two Hack the North badges running Among Us', 1000, 750),
-             '<p>36 hours, team of three. The first prototype in Lua ran the badge out of memory, and the stock firmware rebooted whenever the radio turned on, so we flashed our own.</p>',
-             '<p class="go">' + ext('https://github.com/dahan8473/htn-amongus', 'Code') + ext('https://devpost.com/software/among-us-lbrwjk', 'Devpost') + '</p>']),
+  item('wren', [('<b>Wren</b>, multi-tenant nonprofit platform', '2026 – now'), ('TypeScript, Next.js, PostgreSQL, Supabase, Trigger.dev, AWS, Terraform', '')],
+       ['Built a multi-tenant SaaS on <b>Supabase Postgres</b>: row-level security on every table, isolation tests that prove cross-org reads fail, and a commit gate that blocks service-role use and unscoped views',
+        'Routed every LLM call through one package with job-based model selection and a per-org <b>cost ledger</b>',
+        'Built a spreadsheet intake with <b>PHI/SIN</b> guards, storage upload, commit and undo, backed by 10 migrations and 23 tests',
+        'Built idempotent <b>Trigger.dev</b> jobs, <b>Sentry/PostHog</b> observability, and an <b>AWS</b> S3/SQS/ECS stack in <b>Terraform</b>'],
+       note=['<p>Operations software for small nonprofits. Private repo, demo on request.</p>',
+             '<p class="stack">TypeScript · Next.js · PostgreSQL · Supabase · Trigger.dev · AWS · Terraform</p>']),
   '        <p class="r-more"><a class="ln" href="/projects/">All projects, with the stack and the code &#8594;</a></p>\n',
 ])
 resume += sec('awards', 'Awards', [
@@ -312,13 +314,13 @@ resume += sec('awards', 'Awards', [
 ])
 resume += sec('skills', 'Skills', [
   item(None, [('<b>Languages</b>', ''), ('Python, Java, C++, Go, JavaScript, TypeScript, SQL, HTML/CSS', '')],
-       note=['<p>Java at J.D. Power. Python for the UR5 arm and every FastAPI backend. C++ on the Hack the North badges. TypeScript across Tethos, biopilot, deja-view and clawdash. SQL in Supabase, with row-level security and server-side functions.</p>']),
-  item(None, [('<b>Frameworks</b>', ''), ('React, Next.js, Node.js, Express, Spring Boot, FastAPI, Flask, React Three Fiber, GSAP, Tailwind', '')],
+       note=['<p>Java and Go at J.D. Power. Python for the UR5 arm and every FastAPI backend. C++ on the Hack the North badges. TypeScript across Tethos and Wren. SQL in Postgres, with row-level security and server-side functions.</p>']),
+  item(None, [('<b>Frameworks</b>', ''), ('React, Next.js, Node.js, Express, Spring Boot, FastAPI, Flask, React Three Fiber, GSAP, Framer Motion, Tailwind', '')],
        note=['<p>Spring Boot at J.D. Power. Next.js and FastAPI for Tethos and most hackathons. React Three Fiber for Tethos Island.</p>']),
-  item(None, [('<b>AI and data</b>', ''), ('Anthropic and OpenAI APIs, RAG, OpenCV, PyTorch, TensorFlow, PostgreSQL, Supabase, MongoDB, Kafka', '')],
-       note=['<p>RAG over Tethos\'s Drive and Notion with pgvector. YOLOv8 for biopilot. Kafka at J.D. Power. The floating head on this site runs on DeepSeek and Jev.</p>']),
-  item(None, [('<b>Systems</b>', ''), ('Docker, Kubernetes, AWS, Linux, Git, GitHub Actions, ESP32, Arduino, PlatformIO', '')],
-       note=['<p>Kubernetes at J.D. Power. Docker on Cloud Run for the RAG service. snake-and-commits is a GitHub Action. ESP32 and PlatformIO for the badges.</p>']),
+  item(None, [('<b>AI and data</b>', ''), ('OpenAI, Anthropic and DeepSeek APIs, RAG, OpenCV, PyTorch, PostgreSQL, Supabase, MySQL, MongoDB', '')],
+       note=['<p>RAG over Tethos\'s docs, YOLOv8 for biopilot, and DeepSeek for the island NPCs and this site.</p>']),
+  item(None, [('<b>Systems</b>', ''), ('ESP32/PlatformIO, Docker, Kubernetes, AWS, Linux, Git, GitLab CI, Jenkins, GitHub Actions, REST APIs', '')],
+       note=['<p>Kubernetes and Go at J.D. Power, with GitLab and Jenkins CI/CD. Docker on Cloud Run for the RAG service. snake-and-commits is a GitHub Action. ESP32 and PlatformIO for the badges.</p>']),
 ])
 resume += '      </div>\n'
 write('resume/index.html', page('/resume/', 'Resume', "David Liu's resume. Software engineering at Western, 16 months at J.D. Power, founder of Tethos. Every line has the story behind it.", resume, 'resume', cls='resume', ))

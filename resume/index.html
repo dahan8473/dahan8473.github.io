@@ -94,14 +94,15 @@
           <div class="r-line first"><span><b>J.D. Power</b></span><span class="t3">May 2025 – Aug 2026</span></div>
           <div class="r-line"><span>Software Engineering Intern, 16-month co-op</span><span class="t3">London, ON</span></div>
           <ul class="r-bullets">
-            <li>Built and maintained Spring Boot services on Kubernetes powering the Build &amp; Price sites and analytics connectors for five Stellantis brands: Jeep, Ram, Dodge, Chrysler and Maserati</li>
-            <li>Fixed the backend and data-pipeline defects blocking the model-year 2026 launch, restoring the vehicle customization flow in production</li>
-            <li>Remediated 2,000+ TruffleHog secret-scanning findings, rotated leaked keys, and wrote a research report on GitHub Copilot for automated vulnerability detection</li>
+            <li>Built and maintained <b>Java</b> and <b>Spring Boot</b> services on <b>Kubernetes</b> for pricing and parts analysis across five Stellantis brands: Jeep, Ram, Dodge, Chrysler and Maserati, spanning 10+ repos</li>
+            <li>Diagnosed <b>MY2026</b> spec and pricing failures across service repos and the data pipeline, using browser network traces to isolate the failing service; fixed the data mappings and filters and cut launch errors</li>
+            <li>Built a <b>Go</b> service and data pipeline that ingested, validated and loaded 20+ specs across five brands, automating spec intake; shipped through <b>GitLab</b> and <b>Jenkins</b> CI/CD and handled load tests and incident response</li>
+            <li>Scanned 80+ repos with <b>TruffleHog</b>, remediated 2,000+ findings, and built a front-end dashboard to triage vulnerabilities and automate remediation; authored the <b>GitHub Copilot</b> research report that produced the scan findings</li>
           </ul>
           <aside class="note"><div>
             <p>Sixteen months on the team behind the Build &amp; Price sites. The Copilot report went to engineering leadership and was adopted.</p>
             <p>Also a Swagger UI security migration and CI/CD work.</p>
-            <p class="stack">Java · Spring Boot · Kubernetes · Kafka</p>
+            <p class="stack">Java · Spring Boot · Kubernetes · Go · GitLab CI · Jenkins</p>
           </div></aside>
         </div>
         <div class="r-item" data-t="modern" tabindex="0">
@@ -131,8 +132,8 @@
           <div class="r-line first"><span><b>Tethos</b></span><span class="t3">May 2024 – now</span></div>
           <div class="r-line"><span>Founder and President</span><span class="t3">London, ON</span></div>
           <ul class="r-bullets">
-            <li>Solo-founded Western's largest student-run tech organization, now a federally incorporated nonprofit: 250+ student developers, an 80+ person exec team, and chapters at Western and UBC</li>
-            <li>Delivered 20+ pro-bono projects for nonprofits including World Vision, the Canadian Red Cross and the London Children's Museum, saving partners $500,000+</li>
+            <li>Solo-founded and scaled Western's largest student-run tech organization to 100+ developers and 150+ members across 2 chapters (Western, UBC), now a federally incorporated non-profit</li>
+            <li>Delivered 20+ pro bono projects for nonprofits including World Vision, the Canadian Red Cross and the London Children's Museum, saving partners $500,000+</li>
             <li><span data-t="genesis">Produced GENESIS, London's largest student demo day: 260+ attendees, 7 project demos, 8 sponsors and $12,000 raised</span></li>
           </ul>
           <aside class="note"><div>
@@ -158,12 +159,12 @@
         <h2 id="projects-h">Projects</h2>
         <div class="r-item" data-t="tethos-platform" tabindex="0">
           <div class="r-line first"><span><b>Tethos Island</b>, play.tethos.ca</span><span class="t3">May 2026 – now</span></div>
-          <div class="r-line"><span>Next.js, TypeScript, Three.js, React Three Fiber, Colyseus, Supabase</span><span class="t3"></span></div>
+          <div class="r-line"><span>Next.js, TypeScript, Three.js, React Three Fiber, Colyseus, Supabase, PostgreSQL, Fly.io</span><span class="t3"></span></div>
           <ul class="r-bullets">
-            <li>Solo-building a cozy multiplayer 3D island game as the Tethos member portal: game design and mechanics, multiplayer, backend, character rig, animation, models and shaders</li>
-            <li>Realtime multiplayer on Colyseus with interpolation, interest management and server-checked movement, in shards of up to 40 players</li>
-            <li>A server-authoritative economy in Postgres functions with rate limits and hourly caps; cut the world from 697 draw calls to 252 by merging terrain</li>
-            <li>Built with a team of role-scoped Claude Code agents I run (build, QA, reviewer): about 2,400 commits and 2,900 tests, plus 59 API routes, five tiers of role-based access and a recruiting dashboard with 240+ applications</li>
+            <li>Built a browser multiplayer island for Tethos's 150+ members: a <b>Colyseus</b> server at 20 updates/sec with a 120-300 ms interpolation buffer, a 50-unit interest radius, and 30-player shards that cap at 40; a 40-player shard costs 3% more than a 24-player one</li>
+            <li>Wrote the core world algorithms in <b>TypeScript</b>: <b>A*</b> with a binary heap and string pulling for 12 resident NPC schedules, a 47-tile autotiler with rotation canonicalization, an <b>O(n)</b> distance transform for shorelines, and a fixed-step 120 Hz character controller; merged terrain and cliff meshes to cut draw calls from 697 to 252</li>
+            <li>Modeled the platform in <b>PostgreSQL</b> with 94 migrations and 131 tables behind 136 API routes; the server-authoritative economy runs through rate-limited RPCs and closed an item-duplication exploit, with 2,887 tests across 358 files</li>
+            <li>Built 5 LLM NPCs on <b>DeepSeek V4.1 Flash</b> with per-player memory: the server extracts structured facts from each chat, merges them into a memory set, and reloads them before the next conversation, with rate limits and a monthly interaction cap</li>
           </ul>
           <aside class="note"><div>
             <img src="/media/work/tethos-island/village.webp" alt="Tethos Island: the village at golden hour" width="1440" height="860" loading="lazy">
@@ -171,17 +172,18 @@
             <p class="go"><a class="ln out" href="https://play.tethos.ca">Play it</a><a class="ln" href="/dashboard/">How it works</a></p>
           </div></aside>
         </div>
-        <div class="r-item" data-t="hackthenorth" tabindex="0">
-          <div class="r-line first"><span><b>Among Us IRL</b></span><span class="t3">Sep 2026</span></div>
-          <div class="r-line"><span>C++, ESP32-C3, ESP-NOW, PlatformIO</span><span class="t3">Hack the North</span></div>
+        <div class="r-item" data-t="wren" tabindex="0">
+          <div class="r-line first"><span><b>Wren</b>, multi-tenant nonprofit platform</span><span class="t3">2026 – now</span></div>
+          <div class="r-line"><span>TypeScript, Next.js, PostgreSQL, Supabase, Trigger.dev, AWS, Terraform</span><span class="t3"></span></div>
           <ul class="r-bullets">
-            <li>Built the game for real-life Among Us on conference badges: role dealing, the kill, report and meeting state machine, on-badge voting, and NFC tasks with motion minigames</li>
-            <li>No server, router or phones: game state syncs peer to peer over a mesh, and signal strength decides if you're close enough to kill</li>
+            <li>Built a multi-tenant SaaS on <b>Supabase Postgres</b>: row-level security on every table, isolation tests that prove cross-org reads fail, and a commit gate that blocks service-role use and unscoped views</li>
+            <li>Routed every LLM call through one package with job-based model selection and a per-org <b>cost ledger</b></li>
+            <li>Built a spreadsheet intake with <b>PHI/SIN</b> guards, storage upload, commit and undo, backed by 10 migrations and 23 tests</li>
+            <li>Built idempotent <b>Trigger.dev</b> jobs, <b>Sentry/PostHog</b> observability, and an <b>AWS</b> S3/SQS/ECS stack in <b>Terraform</b></li>
           </ul>
           <aside class="note"><div>
-            <img src="/media/work/htn-badges.webp" alt="Two Hack the North badges running Among Us" width="1000" height="750" loading="lazy">
-            <p>36 hours, team of three. The first prototype in Lua ran the badge out of memory, and the stock firmware rebooted whenever the radio turned on, so we flashed our own.</p>
-            <p class="go"><a class="ln out" href="https://github.com/dahan8473/htn-amongus">Code</a><a class="ln out" href="https://devpost.com/software/among-us-lbrwjk">Devpost</a></p>
+            <p>Operations software for small nonprofits. Private repo, demo on request.</p>
+            <p class="stack">TypeScript · Next.js · PostgreSQL · Supabase · Trigger.dev · AWS · Terraform</p>
           </div></aside>
         </div>
         <p class="r-more"><a class="ln" href="/projects/">All projects, with the stack and the code &#8594;</a></p>
@@ -234,28 +236,28 @@
           <div class="r-line first"><span><b>Languages</b></span><span class="t3"></span></div>
           <div class="r-line"><span>Python, Java, C++, Go, JavaScript, TypeScript, SQL, HTML/CSS</span><span class="t3"></span></div>
           <aside class="note"><div>
-            <p>Java at J.D. Power. Python for the UR5 arm and every FastAPI backend. C++ on the Hack the North badges. TypeScript across Tethos, biopilot, deja-view and clawdash. SQL in Supabase, with row-level security and server-side functions.</p>
+            <p>Java and Go at J.D. Power. Python for the UR5 arm and every FastAPI backend. C++ on the Hack the North badges. TypeScript across Tethos and Wren. SQL in Postgres, with row-level security and server-side functions.</p>
           </div></aside>
         </div>
         <div class="r-item" tabindex="0">
           <div class="r-line first"><span><b>Frameworks</b></span><span class="t3"></span></div>
-          <div class="r-line"><span>React, Next.js, Node.js, Express, Spring Boot, FastAPI, Flask, React Three Fiber, GSAP, Tailwind</span><span class="t3"></span></div>
+          <div class="r-line"><span>React, Next.js, Node.js, Express, Spring Boot, FastAPI, Flask, React Three Fiber, GSAP, Framer Motion, Tailwind</span><span class="t3"></span></div>
           <aside class="note"><div>
             <p>Spring Boot at J.D. Power. Next.js and FastAPI for Tethos and most hackathons. React Three Fiber for Tethos Island.</p>
           </div></aside>
         </div>
         <div class="r-item" tabindex="0">
           <div class="r-line first"><span><b>AI and data</b></span><span class="t3"></span></div>
-          <div class="r-line"><span>Anthropic and OpenAI APIs, RAG, OpenCV, PyTorch, TensorFlow, PostgreSQL, Supabase, MongoDB, Kafka</span><span class="t3"></span></div>
+          <div class="r-line"><span>OpenAI, Anthropic and DeepSeek APIs, RAG, OpenCV, PyTorch, PostgreSQL, Supabase, MySQL, MongoDB</span><span class="t3"></span></div>
           <aside class="note"><div>
-            <p>RAG over Tethos's Drive and Notion with pgvector. YOLOv8 for biopilot. Kafka at J.D. Power. The floating head on this site runs on DeepSeek and Jev.</p>
+            <p>RAG over Tethos's docs, YOLOv8 for biopilot, and DeepSeek for the island NPCs and this site.</p>
           </div></aside>
         </div>
         <div class="r-item" tabindex="0">
           <div class="r-line first"><span><b>Systems</b></span><span class="t3"></span></div>
-          <div class="r-line"><span>Docker, Kubernetes, AWS, Linux, Git, GitHub Actions, ESP32, Arduino, PlatformIO</span><span class="t3"></span></div>
+          <div class="r-line"><span>ESP32/PlatformIO, Docker, Kubernetes, AWS, Linux, Git, GitLab CI, Jenkins, GitHub Actions, REST APIs</span><span class="t3"></span></div>
           <aside class="note"><div>
-            <p>Kubernetes at J.D. Power. Docker on Cloud Run for the RAG service. snake-and-commits is a GitHub Action. ESP32 and PlatformIO for the badges.</p>
+            <p>Kubernetes and Go at J.D. Power, with GitLab and Jenkins CI/CD. Docker on Cloud Run for the RAG service. snake-and-commits is a GitHub Action. ESP32 and PlatformIO for the badges.</p>
           </div></aside>
         </div>
       </section>

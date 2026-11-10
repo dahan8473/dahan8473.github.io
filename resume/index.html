@@ -164,7 +164,7 @@
             <li>Built a browser multiplayer island for Tethos's 150+ members: a <b>Colyseus</b> server at 20 updates/sec with a 120-300 ms interpolation buffer, a 50-unit interest radius, and 30-player shards that cap at 40; a 40-player shard costs 3% more than a 24-player one</li>
             <li>Wrote the core world algorithms in <b>TypeScript</b>: <b>A*</b> with a binary heap and string pulling for 12 resident NPC schedules, a 47-tile autotiler with rotation canonicalization, an <b>O(n)</b> distance transform for shorelines, and a fixed-step 120 Hz character controller; merged terrain and cliff meshes to cut draw calls from 697 to 252</li>
             <li>Modeled the platform in <b>PostgreSQL</b> with 94 migrations and 131 tables behind 136 API routes; the server-authoritative economy runs through rate-limited RPCs and closed an item-duplication exploit, with 2,887 tests across 358 files</li>
-            <li>Built 5 LLM NPCs on <b>DeepSeek V4.1 Flash</b> with per-player memory: the server extracts structured facts from each chat, merges them into a memory set, and reloads them before the next conversation, with rate limits and a monthly interaction cap</li>
+            <li>Built 5 LLM NPCs with per-player memory: the server extracts structured facts from each chat, merges them into a memory set, and reloads them before the next conversation, with rate limits and a monthly interaction cap</li>
           </ul>
           <aside class="note"><div>
             <img src="/media/work/tethos-island/village.webp" alt="Tethos Island: the village at golden hour" width="1440" height="860" loading="lazy">
@@ -250,7 +250,7 @@
           <div class="r-line first"><span><b>AI and data</b></span><span class="t3"></span></div>
           <div class="r-line"><span>OpenAI, Anthropic and DeepSeek APIs, RAG, OpenCV, PyTorch, PostgreSQL, Supabase, MySQL, MongoDB</span><span class="t3"></span></div>
           <aside class="note"><div>
-            <p>RAG over Tethos's docs, YOLOv8 for biopilot, and DeepSeek for the island NPCs and this site.</p>
+            <p>RAG over Tethos's docs, YOLOv8 for biopilot, Claude Haiku 4.5 for the island NPCs, and DeepSeek for this site.</p>
           </div></aside>
         </div>
         <div class="r-item" tabindex="0">

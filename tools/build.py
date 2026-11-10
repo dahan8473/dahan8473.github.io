@@ -286,7 +286,7 @@ resume += sec('projects', 'Projects', [
        ['Built a browser multiplayer island for Tethos\'s 150+ members: a <b>Colyseus</b> server at 20 updates/sec with a 120-300 ms interpolation buffer, a 50-unit interest radius, and 30-player shards that cap at 40; a 40-player shard costs 3% more than a 24-player one',
         'Wrote the core world algorithms in <b>TypeScript</b>: <b>A*</b> with a binary heap and string pulling for 12 resident NPC schedules, a 47-tile autotiler with rotation canonicalization, an <b>O(n)</b> distance transform for shorelines, and a fixed-step 120 Hz character controller; merged terrain and cliff meshes to cut draw calls from 697 to 252',
         'Modeled the platform in <b>PostgreSQL</b> with 94 migrations and 131 tables behind 136 API routes; the server-authoritative economy runs through rate-limited RPCs and closed an item-duplication exploit, with 2,887 tests across 358 files',
-        'Built 5 LLM NPCs on <b>DeepSeek V4.1 Flash</b> with per-player memory: the server extracts structured facts from each chat, merges them into a memory set, and reloads them before the next conversation, with rate limits and a monthly interaction cap'],
+        'Built 5 LLM NPCs with per-player memory: the server extracts structured facts from each chat, merges them into a memory set, and reloads them before the next conversation, with rate limits and a monthly interaction cap'],
        note=[img('/media/work/tethos-island/village.webp', 'Tethos Island: the village at golden hour', 1440, 860),
              '<p>The title screen is the real game running behind the menu, at whatever time it is in London right now.</p>',
              '<p class="go">' + ext('https://play.tethos.ca', 'Play it') + link('/dashboard/', 'How it works') + '</p>']),
@@ -318,7 +318,7 @@ resume += sec('skills', 'Skills', [
   item(None, [('<b>Frameworks</b>', ''), ('React, Next.js, Node.js, Express, Spring Boot, FastAPI, Flask, React Three Fiber, GSAP, Framer Motion, Tailwind', '')],
        note=['<p>Spring Boot at J.D. Power. Next.js and FastAPI for Tethos and most hackathons. React Three Fiber for Tethos Island.</p>']),
   item(None, [('<b>AI and data</b>', ''), ('OpenAI, Anthropic and DeepSeek APIs, RAG, OpenCV, PyTorch, PostgreSQL, Supabase, MySQL, MongoDB', '')],
-       note=['<p>RAG over Tethos\'s docs, YOLOv8 for biopilot, and DeepSeek for the island NPCs and this site.</p>']),
+       note=['<p>RAG over Tethos\'s docs, YOLOv8 for biopilot, Claude Haiku 4.5 for the island NPCs, and DeepSeek for this site.</p>']),
   item(None, [('<b>Systems</b>', ''), ('ESP32/PlatformIO, Docker, Kubernetes, AWS, Linux, Git, GitLab CI, Jenkins, GitHub Actions, REST APIs', '')],
        note=['<p>Kubernetes and Go at J.D. Power, with GitLab and Jenkins CI/CD. Docker on Cloud Run for the RAG service. snake-and-commits is a GitHub Action. ESP32 and PlatformIO for the badges.</p>']),
 ])

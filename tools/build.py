@@ -171,7 +171,7 @@ def link(href, text):
 
 home = '''      <section class="hello" data-t="now">
         <p><em>Hi, I'm David.</em> I'm in my fourth year of Software Engineering at Western.</p>
-        <p>I run <em>Tethos</em>, a nonprofit where 250+ student developers have built free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
+        <p>I run <em>Tethos</em>, a nonprofit where 100+ student developers and 150+ members have built free software for other nonprofits. I just finished <em>sixteen months at J.D. Power</em> as a software engineering intern, and I'm looking for a software engineering internship for Summer 2027.</p>
         <p><em>But I'm a lot more than my technical skills.</em> Outside of code I'm kind of goofy. I like weird ideas, and my friends usually ask how I even thought of them.</p>
         <p>Since this is my personal website, I wanted it to feel like me, packed with little bits of fun that reward you the more you explore. Click around, drag things, and talk to the floating head in the corner, an AI version of me wired into <a class="ln" href="/brain/">my second brain</a>. But most of all,</p>
         <p><em>stay curious.</em></p>
@@ -192,7 +192,7 @@ home = '''      <section class="hello" data-t="now">
         <a class="ln out" href="https://x.com/davidliu8473" aria-label="X">X</a>
       </p>
 '''
-write('index.html', page('/', 'David Liu', 'Software engineering at Western. Founder of Tethos, a nonprofit where 250+ student developers have built free software for nonprofits. 16 months as a software engineering intern at J.D. Power.', home, 'home', cls='home', ld=True))
+write('index.html', page('/', 'David Liu', 'Software engineering at Western. Founder of Tethos, a nonprofit where 100+ student developers have built free software for nonprofits. 16 months as a software engineering intern at J.D. Power.', home, 'home', cls='home', ld=True))
 
 
 # ---- Resume -----------------------------------------------------------------
@@ -414,7 +414,7 @@ PROJ_MORE = {
                'Performance as a feature: merging the ground and cliff pieces cut the world from 697 draw calls to 252, and detail tiers keep a full 40-player shard about 3% costlier than 24.',
                "The sky and weather of real London, Ontario, from Open-Meteo with a NOAA-computed fallback. Everyone sees the same rain.",
                'My own art, built by 128 Blender Python scripts: the character rig with hand-keyed animation and IK foot planting, 12 residents with daily routines, 21 hairstyles, the café and shop interiors, weapons and enemies, and 31 custom shaders for water, sky, grass and faces.',
-               'Around it: about 2,400 commits and 2,900 tests, 59 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications.'],
+               'Around it: about 2,400 commits and 2,887 tests, 136 API routes, five tiers of role-based access, and a recruiting dashboard that has processed 240+ applications.'],
     'story': 'The title screen is the real game running behind the menu, at whatever time it is in London, Ontario right now.',
     'shots': [['/media/work/tethos-island/title.webp', 'The title screen over the village at night', 1600, 900],
               ['/media/work/tethos-island/village.webp', 'The village at golden hour', 1440, 860],

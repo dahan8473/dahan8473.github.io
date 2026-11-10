@@ -290,13 +290,13 @@ resume += sec('projects', 'Projects', [
        note=[img('/media/work/tethos-island/village.webp', 'Tethos Island: the village at golden hour', 1440, 860),
              '<p>The title screen is the real game running behind the menu, at whatever time it is in London right now.</p>',
              '<p class="go">' + ext('https://play.tethos.ca', 'Play it') + link('/dashboard/', 'How it works') + '</p>']),
-  item('wren', [('<b>Wren</b>, multi-tenant nonprofit platform', '2026 – now'), ('TypeScript, Next.js, PostgreSQL, Supabase, Trigger.dev, AWS, Terraform', '')],
+  item('wren', [('<b>Wren</b>, multi-tenant nonprofit platform', '2026 – now'), ('TypeScript, Next.js, PostgreSQL, Supabase', '')],
        ['Built a multi-tenant SaaS on <b>Supabase Postgres</b>: row-level security on every table, isolation tests that prove cross-org reads fail, and a commit gate that blocks service-role use and unscoped views',
         'Routed every LLM call through one package with job-based model selection and a per-org <b>cost ledger</b>',
         'Built a spreadsheet intake with <b>PHI/SIN</b> guards, storage upload, commit and undo, backed by 10 migrations and 23 tests',
-        'Built idempotent <b>Trigger.dev</b> jobs, <b>Sentry/PostHog</b> observability, and an <b>AWS</b> S3/SQS/ECS stack in <b>Terraform</b>'],
+        'Built a staff access log and <b>/ops</b> review surface that records every staff read of an org, with org-scoped policies and an audit trail'],
        note=['<p>Operations software for small nonprofits. Private repo, demo on request.</p>',
-             '<p class="stack">TypeScript · Next.js · PostgreSQL · Supabase · Trigger.dev · AWS · Terraform</p>']),
+             '<p class="stack">TypeScript · Next.js · PostgreSQL · Supabase</p>']),
   '        <p class="r-more"><a class="ln" href="/projects/">All projects, with the stack and the code &#8594;</a></p>\n',
 ])
 resume += sec('awards', 'Awards', [
